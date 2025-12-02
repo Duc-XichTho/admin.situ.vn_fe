@@ -1,0 +1,257 @@
+.mainArea {
+  background: white;
+  border-radius: 20px;
+  padding: 30px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  flex: 1;
+  min-width: 0; /* Quan trọng cho flexbox */
+}
+
+.promptSection {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.title {
+  font-size: 20px;
+  font-weight: bold;
+  color: #667eea;
+}
+
+.submitBtn {
+  padding: 15px 40px;
+  background: linear-gradient(45deg, #667eea, #764ba2);
+  color: white;
+  border: none;
+  border-radius: 25px;
+  font-size: 18px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-family: inherit;
+}
+
+.submitBtn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+}
+
+.newQuestionBtn {
+  padding: 15px 40px;
+  background: linear-gradient(45deg, #6c757d, #868e96);
+  color: white;
+  border: none;
+  border-radius: 25px;
+  font-size: 18px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-family: inherit;
+}
+
+.newQuestionBtn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(108, 117, 125, 0.4);
+}
+
+.suggestionPopup {
+  position: static;
+  background: linear-gradient(135deg, #fff9c4 0%, #ffeb3b 100%);
+  border: 3px solid #ffc107;
+  border-radius: 15px;
+  padding: 15px;
+  box-shadow: 0 8px 30px rgba(255, 193, 7, 0.3);
+  z-index: 10;
+  display: none;
+  margin-top: 16px;
+}
+
+.suggestionPopup.show {
+  display: block;
+  animation: bounceIn 0.6s ease;
+}
+
+.suggestionContent {
+  margin-left: 25px;
+}
+
+.suggestionTitle {
+  font-weight: bold;
+  color: #f57c00;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 5px;
+}
+
+.suggestionText {
+  color: #e65100;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 5px;
+  border-radius: 5px;
+  transition: background-color 0.2s ease;
+}
+
+.suggestionText:hover {
+  background-color: rgba(255, 193, 7, 0.3);
+}
+
+.suggestionHint {
+  font-size: 11px;
+  color: #bf360c;
+  margin-top: 5px;
+  font-style: italic;
+}
+
+@keyframes bounceIn {
+  0% { 
+    opacity: 0; 
+    transform: translateY(-20px) scale(0.8); 
+  }
+  50% { 
+    opacity: 1; 
+    transform: translateY(0px) scale(1.05); 
+  }
+  100% { 
+    opacity: 1; 
+    transform: translateY(0px) scale(1); 
+  }
+}
+
+/* Permission notice styles */
+.permissionNotice {
+  margin: 16px 0;
+  padding: 16px;
+  background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+  border-radius: 12px;
+  border: 2px solid #ff6b6b;
+  box-shadow: 0 4px 12px rgba(255, 107, 107, 0.2);
+}
+
+.permissionContent {
+  text-align: center;
+}
+
+.permissionTitle {
+  font-size: 16px;
+  font-weight: 600;
+  color: #d63031;
+  margin-bottom: 8px;
+}
+
+.permissionText {
+  font-size: 14px;
+  color: #636e72;
+  line-height: 1.5;
+}
+
+/* Selected question info styles */
+.selectedQuestionInfo {
+  margin: 0 0 16px 0;
+  padding: 16px;
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  animation: slideInDown 0.3s ease;
+  position: relative;
+}
+
+.selectedQuestionInfo::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #667eea, #764ba2);
+  border-radius: 12px 12px 0 0;
+}
+
+.questionInfoHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.questionInfoIcon {
+  font-size: 16px;
+}
+
+.questionInfoTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: #495057;
+}
+
+.questionInfoContent {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.questionText {
+  font-size: 15px;
+  color: #212529;
+  line-height: 1.5;
+  font-weight: 500;
+  padding: 8px 12px;
+  background: white;
+  border-radius: 8px;
+  border: 1px solid #dee2e6;
+}
+
+.questionInfoTags {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 8px 0 16px 0;
+  padding: 8px 0;
+}
+
+.infoTag {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+  background: #e9ecef;
+  color: #495057;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
+}
+
+.infoTag:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.tagIcon {
+  font-size: 10px;
+}
+
+@keyframes slideInDown {
+  0% { 
+    opacity: 0; 
+    transform: translateY(-8px); 
+  }
+  100% { 
+    opacity: 1; 
+    transform: translateY(0); 
+  }
+}
+
+@media (max-width: 480px) {
+  .mainArea {
+    padding: 15px;
+  }
+} 

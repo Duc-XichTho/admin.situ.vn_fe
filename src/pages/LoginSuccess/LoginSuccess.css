@@ -1,0 +1,331 @@
+.login-success-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background: linear-gradient(90deg, rgba(218,218,218,1) 0%, rgba(218,218,218,1) 100%);
+  padding: 20px;
+  position: relative;
+  overflow: hidden;
+}
+
+.success-card {
+  background: rgba(255, 255, 255, 0.95);
+  padding: 40px;
+  border-radius: 30px;
+  box-shadow: 
+    0 10px 30px rgba(99, 102, 241, 0.1),
+    0 1px 8px rgba(99, 102, 241, 0.2);
+  width: 100%;
+  max-width: 500px;
+  text-align: center;
+  position: relative;
+  z-index: 1;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(99, 102, 241, 0.1);
+  animation: cardAppear 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.success-icon {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  margin: 0 auto 30px;
+}
+
+.checkmark {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 60px;
+  height: 60px;
+}
+
+.check-line {
+  position: absolute;
+  background: #1171E6;
+  border-radius: 4px;
+}
+
+.line-1 {
+  width: 8px;
+  height: 30px;
+  left: 20px;
+  top: 30px;
+  transform: rotate(45deg);
+  animation: checkLine1 0.4s ease-in-out 0.2s forwards;
+  transform-origin: 50% 100%;
+  opacity: 0;
+}
+
+.line-2 {
+  width: 40px;
+  height: 8px;
+  right: 8px;
+  top: 35px;
+  transform: rotate(-45deg);
+  animation: checkLine2 0.4s ease-in-out 0.4s forwards;
+  transform-origin: 100% 50%;
+  opacity: 0;
+}
+
+.success-rings {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 2px solid #1171E6;
+  opacity: 0;
+}
+
+.ring-1 {
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  animation: ringExpand 0.6s ease-out 0.6s forwards;
+}
+
+.ring-2 {
+  top: 10%;
+  left: 10%;
+  right: 10%;
+  bottom: 10%;
+  animation: ringExpand 0.6s ease-out 0.8s forwards;
+}
+
+.ring-3 {
+  top: 20%;
+  left: 20%;
+  right: 20%;
+  bottom: 20%;
+  animation: ringExpand 0.6s ease-out 1s forwards;
+}
+
+.success-content {
+  position: relative;
+  z-index: 1;
+}
+
+.success-content h1 {
+  color: #1a1b4b;
+  font-size: 1.5rem;
+  margin-bottom: 10px;
+  font-weight: 700;
+  opacity: 0;
+  animation: fadeInUp 0.6s ease-out 1s forwards;
+}
+
+.success-content p {
+  color: #6b7280;
+  font-size: 1.1rem;
+  margin: 0 0 30px;
+  opacity: 0;
+  animation: fadeInUp 0.6s ease-out 1.2s forwards;
+}
+
+.loading-bar {
+  width: 100%;
+  height: 4px;
+  background: rgba(99, 102, 241, 0.1);
+  border-radius: 2px;
+  overflow: hidden;
+  opacity: 0;
+  animation: fadeIn 0.3s ease-out 1.4s forwards;
+}
+
+.loading-progress {
+  height: 100%;
+  background: linear-gradient(90deg, #1171E6, #818cf8);
+  border-radius: 2px;
+  animation: progress 3s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+
+.tech-circles {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+}
+
+.tech-circle {
+  position: absolute;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(129, 140, 248, 0.1));
+  animation: float 6s infinite;
+}
+
+.tech-circle:nth-child(1) {
+  width: 60px;
+  height: 60px;
+  top: -20px;
+  right: -20px;
+  animation-delay: 0s;
+}
+
+.tech-circle:nth-child(2) {
+  width: 40px;
+  height: 40px;
+  bottom: 40px;
+  left: -10px;
+  animation-delay: -2s;
+}
+
+.tech-circle:nth-child(3) {
+  width: 50px;
+  height: 50px;
+  bottom: -20px;
+  right: 30%;
+  animation-delay: -4s;
+}
+
+.particle-grid {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: 
+    linear-gradient(rgba(99, 102, 241, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(99, 102, 241, 0.05) 1px, transparent 1px);
+  background-size: 30px 30px;
+  animation: gridMove 20s linear infinite;
+}
+
+@keyframes cardAppear {
+  0% {
+    transform: translateY(30px);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes checkLine1 {
+  0% {
+    height: 0;
+    opacity: 1;
+  }
+  100% {
+    height: 30px;
+    opacity: 1;
+  }
+}
+
+@keyframes checkLine2 {
+  0% {
+    width: 0;
+    opacity: 1;
+  }
+  100% {
+    width: 40px;
+    opacity: 1;
+  }
+}
+
+@keyframes ringExpand {
+  0% {
+    transform: scale(0.5);
+    opacity: 0;
+  }
+  50% {
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 0.2;
+  }
+}
+
+@keyframes fadeInUp {
+  0% {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes progress {
+  0% {
+    width: 0%;
+  }
+  5% {
+    width: 5%;
+  }
+  10% {
+    width: 15%;
+  }
+  30% {
+    width: 40%;
+  }
+  50% {
+    width: 65%;
+  }
+  70% {
+    width: 80%;
+  }
+  90% {
+    width: 90%;
+  }
+  100% {
+    width: 100%;
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-20px) rotate(10deg);
+  }
+}
+
+@keyframes gridMove {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(30px);
+  }
+}
+
+.cyber-lines {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    90deg,
+    #6366f11a 1px,
+    transparent 1px
+  )
+  0 0 / 50px 50px,
+linear-gradient(rgba(99, 102, 241, 0.1) 1px, transparent 1px) 0 0 / 50px
+  50px;
+}

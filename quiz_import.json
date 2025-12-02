@@ -1,0 +1,43 @@
+{
+  "quiz": [
+    {
+      "id": "q1",
+      "type": "multiple_choice",
+      "question": "JavaScript là ngôn ngữ lập trình thuộc loại nào?",
+      "points": 2,
+      "options": [
+        "Ngôn ngữ lập trình biên dịch",
+        "Ngôn ngữ lập trình thông dịch",
+        "Ngôn ngữ lập trình assembly",
+        "Ngôn ngữ lập trình cấp thấp"
+      ],
+      "correctAnswer": "Ngôn ngữ lập trình thông dịch"
+    },
+    {
+      "id": "q2", 
+      "type": "multiple_choice",
+      "question": "Trong React, hook nào được sử dụng để thực hiện side effects?",
+      "points": 1,
+      "options": [
+        "useState",
+        "useEffect",
+        "useContext",
+        "useReducer"
+      ],
+      "correctAnswer": "useEffect"
+    },
+    {
+      "id": "q3",
+      "type": "multiple_choice", 
+      "question": "Phương thức HTTP nào không làm thay đổi trạng thái của server?",
+      "points": 2,
+      "options": [
+        "POST",
+        "PUT", 
+        "GET",
+        "DELETE"
+      ],
+      "correctAnswer": "GET"
+    }
+  ]
+} 

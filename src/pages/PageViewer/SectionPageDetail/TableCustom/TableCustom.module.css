@@ -1,0 +1,250 @@
+.main {
+    width: 100%;
+    height: 100%;
+}
+
+.pageInfo {
+    height: 60px;
+    display: flex;
+    /*justify-content: space-between;*/
+    /*align-items: center;*/
+    margin-bottom: 25px;
+    margin-top: 25px;
+    align-items: stretch;
+    gap: 10px;
+    flex-direction: column;
+}
+.pageTitle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: max-content;
+}
+
+
+.info {
+    flex: 1;
+    height: 7%;
+    display: flex;
+    justify-content: end;
+    align-items: center;
+}
+@media (max-width: 768px) {
+    .pageInfo {
+        height: 8%;
+        flex-direction: column !important;
+        align-items: stretch;
+        gap: 10px;
+        margin-top: 15px;
+    }
+    .pageTitle, .info {
+        width: 100%;
+    }
+    .pageTitle {
+        padding-left: 10px;
+    }
+}
+
+.button {
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: 500;
+    color: #454545;
+    padding: 8px 12px;
+    border: solid 1px #cccccc;
+    border-radius: 10px;
+    margin-right: 5px;
+}
+
+.nameElement {
+    font-size: 20px;
+    font-weight: 500;
+    padding-left: 10px;
+}
+
+.optionButton {
+    height: 20px;
+    display: flex;
+    justify-content: end;
+    gap: 30px;
+}
+
+.optionButton > span {
+    font-weight: 500;
+    cursor: pointer;
+}
+
+
+.cardList {
+    height: calc(100% - 100px);
+    overflow: auto;
+    margin-top: 1em;
+    padding: 12px 15px 45px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.card {
+    background: rgba(255, 255, 255, 0.6);
+    border-radius: 12px;
+    /*box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.08);*/
+    padding: 16px;
+    border: 1px solid rgba(200, 200, 200, 0.3);
+}
+
+/*.image {*/
+/*    width: 100%;*/
+/*    height: 250px;*/
+/*    background: white;*/
+/*    border-radius: 4px;*/
+/*    margin-bottom: 12px;*/
+/*}*/
+
+.content {
+    /*display: flex;*/
+    /*flex-direction: column;*/
+    /*gap : 5px ;*/
+    margin-top: 10px;
+
+}
+
+.title {
+    font-weight: 700;
+    font-size: 17.5px;
+    margin-bottom: 6px;
+    color: #262626;
+}
+
+.desc,
+.note,
+.amount,
+.attach,
+.update,
+.create,
+.action {
+    font-size: 14px;
+    margin-bottom: 8px;
+    color: #454545;
+}
+
+/*.update {*/
+/*    font-size: 13px;*/
+/*    color: #555;*/
+
+/*}*/
+
+.create {
+   margin-right: 10px;
+}
+
+.footer {
+    display: flex;
+    justify-content: end;
+    align-items: center;
+    margin-top: 10px;
+}
+
+.action {
+    margin-left: 10px;
+    cursor: pointer;
+    color: black;
+}
+
+/* Chrome, Safari, Edge */
+.customScrollbar::-webkit-scrollbar {
+    width: 8px;
+    background: #f5f5f5;
+}
+.customScrollbar::-webkit-scrollbar-thumb {
+    background: #f5f5f5; /* Custom thumb color */
+    border-radius: 4px;
+}
+.customScrollbar::-webkit-scrollbar-thumb:hover {
+    background: #f5f5f5; /* Thumb color on hover */
+}
+.customScrollbar::-webkit-scrollbar-track {
+    background: #f5f5f5; /* Track color */
+}
+
+/* Firefox */
+.customScrollbar {
+    scrollbar-width: none;
+    scrollbar-color:  #ffffff #ffffff; /* thumb color track color */
+}
+.plusCircle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    /*border: 1px solid #454545;*/
+    /*border-radius: 50%;*/
+    color: #454545;
+    font-weight: bold;
+    font-size: 22px;
+    margin-right: 2px;
+    padding-bottom: 2px;
+}
+
+.plusCircleMobile {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    /*border: 1px solid #454545;*/
+    /*border-radius: 50%;*/
+    color: #454545;
+    font-weight: bold;
+    font-size: 16px;
+    margin-right: 2px;
+    padding-bottom: 2px;
+}
+.mobileText {
+    font-size: 13px;
+}
+/* In TableCustom.module.css */
+.footerActions {
+}
+
+@media (max-width: 768px) {
+    .footerActions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 7px;
+        margin-top: 5px;
+        margin-right: 10px;
+    }
+}
+.timeInfo {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+@media (max-width: 768px) {
+    .timeInfo {
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 2px;
+    }
+}
+.hideOnMobile {
+    display: inline;
+}
+
+@media (max-width: 768px) {
+    .hideOnMobile {
+        display: none;
+    }
+}
+
+.fileNameEllipsis {
+    max-width: 180px; /* adjust as needed */
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    display: inline-block;
+    vertical-align: middle;
+}

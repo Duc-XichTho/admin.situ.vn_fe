@@ -1,0 +1,65 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #333;
+  overflow: hidden; /* Ngăn scroll không cần thiết */
+}
+
+.mainContent {
+  display: flex;
+  flex: 1;
+  gap: 10px;
+  padding: 10px;
+  min-height: 0; /* Quan trọng cho flexbox */
+  overflow: hidden; /* Ngăn scroll không cần thiết */
+}
+
+/* Đảm bảo các panels có thể scroll nội dung */
+.mainContent > * {
+  overflow: hidden;
+}
+
+.mainContent > * > * {
+  overflow-y: auto;
+  height: 100%;
+}
+
+@media (max-width: 1200px) {
+  .mainContent {
+    gap: 8px;
+  }
+}
+
+@media (max-width: 768px) {
+  .container {
+    height: auto;
+    min-height: 100vh;
+    overflow: auto;
+  }
+  
+  .mainContent {
+    flex-direction: column;
+    gap: 10px;
+    overflow: visible;
+    height: auto;
+  }
+  
+  .mainContent > * {
+    overflow: visible;
+  }
+  
+  .mainContent > * > * {
+    overflow: visible;
+    height: auto;
+  }
+}
+
+@media (max-width: 480px) {
+  .mainContent {
+    padding: 5px;
+    gap: 5px;
+  }
+} 

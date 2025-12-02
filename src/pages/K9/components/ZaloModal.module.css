@@ -1,0 +1,264 @@
+.overlay {
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background-color: rgba(0, 0, 0, 0.5);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	z-index: 1000;
+}
+
+.modal {
+	background: white;
+	border-radius: 12px;
+	box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+	width: 90%;
+	max-width: 600px;
+	max-height: 90vh;
+	overflow: hidden;
+}
+
+.header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: 20px 24px;
+	border-bottom: 1px solid #e8e8e8;
+}
+
+.header h3 {
+	margin: 0;
+	font-size: 18px;
+	font-weight: 600;
+	color: #333;
+}
+
+.closeButton {
+	background: none;
+	border: none;
+	font-size: 24px;
+	cursor: pointer;
+	color: #999;
+	padding: 0;
+	width: 32px;
+	height: 32px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: 50%;
+	transition: all 0.2s;
+}
+
+.closeButton:hover {
+	background-color: #f5f5f5;
+	color: #666;
+}
+
+.content {
+	padding: 24px;
+}
+
+.imageContainer {
+	text-align: center;
+	margin-bottom: 24px;
+	position: relative;
+}
+
+.zaloImage {
+	width: 160px;
+	height: 160px;
+	border-radius: 5%;
+	object-fit: cover;
+	border: 3px solid #e8e8e8;
+}
+
+.imageInput {
+	display: none;
+}
+
+.imageUploadLabel {
+	display: inline-block;
+	margin-top: 12px;
+	padding: 8px 16px;
+	background: #1890ff;
+	color: white;
+	border-radius: 6px;
+	cursor: pointer;
+	font-size: 14px;
+	transition: background 0.2s;
+}
+
+.imageUploadLabel:hover:not(.disabled) {
+	background: #40a9ff;
+}
+
+.imageUploadLabel.disabled {
+	background: #d9d9d9;
+	cursor: not-allowed;
+	opacity: 0.6;
+}
+
+.phoneSection {
+	margin-bottom: 20px;
+}
+
+.phoneSection h4 {
+	margin: 0 0 12px 0;
+	font-size: 16px;
+	font-weight: 600;
+	color: #333;
+}
+
+.phoneDisplay {
+	display: flex;
+	align-items: center;
+	gap: 16px;
+}
+
+.phoneNumber {
+	font-size: 18px;
+	font-weight: 600;
+	color: #1890ff;
+	padding: 8px 16px;
+	border-radius: 6px;
+}
+
+.copyButton {
+	padding: 8px 16px;
+	background: #1890ff;
+	color: white;
+	border: none;
+	border-radius: 6px;
+	cursor: pointer;
+	font-size: 14px;
+	transition: background 0.2s;
+}
+
+.copyButton:hover {
+	background: #1890ff;
+}
+
+.textSection {
+	margin-bottom: 24px;
+}
+
+.textSection h4 {
+	margin: 0 0 12px 0;
+	font-size: 16px;
+	font-weight: 600;
+	color: #333;
+}
+
+.zaloText {
+	margin: 0;
+	padding: 16px;
+	background: #fafafa;
+	border-radius: 6px;
+	border: 1px solid #e8e8e8;
+	line-height: 1.6;
+	color: #666;
+}
+
+.adminActions {
+	text-align: center;
+	padding-top: 16px;
+	border-top: 1px solid #e8e8e8;
+}
+
+.editButton {
+	padding: 10px 20px;
+	background: #1890ff;
+	color: white;
+	border: none;
+	border-radius: 6px;
+	cursor: pointer;
+	font-size: 14px;
+	transition: background 0.2s;
+}
+
+.editButton:hover {
+	background: #1890ff;
+}
+
+.editForm {
+	margin-bottom: 24px;
+}
+
+.inputGroup {
+	margin-bottom: 20px;
+}
+
+.inputGroup label {
+	display: block;
+	margin-bottom: 8px;
+	font-weight: 500;
+	color: #333;
+}
+
+.inputGroup input,
+.inputGroup textarea {
+	width: 100%;
+	padding: 12px 16px;
+	border: 1px solid #d9d9d9;
+	border-radius: 6px;
+	font-size: 14px;
+	transition: border-color 0.2s;
+	font-family: inherit;
+}
+
+.inputGroup input:focus,
+.inputGroup textarea:focus {
+	outline: none;
+	border-color: #1890ff;
+	box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+}
+
+.inputGroup textarea {
+	resize: vertical;
+	min-height: 80px;
+}
+
+.editActions {
+	display: flex;
+	gap: 12px;
+	justify-content: flex-end;
+}
+
+.cancelButton {
+	padding: 10px 20px;
+	border: 1px solid #d9d9d9;
+	background: white;
+	color: #666;
+	border-radius: 6px;
+	cursor: pointer;
+	font-size: 14px;
+	transition: all 0.2s;
+}
+
+.cancelButton:hover {
+	border-color: #1890ff;
+	color: #1890ff;
+}
+
+.saveButton {
+	padding: 10px 20px;
+	border: none;
+	background: #52c41a;
+	color: white;
+	border-radius: 6px;
+	cursor: pointer;
+	font-size: 14px;
+	transition: all 0.2s;
+}
+
+.saveButton:hover:not(:disabled) {
+	background: #73d13d;
+}
+
+.saveButton:disabled {
+	background: #d9d9d9;
+	cursor: not-allowed;
+}

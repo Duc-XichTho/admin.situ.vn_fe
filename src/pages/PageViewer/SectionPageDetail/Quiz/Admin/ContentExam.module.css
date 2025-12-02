@@ -1,0 +1,784 @@
+.examContainer {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    max-height: 70vh;
+    overflow: auto;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.saveButton {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: #2ecc71;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.saveButton:hover {
+    background: #27ae60;
+}
+
+.contentWrapper {
+    display: flex;
+    gap: 20px;
+    width: 100%;
+    height: 95%;
+
+}
+
+/* Form tạo câu hỏi */
+.questionForm {
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    width: 400px;
+    flex-shrink: 0;
+    height: 100%;
+}
+
+.formGroup {
+    margin-bottom: 20px;
+}
+
+.formGroup label {
+    display: block;
+    margin-bottom: 8px;
+    color: #2c3e50;
+    font-weight: 500;
+}
+
+.formGroup input[type="text"],
+.formGroup input[type="number"],
+.formGroup textarea,
+.formGroup select {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.formGroup textarea {
+    min-height: 100px;
+    resize: vertical;
+}
+
+.optionsSection {
+    margin-top: 20px;
+}
+
+.optionsHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.addOptionButton {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    background: #f8f9fa;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.addOptionButton:hover {
+    background: #e9ecef;
+}
+
+.optionItem {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+    padding: 8px;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+}
+
+.optionItem input[type="text"] {
+    flex: 1;
+}
+
+.removeButton {
+    background: none;
+    border: none;
+    color: #e74c3c;
+    cursor: pointer;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: background 0.2s;
+}
+
+.removeButton:hover {
+    background: #fee2e2;
+}
+
+.editButton {
+    background: none;
+    border: none;
+    color: #3498db;
+    cursor: pointer;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: background 0.2s;
+}
+
+.editButton:hover {
+    background: #ebf5fb;
+}
+
+.formActions {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.addQuestionButton {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    background: #3498db;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.2s;
+    flex: 1;
+    justify-content: center;
+}
+
+.addQuestionButton:hover {
+    background: #2980b9;
+}
+
+.addQuestionButton:disabled {
+    background: #bdc3c7;
+    cursor: not-allowed;
+}
+
+.cancelButton {
+    padding: 10px 20px;
+    background: #e74c3c;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.cancelButton:hover {
+    background: #c0392b;
+}
+
+/* Danh sách câu hỏi */
+.questionsList {
+    background: #f8f9fa;
+    border-radius: 16px;
+    padding: 32px;
+    max-height: 58vh;
+    width: calc(100% - 400px);
+    overflow: auto;
+}
+
+.questionsList h3 {
+    margin-bottom: 20px;
+    color: #2c3e50;
+}
+
+.questionSection {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 32px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.sectionTitle {
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.sectionTitle .questionType {
+    font-size: 15px;
+    padding: 8px 16px;
+    font-weight: 600;
+    border: none;
+}
+
+.sectionTitle .questionType.multiple_choice {
+    background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+    color: #1565c0;
+}
+
+.sectionTitle .questionType.essay {
+    background: linear-gradient(135deg, #fce4ec 0%, #f8bbd0 100%);
+    color: #c2185b;
+}
+
+.questionItem {
+    background: #ffffff;
+    border-radius: 10px;
+    padding: 24px;
+    margin-bottom: 16px;
+    border: 1px solid #edf2f7;
+    transition: all 0.2s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.questionItem::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 4px;
+}
+
+.questionItem.multiple_choice::before {
+    background: linear-gradient(to bottom, #1976d2, #2196f3);
+}
+
+.questionItem.essay::before {
+    background: linear-gradient(to bottom, #c2185b, #e91e63);
+}
+
+.questionItem:hover {
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    transform: translateY(-2px);
+}
+
+.questionHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.questionHeader h4 {
+    font-size: 16px;
+    font-weight: 600;
+    color: #2d3748;
+}
+
+.questionActions {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.points {
+    background: #edf2f7;
+    color: #2d3748;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.questionText {
+    color: #4a5568;
+    margin-bottom: 20px;
+    line-height: 1.6;
+    font-size: 15px;
+}
+
+.optionsList {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 16px;
+}
+
+.optionsList .optionItem {
+    flex: 0 0 calc(25% - 9px); /* 25% cho 4 items, trừ đi 9px để tính khoảng gap */
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 12px 16px;
+    color: #4a5568;
+    font-size: 14px;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    min-height: 48px;
+}
+
+@media (max-width: 1400px) {
+    .optionsList .optionItem {
+        flex: 0 0 calc(50% - 6px); /* 50% cho 2 items mỗi hàng */
+    }
+}
+
+@media (max-width: 768px) {
+    .optionsList .optionItem {
+        flex: 0 0 100%; /* 1 item full width */
+    }
+}
+
+.optionsList .optionItem.correctAnswer {
+    background: #f0fff4;
+    border-color: #9ae6b4;
+    color: #2f855a;
+    font-weight: 500;
+}
+
+.essayInfo {
+    margin-top: 16px;
+    padding: 12px 16px;
+    background: #f8fafc;
+    border-radius: 8px;
+    color: #4a5568;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border: 1px solid #e2e8f0;
+}
+
+.editButton, .removeButton {
+    padding: 8px;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+.editButton {
+    color: #3182ce;
+    background: #ebf8ff;
+}
+
+.editButton:hover {
+    background: #bee3f8;
+}
+
+.removeButton {
+    color: #e53e3e;
+    background: #fff5f5;
+}
+
+.removeButton:hover {
+    background: #fed7d7;
+}
+
+/* Custom scrollbar */
+.questionForm::-webkit-scrollbar,
+.questionsList::-webkit-scrollbar {
+    width: 8px;
+}
+
+.questionForm::-webkit-scrollbar-track,
+.questionsList::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+.questionForm::-webkit-scrollbar-thumb,
+.questionsList::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 4px;
+}
+
+.questionForm::-webkit-scrollbar-thumb:hover,
+.questionsList::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+    .contentWrapper {
+        flex-direction: column;
+    }
+
+    .questionForm {
+        width: 100%;
+        height: auto;
+        margin-bottom: 20px;
+    }
+
+    .questionsList {
+        height: auto;
+    }
+
+    .formActions {
+        flex-direction: column;
+    }
+
+    .cancelButton {
+        width: 100%;
+    }
+}
+
+.teacherButton {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: #4299e1;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.teacherButton:hover {
+    background: #3182ce;
+}
+
+.modalOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal {
+    background: white;
+    border-radius: 12px;
+    padding: 24px;
+    width: 60vh;
+    height: 65vh;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.modal h3 {
+    margin: 0;
+    color: #2d3748;
+    font-size: 18px;
+}
+
+.teacherList {
+    overflow-y: auto;
+    padding-right: 16px;
+    max-height: 400px;
+}
+
+.teacherItem {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.teacherItem:last-child {
+    border-bottom: none;
+}
+
+.teacherItem input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+}
+
+.teacherItem label {
+    color: #4a5568;
+    font-size: 14px;
+    cursor: pointer;
+    flex: 1;
+}
+
+.modalActions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: auto;
+    padding-top: 16px;
+    border-top: 1px solid #e2e8f0;
+}
+
+.modalActions .saveButton {
+    padding: 8px 16px;
+    background: #48bb78;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.modalActions .saveButton:hover {
+    background: #38a169;
+}
+
+.modalActions .cancelButton {
+    padding: 8px 16px;
+    background: #e2e8f0;
+    color: #4a5568;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.modalActions .cancelButton:hover {
+    background: #cbd5e0;
+}
+
+/* Custom scrollbar cho teacherList */
+.teacherList::-webkit-scrollbar {
+    width: 6px;
+}
+
+.teacherList::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+.teacherList::-webkit-scrollbar-thumb {
+    background: #cbd5e0;
+    border-radius: 3px;
+}
+
+.teacherList::-webkit-scrollbar-thumb:hover {
+    background: #a0aec0;
+}
+
+.headerActions {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.selectedTeachers {
+    color: #4a5568;
+    font-size: 14px;
+    padding: 6px 12px;
+    background: #edf2f7;
+    border-radius: 6px;
+}
+
+.searchBox {
+    position: relative;
+    margin-bottom: 16px;
+}
+
+.searchBox svg {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #a0aec0;
+}
+
+.searchBox input {
+    width: 100%;
+    padding: 10px 12px 10px 40px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 14px;
+    color: #4a5568;
+    transition: all 0.2s ease;
+}
+
+.searchBox input:focus {
+    outline: none;
+    border-color: #4299e1;
+    box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
+}
+
+.searchBox input::placeholder {
+    color: #a0aec0;
+}
+
+.teacherInfo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.teacherEmail {
+    font-weight: 500;
+}
+
+.adminBadge, .approvedBadge {
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.adminBadge {
+    background: #ebf8ff;
+    color: #3182ce;
+    border: 1px solid #bee3f8;
+}
+
+.approvedBadge {
+    background: #f0fff4;
+    color: #38a169;
+    border: 1px solid #c6f6d5;
+}
+
+.noResults {
+    text-align: center;
+    padding: 24px;
+    color: #718096;
+    font-size: 14px;
+    background: #f7fafc;
+    border-radius: 8px;
+    border: 1px dashed #e2e8f0;
+}
+
+.uploadButton {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: #3498db;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.uploadButton:hover {
+    background: #2980b9;
+}
+
+.downloadButton {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: #2ecc71;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.downloadButton:hover {
+    background: #27ae60;
+}
+
+.downloadButton:disabled {
+    background: #bdc3c7;
+    cursor: not-allowed;
+}
+
+.message {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 12px 20px;
+    border-radius: 4px;
+    font-weight: 500;
+    z-index: 1000;
+    animation: slideIn 0.3s ease-out;
+}
+
+.success {
+    background-color: #4caf50;
+    color: white;
+}
+
+.error {
+    background-color: #f44336;
+    color: white;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+.errorMessage {
+    position: fixed !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+}
+
+.errorMessage :global(.ant-message-notice-content) {
+    padding: 16px !important;
+    box-shadow: 0 3px 6px -4px rgba(0, 0, 0, 0.12), 0 6px 16px 0 rgba(0, 0, 0, 0.08), 0 9px 28px 8px rgba(0, 0, 0, 0.05) !important;
+}
+
+.pointPassContainer {
+    display: flex;
+    align-items: center;
+    margin-right: 15px;
+}
+
+.pointPassContainer label {
+    margin-right: 8px;
+    color: #333;
+    font-weight: 500;
+}
+
+.percentageInputWrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.pointPassSelect {
+    width: 100px;
+    height: 32px;
+    padding: 4px 8px;
+    border: 1px solid #d9d9d9;
+    border-radius: 4px;
+    font-size: 14px;
+    background-color: white;
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 8px center;
+    background-size: 16px;
+    padding-right: 32px;
+}
+
+.pointPassSelect:focus {
+    border-color: #1890ff;
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+}
+
+.pointPassSelect:hover {
+    border-color: #40a9ff;
+} 

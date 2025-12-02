@@ -1,0 +1,603 @@
+.loginBg {
+  min-height: 100vh;
+  background: #0a3d62;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modalContainer {
+  height: 80vh;
+  overflow-y: auto;
+  padding-right: 8px;
+  padding-bottom: 8px;
+}
+
+.modalScrollContainer {
+  max-height: 40vh;
+  overflow-y: auto;
+  padding-right: 8px;
+}
+
+
+.btnDescInBtn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+.btnDesc {
+  display: block;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+.btnDescSmall {
+  display: block;
+  font-size: 11px;
+  color: #eee;
+  font-weight: 400;
+  line-height: 1.2;
+  margin-top: 2px;
+  letter-spacing: 0.1px;
+  opacity: 0.85;
+}
+
+.redBtn .btnDescSmall {
+  color: #fff;
+  opacity: 0.85;
+}
+
+.blackBtn .btnDescSmall {
+  color: #ccc;
+  opacity: 0.85;
+}
+
+.loginCard {
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+  padding: 72px 56px 64px 56px;
+  min-width: 600px;
+  max-width: 95vw;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.logoRow {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 12px;
+  gap: 18px;
+}
+.logoRow > img {
+  width: 64px;
+}
+
+.logoBox {
+  background: #e53935;
+  color: #fff;
+  /* font-weight: bold; */
+  font-size: 32px;
+  /* border-radius: 8px; */
+  width: 64px;
+  height: 80px;
+  display: flex
+;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  line-height: 1.1;
+}
+.brandTitle {
+  font-size: 28px;
+  font-weight: 700;
+  text-align: left;
+}
+.logoText{
+  font-size: 48px;
+}
+.brandDesc{
+  font-size: 16px;
+  color: #727272;
+  text-align: left;
+}
+.brandDescTitle {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 4px;
+  text-align: center;
+}
+.brandDescSub {
+  font-size: 16px;
+  color: #444;
+  text-align: center;
+  margin-bottom: 8px;
+}
+.hr {
+  width: 100%;
+  border-bottom: 1px solid #ddd;
+  margin: 20px 0 12px 0;
+}
+.loginSwitch {
+  margin: 0 0 20px 0;
+  font-size: 15px;
+  color: #222;
+  text-align: center;
+}
+.loginActions {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 40px;
+  width: 100%;
+  margin-top: 0;
+  margin-bottom: 0;
+}
+.actionBtnWrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 200px;
+}
+.redBtn {
+  background: #e53935 !important;
+  border: none !important;
+  color: #fff !important;
+  font-weight: 600;
+  width: 100%;
+  height: 64px;
+  font-size: 17px;
+  border-radius: 8px !important;
+}
+.blackBtn {
+  background: #222 !important;
+  border: none !important;
+  color: #fff !important;
+  font-weight: 600;
+  width: 100%;
+  height: 64px;
+  font-size: 17px;
+  border-radius: 8px !important;
+}
+
+/* Responsive cho mobile */
+@media (max-width: 700px) {
+  .loginCard {
+    min-width: 0;
+    width: 98vw;
+    padding: 28px 8vw 24px 8vw;
+  }
+  .logoRow {
+    gap: 10px;
+  }
+  .loginActions {
+    flex-direction: column;
+    gap: 18px;
+    align-items: center;
+  }
+  .actionBtnWrap {
+    width: 100%;
+    max-width: 350px;
+  }
+  .redBtn, .blackBtn {
+    height: 44px;
+    font-size: 15px;
+  }
+  .brandTitle {
+    font-size: 22px;
+  }
+  .brandDescTitle {
+    font-size: 17px;
+  }
+  .brandDescSub {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 400px) {
+  .loginCard {
+    padding: 12px 2vw 12px 2vw;
+  }
+  .logoBox {
+    width: 48px;
+    height: 48px;
+    font-size: 22px;
+  }
+  .actionBtnWrap {
+    max-width: 98vw;
+  }
+} 
+
+
+.modalTitle {
+  text-align: center;
+}
+
+.modalTitleMain {
+  font-size: 20px;
+  font-weight: 600;
+  color: #222;
+  margin-bottom: 4px;
+}
+
+.modalTitleSub {
+  font-size: 14px;
+  color: #666;
+  font-weight: 400;
+}
+
+.modalForm {
+  margin-top: 8px;
+}
+
+.formItem {
+  margin-bottom: 20px;
+}
+
+.formItem .ant-form-item-label > label {
+  font-weight: 500;
+  color: #333;
+  font-size: 14px;
+}
+
+.formItem .ant-input,
+.formItem .ant-input-password {
+  border-radius: 8px;
+  border: 1px solid #d9d9d9;
+  padding: 12px 16px;
+  font-size: 14px;
+}
+
+.formItem .ant-input:focus,
+.formItem .ant-input-password:focus,
+.formItem .ant-input:hover,
+.formItem .ant-input-password:hover {
+  border-color: #1890ff;
+  box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.1);
+}
+
+.modalSubmitBtn {
+  height: 48px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 16px;
+  margin-top: 8px;
+  background: #1890ff;
+  border: none;
+}
+
+.modalSubmitBtn:hover {
+  background: #40a9ff;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(24, 144, 255, 0.3);
+} 
+
+/* Register options styles */
+.registerOptions {
+  margin-bottom: 16px;
+}
+
+.radioGroup {
+  width: 100%;
+  display: flex;
+  gap: 12px;
+}
+
+.radioButton {
+  flex: 1;
+  height: auto;
+  padding: 16px;
+  border-radius: 8px;
+  border: 1px solid #d9d9d9;
+  background: #fff;
+  transition: all 0.3s ease;
+}
+
+.radioButton:hover {
+  border-color: #1890ff;
+  box-shadow: 0 2px 8px rgba(24, 144, 255, 0.1);
+}
+
+.radioButton.ant-radio-button-wrapper-checked {
+  border-color: #1890ff !important;
+  background: #f0f8ff;
+  box-shadow: 0 2px 8px rgba(24, 144, 255, 0.15);
+}
+
+.radioButton.ant-radio-button-wrapper-checked::before {
+  display: none !important;
+}
+
+.radioButton::before {
+  display: none !important;
+}
+
+.radioButton:not(:first-child)::before {
+  display: none !important;
+}
+
+.radioContent {
+  text-align: center;
+}
+
+.radioTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: #222;
+  margin-bottom: 4px;
+}
+
+.radioDesc {
+  font-size: 12px;
+  color: #666;
+  line-height: 1.3;
+}
+
+/* Gmail register styles */
+.gmailRegister {
+  padding: 8px 0;
+}
+
+.gmailInfo {
+  display: flex;
+  align-items: center;
+  margin-bottom: 24px;
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+}
+
+.gmailIcon {
+  font-size: 32px;
+  margin-right: 16px;
+}
+
+.gmailText {
+  flex: 1;
+}
+
+.gmailTitle {
+  font-size: 16px;
+  font-weight: 600;
+  color: #222;
+  margin-bottom: 4px;
+}
+
+.gmailDesc {
+  font-size: 13px;
+  color: #666;
+  line-height: 1.4;
+}
+
+.gmailBtn {
+  height: 48px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 16px;
+  background: #4285f4;
+  border: none;
+}
+
+.gmailBtn:hover {
+  background: #3367d6;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(66, 133, 244, 0.3);
+}
+
+/* Divider style */
+.ant-divider {
+  margin: 20px 0;
+  border-color: #f0f0f0;
+}
+
+/* Responsive cho modal */
+@media (max-width: 500px) {
+  .radioGroup {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .radioButton {
+    padding: 12px;
+  }
+  
+  .gmailInfo {
+    flex-direction: column;
+    text-align: center;
+    padding: 16px;
+  }
+  
+  .gmailIcon {
+    margin-right: 0;
+    margin-bottom: 8px;
+  }
+} 
+
+/* Modal scroll content */
+.modalScrollContent {
+  height: 100%;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.modalScrollContent::-webkit-scrollbar {
+  width: 6px;
+}
+
+.modalScrollContent::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.modalScrollContent::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+.modalScrollContent::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* Modal footer button */
+.customModal .ant-modal-footer {
+  border-top: 1px solid #f0f0f0;
+  padding: 16px 24px;
+  text-align: center;
+}
+
+.customModal .ant-modal-footer .ant-btn {
+  height: 48px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 16px;
+}
+
+/* Terms & Service Agreement Styles */
+.formItem .ant-checkbox-wrapper {
+  padding: 16px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+  width: 100%;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.formItem .ant-checkbox-wrapper .ant-checkbox {
+  margin-top: 2px;
+}
+
+.termsText {
+  flex: 1;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #333;
+}
+
+.termsLink {
+  background: none;
+  border: none;
+  color: #1890ff;
+  text-decoration: underline;
+  cursor: pointer;
+  font-size: 14px;
+  padding: 0;
+  margin: 0;
+  font-weight: 500;
+  transition: color 0.2s ease;
+}
+
+.termsLink:hover {
+  color: #40a9ff;
+  text-decoration: none;
+}
+
+/* Terms Modal Content */
+.termsContent {
+  height: 100%;
+  overflow-y: auto;
+  padding-right: 8px;
+}
+
+.termsContent::-webkit-scrollbar {
+  width: 6px;
+}
+
+.termsContent::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.termsContent::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+.termsContent::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+.termsSection {
+  margin-bottom: 24px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.termsSection:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.termsSection h3 {
+  font-size: 16px;
+  font-weight: 600;
+  color: #222;
+  margin: 0 0 12px 0;
+}
+
+.termsSection p {
+  font-size: 14px;
+  line-height: 1.6;
+  color: #555;
+  margin: 0 0 12px 0;
+}
+
+.termsSection ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.termsSection li {
+  font-size: 14px;
+  line-height: 1.6;
+  color: #555;
+  margin-bottom: 8px;
+}
+
+.termsSection li:last-child {
+  margin-bottom: 0;
+}
+
+/* Responsive for terms */
+@media (max-width: 500px) {
+  .formItem .ant-checkbox-wrapper {
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px;
+  }
+  
+  .formItem .ant-checkbox-wrapper .ant-checkbox {
+    align-self: flex-start;
+  }
+  
+  .termsText {
+    font-size: 13px;
+  }
+  
+  .termsLink {
+    font-size: 13px;
+  }
+  
+  .termsSection h3 {
+    font-size: 15px;
+  }
+  
+  .termsSection p,
+  .termsSection li {
+    font-size: 13px;
+  }
+} 

@@ -1,0 +1,667 @@
+.main {
+    width: 100%;
+    height: 100%;
+}
+
+.tiptap img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 0 auto;
+}
+
+.content {
+    box-sizing: border-box;
+    width: 100%;
+    height: calc(100% - 70px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    background: #fff;
+    border-radius: 10px;
+    padding: 2px 16px 16px 0px;
+    box-shadow: 0 6px 20px #00000026;
+    border: 1px solid #ddd;
+}
+
+.pageInfo {
+    height: 25px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+    margin-top: 15px;
+    margin-left: 20px;
+}
+
+.pageTitle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: max-content;
+}
+
+.info {
+    flex: 1;
+    height: 7%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.infoLeft {
+    width: max-content;
+    height: 100%;
+}
+
+.nameElement {
+    font-size: 18px;
+    font-weight: 500
+}
+
+.infoElement {
+    width: 100%;
+    height: 40%;
+    display: flex;
+    align-items: center;
+}
+
+.infoElement span {
+    font-size: 12px;
+}
+
+.infoRight {
+    flex: 1;
+    /*width: 50%;*/
+    height: 100%;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+}
+
+.tiptap {
+    width: 100%;
+    height: 93%;
+}
+
+
+.controlGroup {
+    width: 100%;
+    height: max-content;
+    display: flex;
+
+}
+
+.buttonGroup {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    flex-wrap: wrap; /* 🧩 Thêm dòng này để bẻ xuống khi tràn */
+
+}
+
+.buttonGroup button {
+    height: 100%;
+    min-width: 40px;
+    color: black;
+    cursor: pointer;
+    background-color: transparent;
+}
+
+.buttonGroup button:hover {
+    background-color: #34b270;
+}
+
+.buttonGroup button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+}
+
+.isActive {
+    background-color: #34b270 !important;
+    color: white !important;
+}
+
+.editorContent {
+    width: 100%;
+    height: calc(100% - 65px);
+    box-shadow: none; /* thay vì xoá dòng này */
+    border-radius: 10px;
+    overflow: auto;
+}
+
+.editorContentFull {
+    /*margin-top: 10px;*/
+    width: 100%;
+    height: calc(100% - 10px);
+    box-shadow: none; /* thay vì xoá dòng này */
+    border-radius: 10px;
+    overflow: auto;
+}
+
+.editorContentWrap * {
+    line-height: 1.5 !important;
+    word-spacing: 1px;
+}
+
+.editorContentWrap {
+    width: 100%;
+    height: 100%;
+}
+
+.editorContentWrap :global(.tiptap) {
+    width: 100%;
+    height: 100%;
+    padding: 0.5em 0.5em 0.5em 1.5em;
+}
+
+.editorContentWrap :global(.tiptap:first-child) {
+    margin-top: 0;
+}
+
+.editorContentWrap :global(.tiptap blockquote) {
+    border-left: 3px solid red;
+    margin: 1.5rem 0;
+    padding-left: 1rem;
+}
+
+.editorContentWrap :global(.tiptap :is(ul, ol)) {
+    padding: 0 1rem;
+    margin: 1.25rem 1rem 1.25rem 0.4rem;
+}
+
+.editorContentWrap :global(.tiptap ol li p) {
+    margin: 0.25em 0;
+}
+
+.editorContentWrap :global(.tiptap hr) {
+    border: none;
+    border-top: 1px solid gray;
+    cursor: pointer;
+    margin: 1rem 0;
+}
+
+.resizableImageWrapper {
+    position: relative;
+    display: inline-block;
+    margin: 5px;
+}
+
+.resizableImage {
+    display: block;
+    max-width: 100%;
+}
+
+.resizeHandle {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    background-color: #007bff;
+    border-radius: 50%;
+    z-index: 10;
+}
+
+.resizeTopLeft {
+    top: -1px;
+    left: -1px;
+    cursor: nwse-resize;
+}
+
+.resizeTopRight {
+    top: -1px;
+    right: -1px;
+    cursor: nesw-resize;
+}
+
+.resizeBottomLeft {
+    bottom: -1px;
+    left: -1px;
+    cursor: nesw-resize;
+}
+
+.resizeBottomRight {
+    bottom: -1px;
+    right: -1px;
+    cursor: nwse-resize;
+}
+
+.resizableImageWrapper:hover .resizeHandle {
+    display: block;
+}
+
+.resizableImageWrapper .resizeHandle {
+    display: none;
+}
+
+.editorContentWrap :global(.tiptap table) {
+    border-collapse: collapse;
+    margin: 0;
+    overflow: hidden;
+    table-layout: fixed;
+    width: 100%;
+}
+
+.editorContentWrap :global(.tiptap td) {
+    border: 1px solid rgb(187, 183, 183);
+    box-sizing: border-box;
+    min-width: 1em;
+    padding: 5px;
+    position: relative;
+    vertical-align: top;
+}
+
+.editorContentWrap :global(.tiptap td > *) {
+    margin-bottom: 0;
+}
+
+.editorContentWrap :global(.tiptap th) {
+    background-color: #8080803f;
+    border: 1px solid rgb(187, 183, 183);
+    box-sizing: border-box;
+    min-width: 1em;
+    padding: 5px;
+    position: relative;
+    vertical-align: top;
+}
+
+.editorContentWrap :global(.tiptap th > *) {
+    margin-bottom: 0;
+}
+
+.editorContentWrap :global(.tiptap th) {
+    font-weight: bold;
+    text-align: left;
+}
+
+.editorContentWrap :global(.tiptap .selectedCell:after) {
+    background: gray;
+    opacity: 0.5;
+    content: "";
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    pointer-events: none;
+    position: absolute;
+    z-index: 2;
+}
+
+.editorContentWrap :global(.tiptap .column-resize-handle) {
+    background-color: rgb(0, 17, 255);
+    bottom: -2px;
+    pointer-events: none;
+    position: absolute;
+    right: -2px;
+    top: 0;
+    width: 4px;
+}
+
+.editorContentWrap :global(.tiptap .tableWrapper) {
+    margin: 1.5rem 0;
+    overflow-x: auto;
+}
+
+.editorContentWrap :global(.resize-cursor) {
+    cursor: ew-resize;
+    cursor: col-resize;
+}
+
+.fontSizeMenuContainer {
+    height: 100%;
+    position: relative;
+    display: inline-block;
+}
+
+.fontSizeDropdownMenu {
+    position: absolute;
+    top: 110%;
+    left: 0;
+    z-index: 10;
+    background-color: white;
+    border-radius: 4px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    width: max-content;
+}
+
+.fontSizeDropdownMenu button {
+    color: black;
+    display: flex;
+    align-items: center;
+    width: 100%;
+    text-align: left;
+    padding: 8px 12px;
+    border: none;
+    background: none;
+    cursor: pointer;
+}
+
+.fontSizeDropdownMenu button:hover {
+    color: white;
+}
+
+.fontSizeDropdownMenu button span {
+    margin-left: 8px;
+}
+
+.headingMenuContainer {
+    height: 100%;
+    position: relative;
+    display: inline-block;
+}
+
+.headingDropdownMenu {
+    position: absolute;
+    top: 110%;
+    left: 0;
+    z-index: 10;
+    background-color: white;
+    border-radius: 4px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    width: max-content;
+}
+
+.headingDropdownMenu button {
+    color: black;
+    display: flex;
+    align-items: center;
+    width: 100%;
+    text-align: left;
+    padding: 8px 12px;
+    border: none;
+    background: none;
+    cursor: pointer;
+}
+
+.headingDropdownMenu button:hover {
+    color: white;
+}
+
+.headingDropdownMenu button span {
+    margin-left: 8px;
+}
+
+.tableMenuContainer {
+    height: 100%;
+    position: relative;
+    display: inline-block;
+}
+
+.tableDropdownMenu {
+    position: absolute;
+    top: 110%;
+    left: 0;
+    z-index: 10;
+    background-color: white;
+    border-radius: 4px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    min-width: 200px;
+}
+
+.tableDropdownMenu button {
+    color: black;
+    display: flex;
+    align-items: center;
+    width: 100%;
+    text-align: left;
+    padding: 8px 12px;
+    border: none;
+    background: none;
+    cursor: pointer;
+}
+
+.tableDropdownMenu button:hover {
+    color: white;
+}
+
+.tableDropdownMenu button span {
+    margin-left: 8px;
+}
+
+.editorContentWrap :global(.tiptap mark) {
+    background-color: #FAF594;
+    border-radius: 0.4rem;
+    box-decoration-break: clone;
+    padding: 0.1rem 0.3rem;
+}
+
+.colorPickerContainer {
+    height: 100%;
+    position: relative;
+    display: inline-block;
+}
+
+.colorPickerDropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background: white;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 8px;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 4px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.colorPickerDropdown button {
+    width: 100%;
+    height: 24px;
+    border: none;
+}
+
+.colorPicker {
+    width: 100%;
+    min-width: 70px;
+    height: 30px;
+    padding: 0;
+    border: none;
+    cursor: pointer;
+}
+
+.fontMenuContainer {
+    height: 100%;
+    position: relative;
+    display: inline-block;
+}
+
+.fontDropdownMenu {
+    position: absolute;
+    top: 110%;
+    left: 0;
+    z-index: 10;
+    background-color: white;
+    border-radius: 4px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    min-width: 200px;
+}
+
+.fontDropdownMenu button {
+    color: black;
+    display: flex;
+    align-items: center;
+    width: 100%;
+    text-align: left;
+    padding: 8px 12px;
+    border: none;
+    background: none;
+    cursor: pointer;
+}
+
+.fontDropdownMenu button:hover {
+    color: white;
+}
+
+.fontDropdownMenu button span {
+    margin-left: 8px;
+}
+
+.lineHeightMenuContainer {
+    height: 100%;
+    position: relative;
+    display: inline-block;
+}
+
+.lineHeightDropdownMenu {
+    position: absolute;
+    top: 110%;
+    left: 0;
+    z-index: 10;
+    background-color: white;
+    border-radius: 4px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    min-width: 200px;
+}
+
+.lineHeightDropdownMenu button {
+    color: black;
+    display: flex;
+    align-items: center;
+    width: 100%;
+    text-align: left;
+    padding: 8px 12px;
+    border: none;
+    background: none;
+    cursor: pointer;
+}
+
+.lineHeightDropdownMenu button:hover {
+    color: white;
+}
+
+.lineHeightDropdownMenu button span {
+    margin-left: 8px;
+}
+
+.editorContentWrap :global(.tiptap p.is-editor-empty:first-child::before) {
+    color: gray;
+    content: attr(data-placeholder);
+    float: left;
+    height: 0;
+    pointer-events: none;
+}
+
+.controlContainer {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 20px;
+}
+
+.editMode {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 5px;
+    cursor: pointer;
+    animation: slideIn 0.5s ease-out forwards;
+    transition: background-color 0.5s ease;
+}
+
+
+.editMode:hover {
+    background-color: #34b270;
+    padding: 0.3em;
+    border-radius: 5px;
+    color: #fff;
+}
+
+.slideButton {
+    animation: slideIn 0.5s ease-out forwards;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+
+.loadingCircle {
+    border: 4px solid #f3f3f3; /* Màu nền */
+    border-top: 4px solid #3498db; /* Màu của vòng tròn */
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    animation: spin 2s linear infinite;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+.buttonWrap {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+}
+
+.buttonWrap img {
+    width: 20px;
+    margin-right: 5px;
+}
+
+.buttonWrap span {
+    font-size: 16.5px;
+}
+
+.customSwitch {
+    display: flex;
+    align-items: center;
+    height: 25px;
+}
+
+.customSwitch:global(.ant-switch.ant-switch-checked) {
+    background: var(--sab-header-bg) !important;
+}
+
+.customSwitch > div {
+    width: 19px !important;
+    height: 19px !important;
+}
+
+.customSwitch > span > span {
+    font-size: 15px !important;
+    padding-top: 1px !important;
+}
+
+
+/* Chrome, Safari, Edge */
+.customScrollbar::-webkit-scrollbar {
+    width: 8px;
+    background: #ffffff;
+}
+.customScrollbar::-webkit-scrollbar-thumb {
+    background: #ffffff; /* Custom thumb color */
+    border-radius: 4px;
+}
+.customScrollbar::-webkit-scrollbar-thumb:hover {
+    background: #ffffff; /* Thumb color on hover */
+}
+.customScrollbar::-webkit-scrollbar-track {
+    background: #ffffff; /* Track color */
+}
+
+/* Firefox */
+.customScrollbar {
+    scrollbar-width: thin;
+    scrollbar-color:  #ffffff #ffffff; /* thumb color track color */
+}

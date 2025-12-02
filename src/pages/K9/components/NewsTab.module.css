@@ -1,0 +1,427 @@
+/* NewsTab.module.css */
+
+/* Search highlight styles */
+:global(.markdownContent mark) {
+  background-color: #fff3cd !important;
+  color: #856404;
+  padding: 2px 0;
+  border-radius: 2px;
+}
+
+:global(.markdownContent mark.highlighted) {
+  background-color: #ffd700 !important;
+  color: #000;
+  animation: pulse 1s ease-in-out;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    background-color: #ffd700;
+  }
+  50% {
+    background-color: #ffed4e;
+  }
+}
+
+.contentPanel {
+  animation: slideInFromCenter 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  transform-origin: center;
+  opacity: 0;
+  animation-fill-mode: forwards;
+  will-change: transform, opacity;
+  /* width: 75%; */
+}
+
+.modalContent :global(.ant-modal-content) {
+  height: 100vh !important;
+  /* top: -100px !important; */
+}
+
+
+/* Override Ant Design Modal styles with higher specificity */
+/* .modalContent :global(.ant-modal),
+.modalContent :global(:where(.css-dev-only-do-not-override-1x0dypw).ant-modal),
+:global(.ant-modal.modalContent),
+:global(:where(.css-dev-only-do-not-override-1x0dypw).ant-modal.modalContent) {
+  top: 0px !important;
+  padding-bottom: 0px !important;
+} */
+
+
+.contentMain {
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+}
+
+.contentHeader {
+  animation: fadeInUp 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.2s both;
+  will-change: transform, opacity;
+}
+
+.contentBody {
+  animation: fadeInUp 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.4s both;
+  will-change: transform, opacity;
+}
+
+.coverImageContainer {
+  animation: zoomIn 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.3s both;
+  will-change: transform, opacity;
+}
+
+/* Value Section Animations */
+.valueSection {
+  animation: slideInFromCenter 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.3s both;
+  will-change: transform, opacity;
+}
+
+.valueSectionTitle {
+  animation: fadeInUp 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.4s both;
+  will-change: transform, opacity;
+}
+
+.valueSectionContent {
+  animation: fadeInUp 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.5s both;
+  will-change: transform, opacity;
+}
+
+.valueSummary {
+  animation: slideInFromLeft 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.6s both;
+  will-change: transform, opacity;
+}
+
+.valueImage {
+  animation: zoomIn 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.7s both;
+  will-change: transform, opacity;
+}
+
+/* Keyframe Animations */
+@keyframes slideInFromCenter {
+  0% {
+    opacity: 0;
+    transform: scale(0.8) translateY(20px) rotateX(10deg);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(0.95) translateY(10px) rotateX(5deg);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0) rotateX(0deg);
+  }
+}
+
+@keyframes fadeInUp {
+  0% {
+    opacity: 0;
+    transform: translateY(30px) scale(0.95);
+  }
+  50% {
+    opacity: 0.8;
+    transform: translateY(15px) scale(0.98);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes zoomIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.9) rotateY(5deg);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(0.95) rotateY(2deg);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotateY(0deg);
+  }
+}
+
+@keyframes slideInFromLeft {
+  0% {
+    opacity: 0;
+    transform: translateX(-30px) scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+/* Smooth transitions for content changes */
+.contentPanel {
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+.contentTitle {
+  transition: color 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  position: relative;
+}
+
+.contentTitle:hover {
+  color: #3b82f6;
+}
+
+.coverImageDetail {
+  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  backface-visibility: hidden;
+}
+
+.coverImageDetail:hover {
+  transform: scale(1.03) rotateY(2deg);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+}
+
+.contentBody {
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.contentDetail {
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/* Stagger animation for multiple elements */
+.contentDetail {
+  animation: fadeInUp 0.8s ease-out 0.6s both;
+}
+
+/* Loading state animation */
+.contentPanel.loading {
+  animation: shimmer 1.5s ease-in-out infinite;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* Skeleton loading animation */
+.skeleton {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: 4px;
+}
+
+.skeletonText {
+  height: 20px;
+  margin-bottom: 10px;
+  width: 100%;
+}
+
+.skeletonImage {
+  height: 200px;
+  width: 100%;
+  margin-bottom: 15px;
+}
+
+/* Table of Contents Sidebar Styles */
+.tocSidebar {
+  max-width: 320px;
+  background: #ffffff;
+  border-left: 1px solid #e9ecef;
+  display: flex;
+  flex-direction: column;
+  border-radius: 8px;
+}
+
+
+.tocSidebarHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 24px;
+  border-bottom: 1px solid #e9ecef;
+  flex-shrink: 0;
+}
+
+.tocSidebarHeader h4 {
+  margin: 0;
+  color: #495057;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.tocSidebarCloseButton {
+  background: none !important;
+  border: none !important;
+  color: #6c757d !important;
+  cursor: pointer;
+  padding: 4px 8px !important;
+  border-radius: 4px !important;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  min-width: 32px !important;
+  box-shadow: none !important;
+}
+
+.tocSidebarCloseButton:hover {
+  background: #e9ecef !important;
+  color: #495057 !important;
+  border: none !important;
+}
+
+.tocSidebarCloseButton:focus {
+  background: #e9ecef !important;
+  color: #495057 !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.tocSidebarList {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.tocSidebarItem {
+  padding: 5px 24px;
+  margin: 2px 0;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: #495057;
+  font-size: 14px;
+  line-height: 1.4;
+  border-left: 3px solid transparent;
+  position: relative;
+}
+
+.tocSidebarItem:hover {
+  background: #e3f2fd;
+  color: #1976d2;
+  border-left-color: #1976d2;
+  transform: translateX(4px);
+}
+
+.tocSidebarLevel1 {
+  font-weight: 600;
+  font-size: 15px;
+  padding-left: 24px;
+}
+
+.tocSidebarLevel2 {
+  font-weight: 500;
+  padding-left: 36px;
+}
+
+.tocSidebarLevel3 {
+  padding-left: 48px;
+}
+
+.tocSidebarLevel4 {
+  padding-left: 60px;
+  font-size: 13px;
+}
+
+.tocSidebarLevel5 {
+  padding-left: 72px;
+  font-size: 13px;
+}
+
+.tocSidebarLevel6 {
+  padding-left: 84px;
+  font-size: 12px;
+}
+
+.tocSidebarItemActive {
+  background: #e6f7ff !important;
+  color: #1890ff !important;
+  border-left-color: #1890ff !important;
+  font-weight: 600 !important;
+}
+
+.tocSidebarItemActive:hover {
+  background: #bae7ff !important;
+  color: #0050b3 !important;
+}
+
+.headingHighlight {
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 50%, #bae6fd 100%) !important;
+  border-left: 5px solid #0ea5e9 !important;
+  padding: 8px 12px !important;
+  margin: 4px 0 !important;
+  border-radius: 8px !important;
+  box-shadow: 
+    0 4px 12px rgba(14, 165, 233, 0.15),
+    0 2px 4px rgba(14, 165, 233, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6) !important;
+  transform: translateX(4px) !important;
+  position: relative !important;
+}
+
+/* Responsive animations */
+@media (max-width: 768px) {
+  .contentPanel {
+    animation-duration: 0.4s;
+  }
+
+  .contentHeader,
+  .contentBody,
+  .coverImageContainer,
+  .contentDetail {
+    animation-duration: 0.6s;
+  }
+
+  .tocSidebar {
+    width: 280px;
+  }
+
+  .tocSidebarHeader {
+    padding: 16px 20px;
+  }
+
+  .tocSidebarItem {
+    padding: 10px 20px;
+    font-size: 13px;
+  }
+
+  .tocSidebarLevel1 {
+    padding-left: 20px;
+    font-size: 14px;
+  }
+
+  .tocSidebarLevel2 {
+    padding-left: 32px;
+  }
+
+  .tocSidebarLevel3 {
+    padding-left: 44px;
+  }
+
+  .tocSidebarLevel4 {
+    padding-left: 56px;
+  }
+
+  .tocSidebarLevel5 {
+    padding-left: 68px;
+  }
+
+  .tocSidebarLevel6 {
+    padding-left: 80px;
+  }
+}

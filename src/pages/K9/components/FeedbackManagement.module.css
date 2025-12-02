@@ -1,0 +1,39 @@
+.container{
+  height: 100vh;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  background: #afb4bd;
+}
+
+.headerCard{
+  border: 1px solid #eef2f7;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #ffffff 0%, #fafcff 100%);
+  box-shadow: 0 2px 8px rgba(17, 24, 39, 0.04);
+  margin-bottom: 12px;
+}
+
+.tableWrap{
+  flex: 1;
+  min-height: 0;
+}
+
+/* Zebra rows and hover state */
+.tableWrap :global(.ant-table-tbody > tr:nth-child(odd) > td){
+  background: #fcfdff;
+}
+
+.tableWrap :global(.ant-table-tbody > tr:hover > td){
+  background: #f0f7ff !important;
+}
+
+/* Sticky header subtle border */
+.tableWrap :global(.ant-table-thead > tr > th){
+  background: #ffffff;
+  border-bottom: 1px solid #eef2f7;
+}
+
+.detailModal :global(.ant-modal-content){
+  border-radius: 12px;
+}

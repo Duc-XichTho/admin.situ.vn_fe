@@ -1,0 +1,121 @@
+.floatButtonsContainer {
+	position: fixed !important;
+	bottom: 16px !important;
+	right: 16px !important;
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	z-index: 9999;
+	pointer-events: none;
+}
+
+.floatButtonsContainer > * {
+	pointer-events: auto;
+}
+
+.floatButton {
+	width: 32px;
+	height: 32px;
+	border-radius: 50%;
+	border: none;
+	cursor: pointer;
+	font-size: 18px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+	transition: all 0.3s ease;
+	position: relative;
+	overflow: hidden;
+}
+.floatButton img {
+	width: 60%;
+}
+.floatButton::before {
+	content: '';
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0));
+	border-radius: 50%;
+	opacity: 0;
+	transition: opacity 0.3s ease;
+}
+
+.floatButton:hover::before {
+	opacity: 1;
+}
+
+.floatButton:hover {
+	transform: translateY(-2px);
+	box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+}
+
+.floatButton:active {
+	transform: translateY(0);
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.emailButton {
+	background: linear-gradient(135deg, #1890ff, #40a9ff);
+	color: white;
+}
+
+.emailButton:hover {
+	background: linear-gradient(135deg, #40a9ff, #69c0ff);
+}
+
+.zaloButton {
+	background: linear-gradient(135deg, #0068ff, #1890ff);
+	color: white;
+}
+
+.facebookButton {
+	background: #1F7BF2;
+	color: white;
+}
+
+.zaloButton:hover {
+	background: linear-gradient(135deg, #1890ff, #40a9ff);
+}
+
+.guidelineButton {
+	background: linear-gradient(135deg, #52c41a, #73d13d);
+	color: white;
+	font-size: 16px;
+}
+
+.guidelineButton:hover {
+	background: linear-gradient(135deg, #73d13d, #95de64);
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+	.floatButtonsContainer {
+		bottom: 20px;
+		right: 20px;
+		gap: 12px;
+	}
+
+	.floatButton {
+		width: 50px;
+		height: 50px;
+		font-size: 20px;
+	}
+}
+
+@media (max-width: 480px) {
+	.floatButtonsContainer {
+		bottom: 15px;
+		right: 15px;
+		gap: 10px;
+	}
+
+	.floatButton {
+		width: 45px;
+		height: 45px;
+		font-size: 18px;
+	}
+}

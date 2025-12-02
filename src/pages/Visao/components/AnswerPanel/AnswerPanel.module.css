@@ -1,0 +1,457 @@
+.answerPanel {
+  background: white;
+  border-radius: 20px;
+  padding: 30px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+  overflow-y: auto;
+  overflow-x: hidden; /* Tránh scroll ngang không cần thiết */
+  width: 50%;
+  flex-shrink: 0;
+  max-height: 100%; /* Đảm bảo không vượt quá container */
+}
+
+.emptyState {
+  text-align: center;
+  color: #666;
+  font-size: 18px;
+  padding: 40px 20px;
+}
+
+.answerContent {
+  display: none;
+}
+
+.answerContent.show {
+  display: block;
+  animation: slideIn 0.5s ease;
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.answerTitle {
+  font-size: 20px;
+  font-weight: bold;
+  color: #667eea;
+  margin-bottom: 20px;
+}
+
+.answerImage {
+  width: 100%;
+  border-radius: 15px;
+  margin-bottom: 20px;
+}
+
+.answerTextContainer {
+  margin-bottom: 30px; /* Tăng khoảng cách để tránh overlap */
+  overflow: visible;
+  position: relative; /* Đảm bảo positioning context */
+}
+
+/* Clearfix cho answerTextContainer */
+.answerTextContainer::after {
+  content: "";
+  display: table;
+  clear: both;
+}
+
+.answerTextLabel {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 8px;
+}
+
+.answerText {
+  padding: 15px;
+  background: #f8f9fa;
+  border-radius: 10px;
+  border: 1px solid #e9ecef;
+  line-height: 1.6;
+  font-size: 14px;
+  color: #333;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  clear: both;
+  overflow: visible;
+  position: relative; /* Đảm bảo positioning context */
+  display: block; /* Force block display */
+}
+
+/* Clearfix cho answerText */
+.answerText::after {
+  content: "";
+  display: table;
+  clear: both;
+}
+
+/* Styles cho images trong answerText */
+.answerText img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  margin: 10px 0 20px 0; /* Tăng margin-bottom cho ảnh */
+  display: block;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  clear: both; /* Clear float cho ảnh */
+  position: relative; /* Đảm bảo positioning */
+}
+
+/* Styles cho các elements khác trong HTML content */
+.answerText video,
+.answerText iframe {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  margin: 10px 0;
+}
+
+.answerText table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 10px 0;
+}
+
+.answerText p {
+  margin: 8px 0;
+}
+
+.answerText ul, .answerText ol {
+  padding-left: 20px;
+  margin: 8px 0;
+}
+
+.answerActions {
+  display: flex;
+  gap: 10px;
+  margin-top: 30px; /* Tăng margin-top để tránh overlap */
+  clear: both; /* Clear tất cả float elements */
+  position: relative; /* Đảm bảo positioning context */
+  z-index: 1; /* Đảm bảo luôn ở trên */
+  flex-direction: column;
+}
+
+.audioControls {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  width: 100%;
+}
+
+.audioPlayer {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 15px;
+  padding: 20px;
+  border: none;
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+  color: white;
+}
+
+.audioHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 5px;
+}
+
+.audioTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: white;
+}
+
+.audioStatus {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.8);
+  font-weight: 500;
+}
+
+.resumeIndicator {
+  color: #4ade80;
+  font-weight: 600;
+}
+
+.audioButtons {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin-bottom: 5px;
+}
+
+.audioControlBtn {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  padding: 10px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 18px;
+  transition: all 0.3s ease;
+  width: 45px;
+  height: 45px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(10px);
+}
+
+.audioControlBtn:hover {
+  background: rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.5);
+  transform: scale(1.1);
+  box-shadow: 0 4px 15px rgba(255, 255, 255, 0.2);
+}
+
+.audioControlBtn:disabled {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.1);
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.audioControlBtn:disabled:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.1);
+  transform: none;
+  box-shadow: none;
+}
+
+.audioProgress {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.audioTime {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 600;
+  min-width: 40px;
+  text-align: center;
+}
+
+.audioProgressBar {
+  flex: 1;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.audioProgressBar:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: scaleY(1.2);
+}
+
+.audioProgressFill {
+  height: 100%;
+  background: linear-gradient(90deg, #ffffff, #f0f0f0);
+  border-radius: 4px;
+  transition: width 0.1s ease;
+  position: relative;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+}
+
+.audioProgressFill::after {
+  content: '';
+  position: absolute;
+  right: -3px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 6px;
+  height: 6px;
+  background: white;
+  border-radius: 50%;
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.8);
+  border: 2px solid #667eea;
+}
+
+.voiceBtn {
+  background: #28a745;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-family: inherit;
+  font-weight: bold;
+  transition: all 0.2s ease;
+  align-self: flex-start;
+}
+
+.voiceBtn:hover {
+  background: #218838;
+  transform: translateY(-1px);
+}
+
+.voiceBtn:disabled {
+  background: #6c757d;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.voiceBtn:disabled:hover {
+  background: #6c757d;
+  transform: none;
+}
+
+.reflectionBtn {
+  background: #17a2b8;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-family: inherit;
+  font-weight: bold;
+  transition: all 0.2s ease;
+  align-self: flex-start;
+}
+
+.reflectionBtn:hover {
+  background: #138496;
+  transform: translateY(-1px);
+}
+
+@media (max-width: 1200px) {
+  .answerPanel {
+    width: 350px;
+  }
+}
+
+@media (max-width: 768px) {
+  .answerPanel {
+    width: 100%;
+  }
+
+  .answerActions {
+    flex-direction: column;
+  }
+
+  .audioPlayer {
+    padding: 15px;
+  }
+
+  .audioHeader {
+    flex-direction: column;
+    gap: 8px;
+    text-align: center;
+  }
+
+  .audioButtons {
+    gap: 10px;
+  }
+
+  .audioControlBtn {
+    width: 40px;
+    height: 40px;
+    font-size: 16px;
+  }
+
+  .audioProgress {
+    gap: 10px;
+  }
+
+  .audioTime {
+    font-size: 11px;
+    min-width: 35px;
+  }
+
+  .audioProgressBar {
+    height: 7px;
+  }
+}
+
+@media (max-width: 480px) {
+  .answerPanel {
+    padding: 15px;
+  }
+
+  .answerText {
+    padding: 12px;
+    font-size: 13px;
+  }
+
+  .answerTextContainer {
+    margin-bottom: 25px; /* Giữ khoảng cách trên mobile */
+  }
+
+  .answerActions {
+    margin-top: 25px; /* Đảm bảo spacing trên mobile */
+  }
+
+  .audioPlayer {
+    padding: 12px;
+  }
+
+  .audioHeader {
+    gap: 6px;
+  }
+
+  .audioTitle {
+    font-size: 13px;
+  }
+
+  .audioStatus {
+    font-size: 11px;
+  }
+
+  .audioButtons {
+    gap: 8px;
+  }
+
+  .audioControlBtn {
+    width: 36px;
+    height: 36px;
+    font-size: 14px;
+  }
+
+  .audioProgress {
+    gap: 8px;
+  }
+
+  .audioTime {
+    font-size: 10px;
+    min-width: 32px;
+  }
+
+  .audioProgressBar {
+    height: 6px;
+  }
+}
+
+/* Upgrade notice styles */
+.upgradeNotice {
+  margin: 16px 0;
+  padding: 16px;
+  background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+  border-radius: 12px;
+  border: 2px solid #74b9ff;
+  box-shadow: 0 4px 12px rgba(116, 185, 255, 0.2);
+}
+
+.upgradeContent {
+  text-align: center;
+}
+
+.upgradeTitle {
+  font-size: 16px;
+  font-weight: 600;
+  color: #0984e3;
+  margin-bottom: 8px;
+}
+
+.upgradeText {
+  font-size: 14px;
+  color: #636e72;
+  line-height: 1.5;
+}

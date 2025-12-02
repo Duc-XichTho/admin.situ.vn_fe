@@ -1,0 +1,285 @@
+.quizContainer {
+	/* Main container styles */
+}
+
+.quizWrapper {
+	margin: 10px 0;
+	border-radius: 10px;
+	border: 1px solid #DDDEDFFF;
+	padding: 10px;
+}
+
+.quizHeader {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.quizHeaderIcon {
+	color: #dddedf;
+}
+
+.quizSection {
+	margin-bottom: 24px;
+}
+
+.quizSectionTitle {
+	margin-bottom: 16px;
+	color: #1890ff;
+}
+
+.essaySectionTitle {
+	margin-bottom: 16px;
+	color: #722ed1;
+}
+
+.questionContainer {
+	margin-bottom: 20px;
+}
+
+.questionText {
+	font-weight: 500;
+	margin-bottom: 12px;
+	font-size: 15px;
+	color: #262626;
+}
+
+.questionNumber {
+	color: #1890ff;
+	margin-right: 8px;
+}
+
+.essayQuestionNumber {
+	color: #722ed1;
+	margin-right: 8px;
+}
+
+.radioOption {
+	padding: 8px 12px;
+	border-radius: 6px;
+	border: 1px solid #d9d9d9;
+	width: 100%;
+	margin: 4px 0;
+	background-color: #fff;
+	transition: all 0.2s ease;
+}
+
+.radioOption:hover {
+	background-color: #f5f5f5;
+}
+
+.radioOptionCorrect {
+	background-color: #f6ffed !important;
+	border-color: #52c41a !important;
+}
+
+.radioOptionIncorrect {
+	background-color: #fff2f0 !important;
+	border-color: #ff4d4f !important;
+}
+
+.radioOptionDisabled {
+	background-color: #fafafa !important;
+	border-color: #d9d9d9 !important;
+}
+
+.radioContent {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
+
+.explanationButton {
+	padding: 0;
+	height: auto;
+	color: #1890ff;
+}
+
+.explanationContent {
+	margin-top: 8px;
+	padding: 12px;
+	background-color: #f0f9ff;
+	border: 1px solid #91d5ff;
+	border-radius: 6px;
+	font-size: 14px;
+	color: #262626;
+}
+
+.explanationTitle {
+	font-weight: bold;
+}
+
+.essayTextArea {
+	border-color: #d9d9d9;
+	border-radius: 6px;
+}
+
+.aiGradingContainer {
+	margin-top: 12px;
+	padding: 16px;
+	background-color: #f0f9ff;
+	border: 1px solid #91d5ff;
+	border-radius: 8px;
+	font-size: 14px;
+}
+
+.aiGradingHeader {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	margin-bottom: 8px;
+	color: #1890ff;
+	font-weight: 500;
+}
+
+.aiGradingStatus {
+	font-size: 12px;
+	color: #52c41a;
+	margin-left: auto;
+}
+
+.resultsContainer {
+	margin-top: 24px;
+	padding: 20px;
+	background-color: #f6ffed;
+	border: 1px solid #b7eb8f;
+	border-radius: 8px;
+	text-align: center;
+}
+
+.resultsTitle {
+	margin-bottom: 16px;
+	color: #262626;
+}
+
+.totalScore {
+	font-size: 24px;
+	font-weight: bold;
+	margin-bottom: 8px;
+}
+
+.scoreMessage {
+	font-size: 16px;
+	font-weight: 500;
+	margin-bottom: 16px;
+}
+
+.scoreBreakdown {
+	display: flex;
+	justify-content: space-around;
+	margin-bottom: 16px;
+	flex-wrap: wrap;
+	gap: 16px;
+}
+
+.scoreSection {
+	text-align: center;
+}
+
+.scoreSectionTitle {
+	font-size: 18px;
+	font-weight: bold;
+	color: #1890ff;
+}
+
+.essayScoreSectionTitle {
+	font-size: 18px;
+	font-weight: bold;
+	color: #722ed1;
+}
+
+.scoreSectionCount {
+	font-size: 16px;
+	color: #666;
+}
+
+.scoreSectionPoints {
+	font-size: 14px;
+	color: #1890ff;
+}
+
+.essayScoreSectionPoints {
+	font-size: 14px;
+	color: #722ed1;
+}
+
+.essayResultsSummary {
+	margin-top: 16px;
+	padding: 16px;
+	background-color: #f0f9ff;
+	border: 1px solid #91d5ff;
+	border-radius: 8px;
+	text-align: left;
+}
+
+.essayResultsTitle {
+	color: #1890ff;
+	margin-bottom: 12px;
+}
+
+.essayResultsText {
+	font-size: 14px;
+	color: #666;
+}
+
+.instructionsContainer {
+	margin-top: 20px;
+	padding: 16px;
+	background-color: #f0f9ff;
+	border: 1px solid #91d5ff;
+	border-radius: 6px;
+	font-size: 14px;
+	color: #262626;
+}
+
+.instructionsTitle {
+	font-weight: 500;
+	margin-bottom: 8px;
+}
+
+.instructionsList {
+	margin: 8px 0;
+	padding-left: 20px;
+}
+
+.instructionsList li {
+	margin-bottom: 4px;
+}
+
+.actionButtons {
+	margin-top: 10px;
+}
+
+/* Score color utilities */
+.scoreExcellent {
+	color: #52c41a;
+}
+
+.scoreGood {
+	color: #faad14;
+}
+
+.scorePoor {
+	color: #ff4d4f;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+	.scoreBreakdown {
+		flex-direction: column;
+		align-items: center;
+	}
+	
+	.scoreSection {
+		width: 100%;
+		max-width: 200px;
+	}
+	
+	.quizWrapper {
+		padding: 8px;
+	}
+	
+	.questionText {
+		font-size: 14px;
+	}
+}

@@ -1,0 +1,7 @@
+.modalContent {
+    width: 100%;
+    height: 70vh;
+    overflow: auto;
+    padding: 10px;
+    box-sizing: border-box;
+}

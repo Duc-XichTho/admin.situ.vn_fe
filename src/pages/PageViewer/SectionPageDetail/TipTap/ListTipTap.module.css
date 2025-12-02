@@ -1,0 +1,317 @@
+.main {
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+}
+
+.pageInfo {
+    height: 80px;
+    display: flex;
+    /*justify-content: space-between;*/
+    /*align-items: center;*/
+    margin-bottom: 25px;
+    margin-top: 25px;
+    align-items: stretch;
+    gap: 10px;
+    flex-direction: column;
+}
+
+.pageTitle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: max-content;
+}
+
+
+.info {
+    flex: 1;
+    height: 7%;
+    display: flex;
+    justify-content: end;
+    align-items: center;
+}
+
+@media (max-width: 768px) {
+    .pageInfo {
+        height: 8%;
+        flex-direction: column !important;
+        align-items: stretch;
+        gap: 10px;
+        margin-top: 15px;
+    }
+    .pageTitle, .info {
+        width: 100%;
+    }
+    .pageTitle{
+        padding-left: 10px;
+    }
+}
+
+
+.button {
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: 500;
+    color: #454545;
+    padding: 8px 12px;
+    border: solid 1px #cccccc;
+    border-radius: 10px;
+    margin-right: 5px;
+}
+.detailButton, .hideButton {
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    color: #454545;
+    background-color: #f9f9f9;
+}
+.nameElement {
+    font-size: 20px;
+    font-weight: 600;
+    padding-left: 10px;
+}
+
+.optionButton {
+    height: 20px;
+    display: flex;
+    justify-content: end;
+    gap: 30px;
+}
+
+.optionButton > span {
+    font-weight: 500;
+    cursor: pointer;
+}
+
+
+/* Đảm bảo .htmlContent có thể co giãn, không làm ảnh hưởng đến layout */
+.htmlContent {
+    font-size: 14px;
+    color: #333;
+    word-wrap: break-word;
+    word-break: break-word;
+    min-height: 50px;
+    box-sizing: border-box;
+    flex-grow: 1;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 7;
+    -webkit-box-orient: vertical;
+    text-overflow: ellipsis;
+}
+
+.htmlContent * {
+    line-height: 1.5 !important;
+    word-spacing: 1px;
+
+}
+
+/* Điều chỉnh cho .listItem để nó không bị ảnh hưởng bởi .htmlContent */
+.listItem {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    border: 1px solid #e0e0e0;
+    padding: 15px;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+    flex-shrink: 0; /* Ngăn không cho phần tử co lại */
+    overflow: hidden; /* Đảm bảo không bị tràn */
+    flex-grow: 0; /* Đảm bảo .listItem không co giãn quá mức */
+}
+
+/* Điều chỉnh cardList nếu cần */
+.cardList {
+    width: 100%;
+    box-sizing: border-box;
+    height: calc(100% - 100px);
+    overflow-y: auto; /* Hiển thị thanh cuộn khi cần thiết */
+    margin-top: 1em;
+    padding: 12px 15px 45px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    flex-grow: 0; /* Đảm bảo không gian cho các phần tử con */
+}
+
+.htmlContent img {
+    max-width: 100%; /* Giới hạn ảnh không vượt quá chiều rộng của phần tử cha */
+    height: auto; /* Đảm bảo tỉ lệ khung hình của ảnh không bị thay đổi */
+    object-fit: contain; /* Đảm bảo ảnh không bị vỡ hình và vẫn giữ tỷ lệ khung hình */
+}
+
+.actions {
+    display: flex;
+    justify-content: end;
+    align-items: center;
+    gap: 20px;
+}
+
+.imagePreview {
+    width: 100%;
+    position: relative;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.imageSlider {
+    width: 100%;
+    height: 100%;
+    transition: all 0.3s ease;
+    background: #f0f0f0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.previewImage {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.arrowButton {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 2;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.9);
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    transition: all 0.3s ease;
+}
+
+.arrowButton:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.arrowButtonLeft {
+    left: 16px;
+}
+
+.arrowButtonRight {
+    right: 16px;
+}
+
+.loadingSpinner {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 40px;
+    height: 40px;
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #3498db;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+.dotsContainer {
+    position: absolute;
+    bottom: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 8px;
+    z-index: 2;
+}
+
+.dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.5);
+    transition: all 0.3s ease;
+}
+
+.dotActive {
+    background: #fff;
+}
+
+@keyframes spin {
+    0% { transform: translate(-50%, -50%) rotate(0deg); }
+    100% { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+.plusCircle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    /*border: 1px solid #454545;*/
+    /*border-radius: 50%;*/
+    color: #454545;
+    font-weight: bold;
+    font-size: 22px;
+    margin-right: 2px;
+    padding-bottom: 2px;
+}
+
+.plusCircleMobile {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    /*border: 1px solid #454545;*/
+    /*border-radius: 50%;*/
+    color: #454545;
+    font-weight: bold;
+    font-size: 16px;
+    margin-right: 2px;
+    padding-bottom: 2px;
+}
+.mobileText {
+    font-size: 13px;
+}
+/* Chrome, Safari, Edge */
+.customScrollbar::-webkit-scrollbar {
+    width: 8px;
+    background: #f5f5f5;
+}
+.customScrollbar::-webkit-scrollbar-thumb {
+    background: #f5f5f5; /* Custom thumb color */
+    border-radius: 4px;
+}
+.customScrollbar::-webkit-scrollbar-thumb:hover {
+    background: #f5f5f5; /* Thumb color on hover */
+}
+.customScrollbar::-webkit-scrollbar-track {
+    background: #f5f5f5; /* Track color */
+}
+
+/* Firefox */
+.customScrollbar {
+    scrollbar-width: none;
+    scrollbar-color:  #ffffff #ffffff; /* thumb color track color */
+}
+.title{
+    margin-bottom: 5px;
+    display: flex;
+    gap: 5px;
+    align-items: center;
+}
+
+.quizButton {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    color: #454545;
+    background-color: #f9f9f9;
+}

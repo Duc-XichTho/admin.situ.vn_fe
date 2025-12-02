@@ -1,0 +1,32 @@
+/* Prompt Settings List Modal Styles */
+.promptSettingsListModal :global(.ant-modal) {
+    max-height: 100vh !important;
+}
+
+.promptSettingsListModal :global(.ant-modal-content) {
+    height: 100vh !important;
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+.promptSettingsListModal :global(.ant-modal-body) {
+    height: calc(90vh - 120px) !important;
+    padding: 20px !important;
+    overflow-y: auto !important;
+    flex: 1 !important;
+}
+
+.promptSettingsListModal :global(.ant-modal-header) {
+    flex-shrink: 0 !important;
+}
+
+.promptSettingsListModal :global(.ant-modal-footer) {
+    flex-shrink: 0 !important;
+}
+
+/* Content container */
+.contentContainer {
+    height: 100%;
+    overflow-x: hidden;
+}
+

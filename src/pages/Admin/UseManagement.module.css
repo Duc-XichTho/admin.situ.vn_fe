@@ -1,0 +1,28 @@
+/* Container styles */
+.container {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: stretch;
+    height: 74vh;
+    width: 99vw;   
+     padding: 20px;
+    border-radius: 8px;
+    overflow: auto;
+}
+
+.SideBar {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 20px;
+    padding: 20px 0;
+}
+
+.actions {
+    display: flex;
+    gap: 10px;
+}
+
+
+

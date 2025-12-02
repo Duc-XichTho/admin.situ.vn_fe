@@ -1,0 +1,157 @@
+@import 'react-grid-layout/css/styles.css';
+@import 'react-resizable/css/styles.css';
+@import "styleGlobal.css";
+
+* {
+    padding: 0;
+    margin: 0;
+    border: none;
+    outline: none;
+    box-sizing: border-box;
+    font-family: var(--font-family), serif;
+}
+
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background-color: #ffffff;
+}
+
+::-webkit-scrollbar-thumb {
+    background-color: #e8e8e8;
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background-color: #d3d3d3;
+}
+
+.headerPowersheet {
+    position: relative;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.headerTitle {
+    display: flex;
+    width: max-content;
+    align-items: center;
+    gap: 5px;
+}
+
+.headerTitle > span {
+    color: #248627;
+    font-size: 23px;
+    font-weight: bold;
+    line-height: 35.41px;
+}
+
+.headerAction {
+    display: flex;
+    justify-content: flex-end;
+    width: 85%;
+    height: 100%;
+    gap: 20px;
+    align-items: center;
+}
+
+.generalButton {
+    display: flex;
+    height: 35px;
+    background: #d9d9d9;
+    border-radius: 10px;
+    text-align: center;
+    align-items: center;
+    line-height: 24px;
+    padding: 0 20px;
+    color: #454545;
+    cursor: pointer;
+}
+
+.btn-normal {
+    display: flex;
+    height: 27px;
+    background: #E1E1E1;
+    border-radius: 10px;
+    text-align: center;
+    align-items: center;
+    line-height: 24px;
+    padding: 0 20px;
+    color: #868686 ;
+    cursor: pointer;
+}
+
+.btn-normal {
+    font-size: 14px;
+}
+
+
+.save-btn {
+    display: flex;
+    height: 35px;
+    color: #454545;
+    border: 1px solid #1171E6;
+    background: #e3f4ff;
+    border-radius: 10px;
+    text-align: center;
+    align-items: center;
+    line-height: 24px;
+    padding: 0 20px;
+    cursor: pointer;
+    gap: 5px;
+    width: fit-content;
+}
+
+.zoomIn {
+    animation: zoomIn 0.5s ease-out forwards;
+    background-color: #d3dce2;
+    height: 100vh;
+    overflow: auto;
+}
+
+@keyframes zoomIn {
+    0% {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.ant-menu-submenu-title {
+    padding-left: 16px !important;
+    display: flex !important;
+    align-items: center !important;
+}
+
+.ant-menu.ant-menu-sub.ant-menu-inline > li {
+    padding-left: 17px !important;
+
+}
+
+.ant-menu-submenu-popup.ant-menu-submenu-placement-rightTop > ul {
+    max-height: 350px !important;
+    background-color: #f0f0f0;
+    margin-left: -5%;
+}
+
+.ant-menu-item .ant-menu-item-only-child {
+    padding-left: 0;
+}
+
+/* Ghi đè lại màu sắc của submenu khi nó được chọn */
+.ant-menu-light .ant-menu-submenu-selected > .ant-menu-submenu-title {
+    color: #249E57 !important; /* Thay đổi màu chữ */
+}
+
+
+#react-doc-viewer{
+    height: 100% !important;
+    border-radius: 10px;
+}

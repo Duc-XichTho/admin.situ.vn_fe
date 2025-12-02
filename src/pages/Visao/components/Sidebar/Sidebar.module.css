@@ -1,0 +1,106 @@
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  width: 380px;
+  height: 100%;
+  flex-shrink: 0;
+}
+
+.panelWrapperHistory {
+  height: 42% !important;
+  transition: all 0.3s ease;
+  overflow: hidden;
+}
+
+.panelWrapperHistory.collapsed {
+  height: 60px !important;
+  overflow: hidden;
+}
+
+.panelWrapperHistory.expanded {
+  height: calc(100% - 75px) !important;
+}
+
+.panelWrapperPremade {
+  height: 58% !important;
+  transition: all 0.3s ease;
+  overflow: hidden;
+}
+
+.panelWrapperPremade.collapsed {
+  height: 60px !important;
+  overflow: hidden;
+}
+
+.panelWrapperPremade.expanded {
+  height: calc(100% - 75px) !important;
+}
+
+@media (max-width: 1200px) {
+  .sidebar {
+    width: 320px;
+  }
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    width: 100%;
+    height: auto;
+    max-height: 80vh;
+    overflow: hidden;
+    min-height: 120px;
+  }
+  .panelWrapperHistory {
+    height: 40%;
+    min-height: 60px;
+    transition: all 0.3s ease;
+    overflow: hidden;
+  }
+  .panelWrapperPremade {
+    height: 60%;
+    min-height: 60px;
+    transition: all 0.3s ease;
+    overflow: hidden;
+  }
+  .panelWrapperHistory.collapsed,
+  .panelWrapperPremade.collapsed {
+    height: 60px;
+    min-height: 60px;
+  }
+  .panelWrapperHistory.expanded,
+  .panelWrapperPremade.expanded {
+    height: calc(100% - 75px);
+  }
+}
+
+@media (max-width: 480px) {
+  .sidebar {
+    height: auto;
+    max-height: 80vh;
+    overflow: hidden;
+    min-height: 120px;
+    gap : 5px
+  }
+  .panelWrapperHistory {
+    height: 40%;
+    min-height: 60px;
+    transition: all 0.3s ease;
+    overflow: hidden;
+  }
+  .panelWrapperPremade {
+    height: 60%;
+    min-height: 60px;
+    transition: all 0.3s ease;
+    overflow: hidden;
+  }
+  .panelWrapperHistory.collapsed,
+  .panelWrapperPremade.collapsed {
+    height: 60px;
+    min-height: 60px;
+  }
+  .panelWrapperHistory.expanded,
+  .panelWrapperPremade.expanded {
+    height: calc(100% - 75px);
+  }
+}

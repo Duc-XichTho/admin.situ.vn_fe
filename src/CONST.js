@@ -1,0 +1,16 @@
+export const ROUTES = {
+    LOGIN: "/",
+    LOGIN_SUCCESS: "/login-success",
+    VISAO: "/visao",
+    VISAO_DEMO: "/visao-demo",
+    K9: "/home",
+    K9_MANAGEMENT: "/home-management",
+    COMPANY_REPORT: "/company-report",
+    ADMIN: "/admin",
+    MANAGEMENT: "/management",
+    USER_MANAGEMENT: "/user-management",
+    EXCEL_DATA: "/excel-data",
+    HOME_PAGE: "/home-page",
+    HOMEPAGE_CONTENT_EDITOR: "/admin/homepage-content",
+    FEEDBACK_MANAGEMENT: "/feedback-management",
+};

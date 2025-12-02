@@ -1,0 +1,127 @@
+.main {
+    width: 100%;
+    height: 100%;
+}
+
+.pageInfo {
+    height: 25px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+    margin-top: 45px;
+}
+
+.pageTitle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: max-content;
+}
+
+
+.info {
+    flex: 1;
+    height: 7%;
+    display: flex;
+    justify-content: end;
+    align-items: center;
+}
+
+.button {
+    cursor: pointer;
+    font-size: 18px;
+    font-weight: 500;
+    color: rgba(0, 0, 0, 1);
+}
+
+.nameElement {
+    font-size: 18px;
+    font-weight: 500
+}
+
+.optionButton {
+    height: 20px;
+    display: flex;
+    justify-content: end;
+    gap: 30px;
+}
+
+.optionButton > span {
+    font-weight: 500;
+    cursor: pointer;
+}
+
+
+.cardList {
+    height: calc(100% - 100px);
+    overflow: auto;
+    margin-top: 1em;
+    padding: 12px 15px 45px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.card {
+    background: rgba(255, 255, 255, 0.6);
+    border-radius: 12px;
+    padding: 16px;
+    border: 1px solid rgba(200, 200, 200, 0.3);
+}
+
+/*.image {*/
+/*    width: 100%;*/
+/*    height: 250px;*/
+/*    background: white;*/
+/*    border-radius: 4px;*/
+/*    margin-bottom: 12px;*/
+/*}*/
+
+.content {
+    /*display: flex;*/
+    /*flex-direction: column;*/
+    /*gap : 5px ;*/
+    margin-top: 10px;
+
+}
+
+.title {
+    font-weight: bold;
+    font-size: 16px;
+    margin-bottom: 6px;
+}
+
+.title,
+.desc,
+.note,
+.amount,
+.attach {
+    font-size: 14px;
+    margin-bottom: 8px;
+}
+
+.update {
+    font-size: 13px;
+    color: #555;
+
+}
+
+.create {
+    font-size: 13px;
+    color: #555;
+    margin-right: 10px;
+}
+
+.footer {
+    display: flex;
+    justify-content: end;
+    align-items: center;
+    margin-top: 10px;
+}
+
+.action {
+    margin-left: 10px;
+    cursor: pointer;
+    color: black;
+}

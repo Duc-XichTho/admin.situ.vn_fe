@@ -1,0 +1,135 @@
+.countdownTimer {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-weight: 500;
+  font-size: 13px;
+  border: none;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  min-width: 80px;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.countdownTimer:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.timerText {
+  font-family: 'Courier New', monospace;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+/* Status styles */
+.status-admin {
+  background: linear-gradient(135deg, #52c41a 0%, #73d13d 100%);
+  color: white;
+  animation: adminPulse 3s infinite;
+}
+
+.status-active {
+  background: linear-gradient(135deg, #52c41a 0%, #73d13d 100%);
+  color: white;
+}
+
+.status-warning {
+  background: linear-gradient(135deg, #faad14 0%, #ffc53d 100%);
+  color: white;
+  animation: warningPulse 2s infinite;
+}
+
+.status-expired {
+  background: linear-gradient(135deg, #ff4d4f 0%, #ff7875 100%);
+  color: white;
+  animation: expiredPulse 1.5s infinite;
+}
+
+.status-not_started {
+  background: linear-gradient(135deg, #1890ff 0%, #40a9ff 100%);
+  color: white;
+}
+
+.status-no_setup {
+  background: linear-gradient(135deg, #faad14 0%, #ffc53d 100%);
+  color: white;
+  animation: setupPulse 2s infinite;
+}
+
+/* Animations */
+@keyframes adminPulse {
+  0%, 100% {
+    box-shadow: 0 2px 8px rgba(82, 196, 26, 0.3);
+  }
+  50% {
+    box-shadow: 0 4px 16px rgba(82, 196, 26, 0.5);
+  }
+}
+
+@keyframes warningPulse {
+  0%, 100% {
+    box-shadow: 0 2px 8px rgba(250, 173, 20, 0.3);
+  }
+  50% {
+    box-shadow: 0 4px 16px rgba(250, 173, 20, 0.6);
+  }
+}
+
+@keyframes expiredPulse {
+  0%, 100% {
+    box-shadow: 0 2px 8px rgba(255, 77, 79, 0.3);
+  }
+  50% {
+    box-shadow: 0 6px 20px rgba(255, 77, 79, 0.7);
+  }
+}
+
+@keyframes setupPulse {
+  0%, 100% {
+    box-shadow: 0 2px 8px rgba(250, 173, 20, 0.3);
+  }
+  50% {
+    box-shadow: 0 4px 16px rgba(250, 173, 20, 0.5);
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .countdownTimer {
+    padding: 4px 8px;
+    font-size: 11px;
+    min-width: 60px;
+  }
+  
+  .timerText {
+    font-size: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .countdownTimer {
+    padding: 3px 6px;
+    font-size: 10px;
+    min-width: 50px;
+    gap: 4px;
+  }
+  
+  .timerText {
+    font-size: 9px;
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .countdownTimer {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  }
+  
+  .countdownTimer:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  }
+} 

@@ -1,0 +1,111 @@
+.firstTimePopup {
+  /* Custom styles for the popup */
+}
+
+.firstTimePopup :global(.ant-modal) {
+  z-index: 2000 !important;
+}
+
+.firstTimePopup :global(.ant-modal-mask) {
+  z-index: 1999 !important;
+}
+
+.firstTimePopup :global(.ant-modal-content) {
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.firstTimePopup :global(.ant-modal-header) {
+  background: white;
+  border-bottom: none;
+  padding: 20px 24px;
+}
+
+.firstTimePopup :global(.ant-modal-title) {
+  color: white;
+  font-size: 18px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.firstTimePopup :global(.ant-modal-close) {
+  color: white;
+}
+
+.firstTimePopup :global(.ant-modal-close:hover) {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.firstTimePopup :global(.ant-modal-body) {
+  padding: 0;
+}
+
+.firstTimePopup :global(.ant-modal-footer) {
+  border-top: 1px solid #f0f0f0;
+  padding: 16px 24px;
+  text-align: center;
+}
+
+.firstTimePopup :global(.ant-btn-primary) {
+  background-color: #262626;
+  border-color: #262626;
+  border-radius: 6px;
+  padding: 8px 24px;
+  height: auto;
+  font-weight: 500;
+}
+
+.firstTimePopup :global(.ant-btn-primary:hover) {
+  background-color: #8f0f2f;
+  border-color: #8f0f2f;
+}
+
+.firstTimePopup :global(.ant-checkbox-wrapper) {
+  font-size: 14px;
+}
+
+.firstTimePopup :global(.ant-checkbox-checked .ant-checkbox-inner) {
+  background-color: #262626;
+  border-color: #262626;
+}
+
+.imageContainer {
+  padding: 20px 0;
+}
+
+.welcomeImage {
+  width: 500px;
+  height: 500px;
+  margin-bottom: 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  object-fit: cover;
+}
+
+.contentSection {
+  margin-bottom: 20px;
+  padding: 0 24px;
+}
+
+.welcomeTitle {
+  color: #262626;
+  margin-bottom: 10px;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.welcomeText {
+  color: #666;
+  line-height: 1.6;
+  font-size: 14px;
+  text-align: left;
+}
+
+.checkboxSection {
+  border-top: 1px solid #f0f0f0;
+  padding: 20px 24px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #fafafa;
+}

@@ -1,0 +1,10 @@
+.editDetailModal :global(.ant-modal-content){
+  height: 95vh !important;
+  top: -85px !important;
+}
+
+.editDetailModal :global(.ant-modal-body){
+  height: calc(85vh - 110px) !important;
+  overflow-y: auto !important;
+  padding: 16px !important;
+}

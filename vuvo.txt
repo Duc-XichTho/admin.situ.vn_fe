@@ -1,0 +1,43 @@
+//Querry set id
+
+DO $$
+DECLARE
+    tbl_name text;
+    seq_name text;
+BEGIN
+    -- Duyệt qua tất cả các bảng trong schema codegym
+    FOR tbl_name IN
+        SELECT table_name
+        FROM information_schema.tables
+        WHERE table_schema = 'codegym' AND table_type = 'BASE TABLE' AND table_name != 'users'  -- Ngoại trừ bảng users
+    LOOP
+        -- Bước 1: Cập nhật ID thành giá trị liên tiếp
+        RAISE NOTICE 'Updating IDs for table %', tbl_name;
+
+        -- Bước 2: Cập nhật ID với giá trị liên tiếp mới
+        EXECUTE format('
+            WITH cte AS (
+                SELECT id, ROW_NUMBER() OVER (ORDER BY id) AS new_id
+                FROM codegym.%I
+            )
+            UPDATE codegym.%I
+            SET id = cte.new_id
+            FROM cte
+            WHERE codegym.%I.id = cte.id',
+            tbl_name, tbl_name, tbl_name);
+
+        -- Bước 3: Reset lại sequence để bắt đầu từ ID lớn nhất + 1
+        seq_name := tbl_name || '_id_seq';  -- Giả định tên sequence theo quy tắc: <tên_bảng>_id_seq
+
+        -- Lấy ID lớn nhất sau khi cập nhật
+        DECLARE
+            max_id bigint;
+        BEGIN
+            EXECUTE format('SELECT COALESCE(MAX(id), 0) FROM codegym.%I', tbl_name) INTO max_id;
+
+            -- Cập nhật lại sequence
+            EXECUTE format('ALTER SEQUENCE codegym.%I RESTART WITH %s', seq_name, max_id + 1);
+        END;
+    END LOOP;
+END $$;
+code cập nhật ID thành tự tăng dùng cho khi paste dữ liệu vào database bởi vì postgres paste k tự tính id tăng tiếp theo

@@ -1,0 +1,137 @@
+/* Diagram Config Modal Styles */
+.diagramConfigModal :global(.ant-modal) {
+    top: 5vh !important;
+    max-height: 90vh !important;
+}
+
+.diagramConfigModal :global(.ant-modal-content) {
+    height: 95vh !important;
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+.diagramConfigModal :global(.ant-modal-body) {
+    height: calc(85vh - 120px) !important;
+    padding: 20px !important;
+    overflow-y: auto !important;
+    flex: 1 !important;
+}
+
+.diagramConfigModal :global(.ant-modal-header) {
+    flex-shrink: 0 !important;
+}
+
+.diagramConfigModal :global(.ant-modal-footer) {
+    flex-shrink: 0 !important;
+}
+
+/* Content container */
+.contentContainer {
+    height: 100%;
+    overflow-x: hidden;
+}
+
+/* Configuration sections */
+.configSection {
+    margin-bottom: 20px;
+}
+
+/* Diagram Type & AI Model Section */
+.diagramConfigSection {
+    margin-bottom: 20px;
+    padding: 15px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    border: 2px solid #1890ff;
+}
+
+.diagramConfigTitle {
+    margin-bottom: 15px;
+    color: #1890ff;
+}
+
+.diagramConfigRow {
+    margin-bottom: 10px;
+}
+
+.diagramConfigLabel {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: bold;
+    font-size: 13px;
+}
+
+.diagramConfigDescription {
+    margin-top: 8px;
+    font-size: 11px;
+    color: #666;
+    text-align: center;
+}
+
+/* AI 3-Step Configuration */
+.aiConfigSection {
+    margin-bottom: 20px;
+    padding: 15px;
+    background-color: #fff7e6;
+    border-radius: 8px;
+    border: 2px solid #fa8c16;
+}
+
+.aiConfigTitle {
+    margin-bottom: 15px;
+    color: #fa8c16;
+}
+
+.aiStepContainer {
+    padding: 12px;
+    background-color: #ffffff;
+    border-radius: 6px;
+    border: 1px solid #d9d9d9;
+    height: 100%;
+}
+
+.aiStepTitle {
+    margin-bottom: 12px;
+    font-size: 14px;
+    text-align: center;
+}
+
+.aiStepTitle.ai1 {
+    color: #1890ff;
+}
+
+.aiStepTitle.ai2 {
+    color: #52c41a;
+}
+
+.aiStepTitle.ai3 {
+    color: #722ed1;
+}
+
+.aiStepModel {
+    margin-bottom: 12px;
+}
+
+.aiStepPrompt {
+    margin-bottom: 8px;
+}
+
+.aiStepPrompt :global(.ant-input) {
+    min-height: 400px !important;
+    max-height: 500px !important;
+    resize: vertical !important;
+}
+
+.aiStepLabel {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: bold;
+    font-size: 12px;
+}
+
+.aiStepDescription {
+    font-size: 11px;
+    color: #666;
+    text-align: center;
+    font-style: italic;
+}

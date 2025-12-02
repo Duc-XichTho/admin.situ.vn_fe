@@ -1,0 +1,9 @@
+.adminContainer {
+    min-height: 100vh;
+    padding: 20px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.aiContainer{
+    height: 90vh;
+}

@@ -1,0 +1,15 @@
+{
+  "name": "AiMBA",
+  "short_name": "AiMBA",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#ffffff",
+  "icons": [
+    {
+      "src": "/Favicon.png",
+      "sizes": "127x144",
+      "type": "image/png"
+    }
+  ]
+}

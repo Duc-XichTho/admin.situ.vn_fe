@@ -1,0 +1,4 @@
+.feedbackModal :global(.ant-modal-content){
+    height: max-content !important;
+}
+

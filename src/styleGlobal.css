@@ -1,0 +1,37 @@
+:root {
+  --font-family: 'Reddit Sans', sans-serif;
+  --text-color: #262626;
+  --header-bg: #ffffff;
+  --header-text: #454545;
+  --header-border: #d9d9d9;
+  --header-shadow: #e4e2e280;
+  --header-item-text: #262626;
+  --header-item-active: #1976d2;
+  --header-item-hover: #1976d2;
+  --header-item-active-bg: #a6d2fd;
+  --header-item-active-border: #1976d2;
+  --header-arrow-bg: #00000033;
+  --header-arrow-color: #ffffff;
+
+  /* New SAB Bot Popup Color Variables */
+  --sab-primary-color: #3cc575;
+  --sab-primary-color-pop-up: #249C70;
+  --sab-primary-hover-color: #2d9d5b;
+  --sab-header-bg: #2d9d5b;
+  --sab-user-message-bg: #bae6fd;
+  --sab-bot-message-bg: #e5e7eb;
+  --sab-input-border: #d1d5db;
+  --sab-input-focus-border: #3cc575;
+  --sab-input-focus-shadow: #3b82f633;
+}
+
+.btn-view-phieu{
+  padding: 3px;
+  margin: 0 1px;
+  border-radius: 3px;
+  background: #ffffff;
+  -webkit-box-shadow: 0px 0px 5px 0px rgba(0,0,0,0.2);
+  -moz-box-shadow: 0px 0px 5px 0px rgba(0,0,0,0.2);
+  box-shadow: 0px 0px 5px 0px rgba(0,0,0,0.2);
+  cursor: pointer;
+}

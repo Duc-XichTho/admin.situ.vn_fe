@@ -1,0 +1,328 @@
+.homeContainer {
+    width: 100%;
+    height: 100vh;
+    background-color: #ffffff;
+}
+
+.nameFolder {
+    font-size: 20px;
+}
+
+.titleFolder {
+    font-size: 14px;
+    font-weight: 400;
+    color : #454545
+}
+
+.homeHeader {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    background-color: #b1143c;
+    color: #262626;
+    padding: 0 20px;
+    height: 8%;
+}
+
+.logo {
+    font-weight: bold;
+    margin: 0px 20px;
+    font-size: 20px;
+    padding: 10px;
+}
+
+.homeNav {
+    padding: 10px;
+    margin-left: 100px;
+    display: flex;
+    align-items: center;
+    gap: 50px;
+    font-size: 18px;
+    font-weight: 400;
+}
+
+.homeNav a {
+    color: white;
+    text-decoration: none;
+}
+
+.homeNav a:hover {
+    text-decoration: underline;
+}
+
+.registerLink {
+    color: #262626;
+    cursor: pointer;
+    text-decoration: none;
+    font-size: 22px;
+}
+
+.registerLink:hover {
+    opacity: 0.8;
+}
+
+.homeBody {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+}
+
+.homeBodyContent {
+    height: 100%;
+}
+
+.authButton {
+    display: flex;
+    align-items: center;
+    justify-content: end;
+    flex: 1;
+    cursor: pointer;
+}
+
+/* Modal styles */
+.modalTitle {
+    text-align: center;
+    margin-bottom: 24px;
+    padding: 0 24px;
+}
+
+.modalTitle h2 {
+    margin: 0;
+    color: #b1143c;
+    font-size: 24px;
+    font-weight: 600;
+}
+
+.modalTitle p {
+    margin: 8px 0 0;
+    color: #666;
+    font-size: 14px;
+}
+
+.modalForm {
+    width: 100%;
+    max-height: 70vh;
+    overflow-y: auto;
+    padding: 0 24px 24px;
+}
+
+.modalForm::-webkit-scrollbar {
+    width: 6px;
+}
+
+.modalForm::-webkit-scrollbar-track {
+    background: #f0f0f0;
+}
+
+.modalForm::-webkit-scrollbar-thumb {
+    background: #b1143c;
+    border-radius: 3px;
+}
+
+.formSection {
+    margin-bottom: 32px;
+    padding: 24px;
+    background: #f8f8f8;
+    border-radius: 8px;
+    border: 1px solid #f0f0f0;
+}
+
+.formSection:last-child {
+    margin-bottom: 16px;
+}
+
+.sectionTitle {
+    display: block;
+    margin-bottom: 20px;
+    font-size: 16px;
+    color: #b1143c;
+}
+
+.modalForm :global(.ant-form-item) {
+    margin-bottom: 24px;
+}
+
+.modalForm :global(.ant-form-item):last-child {
+    margin-bottom: 0;
+}
+
+.modalForm :global(.ant-input) {
+    padding: 8px 12px;
+    font-size: 14px;
+}
+
+.modalForm :global(.ant-form-item-label) {
+    padding-bottom: 8px;
+}
+
+.modalForm :global(.ant-form-item-label > label) {
+    font-weight: 500;
+    color: #333;
+}
+
+.modalForm :global(.ant-form-item-extra) {
+    font-size: 12px;
+    color: #666;
+}
+
+.formActions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 20px;
+    margin-top: 32px;
+    margin-bottom: 0 !important;
+    padding: 16px 24px;
+    background: #fff;
+    border-top: 1px solid #f0f0f0;
+}
+
+.formActions button {
+    min-width: 120px;
+    height: 36px;
+}
+
+/* Mobile styles */
+.mobileNavRow {
+    display: flex;
+    align-items: center;
+    height: 48px;
+    background-color: #fff;
+    border-bottom: 1px solid #000;
+}
+
+.mobileNavItem {
+    flex: 1;
+    text-align: center;
+    font-size: 16px;
+    color: #000;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.mobileDivider {
+    width: 1px;
+    background-color: #000;
+    align-self: stretch;
+}
+
+@media (max-width: 768px) {
+    .registerLink {
+        color: #000;
+    }
+    
+    .modalForm {
+        padding: 0 16px 16px;
+    }
+    
+    .formSection {
+        padding: 16px;
+        margin-bottom: 24px;
+    }
+    
+    .modalTitle h2 {
+        font-size: 20px;
+    }
+    
+    .formActions {
+        flex-direction: column;
+        gap: 12px;
+        padding: 16px;
+    }
+    
+    .formActions button {
+        width: 100%;
+    }
+}
+.card {
+    background: rgba(255, 255, 255, 0.6);
+    border-radius: 12px;
+    /*box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.08);*/
+    padding: 16px;
+}
+
+
+.content {
+    padding: 12px 15px;
+    gap: 5px;
+}
+.content:last-child {
+    border-bottom: none;
+}
+.title {
+    font-weight: 600;
+    font-size: 16px;
+    margin-bottom: 4px;
+}
+.desc {
+    margin-bottom: 4px;
+    font-size: 13px;
+    color: #454545;
+}
+.update {
+    margin-top: 8px;
+    font-size: 10px;
+    color: #888;
+}
+.itemBoxRow {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.itemBox {
+    width: 80px;
+    height: 80px;
+    background: #e0e0e0;
+    border-radius: 4px;
+    flex-shrink: 0;
+}
+.tag1 {
+    color: #D24B4B;
+    border: 1px solid #D24B4B;
+    background: #fff0f0;
+    border-radius: 8px;
+    padding: 2px 10px;
+    font-size: 13px;
+    font-weight: 500;
+    display: inline-block;
+}
+.tag2 {
+    color: #1A52A6;
+    border: 1px solid #1A52A6;
+    background: #f0f6ff;
+    border-radius: 8px;
+    padding: 2px 10px;
+    font-size: 13px;
+    font-weight: 500;
+    display: inline-block;
+}
+.tag1Active {
+    color: #fff;
+    background: #D24B4B;
+}
+.tag2Active {
+    color: #fff;
+    background: #1A52A6;
+}
+.gioiThieuTitle {
+    width: 100%;
+    margin-top: 5px;
+    margin-left: 20px;
+    font-weight: 600;
+    font-size: 18px;
+    margin-bottom: 8px;
+}
+
+.gioiThieuTitleMobile {
+    width: 100%;
+    margin-top: 20px;
+    font-weight: 600;
+    font-size: 18px;
+    margin-bottom: 8px;
+}
+@media (max-width: 768px) {
+    html, body, .homeContainer {
+        height: auto !important;
+        overflow: visible !important;
+    }
+}
