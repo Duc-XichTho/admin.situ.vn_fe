@@ -1498,7 +1498,6 @@ html {
 .markdownContent {
     color: #374151;
     line-height: 1.5;
-
     overflow-y: auto;
 }
 
@@ -1509,14 +1508,67 @@ html {
     
 }
 
+/* KaTeX inline formulas - allow wrapping when not enough space */
+.markdownContent :global(.katex:not(.katex-display)) {
+    max-width: 100%;
+    overflow-x: visible;
+    overflow-y: visible;
+    display: inline-block;
+    word-wrap: break-word;
+    word-break: break-word;
+    white-space: normal;
+    /* Allow breaking */
+    overflow-wrap: break-word;
+}
+
+/* KaTeX display formulas - wrap to next line when needed */
 .markdownContent :global(.katex-display) {
     font-size: 1.1em;
     font-family: 'Latin Modern Math', 'STIX Two Math', 'Computer Modern', 'Times New Roman', serif;
+    max-width: 100%;
+    overflow-x: visible;
+    overflow-y: visible;
+    margin: 1em 0;
+    padding: 0.5em 0;
+    /* Allow wrapping */
+    white-space: normal;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
 }
-
 
 .markdownContent :global(.katex-display > .katex) {
     font-size: 1em;
+    max-width: 100%;
+    overflow-x: visible;
+    display: inline-block;
+    white-space: normal;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+
+/* Allow KaTeX to wrap when inside paragraphs or other containers */
+.markdownContent :global(p .katex),
+.markdownContent :global(span .katex),
+.markdownContent :global(li .katex),
+.markdownContent :global(div .katex) {
+    max-width: 100%;
+    overflow-x: visible;
+    overflow-y: visible;
+    display: inline-block;
+    vertical-align: baseline;
+    white-space: normal;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    /* Force wrapping when needed */
+    box-sizing: border-box;
+}
+
+/* Ensure parent containers allow wrapping */
+.markdownContent :global(p),
+.markdownContent :global(li),
+.markdownContent :global(div) {
+    overflow-wrap: break-word;
+    word-wrap: break-word;
 }
 
 .markdownContent h1,
