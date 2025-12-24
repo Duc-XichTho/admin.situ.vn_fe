@@ -49,11 +49,13 @@ import AccessDenied from './AccessDenied.jsx';
 import AudioPlayer from '../../../components/AudioPlayer/AudioPlayer.jsx';
 import EditDetailModal from './EditDetailModal.jsx';
 import FeedbackModal from './FeedbackModal.jsx';
+import PaymentModal from '../../../components/PaymentModal/PaymentModal';
 import ExcalidrawViewer from '../../K9Management/components/ExcalidrawViewer';
 const { Option } = Select;
 const { Text, Title } = Typography;
 import { useNavigate } from 'react-router-dom';
 const CaseTrainingTab = ({
+  setExpandedItem,
   updateURL,
   selectedProgram,
   tag4Filter,
@@ -152,6 +154,9 @@ const CaseTrainingTab = ({
 
   // Feedback modal states
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+
+  // Package purchase modal states
+  const [isPackageModalOpen, setIsPackageModalOpen] = useState(false);
 
   const [selectedItem, setSelectedItem] = useState(null);
   const [isMobile, setIsMobile] = useState(false);
@@ -305,12 +310,12 @@ const CaseTrainingTab = ({
       gfm: true
     });
     const finalHtml = postprocessLatex(html, latexBlocks);
-    
+
     // Create a temporary DOM element to get plain text
     const tempDiv = document.createElement('div');
     tempDiv.innerHTML = finalHtml;
     const plainText = tempDiv.textContent || tempDiv.innerText || '';
-    
+
     // Search in plain text (rendered text, not markdown)
     const searchTerm = text.toLowerCase();
     const lowerPlainText = plainText.toLowerCase();
@@ -321,7 +326,7 @@ const CaseTrainingTab = ({
       const before = Math.max(0, index - 100);
       const after = Math.min(plainText.length, index + searchTerm.length + 100);
       const context = plainText.substring(before, after);
-      
+
       results.push({
         index: results.length,
         position: index,
@@ -340,7 +345,7 @@ const CaseTrainingTab = ({
 
   const highlightTextInContent = (text, searchTerm) => {
     if (!searchTerm || !text) return text;
-    
+
     const regex = new RegExp(`(${searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
     return text.replace(regex, '<mark>$1</mark>');
   };
@@ -354,20 +359,20 @@ const CaseTrainingTab = ({
 
     const searchTerm = text.toLowerCase();
     const container = markdownContentRef.current;
-    
+
     // Get all text nodes
     const walker = document.createTreeWalker(
       container,
       NodeFilter.SHOW_TEXT,
       null
     );
-    
+
     const textNodes = [];
     let node;
     while (node = walker.nextNode()) {
       textNodes.push(node);
     }
-    
+
     // Build plain text and map positions
     let plainText = '';
     const nodeMap = [];
@@ -382,20 +387,20 @@ const CaseTrainingTab = ({
         text: nodeText
       });
     });
-    
+
     // Search in plain text
     const lowerPlainText = plainText.toLowerCase();
     const results = [];
     let index = 0;
-    
+
     while ((index = lowerPlainText.indexOf(searchTerm, index)) !== -1) {
       const before = Math.max(0, index - 100);
       const after = Math.min(plainText.length, index + searchTerm.length + 100);
       const context = plainText.substring(before, after);
-      
+
       // Find which node contains this position
       const nodeInfo = nodeMap.find(n => index >= n.startPos && index < n.endPos);
-      
+
       results.push({
         index: results.length,
         position: index,
@@ -406,7 +411,7 @@ const CaseTrainingTab = ({
       });
       index += searchTerm.length;
     }
-    
+
     setSearchResults(results);
     if (results.length > 0) {
       setHighlightedIndex(0);
@@ -415,61 +420,61 @@ const CaseTrainingTab = ({
 
   const scrollToSearchResult = (resultIndex) => {
     if (resultIndex < 0 || resultIndex >= searchResults.length) return;
-    
+
     setHighlightedIndex(resultIndex);
     const result = searchResults[resultIndex];
-    
+
     setTimeout(() => {
       if (!markdownContentRef.current) {
         console.warn('markdownContentRef not available');
         return;
       }
-      
+
       if (result.node) {
         try {
           const range = document.createRange();
           const offset = result.nodeOffset || 0;
           const matchLength = result.match.length;
-          
+
           const maxOffset = result.node.textContent.length;
           const safeOffset = Math.min(Math.max(0, offset), maxOffset);
           const safeEnd = Math.min(safeOffset + matchLength, maxOffset);
-          
+
           if (safeOffset >= maxOffset) {
             console.warn('Invalid offset for scroll');
             return;
           }
-          
+
           range.setStart(result.node, safeOffset);
           range.setEnd(result.node, safeEnd);
-          
+
           let scrollContainer = null;
           let current = markdownContentRef.current;
           while (current && current !== document.body) {
             const style = window.getComputedStyle(current);
-            const hasOverflow = style.overflow === 'auto' || style.overflowY === 'auto' || 
-                              style.overflow === 'scroll' || style.overflowY === 'scroll';
-            
+            const hasOverflow = style.overflow === 'auto' || style.overflowY === 'auto' ||
+              style.overflow === 'scroll' || style.overflowY === 'scroll';
+
             if (hasOverflow && current.style.height && current.style.height.includes('75vh')) {
               scrollContainer = current;
               break;
             }
-            
+
             if (hasOverflow && !scrollContainer) {
               scrollContainer = current;
             }
-            
+
             current = current.parentElement;
           }
-          
+
           if (!scrollContainer) {
             scrollContainer = markdownContentRef.current.closest('.ant-modal-body') ||
-                            markdownContentRef.current.closest('[style*="overflow"]') ||
-                            document.querySelector('.ant-modal-body');
+              markdownContentRef.current.closest('[style*="overflow"]') ||
+              document.querySelector('.ant-modal-body');
           }
-          
+
           const rect = range.getBoundingClientRect();
-          
+
           if (rect.height === 0 && rect.width === 0) {
             const parent = result.node.parentElement;
             if (parent) {
@@ -478,7 +483,7 @@ const CaseTrainingTab = ({
                 block: 'center',
                 inline: 'nearest'
               });
-              
+
               parent.style.backgroundColor = '#ffd700';
               parent.style.transition = 'background-color 0.3s';
               parent.style.borderRadius = '4px';
@@ -491,9 +496,9 @@ const CaseTrainingTab = ({
             }
             return;
           }
-          
+
           let elementToScroll = range.startContainer.parentElement;
-          
+
           while (elementToScroll && elementToScroll !== markdownContentRef.current) {
             const tagName = elementToScroll.tagName?.toLowerCase();
             if (['p', 'div', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'span'].includes(tagName)) {
@@ -503,21 +508,21 @@ const CaseTrainingTab = ({
             }
             elementToScroll = elementToScroll.parentElement;
           }
-          
+
           if (elementToScroll) {
             elementToScroll.scrollIntoView({
               behavior: 'smooth',
               block: 'center',
               inline: 'nearest'
             });
-            
+
             if (scrollContainer && scrollContainer !== window && scrollContainer !== elementToScroll) {
               setTimeout(() => {
                 const elementRect = elementToScroll.getBoundingClientRect();
                 const containerRect = scrollContainer.getBoundingClientRect();
                 const relativeTop = elementRect.top - containerRect.top;
                 const targetScroll = scrollContainer.scrollTop + relativeTop - 150;
-                
+
                 scrollContainer.scrollTo({
                   top: Math.max(0, targetScroll),
                   behavior: 'smooth'
@@ -531,7 +536,7 @@ const CaseTrainingTab = ({
               inline: 'nearest'
             });
           }
-          
+
           const parent = range.startContainer.parentElement;
           if (parent) {
             markdownContentRef.current.querySelectorAll('.search-highlight-temp').forEach(el => {
@@ -540,13 +545,13 @@ const CaseTrainingTab = ({
               el.style.borderRadius = '';
               el.style.padding = '';
             });
-            
+
             parent.classList.add('search-highlight-temp');
             parent.style.backgroundColor = '#ffd700';
             parent.style.transition = 'background-color 0.3s';
             parent.style.borderRadius = '4px';
             parent.style.padding = '2px 4px';
-            
+
             setTimeout(() => {
               if (parent.classList) {
                 parent.classList.remove('search-highlight-temp');
@@ -572,21 +577,21 @@ const CaseTrainingTab = ({
             NodeFilter.SHOW_TEXT,
             null
           );
-          
+
           let node;
           let charCount = 0;
-          
+
           while (node = walker.nextNode()) {
             const nodeText = node.textContent;
             const nodeLength = nodeText.length;
-            
+
             if (charCount + nodeLength >= result.position) {
               const offset = result.position - charCount;
               try {
                 const range = document.createRange();
                 range.setStart(node, Math.min(offset, nodeLength));
                 range.setEnd(node, Math.min(offset + result.match.length, nodeLength));
-                
+
                 node.parentElement?.scrollIntoView({
                   behavior: 'smooth',
                   block: 'center'
@@ -608,14 +613,14 @@ const CaseTrainingTab = ({
 
   const navigateSearchResult = (direction) => {
     if (searchResults.length === 0) return;
-    
+
     let newIndex = highlightedIndex + direction;
     if (newIndex < 0) {
       newIndex = searchResults.length - 1;
     } else if (newIndex >= searchResults.length) {
       newIndex = 0;
     }
-    
+
     scrollToSearchResult(newIndex);
   };
 
@@ -644,7 +649,7 @@ const CaseTrainingTab = ({
     setPanelPosition({ x: 10, y: 50 });
     setShowSummaryDetail(false); // Reset summaryDetail collapse when item changes
   }, [selectedItem?.id]);
-  
+
   // Auto show panel when search results appear
   useEffect(() => {
     if (searchResults.length > 0) {
@@ -655,7 +660,7 @@ const CaseTrainingTab = ({
   // Drag handlers for search results panel
   const handleMouseDown = (e) => {
     if (!panelRef.current) return;
-    
+
     const rect = panelRef.current.getBoundingClientRect();
     setDragOffset({
       x: e.clientX - rect.left,
@@ -681,7 +686,7 @@ const CaseTrainingTab = ({
       animationFrameId = requestAnimationFrame(() => {
         const newX = e.clientX - dragOffset.x;
         const newY = e.clientY - dragOffset.y;
-        
+
         setPanelPosition({
           x: Math.max(0, Math.min(newX, maxX)),
           y: Math.max(0, Math.min(newY, maxY))
@@ -1050,7 +1055,7 @@ const CaseTrainingTab = ({
         </span>);
     }
     const numeric = Number(quizScore);
-    const pass = !isNaN(numeric) && numeric >= 60;
+    const pass = !isNaN(numeric) && numeric >= 70;
     return (
       <span
         style={{
@@ -1252,7 +1257,15 @@ const CaseTrainingTab = ({
                                   className={styles.dropdownItem}
                                   onClick={(e) => handleItemSelectFromDropdown(item.id, e)}
                                 >
-                                  {item.title}
+                                  {item.lessonNumber && (
+                                    <>
+                                      {item.lessonNumber}:
+                                    </>
+                                  )}
+                                  {currentUser?.account_type === 'Dùng thử' && item.isPublic !== true && (
+                                    <span style={{ marginRight: '4px', fontSize: '12px' }}>🔒</span>
+                                  )}
+                                  < > {item.title}</>
                                 </button>
                               ))}
                             </div>
@@ -1412,12 +1425,23 @@ const CaseTrainingTab = ({
     if (selectedProgram && selectedProgram !== 'all') {
       filtered = filtered.filter(item => {
         if (!Array.isArray(item.tag4)) return false; // bỏ qua nếu không phải mảng
+        // Support both string and array for selectedProgram
+        if (Array.isArray(selectedProgram)) {
+          return selectedProgram.some(prog => item.tag4.includes(prog));
+        }
         return item.tag4.includes(selectedProgram);
       });
     }
 
     if (tag4Filter && tag4Filter !== 'all') {
-      filtered = filtered.filter(item => item.tag4?.includes(tag4Filter));
+      filtered = filtered.filter(item => {
+        if (!Array.isArray(item.tag4)) return false;
+        // Support both string and array for tag4Filter
+        if (Array.isArray(tag4Filter)) {
+          return tag4Filter.some(prog => item.tag4.includes(prog));
+        }
+        return item.tag4.includes(tag4Filter);
+      });
     }
 
     // Tag1 filter
@@ -1440,18 +1464,18 @@ const CaseTrainingTab = ({
       filtered = filtered.filter(item => item.impact === localFilters.impact);
     }
 
-    // Quiz status filter (>=60 is completed)
+    // Quiz status filter (>=70 is completed)
     if (localFilters.quizStatus === 'completed') {
       filtered = filtered.filter(item => {
         const score = quizScores[item.id];
         const n = typeof score === 'number' ? score : parseFloat(score);
-        return !isNaN(n) && n >= 60;
+        return !isNaN(n) && n >= 70;
       });
     } else if (localFilters.quizStatus === 'incomplete') {
       filtered = filtered.filter(item => {
         const score = quizScores[item.id];
         const n = typeof score === 'number' ? score : parseFloat(score);
-        return isNaN(n) || n < 60;
+        return isNaN(n) || n < 70;
       });
     }
 
@@ -1531,13 +1555,22 @@ const CaseTrainingTab = ({
 
   // Get titles for a specific tag
   const getTitlesForTag = (tagType, tagValue) => {
-    const dataCase = selectedProgram === 'all' ? filteredItems : filteredItems.filter(item => item.tag4.includes(selectedProgram));
+    let dataCase = filteredItems;
+    if (selectedProgram && selectedProgram !== 'all') {
+      if (Array.isArray(selectedProgram)) {
+        dataCase = filteredItems.filter(item => selectedProgram.some(prog => item.tag4?.includes(prog)));
+      } else {
+        dataCase = filteredItems.filter(item => item.tag4?.includes(selectedProgram));
+      }
+    }
 
     if (!tagValue) return dataCase;
     return filteredItems.filter(item => item[tagType] == tagValue).map(item => ({
       id: item.id,
       title: item.title,
-      tagType: tagType
+      tagType: tagType,
+      lessonNumber: item.lessonNumber,
+      isPublic: item.isPublic
     }));
   };
 
@@ -1546,7 +1579,14 @@ const CaseTrainingTab = ({
     if (!tagValue) return 0;
     return filteredItems.filter(item => {
       // Filter by selectedProgram first
-      const matchesProgram = selectedProgram === 'all' || (item.tag4 && item.tag4.includes(selectedProgram));
+      let matchesProgram = true;
+      if (selectedProgram && selectedProgram !== 'all') {
+        if (Array.isArray(selectedProgram)) {
+          matchesProgram = selectedProgram.some(prog => item.tag4?.includes(prog));
+        } else {
+          matchesProgram = item.tag4 && item.tag4.includes(selectedProgram);
+        }
+      }
       // Then filter by tag value
       return matchesProgram && item[tagType] === tagValue;
     }).length;
@@ -1738,23 +1778,17 @@ const CaseTrainingTab = ({
       return true;
     }
 
-    // 3. If isPublic is false, check if user's id_user_class is in allowed_user_class
-    if (item.isPublic === false && item.allowed_user_class) {
-      const userClassIds = currentUser?.id_user_class || [];
-      const allowedClasses = Array.isArray(item.allowed_user_class) ? item.allowed_user_class : [];
+    // 3. If isPublic is false, only non-trial accounts can access
+    // Note: Trial accounts (account_type === 'Dùng thử') are NOT allowed to access non-public items
+    if (item.isPublic === false) {
+      // Check if user is a trial account - if yes, deny access
+      const isTrialAccount = currentUser?.account_type === 'Dùng thử';
+      if (isTrialAccount) {
+        return false;
+      }
 
-      // Get valid user class IDs (those that still exist in the system)
-      const validUserClassIds = userClassIds.filter(classId => {
-        // Check if this class ID exists in the userClasses array
-        return userClasses.some(uc => uc.id === classId);
-      });
-
-      // Check if any of user's valid classes are in allowed classes
-      const hasPermission = validUserClassIds.some(userClassId =>
-        allowedClasses.includes(userClassId)
-      );
-
-      return hasPermission;
+      // Non-trial accounts can access non-public items
+      return true;
     }
 
     // Default: deny access
@@ -1766,12 +1800,16 @@ const CaseTrainingTab = ({
 
     // Check access permission
     if (!hasAccess(item)) {
+      const isTrialAccount = currentUser?.account_type === 'Dùng thử';
       return (
         <div
           ref={contentPanelRef}
           className={`${styles.contentPanel} ${newsTabStyles.contentPanel}`}
         >
-          <AccessDenied />
+          <AccessDenied 
+            isTrialAccount={isTrialAccount}
+            onUpgradeClick={() => setIsPackageModalOpen(true)}
+          />
         </div>
       );
     }
@@ -1783,36 +1821,41 @@ const CaseTrainingTab = ({
     return (
       <>  {currentUser?.isAdmin && !isMobile && (
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', width: '100%' }}>
-    <Button
-                type="text"
-                size="small"
-                onClick={handleEditClick}
-                style={{
-                  color: '#9F9F9F',
-                  border: 'none',
-                  boxShadow: 'none'
-                }}
-              >
-                Edit
-              </Button>
+          <Button
+            type="text"
+            size="small"
+            onClick={handleEditClick}
+            style={{
+              color: '#9F9F9F',
+              border: 'none',
+              boxShadow: 'none'
+            }}
+          >
+            Edit
+          </Button>
         </div>
 
       )}
         <div
           ref={contentPanelRef}
           className={`${styles.contentPanel} ${newsTabStyles.contentPanel}`}
-          // style={{ marginTop: (currentUser?.isAdmin && !isMobile) ? '30px' : '0px' }}
+        // style={{ marginTop: (currentUser?.isAdmin && !isMobile) ? '30px' : '0px' }}
         >
 
           <div className={`${styles.contentHeader} ${newsTabStyles.contentHeader}`}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%' }}>
-              <span className={`${styles.contentTitle} ${newsTabStyles.contentTitle}`}>{item.title}</span>
+              <span className={`${styles.contentTitle} ${newsTabStyles.contentTitle}`}>
+                {currentUser?.account_type === 'Dùng thử' && item.isPublic !== true && (
+                  <span style={{ marginRight: '6px', fontSize: '14px', verticalAlign: 'middle' }}>🔒</span>
+                )}
+                {item.title}
+              </span>
               {item.summaryDetail && (
                 <IconButton
                   onClick={() => setShowSummaryDetail(!showSummaryDetail)}
                   title={showSummaryDetail ? 'Ẩn SummaryDetail' : 'Hiện SummaryDetail'}
                   size="small"
-                  style={{ 
+                  style={{
                     padding: '4px',
                     color: '#ff4d4f'
                   }}
@@ -1884,15 +1927,16 @@ const CaseTrainingTab = ({
           </div>
 
           {/* Audio Player Section */}
-          <div style={{ 
-            display: 'flex', 
+          <div style={{
+            display: 'flex',
             gap: isMobile ? '12px' : '16px',
-            fontSize: '15px', 
-            color: '#9F9F9F', 
+            fontSize: '15px',
+            color: '#9F9F9F',
             marginTop: '10px',
             flexDirection: isMobile ? 'column' : 'row',
             alignItems: isMobile ? 'flex-start' : 'center'
           }}>
+           
 
             {item.summaryDetail && (
               <Button
@@ -2001,9 +2045,8 @@ const CaseTrainingTab = ({
           </div>
         )} */}
 
-
             {/* Diagram Section */}
-            {(item.diagramUrl || ((item.diagramHtmlCode || item.diagramHtmlCodeFromSummaryDetail) && item.showHtml !== false) || (item.diagramExcalidrawJson && item.showExcalidraw !== false) || item.diagramNote || item.diagramExcalidrawNote || (item.imgUrls && item.showImgUrls !== false)) && (
+            {(item.diagramUrl  || ((item.diagramHtmlCode || item.diagramHtmlCodeFromSummaryDetail) && item.showHtml !== false) || (item.diagramExcalidrawJson && item.showExcalidraw !== false) || item.diagramNote || item.diagramExcalidrawNote || (item.imgUrls && item.imgUrls.length > 0 && item.showImgUrls !== false)) && (
               <div className={`${styles.valueSection} ${newsTabStyles.valueSection}`}>
                 {/* <h3 className={`${styles.valueSectionTitle} ${newsTabStyles.valueSectionTitle}`}>
                     INFOGRAM - BẢN VẼ TRỰC QUAN HÓA
@@ -2016,40 +2059,40 @@ const CaseTrainingTab = ({
                       const imageUrl = item.diagramExcalidrawImageUrls && Array.isArray(item.diagramExcalidrawImageUrls)
                         ? item.diagramExcalidrawImageUrls[index]
                         : null;
-                      
+
                       return (
-                      <div key={`excalidraw-${index}`} style={{ marginBottom: '20px' }}>
-                        <div style={{ 
-                          border: '1px solid #e1e4e8', 
-                          borderRadius: '8px', 
-                          padding: '16px',
-                          backgroundColor: '#fff'
-                        }}>
-                          <ExcalidrawViewer
-                            jsonString={jsonString}
-                            readOnly={true}
-                            height="500px"
-                            imageUrl={imageUrl}
-                          />
-                        </div>
-                        {/* Show corresponding note if available */}
-                        {(Array.isArray(item.diagramExcalidrawNote) && item.diagramExcalidrawNote[index]) && (
-                          <div className={`${styles.diagramNote} ${newsTabStyles.diagramNote}`}>
-                            <div
-                              style={{ color: 'white' }}
-                              className={styles.markdownContent}
-                              dangerouslySetInnerHTML={{
-                                __html: (() => {
-                                  const { processedText, latexBlocks } = preprocessLatex(item.diagramExcalidrawNote[index] || '');
-                                  const html = marked.parse(processedText);
-                                  const finalHtml = postprocessLatex(html, latexBlocks);
-                                  return DOMPurify.sanitize(finalHtml);
-                                })(),
-                              }}
+                        <div key={`excalidraw-${index}`} style={{ marginBottom: '20px' }}>
+                          <div style={{
+                            border: '1px solid #e1e4e8',
+                            borderRadius: '8px',
+                            padding: '16px',
+                            backgroundColor: '#fff'
+                          }}>
+                            <ExcalidrawViewer
+                              jsonString={jsonString}
+                              readOnly={true}
+                              height="500px"
+                              imageUrl={imageUrl}
                             />
                           </div>
-                        )}
-                      </div>
+                          {/* Show corresponding note if available */}
+                          {(Array.isArray(item.diagramExcalidrawNote) && item.diagramExcalidrawNote[index]) && (
+                            <div className={`${styles.diagramNote} ${newsTabStyles.diagramNote}`}>
+                              <div
+                                style={{ color: 'white' }}
+                                className={styles.markdownContent}
+                                dangerouslySetInnerHTML={{
+                                  __html: (() => {
+                                    const { processedText, latexBlocks } = preprocessLatex(item.diagramExcalidrawNote[index] || '');
+                                    const html = marked.parse(processedText);
+                                    const finalHtml = postprocessLatex(html, latexBlocks);
+                                    return DOMPurify.sanitize(finalHtml);
+                                  })(),
+                                }}
+                              />
+                            </div>
+                          )}
+                        </div>
                       );
                     })
                   )}
@@ -2209,7 +2252,7 @@ const CaseTrainingTab = ({
                 </div>
               )}
 
-              {item.detail && (
+              {item.detail && item.showDetail !== false && (
                 <div className={`${styles.contentDetail} ${newsTabStyles.contentDetail}`}>
                   <div
                     ref={markdownContentRef}
@@ -2224,12 +2267,12 @@ const CaseTrainingTab = ({
                           breaks: false,
                           gfm: true
                         });
-                        
+
                         // Apply search highlight if searchText exists
                         if (searchText && searchText.trim()) {
                           html = highlightTextInContent(html, searchText);
                         }
-                        
+
                         const finalHtml = postprocessLatex(html, latexBlocks);
                         return DOMPurify.sanitize(finalHtml);
                       })(),
@@ -2295,6 +2338,18 @@ const CaseTrainingTab = ({
           />
         )
       }
+
+      {/* Package Purchase Modal */}
+      <PaymentModal
+        open={isPackageModalOpen}
+        onCancel={() => setIsPackageModalOpen(false)}
+        currentUser={currentUser}
+        isMobile={isMobile}
+        onTrialActivated={() => {
+          // Reload user data để cập nhật quyền truy cập
+          window.location.reload();
+        }}
+      />
       {/* Header with count */}
 
       {/* Filters Section - Matching NewsTab.jsx Layout */}
@@ -2472,7 +2527,15 @@ const CaseTrainingTab = ({
                                     className={styles.dropdownItem}
                                     onClick={(e) => handleItemSelectFromDropdown(item.id, e)}
                                   >
-                                    {item.title}
+                                    {item.lessonNumber && (
+                                      <>
+                                        {item.lessonNumber}:
+                                      </>
+                                    )}
+                                    {currentUser?.account_type === 'Dùng thử' && item.isPublic !== true && (
+                                      <span style={{ marginRight: '4px', fontSize: '12px' }}>🔒</span>
+                                    )}
+                                    < > {item.title}</>
                                   </button>
                                 ))}
                               </div>
@@ -2559,8 +2622,74 @@ const CaseTrainingTab = ({
                           />
                         </div>
                       )}
-                      <div style={{ flex: 1 }}>
-                        <Title level={5} className={styles.title}>{item.title}</Title>
+                      <div style={{ flex: 1, position: 'relative' }}>
+                        {/* ID - Top right corner */}
+                        {item.id && (
+                          <div style={{
+                            position: 'absolute',
+                            top: '0',
+                            right: '0',
+                            fontSize: '10px',
+                            color: '#9F9F9F',
+                            backgroundColor: '#f5f5f5',
+                            padding: '2px 6px',
+                            borderRadius: '4px',
+                            zIndex: 1
+                          }}>
+                            ID: {item.id}
+                          </div>
+                        )}
+
+                        {/* Lesson Number - Above title */}
+                        {item.lessonNumber && (
+                          <div style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            marginBottom: '6px',
+                            width: '100%'
+                          }}>
+                            <div style={{
+                              backgroundColor: '#b0b2c6',
+                              color: '#ffffff',
+                              padding: '2px 10px',
+                              borderRadius: '4px',
+                              fontSize: '12px',
+                              fontWeight: '500',
+                              width: 'fit-content'
+                            }}>
+                              {item.lessonNumber}
+                            </div>
+                            {/* Check mark for score >= 70 */}
+                            {(() => {
+                              const score = quizScores[item.id];
+                              const numeric = typeof score === 'number' ? score : parseFloat(score);
+                              const hasPassed = !isNaN(numeric) && numeric >= 70;
+                              return hasPassed ? (
+                                <div style={{
+                                  width: 20,
+                                  height: 20,
+                                  borderRadius: '50%',
+                                  background: '#52c41a',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  flexShrink: 0,
+                                  boxShadow: '0 2px 8px rgba(82, 196, 26, 0.3)'
+                                }}>
+                                  <span style={{ color: 'white', fontSize: '12px', fontWeight: 'bold' }}>✓</span>
+                                </div>
+                              ) : null;
+                            })()}
+                          </div>
+                        )}
+
+                        <Title level={5} className={styles.title} style={{ paddingRight: (item.id && !isMobile) ? '50px' : '0' }}>
+                          {currentUser?.account_type === 'Dùng thử' && item.isPublic !== true && (
+                            <span style={{ marginRight: '6px', fontSize: '14px', verticalAlign: 'middle' }}>🔒</span>
+                          )}
+                          {item.title}
+                        </Title>
                         <div className={styles.metaInfo}>
                           {renderQuizStatus(item)}
                           <Space size="small">
@@ -2638,14 +2767,14 @@ const CaseTrainingTab = ({
                       ref={index === visibleItems.length - 1 ? lastItemRef : null}
                       title={`${item.title}${item.summary ? '\n\n' + item.summary : ''}`}
                       style={{
-                        height: '240px',
+                        height: '210px',
                         overflow: 'hidden',
                         cursor: 'pointer',
                         border: isSelected ? '2px solid #1890ff' : '1px solid #f0f0f0',
                         borderRadius: '8px',
                         transition: 'all 0.3s ease',
                         backgroundColor: isSelected ? '#e6f7ff' : '#fff',
-                        padding: '16px',
+                        padding: '16px 16px 5px 16px',
                         boxShadow: isSelected ? '0 4px 12px rgba(24, 144, 255, 0.2)' : 'none'
                       }}
                       onMouseEnter={(e) => {
@@ -2668,7 +2797,7 @@ const CaseTrainingTab = ({
                           height: '100%',
                           display: 'flex',
                           flexDirection: 'column',
-                          gap: '8px'
+                          gap: '0x'
                         }}
                       >
                         {/* Hàng trên: Ảnh + Title + Summary */}
@@ -2685,7 +2814,6 @@ const CaseTrainingTab = ({
                           {item.avatarUrl && (
                             <div
                               className={styles.avatarGridWrapper}
-                              onClick={(e) => e.stopPropagation()}
                             >
                               <Image
                                 src={item.avatarUrl}
@@ -2706,10 +2834,55 @@ const CaseTrainingTab = ({
                               flexDirection: 'column',
                               gap: '8px',
                               minWidth: 0,
-                              overflow: 'hidden'
+                              overflow: 'hidden',
+                              position: 'relative'
                             }}
                             onClick={() => handleGridItemClick(item)}
                           >
+                            {/* Lesson Number - Above title */}
+                            {item.lessonNumber && (
+                              <div style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                marginBottom: '4px',
+                                width: '100%'
+                              }}>
+                                <div style={{
+                                  backgroundColor: '#b0b2c6',
+                                  color: '#ffffff',
+                                  padding: '2px 10px',
+                                  borderRadius: '4px',
+                                  fontSize: '12px',
+                                  fontWeight: '500',
+                                  width: 'fit-content'
+                                }}>
+                                  {item.lessonNumber}
+                                </div>
+                                {/* Check mark for score >= 70 */}
+                                {(() => {
+                                  const score = quizScores[item.id];
+                                  const numeric = typeof score === 'number' ? score : parseFloat(score);
+                                  const hasPassed = !isNaN(numeric) && numeric >= 70;
+                                  return hasPassed ? (
+                                    <div style={{
+                                      width: 20,
+                                      height: 20,
+                                      borderRadius: '50%',
+                                      background: '#52c41a',
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      justifyContent: 'center',
+                                      flexShrink: 0,
+                                      boxShadow: '0 2px 8px rgba(82, 196, 26, 0.3)'
+                                    }}>
+                                      <span style={{ color: 'white', fontSize: '12px', fontWeight: 'bold' }}>✓</span>
+                                    </div>
+                                  ) : null;
+                                })()}
+                              </div>
+                            )}
+
                             {/* Title */}
                             <div
                               style={{
@@ -2723,6 +2896,9 @@ const CaseTrainingTab = ({
                                 color: '#1f2937'
                               }}
                             >
+                              {currentUser?.account_type === 'Dùng thử' && item.isPublic !== true && (
+                                <span style={{ marginRight: '6px', fontSize: '14px', verticalAlign: 'middle' }}>🔒</span>
+                              )}
                               {item.title}
                             </div>
 
@@ -2756,7 +2932,7 @@ const CaseTrainingTab = ({
                             width: '100%'
                           }}
                         >
-                          {/* CID bên trái */}
+                          {/* CID và ID bên trái */}
                           <div
                             style={{
                               display: 'flex',
@@ -2771,7 +2947,9 @@ const CaseTrainingTab = ({
                               flex: 1
                             }}
                           >
-                            CID: {item.cid || ''}
+                            {item.cid && <span>CID: {item.cid}</span>}
+                            {item.id && item.cid && <span>|</span>}
+                            {item.id && <span>ID: {item.id}</span>}
                           </div>
 
                           {/* Trạng thái quiz + tag bên phải */}
@@ -2860,11 +3038,11 @@ const CaseTrainingTab = ({
                         >
                           ↑
                         </Button>
-                        <span 
-                          style={{ 
-                            fontSize: '12px', 
-                            color: '#666', 
-                            minWidth: '50px', 
+                        <span
+                          style={{
+                            fontSize: '12px',
+                            color: '#666',
+                            minWidth: '50px',
                             textAlign: 'center',
                             cursor: 'pointer'
                           }}
@@ -2888,7 +3066,7 @@ const CaseTrainingTab = ({
               )
             }
             open={selectedItem !== null && viewMode === 'grid'}
-            onCancel={() => { setSelectedItem(null); updateURL({ item: null }) }}
+            onCancel={() => { setSelectedItem(null); updateURL({ item: null }), setExpandedItem(null) }}
             footer={null}
             width={selectedItem?.hasTitle ? 1500 : 1000}
             destroyOnClose={true}
@@ -2909,12 +3087,12 @@ const CaseTrainingTab = ({
                   {renderTOCSidebar()}
                 </div>
               )}
-              
+
               {/* Floating Search Results Panel */}
               {searchResults.length > 0 && showSearchResultsPanel && (
-                <div 
+                <div
                   ref={panelRef}
-                  style={{ 
+                  style={{
                     position: 'fixed',
                     top: `${panelPosition.y}px`,
                     left: `${panelPosition.x}px`,
@@ -2934,8 +3112,8 @@ const CaseTrainingTab = ({
                     transition: isDragging ? 'none' : 'box-shadow 0.2s'
                   }}
                 >
-                  <div 
-                    style={{ 
+                  <div
+                    style={{
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'space-between',
@@ -2947,9 +3125,9 @@ const CaseTrainingTab = ({
                     }}
                     onMouseDown={handleMouseDown}
                   >
-                    <div style={{ 
-                      fontSize: '14px', 
-                      fontWeight: '600', 
+                    <div style={{
+                      fontSize: '14px',
+                      fontWeight: '600',
                       color: '#262626',
                       flex: 1
                     }}>
@@ -2964,7 +3142,7 @@ const CaseTrainingTab = ({
                       onMouseDown={(e) => e.stopPropagation()}
                     />
                   </div>
-                  <div style={{ 
+                  <div style={{
                     overflowY: 'auto',
                     padding: '12px',
                     flex: 1
@@ -2997,15 +3175,15 @@ const CaseTrainingTab = ({
                             }
                           }}
                         >
-                          <div style={{ 
-                            color: '#666', 
+                          <div style={{
+                            color: '#666',
                             marginBottom: '4px',
                             fontSize: '11px'
                           }}>
                             Kết quả {index + 1}
                           </div>
-                          <div 
-                            style={{ 
+                          <div
+                            style={{
                               color: '#262626',
                               lineHeight: '1.6'
                             }}
@@ -3160,6 +3338,50 @@ const CaseTrainingTab = ({
                   )}
 
                   <div className={styles.itemContent}>
+                    {/* Lesson Number - Separate row above image and title */}
+                    {item.lessonNumber && (
+                      <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        marginBottom: '8px',
+                        width: '100%'
+                      }}>
+                        <div style={{
+                          backgroundColor: '#b0b2c6',
+                          color: '#ffffff',
+                          padding: '2px 10px',
+                          borderRadius: '4px',
+                          fontSize: '12px',
+                          fontWeight: '500',
+                          width: 'fit-content'
+                        }}>
+                          {item.lessonNumber}
+                        </div>
+                        {/* Check mark for score >= 70 */}
+                        {(() => {
+                          const score = quizScores[item.id];
+                          const numeric = typeof score === 'number' ? score : parseFloat(score);
+                          const hasPassed = !isNaN(numeric) && numeric >= 70;
+                          return hasPassed ? (
+                            <div style={{
+                              width: 20,
+                              height: 20,
+                              borderRadius: '50%',
+                              background: '#52c41a',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              flexShrink: 0,
+                              boxShadow: '0 2px 8px rgba(82, 196, 26, 0.3)'
+                            }}>
+                              <span style={{ color: 'white', fontSize: '12px', fontWeight: 'bold' }}>✓</span>
+                            </div>
+                          ) : null;
+                        })()}
+                      </div>
+                    )}
+
                     <div className={styles.itemHeader}>
                       <div style={{ display: 'flex', alignItems: 'start', gap: '10px' }}>
                         {item.avatarUrl && (
@@ -3192,29 +3414,11 @@ const CaseTrainingTab = ({
                           </div>
                         )}
                         <div style={{ flex: 1 }}>
-                          <div className={styles.title} style={{
-                            display: 'inline-block',
-                            lineHeight: '1.4'
-                          }}>
-                            <span style={{ display: 'inline' }}>{item.title}</span>
-                            <span style={{
-                              color: '#868686',
-                              fontSize: '12px',
-                              fontWeight: '500',
-                              cursor: 'pointer',
-                              whiteSpace: 'nowrap',
-                              marginLeft: '4px',
-                              display: 'inline'
-                            }}
-                            // onClick={async (e) => {
-                            //   e.preventDefault();
-                            //   e.stopPropagation();
-                            //   const data = await getK9ByCidType(item.cid, 'news');
-                            //   handleCidSourceInfoClick(data);
-                            // }}
-                            >
-                              CID: {item.cid}
-                            </span>
+                          <div className={styles.title}>
+                            {currentUser?.account_type === 'Dùng thử' && item.isPublic !== true && (
+                              <span style={{ marginRight: '6px', fontSize: '14px', verticalAlign: 'middle' }}>🔒</span>
+                            )}
+                            {item.title}
                           </div>
                           {item.summary && (
                             <div className={styles.summary}>
@@ -3226,16 +3430,40 @@ const CaseTrainingTab = ({
 
                     </div>
 
-                    <div className={styles.metaInfo} style={{ justifyContent: 'space-between' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                    <div className={styles.metaInfo} style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      flexWrap: 'wrap',
+                      gap: '8px'
+                    }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', justifyContent: 'space-between', width: '100%' }}>
+                        {/* CID và ID - trước điểm */}
+                        {(item.cid || item.id) && (
+                          <div style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                            color: '#868686',
+                            fontSize: '11px',
+                            fontWeight: '500'
+                          }}>
+                            {item.cid && <span>CID: {item.cid}</span>}
+                            {item.id && item.cid && <span>|</span>}
+                            {item.id && <span>ID: {item.id}</span>}
+                          </div>
+                        )}
 
+                        {
+                          (item.tag1 || item.tag2) && (
+                            <Space size="small">
+                              {item.tag1 && <Tag color="purple">{item.tag1}</Tag>}
+                              {/* {item.tag3 && <Tag color="red">{item.tag3}</Tag>} */}
+                            </Space>
+                          )
+                        }
                         {renderQuizStatus(item)}
 
-                        <Space size="small">
-                          {item.tag1 && <Tag color="purple">{item.tag1}</Tag>}
-                          {/* {item.tag2 && <Tag color="cyan">{item.tag2}</Tag>} */}
-                          {item.tag3 && <Tag color="red">{item.tag3}</Tag>}
-                        </Space>
                       </div>
 
                       {/* {(item.summary || item.description || item.source) && (

@@ -12,7 +12,7 @@
 .promptSettingsListModal :global(.ant-modal-body) {
     height: calc(90vh - 120px) !important;
     padding: 20px !important;
-    overflow-y: auto !important;
+    overflow: hidden !important;
     flex: 1 !important;
 }
 
@@ -27,6 +27,31 @@
 /* Content container */
 .contentContainer {
     height: 100%;
-    overflow-x: hidden;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.contentContainer :global(.ant-tabs) {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.contentContainer :global(.ant-tabs-content-holder) {
+    flex: 1;
+    overflow: hidden;
+    min-height: 0;
+}
+
+.contentContainer :global(.ant-tabs-content) {
+    height: 100%;
+    overflow: hidden;
+}
+
+.contentContainer :global(.ant-tabs-tabpane) {
+    height: 100%;
+    overflow: hidden;
 }
 

@@ -9,59 +9,199 @@ import {
 	message,
 	Tag,
 	Typography,
-	Upload,
-	Image,
+	Tabs,
+	Select,
 } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined, UploadOutlined } from '@ant-design/icons';
-import { uploadFiles } from '../../../apis/aiGen/uploadImageWikiNoteService.jsx';
+import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 
 const { Text } = Typography;
 const { TextArea } = Input;
+const { Option } = Select;
 
-export default function TagProgramModal ({ visible, onClose, tag4Options, onSave }) {
+export default function TagProgramModal ({ visible, onClose, tag4Options, onSave, coursesOptions, onSaveCourses }) {
+  const [activeTab, setActiveTab] = useState('courses'); // 'courses' or 'programs'
+  
+  // Courses (Học phần) states
+  const [coursesList, setCoursesList] = useState([]);
+  const [editingCourse, setEditingCourse] = useState(null);
+  const [editingCourseIndex, setEditingCourseIndex] = useState(null);
+  const [newCourse, setNewCourse] = useState('');
+  const [newCourseDescription, setNewCourseDescription] = useState('');
+  const [savingCourse, setSavingCourse] = useState(false);
+  
+  // Programs (Chương trình) states
   const [tagsList, setProgramList] = useState([]);
   const [editingTag, setEditingTag] = useState(null);
   const [editingIndex, setEditingIndex] = useState(null);
   const [newTag, setNewTag] = useState('');
   const [newDescription, setNewDescription] = useState('');
-  const [newImageUrl, setNewImageUrl] = useState('');
-  const [newImageFile, setNewImageFile] = useState(null);
-  const [editingImageFile, setEditingImageFile] = useState(null);
+  const [newDisplayName, setNewDisplayName] = useState('');
+  const [newCourseId, setNewCourseId] = useState(undefined); // Course that program belongs to
   const [saving, setSaving] = useState(false);
-  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     if (visible) {
+      // Load courses
+      setCoursesList(coursesOptions ? [...coursesOptions] : []);
+      // Load programs
       setProgramList(tag4Options ? [...tag4Options] : []);
       // Reset editing states when modal opens
+      setEditingCourse(null);
+      setEditingCourseIndex(null);
+      setNewCourse('');
+      setNewCourseDescription('');
       setEditingTag(null);
       setEditingIndex(null);
       setNewTag('');
       setNewDescription('');
-      setNewImageUrl('');
-      setNewImageFile(null);
-      setEditingImageFile(null);
+      setNewDisplayName('');
+      setNewCourseId(undefined);
+      // Don't reset activeTab when modal is already open (only reset when first opening)
+      // This prevents switching back to 'courses' tab when saving in 'programs' tab
+    } else {
+      // Only reset activeTab when modal closes
+      setActiveTab('courses');
     }
-  }, [visible, tag4Options]);
+  }, [visible, tag4Options, coursesOptions]);
 
-	const handleImageSelect = (file) => {
-		setNewImageFile(file);
-		// Tạo preview URL để hiển thị
-		const previewUrl = URL.createObjectURL(file);
-		setNewImageUrl(previewUrl);
-		message.info('Ảnh đã được chọn, sẽ upload khi lưu tag');
-		return false; // Prevent default upload
+	// ========== COURSES (HỌC PHẦN) HANDLERS ==========
+	const handleAddCourse = async () => {
+		if (!newCourse.trim()) {
+			message.warning('Vui lòng nhập tên học phần!');
+			return;
+		}
+		if (newCourse.trim().length < 2) {
+			message.warning('Tên học phần phải có ít nhất 2 ký tự!');
+			return;
+		}
+		if (newCourse.trim().length > 50) {
+			message.warning('Tên học phần không được quá 50 ký tự!');
+			return;
+		}
+		if (coursesList.find(course => course.label === newCourse.trim())) {
+			message.warning('Tên học phần này đã tồn tại!');
+			return;
+		}
+
+		setSavingCourse(true);
+
+		const newCourseItem = { 
+			value: newCourse.trim(), 
+			label: newCourse.trim(),
+			description: newCourseDescription.trim() || ''
+		};
+		const updatedList = [...coursesList, newCourseItem];
+		setCoursesList(updatedList);
+		setNewCourse('');
+		setNewCourseDescription('');
+		
+		// Lưu ngay lập tức vào database
+		try {
+			await onSaveCourses(updatedList);
+			message.success('Đã thêm học phần!');
+		} catch (error) {
+			// Nếu lưu thất bại, rollback state
+			setCoursesList(coursesList);
+			message.error('Lỗi khi lưu học phần!');
+		} finally {
+			setSavingCourse(false);
+		}
 	};
 
-	const handleEditImageSelect = (file) => {
-		setEditingImageFile(file);
-		// Tạo preview URL để hiển thị
-		const previewUrl = URL.createObjectURL(file);
-		setEditingTag({ ...editingTag, imageUrl: previewUrl });
-		message.info('Ảnh đã được chọn, sẽ upload khi lưu tag');
-		return false; // Prevent default upload
+	const handleEditCourse = (record, index) => {
+		setEditingCourse({ 
+			value: record.value,
+			label: record.label,
+			description: record.description || '',
+			originalValue: record.value,
+			originalLabel: record.label,
+			originalDescription: record.description || ''
+		});
+		setEditingCourseIndex(index);
 	};
 
+	const handleSaveEditCourse = async () => {
+		if (!editingCourse || !editingCourse.label.trim()) {
+			message.warning('Vui lòng nhập tên học phần!');
+			return;
+		}
+		if (editingCourse.label.trim().length < 2) {
+			message.warning('Tên học phần phải có ít nhất 2 ký tự!');
+			return;
+		}
+		if (editingCourse.label.trim().length > 50) {
+			message.warning('Tên học phần không được quá 50 ký tự!');
+			return;
+		}
+		// Check if new label already exists (excluding current editing item)
+		const existingCourse = coursesList.find(course => 
+			course.label === editingCourse.label.trim() && 
+			course.value !== editingCourse.originalValue
+		);
+		if (existingCourse) {
+			message.warning('Tên học phần này đã tồn tại!');
+			return;
+		}
+
+		setSavingCourse(true);
+
+		const updatedList = coursesList.map(course =>
+			course.value === editingCourse.originalValue
+				? { 
+					value: editingCourse.label.trim(),
+					label: editingCourse.label.trim(),
+					description: editingCourse.description.trim() || ''
+				}
+				: course,
+		);
+		
+		// Backup current states for rollback
+		const originalCoursesList = [...coursesList];
+		const originalEditingCourse = { ...editingCourse };
+		
+		// Update UI optimistically
+		setCoursesList(updatedList);
+		setEditingCourse(null);
+		setEditingCourseIndex(null);
+		
+		// Lưu ngay lập tức vào database
+		try {
+			await onSaveCourses(updatedList);
+			message.success('Đã cập nhật học phần!');
+		} catch (error) {
+			// Nếu lưu thất bại, rollback state
+			setCoursesList(originalCoursesList);
+			setEditingCourse(originalEditingCourse);
+			setEditingCourseIndex(null);
+			message.error('Lỗi khi cập nhật học phần!');
+		} finally {
+			setSavingCourse(false);
+		}
+	};
+
+	const handleDeleteCourse = async (value) => {
+		// Check if any program is using this course
+		const programsUsingCourse = tagsList.filter(program => program.courseId === value);
+		if (programsUsingCourse.length > 0) {
+			message.warning(`Không thể xóa học phần này vì có ${programsUsingCourse.length} chương trình đang sử dụng!`);
+			return;
+		}
+
+		const updatedList = coursesList.filter(course => course.value !== value);
+		setCoursesList(updatedList);
+		
+		// Lưu ngay lập tức vào database
+		try {
+			await onSaveCourses(updatedList);
+			message.success('Đã xóa học phần!');
+		} catch (error) {
+			// Nếu lưu thất bại, rollback state
+			setCoursesList(coursesList);
+			message.error('Lỗi khi xóa học phần!');
+		}
+	};
+
+	// ========== PROGRAMS (CHƯƠNG TRÌNH) HANDLERS ==========
 	const handleAddTag = async () => {
 		if (!newTag.trim()) {
 			message.warning('Vui lòng nhập tên tag!');
@@ -81,38 +221,20 @@ export default function TagProgramModal ({ visible, onClose, tag4Options, onSave
 		}
 
 		setSaving(true);
-		let finalImageUrl = newImageUrl.trim();
-
-		// Upload ảnh nếu có file được chọn
-		if (newImageFile) {
-			try {
-				const response = await uploadFiles([newImageFile]);
-				finalImageUrl = response.files?.[0]?.fileUrl || response.files?.[0]?.url || '';
-				if (!finalImageUrl) {
-					message.error('Upload ảnh thất bại!');
-					setSaving(false);
-					return;
-				}
-			} catch (error) {
-				console.error('Upload error:', error);
-				message.error('Upload ảnh thất bại!');
-				setSaving(false);
-				return;
-			}
-		}
 
 		const newTagItem = { 
 			value: newTag.trim(), 
 			label: newTag.trim(),
 			description: newDescription.trim() || '',
-			imageUrl: finalImageUrl || ''
+			displayName: newDisplayName.trim() || '',
+			courseId: newCourseId || undefined // Link to course
 		};
 		const updatedList = [...tagsList, newTagItem];
 		setProgramList(updatedList);
 		setNewTag('');
 		setNewDescription('');
-		setNewImageUrl('');
-		setNewImageFile(null);
+		setNewDisplayName('');
+		setNewCourseId(undefined);
 		
 		// Lưu ngay lập tức vào database
 		try {
@@ -129,14 +251,16 @@ export default function TagProgramModal ({ visible, onClose, tag4Options, onSave
 
 	const handleEditTag = (record, index) => {
 		setEditingTag({ 
-			value: record.value, // Giữ nguyên value
-			label: record.label, // Chỉ edit label
-			description: record.description || '', // Thêm description
-			imageUrl: record.imageUrl || '', // Thêm imageUrl
+			value: record.value,
+			label: record.label,
+			description: record.description || '',
+			displayName: record.displayName || '',
+			courseId: record.courseId || undefined,
 			originalValue: record.value,
 			originalLabel: record.label,
 			originalDescription: record.description || '',
-			originalImageUrl: record.imageUrl || ''
+			originalDisplayName: record.displayName || '',
+			originalCourseId: record.courseId || undefined
 		});
 		setEditingIndex(index);
 	};
@@ -165,34 +289,16 @@ export default function TagProgramModal ({ visible, onClose, tag4Options, onSave
 		}
 
 		setSaving(true);
-		let finalImageUrl = editingTag.imageUrl.trim();
-
-		// Upload ảnh nếu có file mới được chọn
-		if (editingImageFile) {
-			try {
-				const response = await uploadFiles([editingImageFile]);
-				finalImageUrl = response.files?.[0]?.fileUrl || response.files?.[0]?.url || '';
-				if (!finalImageUrl) {
-					message.error('Upload ảnh thất bại!');
-					setSaving(false);
-					return;
-				}
-			} catch (error) {
-				console.error('Upload error:', error);
-				message.error('Upload ảnh thất bại!');
-				setSaving(false);
-				return;
-			}
-		}
 
 		const updatedList = tagsList.map(tag =>
 			tag.value === editingTag.originalValue
 				? { 
-					value: editingTag.label.trim(), // Update value to match label
+					value: editingTag.label.trim(),
 					label: editingTag.label.trim(),
 					description: editingTag.description.trim() || '',
-					imageUrl: finalImageUrl || ''
-				} // Update both value and label to be the same
+					displayName: editingTag.displayName.trim() || '',
+					courseId: editingTag.courseId || undefined
+				}
 				: tag,
 		);
 		
@@ -204,12 +310,10 @@ export default function TagProgramModal ({ visible, onClose, tag4Options, onSave
 		setProgramList(updatedList);
 		setEditingTag(null);
 		setEditingIndex(null);
-		setEditingImageFile(null);
 		
 		// Lưu ngay lập tức vào database
 		try {
 			await onSave(updatedList);
-			message.success('Đã cập nhật tag!');
 		} catch (error) {
 			// Nếu lưu thất bại, rollback state
 			setProgramList(originalProgramList);
@@ -241,6 +345,106 @@ export default function TagProgramModal ({ visible, onClose, tag4Options, onSave
     onClose();
   };
 
+	// ========== COURSES COLUMNS ==========
+	const coursesColumns = [
+		{
+			title: 'Học phần',
+			dataIndex: 'label',
+			key: 'label',
+			width: 200,
+			render: (text, record, index) => {
+				const isEditing = editingCourseIndex === index;
+				if (isEditing) {
+					return (
+						<div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+							<Input
+								value={editingCourse.label || ''}
+								onChange={(e) => setEditingCourse({ ...editingCourse, label: e.target.value })}
+								onPressEnter={handleSaveEditCourse}
+								onKeyDown={(e) => {
+									if (e.key === 'Escape') {
+										setEditingCourse(null);
+										setEditingCourseIndex(null);
+									}
+								}}
+								autoFocus
+								size="small"
+								style={{ flex: 1 }}
+								placeholder="Nhập tên học phần..."
+							/>
+						</div>
+					);
+				}
+				return <Tag color="blue" style={{ margin: '2px 0' }}>{text}</Tag>;
+			},
+		},
+		{
+			title: 'Mô tả',
+			dataIndex: 'description',
+			key: 'description',
+			render: (text, record, index) => {
+				const isEditing = editingCourseIndex === index;
+				if (isEditing) {
+					return (
+						<TextArea
+							value={editingCourse.description || ''}
+							onChange={(e) => setEditingCourse({ ...editingCourse, description: e.target.value })}
+							placeholder="Nhập mô tả..."
+							autoSize={{ minRows: 2, maxRows: 4 }}
+							size="small"
+						/>
+					);
+				}
+				return (
+					<Text type="secondary" style={{ fontSize: '12px' }}>
+						{text || 'Chưa có mô tả'}
+					</Text>
+				);
+			},
+		},
+		{
+			title: 'Thao tác',
+			key: 'actions',
+			width: 120,
+			render: (_, record, index) => {
+				const isEditing = editingCourseIndex === index;
+				if (isEditing) {
+					return (
+						<Space>
+							<Button type="link" size="small" onClick={handleSaveEditCourse} loading={savingCourse}>
+								{savingCourse ? 'Đang lưu...' : 'Lưu'}
+							</Button>
+							<Button type="link" size="small" onClick={() => {
+								setEditingCourse(null);
+								setEditingCourseIndex(null);
+							}}>
+								Hủy
+							</Button>
+						</Space>
+					);
+				}
+				return (
+					<Space>
+						<Button type="link" size="small" icon={<EditOutlined />} onClick={() => handleEditCourse(record, index)}>
+							Sửa
+						</Button>
+						<Popconfirm
+							title="Bạn có chắc muốn xóa học phần này?"
+							onConfirm={() => handleDeleteCourse(record.value)}
+							okText="Có"
+							cancelText="Không"
+						>
+							<Button type="link" size="small" danger icon={<DeleteOutlined />}>
+								Xóa
+							</Button>
+						</Popconfirm>
+					</Space>
+				);
+			},
+		},
+	];
+
+	// ========== PROGRAMS COLUMNS ==========
 	const tagsColumns = [
 		{
 			title: 'Program',
@@ -273,46 +477,60 @@ export default function TagProgramModal ({ visible, onClose, tag4Options, onSave
 			},
 		},
 		{
-			title: 'Ảnh',
-			dataIndex: 'imageUrl',
-			key: 'imageUrl',
-			width: 120,
+			title: 'Học phần',
+			dataIndex: 'courseId',
+			key: 'courseId',
+			width: 150,
+			render: (courseId, record, index) => {
+				const isEditing = editingIndex === index;
+				if (isEditing) {
+					return (
+						<Select
+							value={editingTag.courseId}
+							onChange={(value) => setEditingTag({ ...editingTag, courseId: value })}
+							placeholder="Chọn học phần"
+							allowClear
+							size="small"
+							style={{ width: '100%' }}
+						>
+							{coursesList.map(course => (
+								<Option key={course.value} value={course.value}>
+									{course.label}
+								</Option>
+							))}
+						</Select>
+					);
+				}
+				const course = coursesList.find(c => c.value === courseId);
+				return (
+					<Text style={{ fontSize: '13px' }}>
+						{course ? <Tag color="blue">{course.label}</Tag> : '-'}
+					</Text>
+				);
+			},
+		},
+		{
+			title: 'Tên hiển thị',
+			dataIndex: 'displayName',
+			key: 'displayName',
+			width: 200,
 			render: (text, record, index) => {
 				const isEditing = editingIndex === index;
 				if (isEditing) {
 					return (
-						<div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-							<Input
-								value={editingTag.imageUrl || ''}
-								onChange={(e) => setEditingTag({ ...editingTag, imageUrl: e.target.value })}
-								placeholder="URL ảnh..."
-								size="small"
-							/>
-							<Upload
-								showUploadList={false}
-								beforeUpload={handleEditImageSelect}
-								accept="image/*"
-								disabled={saving}
-							>
-								<Button size="small" icon={<UploadOutlined />} loading={saving}>
-									{saving ? 'Đang lưu...' : 'Chọn ảnh'}
-								</Button>
-							</Upload>
-						</div>
-					);
-				}
-				if (text) {
-					return (
-						<Image
-							src={text}
-							width={60}
-							height={40}
-							style={{ objectFit: 'cover', borderRadius: 4 }}
-							fallback="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMIAAADDCAYAAADQvc6UAAABRWlDQ1BJQ0MgUHJvZmlsZQAAKJFjYGASSSwoyGFhYGDIzSspCnJ3UoiIjFJgf8LAwSDCIMogwMCcmFxc4BgQ4ANUwgCjUcG3awyMIPqyLsis7PPOq3QdDFcvjV3jOD1boQVTPQrgSkktTgbSf4A4LbmgqISBgTEFyFYuLykAsTuAbJEioKOA7DkgdjqEvQHEToKwj4DVhAQ5A9k3gGyB5IxEoBmML4BsnSQk8XQkNtReEOBxcfXxUQg1Mjc0dyHgXNJBSWpFCYh2zi+oLMpMzyhRcASGUqqCZ16yno6CkYGRAQMDKMwhqj/fAIcloxgHQqxAjIHBEugw5sUIsSQpBobtQPdLciLEVJYzMPBHMDBsayhILEqEO4DxG0txmrERhM29nYGBddr//5/DGRjYNRkY/l7////39v///y4Dmn+LgeHANwDrkl1AuO+kmgAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAwqADAAQAAAABAAAAwwAAAAD9b/HnAAAHlklEQVR4Ae3dP3Ik1RnG4W+FgYxN"
+						<Input
+							value={editingTag.displayName || ''}
+							onChange={(e) => setEditingTag({ ...editingTag, displayName: e.target.value })}
+							placeholder="Nhập tên hiển thị..."
+							size="small"
 						/>
 					);
 				}
-				return <Text type="secondary" style={{ fontSize: '12px' }}>Chưa có ảnh</Text>;
+				return (
+					<Text style={{ fontSize: '13px', fontWeight: '500' }}>
+						{text || '-'}
+					</Text>
+				);
 			},
 		},
 		{
@@ -381,32 +599,23 @@ export default function TagProgramModal ({ visible, onClose, tag4Options, onSave
 		},
 	];
 
-	return (
-		<Modal
-			title="Quản lý Program"
-			open={visible}
-			onCancel={onClose}
-			width={800}
-			footer={[
-				<Button key="cancel" onClick={onClose}>
-					Đóng
-				</Button>,
-			]}
-		>
-			<div style={{height: '60vh', overflowY: 'auto', padding: 10}}>
-				<div style={{ marginBottom: '20px' }}>
-					<Text type="secondary">
-						Quản lý danh sách tags cho các bài viết. Program giúp phân loại và tìm kiếm nội dung dễ dàng hơn.
-					</Text>
-					<div style={{ marginTop: '10px', padding: '8px', backgroundColor: '#f6ffed', borderRadius: '4px', border: '1px solid #b7eb8f' }}>
-						<Text type="success" style={{ fontSize: '12px' }}>
-							💡 <strong>Hướng dẫn:</strong> Click vào nút "Sửa" để chỉnh sửa, "Xóa" để xóa, hoặc nhập tên mới và nhấn "Thêm". Tất cả thay đổi sẽ được lưu tự động!
+	const tabItems = [
+		{
+			key: 'courses',
+			label: 'Học phần',
+			children: (
+				<div style={{ padding: '10px 0' }}>
+					<div style={{ marginBottom: '20px' }}>
+						<Text type="secondary">
+							Quản lý danh sách học phần. Mỗi học phần có thể chứa nhiều chương trình.
 						</Text>
+						<div style={{ marginTop: '10px', padding: '8px', backgroundColor: '#e6f7ff', borderRadius: '4px', border: '1px solid #91d5ff' }}>
+							<Text type="info" style={{ fontSize: '12px' }}>
+								💡 <strong>Hướng dẫn:</strong> Click vào nút "Sửa" để chỉnh sửa, "Xóa" để xóa, hoặc nhập tên mới và nhấn "Thêm". Tất cả thay đổi sẽ được lưu tự động!
+							</Text>
+						</div>
 					</div>
-				</div>
 
-				{/* Program Management */}
-				<div>
 					<div style={{
 						display: 'flex',
 						justifyContent: 'space-between',
@@ -414,42 +623,97 @@ export default function TagProgramModal ({ visible, onClose, tag4Options, onSave
 						marginBottom: '15px',
 						gap: '10px'
 					}}>
-						<h4 style={{ margin: 0, color: '#722ed1' }}>Program - Phân loại nội dung</h4>
+						<h4 style={{ margin: 0, color: '#1890ff' }}>Học phần - Phân loại chương trình</h4>
 						<div style={{ display: 'flex', flexDirection: 'column', gap: '8px', minWidth: '300px' }}>
 							<Input
-								placeholder="Nhập tên tag mới"
+								placeholder="Nhập tên học phần mới"
+								value={newCourse}
+								onChange={(e) => setNewCourse(e.target.value)}
+								onPressEnter={handleAddCourse}
+								size="small"
+							/>
+							<TextArea
+								placeholder="Nhập mô tả cho học phần (tùy chọn)"
+								value={newCourseDescription}
+								onChange={(e) => setNewCourseDescription(e.target.value)}
+								autoSize={{ minRows: 2, maxRows: 3 }}
+								size="small"
+							/>
+							<Button type="primary" icon={<PlusOutlined />} onClick={handleAddCourse} size="small" loading={savingCourse}>
+								{savingCourse ? 'Đang lưu...' : 'Thêm Học phần'}
+							</Button>
+						</div>
+					</div>
+					<Table
+						columns={coursesColumns}
+						dataSource={coursesList}
+						rowKey="value"
+						pagination={false}
+						size="small"
+					/>
+				</div>
+			),
+		},
+		{
+			key: 'programs',
+			label: 'Chương trình',
+			children: (
+				<div style={{ padding: '10px 0' }}>
+					<div style={{ marginBottom: '20px' }}>
+						<Text type="secondary">
+							Quản lý danh sách chương trình. Mỗi chương trình có thể thuộc về một học phần.
+						</Text>
+						<div style={{ marginTop: '10px', padding: '8px', backgroundColor: '#f6ffed', borderRadius: '4px', border: '1px solid #b7eb8f' }}>
+							<Text type="success" style={{ fontSize: '12px' }}>
+								💡 <strong>Hướng dẫn:</strong> Click vào nút "Sửa" để chỉnh sửa, "Xóa" để xóa, hoặc nhập tên mới và nhấn "Thêm". Tất cả thay đổi sẽ được lưu tự động!
+							</Text>
+						</div>
+					</div>
+
+					<div style={{
+						display: 'flex',
+						justifyContent: 'space-between',
+						alignItems: 'flex-start',
+						marginBottom: '15px',
+						gap: '10px'
+					}}>
+						<h4 style={{ margin: 0, color: '#722ed1' }}>Chương trình - Phân loại nội dung</h4>
+						<div style={{ display: 'flex', flexDirection: 'column', gap: '8px', minWidth: '300px' }}>
+							<Input
+								placeholder="Nhập tên chương trình mới"
 								value={newTag}
 								onChange={(e) => setNewTag(e.target.value)}
 								onPressEnter={handleAddTag}
 								size="small"
 							/>
+							<Select
+								placeholder="Chọn học phần (tùy chọn)"
+								value={newCourseId}
+								onChange={setNewCourseId}
+								allowClear
+								size="small"
+							>
+								{coursesList.map(course => (
+									<Option key={course.value} value={course.value}>
+										{course.label}
+									</Option>
+								))}
+							</Select>
 							<TextArea
-								placeholder="Nhập mô tả cho tag (tùy chọn)"
+								placeholder="Nhập mô tả cho chương trình (tùy chọn)"
 								value={newDescription}
 								onChange={(e) => setNewDescription(e.target.value)}
 								autoSize={{ minRows: 2, maxRows: 3 }}
 								size="small"
 							/>
-							<div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-								<Input
-									placeholder="URL ảnh (tùy chọn)"
-									value={newImageUrl}
-									onChange={(e) => setNewImageUrl(e.target.value)}
-									size="small"
-								/>
-								<Upload
-									showUploadList={false}
-									beforeUpload={handleImageSelect}
-									accept="image/*"
-									disabled={saving}
-								>
-									<Button size="small" icon={<UploadOutlined />} style={{ width: '100%' }} loading={saving}>
-										{saving ? 'Đang lưu...' : 'Chọn ảnh'}
-									</Button>
-								</Upload>
-							</div>
+							<Input
+								placeholder="Tên hiển thị (VD: Bài 1, Bài 2...)"
+								value={newDisplayName}
+								onChange={(e) => setNewDisplayName(e.target.value)}
+								size="small"
+							/>
 							<Button type="primary" icon={<PlusOutlined />} onClick={handleAddTag} size="small" loading={saving}>
-								{saving ? 'Đang lưu...' : 'Thêm Tag'}
+								{saving ? 'Đang lưu...' : 'Thêm Chương trình'}
 							</Button>
 						</div>
 					</div>
@@ -461,8 +725,29 @@ export default function TagProgramModal ({ visible, onClose, tag4Options, onSave
 						size="small"
 					/>
 				</div>
-			</div>
+			),
+		},
+	];
 
+	return (
+		<Modal
+			title="Quản lý Học phần & Chương trình"
+			open={visible}
+			onCancel={onClose}
+			width={1400}
+			footer={[
+				<Button key="cancel" onClick={onClose}>
+					Đóng
+				</Button>,
+			]}
+		>
+			<div style={{height: '70vh', overflowY: 'auto', padding: 10}}>
+				<Tabs
+					activeKey={activeTab}
+					onChange={setActiveTab}
+					items={tabItems}
+				/>
+			</div>
 		</Modal>
 	);
 };

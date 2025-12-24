@@ -67,6 +67,8 @@ const AISummaryDetailGeneration = () => {
     const [diagramHtmlFilter, setDiagramHtmlFilter] = useState('all'); // 'all', 'has', 'none'
     const [diagramExcalidrawFilter, setDiagramExcalidrawFilter] = useState('all'); // 'all', 'has', 'none'
     const [imgUrlsFilter, setImgUrlsFilter] = useState('all'); // 'all', 'has', 'none'
+    const [showDetailFilter, setShowDetailFilter] = useState('all'); // 'all', 'has', 'none'
+    const [lessonNumberFilter, setLessonNumberFilter] = useState(''); // Text search for lessonNumber
 
     // Queue states for SummaryDetail
     const [summaryDetailQueue, setSummaryDetailQueue] = useState([]);
@@ -78,6 +80,7 @@ const AISummaryDetailGeneration = () => {
     const [togglingShowHtml, setTogglingShowHtml] = useState(false);
     const [togglingShowExcalidraw, setTogglingShowExcalidraw] = useState(false);
     const [togglingShowImgUrls, setTogglingShowImgUrls] = useState(false);
+    const [togglingShowDetail, setTogglingShowDetail] = useState(false);
     // Preview imgUrls modal
     const [imgUrlsPreviewModalVisible, setImgUrlsPreviewModalVisible] = useState(false);
     const [previewingRecord, setPreviewingRecord] = useState(null);
@@ -1613,6 +1616,48 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
         }
     };
 
+    // Handle bulk toggle showDetail
+    const handleBulkToggleShowDetail = async (toggleTo) => {
+        if (selectedRowKeys.length === 0) {
+            message.warning('Vui lòng chọn ít nhất một bản ghi để cập nhật!');
+            return;
+        }
+
+        try {
+            setTogglingShowDetail(true);
+            
+            // Sử dụng updateK9Bulk API
+            const updateData = {
+                ids: selectedRowKeys,
+                fieldToUpdate: 'showDetail',
+                value: toggleTo
+            };
+
+            await updateK9Bulk(updateData);
+
+            // Update local data
+            const updater = (list) => list.map(item =>
+                selectedRowKeys.includes(item.id)
+                    ? { ...item, showDetail: toggleTo }
+                    : item
+            );
+
+            setK9Data(prev => ({
+                news: updater(prev.news || []),
+                caseTraining: updater(prev.caseTraining || []),
+                longForm: updater(prev.longForm || []),
+                home: updater(prev.home || []),
+            }));
+
+            message.success(`Đã ${toggleTo ? 'bật' : 'tắt'} hiển thị Detail cho ${selectedRowKeys.length} bản ghi!`);
+        } catch (error) {
+            console.error('Error toggling showDetail:', error);
+            message.error('Cập nhật thất bại!');
+        } finally {
+            setTogglingShowDetail(false);
+        }
+    };
+
     useEffect(() => {
         loadK9Data();
     }, []);
@@ -1628,7 +1673,7 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
     // Reset to page 1 when tab, search, or filters change
     useEffect(() => {
         setCurrentPage(1);
-    }, [activeTab, searchText, summaryDetailFilter, diagramHtmlFilter, diagramExcalidrawFilter, imgUrlsFilter]);
+    }, [activeTab, searchText, summaryDetailFilter, diagramHtmlFilter, diagramExcalidrawFilter, imgUrlsFilter, showDetailFilter, lessonNumberFilter]);
 
     // Optimize filter with useMemo
     const filteredData = useMemo(() => {
@@ -1674,6 +1719,22 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
             data = data.filter(item => !item.imgUrls || !Array.isArray(item.imgUrls) || item.imgUrls.length === 0);
         }
 
+        // Filter by showDetail status (has/none)
+        if (showDetailFilter === 'has') {
+            data = data.filter(item => item.detail && item.detail.trim() !== '');
+        } else if (showDetailFilter === 'none') {
+            data = data.filter(item => !item.detail || item.detail.trim() === '');
+        }
+
+        // Filter by lessonNumber (text search)
+        if (lessonNumberFilter.trim()) {
+            const lessonNumberLower = lessonNumberFilter.toLowerCase().trim();
+            data = data.filter(item => {
+                const lessonNumber = String(item.lessonNumber || '').toLowerCase();
+                return lessonNumber.includes(lessonNumberLower);
+            });
+        }
+
         // Filter by general search text
         if (searchText.trim()) {
             const searchLower = searchText.toLowerCase();
@@ -1693,7 +1754,7 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
         }
 
         return data;
-    }, [searchText, summaryDetailFilter, diagramHtmlFilter, diagramExcalidrawFilter, imgUrlsFilter, currentTabData]);
+    }, [searchText, summaryDetailFilter, diagramHtmlFilter, diagramExcalidrawFilter, imgUrlsFilter, showDetailFilter, lessonNumberFilter, currentTabData]);
 
     const renderDetail = useCallback((text, record) => {
         if (!text) return '-';
@@ -1877,6 +1938,18 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
             key: 'cid',
             width: 100,
             render: (cid) => cid ? <Tag color="blue">{cid}</Tag> : '-',
+        },
+        {
+            title: 'Lesson Number',
+            dataIndex: 'lessonNumber',
+            key: 'lessonNumber',
+            width: 120,
+            render: (lessonNumber) => lessonNumber ? <Tag color="purple">{lessonNumber}</Tag> : '-',
+            sorter: (a, b) => {
+                const aVal = String(a.lessonNumber || '').toLowerCase();
+                const bVal = String(b.lessonNumber || '').toLowerCase();
+                return aVal.localeCompare(bVal);
+            },
         },
         {
             title: 'Title',
@@ -2233,6 +2306,45 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
             }
         },
         {
+            title: <span style={{ fontSize: '12px' }}>Hiển thị Detail</span>,
+            key: 'showDetail',
+            width: 120,
+            render: (_, record) => {
+                const hasDetail = record.detail && record.detail.trim() !== '';
+                
+                return (
+                    <Switch
+                        checked={record.showDetail !== false} // Default true nếu không có giá trị
+                        disabled={!hasDetail}
+                        onChange={async (checked) => {
+                            try {
+                                const updateData = {
+                                    id: record.id,
+                                    showDetail: checked
+                                };
+                                const updateResponse = await updateK9(updateData);
+                                const updatedRecord = updateResponse?.data || updateResponse;
+                                const updater = (list) => list.map(item =>
+                                    item.id === record.id ? { ...item, ...updatedRecord } : item
+                                );
+                                setK9Data(prev => ({
+                                    news: updater(prev.news || []),
+                                    caseTraining: updater(prev.caseTraining || []),
+                                    longForm: updater(prev.longForm || []),
+                                    home: updater(prev.home || []),
+                                }));
+                                message.success(`Đã ${checked ? 'bật' : 'tắt'} hiển thị Detail`);
+                            } catch (error) {
+                                console.error('Error updating showDetail:', error);
+                                message.error('Cập nhật thất bại!');
+                            }
+                        }}
+                        size="small"
+                    />
+                );
+            }
+        },
+        {
             title: 'Thao tác',
             key: 'action',
             width: 520,
@@ -2256,8 +2368,6 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
                             Về trang chủ
                         </Button>
                         <h2 style={{ marginBottom: 0, margin: 0, fontSize: '18px' }}>AI Tạo SummaryDetail</h2>
-                    </div>
-                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
                         <Input
                             placeholder="Tìm kiếm ID, CID, Title, Summary, Detail..."
                             prefix={<SearchOutlined />}
@@ -2267,6 +2377,19 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
                             allowClear
                             size="small"
                         />
+                        <Tooltip title="Cài đặt Prompt AI (Danh sách)">
+                            <Button
+                                type="text"
+                                icon={<SettingOutlined />}
+                                onClick={() => setPromptSettingsListModalVisible(true)}
+                                style={{ color: '#fa8c16' }}
+                                size="small"
+                            >
+                                Cài đặt Prompt
+                            </Button>
+                        </Tooltip>
+                    </div>
+                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
                         <span style={{ fontSize: '13px', fontWeight: 500 }}>Lọc SummaryDetail:</span>
                         <Select
                             value={summaryDetailFilter}
@@ -2311,17 +2434,26 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
                             <Select.Option value="has">Đã có</Select.Option>
                             <Select.Option value="none">Chưa có</Select.Option>
                         </Select>
-                        <Tooltip title="Cài đặt Prompt AI (Danh sách)">
-                            <Button
-                                type="text"
-                                icon={<SettingOutlined />}
-                                onClick={() => setPromptSettingsListModalVisible(true)}
-                                style={{ color: '#fa8c16' }}
-                                size="small"
-                            >
-                                Cài đặt Prompt
-                            </Button>
-                        </Tooltip>
+                        <span style={{ fontSize: '13px', fontWeight: 500 }}>Lọc ShowDetail:</span>
+                        <Select
+                            value={showDetailFilter}
+                            onChange={setShowDetailFilter}
+                            style={{ width: 140 }}
+                            size="small"
+                        >
+                            <Select.Option value="all">Tất cả</Select.Option>
+                            <Select.Option value="has">Đã có</Select.Option>
+                            <Select.Option value="none">Chưa có</Select.Option>
+                        </Select>
+                        <span style={{ fontSize: '13px', fontWeight: 500 }}>Tìm LessonNumber:</span>
+                        <Input
+                            placeholder="Nhập lessonNumber..."
+                            value={lessonNumberFilter}
+                            onChange={(e) => setLessonNumberFilter(e.target.value)}
+                            style={{ width: 150 }}
+                            allowClear
+                            size="small"
+                        />
                     </div>
                 </div>
 
@@ -2565,6 +2697,27 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
                             size="small"
                         >
                             Tắt imgUrls
+                        </Button>
+
+                        <Button
+                            type="default"
+                            icon={<FileTextOutlined />}
+                            onClick={() => handleBulkToggleShowDetail(true)}
+                            loading={togglingShowDetail}
+                            disabled={selectedRowKeys.length === 0 || togglingShowDetail}
+                            size="small"
+                        >
+                            Bật Detail
+                        </Button>
+                        <Button
+                            type="default"
+                            icon={<FileTextOutlined />}
+                            onClick={() => handleBulkToggleShowDetail(false)}
+                            loading={togglingShowDetail}
+                            disabled={selectedRowKeys.length === 0 || togglingShowDetail}
+                            size="small"
+                        >
+                            Tắt Detail
                         </Button>
                     </div>
                 )}

@@ -35,6 +35,7 @@ const NewsItem = ({
 	isCase = false,
 	onCopyCase, // Thêm prop onCopyCase
 	isGridView = false, // Thêm prop isGridView để render layout khác cho grid view
+	currentUser, // Thêm prop currentUser để kiểm tra account_type
 }) => {
 	const [showHoverPopup, setShowHoverPopup] = React.useState(false);
 	const [popupPosition, setPopupPosition] = React.useState({ x: 0, y: 0 });
@@ -165,14 +166,13 @@ const NewsItem = ({
 	// Grid View Layout: Ảnh + title + summary ở hàng trên, CID + nút ở hàng dưới
 	if (isGridView) {
 		return (
-			<div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+			<div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: '0px' }}>
 				{/* Hàng trên: Ảnh + Title + Summary */}
 				<div style={{ display: 'flex', flexDirection: 'row', gap: '16px', flex: 1, minHeight: 0 }}>
 					{/* Image - Bên trái */}
 					{item.avatarUrl && (
 						<div
 							className={styles.avatarGridWrapper}
-							onClick={(e) => e.stopPropagation()}
 						>
 							<Image
 								src={item.avatarUrl}
@@ -193,10 +193,54 @@ const NewsItem = ({
 							flexDirection: 'column',
 							gap: '6px',
 							minWidth: 0,
-							overflow: 'hidden'
+							overflow: 'hidden',
+							position: 'relative'
 						}}
 						onClick={() => onItemClick && onItemClick(item)}
 					>
+						{/* Lesson Number - Above title */}
+						{item.lessonNumber && (
+							<div style={{
+								display: 'flex',
+								alignItems: 'center',
+								justifyContent: 'space-between',
+								marginBottom: '4px',
+								width: '100%'
+							}}>
+								<div style={{
+									backgroundColor: '#b0b2c6',
+									color: '#ffffff',
+									padding: '2px 10px',
+									borderRadius: '4px',
+									fontSize: '12px',
+									fontWeight: '500',
+									width: 'fit-content'
+								}}>
+									{item.lessonNumber}
+								</div>
+								{/* Check mark for score >= 70 */}
+								{(() => {
+									const numeric = typeof quizScore === 'number' ? quizScore : parseFloat(quizScore);
+									const hasPassed = !isNaN(numeric) && numeric >= 70;
+									return hasPassed ? (
+										<div style={{
+											width: 20,
+											height: 20,
+											borderRadius: '50%',
+											background: '#52c41a',
+											display: 'flex',
+											alignItems: 'center',
+											justifyContent: 'center',
+											flexShrink: 0,
+											boxShadow: '0 2px 8px rgba(82, 196, 26, 0.3)'
+										}}>
+											<span style={{ color: 'white', fontSize: '12px', fontWeight: 'bold' }}>✓</span>
+										</div>
+									) : null;
+								})()}
+							</div>
+						)}
+
 						{/* Title */}
 						<div
 							style={{
@@ -208,9 +252,13 @@ const NewsItem = ({
 								WebkitLineClamp: 2,
 								WebkitBoxOrient: 'vertical',
 								color: '#1f2937',
-								cursor: 'pointer'
+								cursor: 'pointer',
+								marginTop: item.lessonNumber ? '0' : '0'
 							}}
 						>
+							{currentUser?.account_type === 'Dùng thử' && item.isPublic !== true && (
+								<span style={{ marginRight: '6px', fontSize: '14px', verticalAlign: 'middle' }}>🔒</span>
+							)}
 							{item.title}
 						</div>
 
@@ -221,7 +269,7 @@ const NewsItem = ({
 								color: '#6b7280',
 								overflow: 'hidden',
 								display: '-webkit-box',
-								WebkitLineClamp: 6,
+								WebkitLineClamp: 4,
 								WebkitBoxOrient: 'vertical',
 								lineHeight: '1.4',
 							}}>
@@ -235,14 +283,13 @@ const NewsItem = ({
 				{!isHome && (
 					<div
 						style={{
-							width: '100%',
 							display: 'flex',
 							gap: '4px',
 							marginTop: 'auto',
 							width: '100%',
 						}}
 					>
-						{/* CID: luôn chiếm cả 1 dòng riêng */}
+						{/* CID và ID: cùng 1 dòng */}
 						<div
 							style={{
 								display: 'flex',
@@ -257,7 +304,9 @@ const NewsItem = ({
 								whiteSpace: 'nowrap',
 							}}
 						>
-							CID: {item.cid || ''}
+							{item.cid && <span>CID: {item.cid}</span>}
+							{item.id && item.cid && <span>|</span>}
+							{item.id && <span>ID: {item.id}</span>}
 						</div>
 
 						{/* Action buttons: xuống hẳn 1 dòng dưới CID */}
@@ -419,6 +468,7 @@ const NewsItem = ({
 	return (
 		<div
 			className={`${styles.newsItem} ${item.impact !== 'important' ? styles.noImpact : ''} ${isBookmarked ? styles.hasBookmark : ''} ${isRead ? styles.hasRead : ''} ${isSelected ? styles.selected : ''}`}
+			style={{ height: isCase ? '100%' : 'auto'}}
 			onClick={(e) => {
 				if (onItemClick) {
 					onItemClick(item);
@@ -540,8 +590,90 @@ const NewsItem = ({
 									/>
 								</div>
 							)}
-							<div className={styles.newsTitle} style={isMobile && { display: 'flex', alignItems: 'start', flexDirection: 'column' } || { display: 'flex', alignItems: 'start', flexDirection: 'row', justifyContent: 'space-between', width: '100%' }}>
-								<div>{item.title}</div>
+							<div style={{ 
+								display: 'flex', 
+								flexDirection: 'column',
+								width: '100%',
+								position: 'relative',
+								gap: '6px',
+								minWidth: 0
+							}}>
+								{/* Lesson Number - Above title */}
+								{item.lessonNumber && (
+									<div style={{
+										display: 'flex',
+										alignItems: 'center',
+										justifyContent: 'space-between',
+										width: '100%'
+									}}>
+										<div style={{
+											backgroundColor: '#b0b2c6',
+											color: '#ffffff',
+											padding: '4px 10px',
+											borderRadius: '4px',
+											fontSize: '12px',
+											fontWeight: '500',
+											width: 'fit-content'
+										}}>
+											{item.lessonNumber}
+										</div>
+										{/* Check mark for score >= 70 */}
+										{(() => {
+											const numeric = typeof quizScore === 'number' ? quizScore : parseFloat(quizScore);
+											const hasPassed = !isNaN(numeric) && numeric >= 70;
+											return hasPassed ? (
+												<div style={{
+													width: 20,
+													height: 20,
+													borderRadius: '50%',
+													background: '#52c41a',
+													display: 'flex',
+													alignItems: 'center',
+													justifyContent: 'center',
+													flexShrink: 0,
+													boxShadow: '0 2px 8px rgba(82, 196, 26, 0.3)'
+												}}>
+													<span style={{ color: 'white', fontSize: '12px', fontWeight: 'bold' }}>✓</span>
+												</div>
+											) : null;
+										})()}
+									</div>
+								)}
+
+								<div className={styles.newsTitle} style={{ 
+									position: 'relative',
+									width: '100%',
+									minWidth: 0,
+									paddingRight: item.id ? '50px' : '0',
+									overflow: 'hidden',
+									display: '-webkit-box',
+									WebkitLineClamp: 2,
+									WebkitBoxOrient: 'vertical',
+									lineHeight: '1.4',
+								}}>
+									{currentUser?.account_type === 'Dùng thử' && item.isPublic !== true && (
+										<span style={{ marginRight: '6px', fontSize: '14px', verticalAlign: 'middle' }}>🔒</span>
+									)}
+									{item.title}
+									
+									{/* ID - Top right corner */}
+									{item.id && (
+										<div style={{
+											position: 'absolute',
+											top: '0',
+											right: '0',
+											fontSize: '10px',
+											color: '#9F9F9F',
+											backgroundColor: '#f5f5f5',
+											padding: '2px 6px',
+											borderRadius: '4px',
+											zIndex: 1,
+											flexShrink: 0
+										}}>
+											ID: {item.id}
+										</div>
+									)}
+								</div>
 							</div>
 
 
@@ -595,28 +727,28 @@ const NewsItem = ({
 							</>
 						)}
 						{isCase &&
-							<div style={{ display: 'flex', flexWrap: 'wrap', marginTop: '10px', gap: '8px' }}>
+							<div className={styles.programStatsContainer} style={{ marginTop: '10px' }}>
 								{
 									item?.info && (
 										<>
-											<div className={styles.quizCompletedBadge} style={{ flex: '0 0 calc(50% - 4px)' }}>
-												<span className={styles.completedText}>🏢 Lĩnh vực: {item.info.area}</span>
-											</div>
-											<div className={styles.quizCompletedBadge} style={{ flex: '0 0 calc(50% - 4px)' }}>
-												<span className={styles.completedText}>🎯 Chuyên ngành: {item.info.domain}</span>
-											</div>
+											<span className={styles.programStatTag}>
+												🏢 Lĩnh vực: {item.info.area}
+											</span>
+											<span className={styles.programStatTag}>
+												🎯 Chuyên ngành: {item.info.domain}
+											</span>
 										</>
 									)
 								}
 								{
 									item.questionContent && (
 										<>
-											<div className={styles.quizCompletedBadge} style={{ flex: '0 0 calc(50% - 4px)' }}>
-												<span className={styles.completedText}>📋 {item.questionContent.mcqCount} câu trắc nghiệm</span>
-											</div>
-											<div className={styles.quizCompletedBadge} style={{ flex: '0 0 calc(50% - 4px)' }}>
-												<span className={styles.completedText}>✍️ {item.questionContent.essayCount} câu tự luận</span>
-											</div>
+											<span className={styles.programStatTag}>
+												📋 {item.questionContent.mcqCount} câu trắc nghiệm
+											</span>
+											<span className={styles.programStatTag}>
+												✍️ {item.questionContent.essayCount} câu tự luận
+											</span>
 										</>
 									)
 								}
@@ -626,8 +758,83 @@ const NewsItem = ({
 
 				) : (
 					<>
-						<div className={styles.newsTitle}>
-							{item.title}
+						{/* Lesson Number - Above title */}
+						{item.lessonNumber && (
+							<div style={{
+								display: 'flex',
+								alignItems: 'center',
+								justifyContent: 'space-between',
+								marginBottom: '6px',
+								width: '100%'
+							}}>
+								<div style={{
+									backgroundColor: '#b0b2c6',
+									color: '#ffffff',
+									padding: '4px 10px',
+									borderRadius: '4px',
+									fontSize: '12px',
+									fontWeight: '500',
+									width: 'fit-content'
+								}}>
+									{item.lessonNumber}
+								</div>
+								{/* Check mark for score >= 70 */}
+								{(() => {
+									const numeric = typeof quizScore === 'number' ? quizScore : parseFloat(quizScore);
+									const hasPassed = !isNaN(numeric) && numeric >= 70;
+									return hasPassed ? (
+										<div style={{
+											width: 20,
+											height: 20,
+											borderRadius: '50%',
+											background: '#52c41a',
+											display: 'flex',
+											alignItems: 'center',
+											justifyContent: 'center',
+											flexShrink: 0,
+											boxShadow: '0 2px 8px rgba(82, 196, 26, 0.3)'
+										}}>
+											<span style={{ color: 'white', fontSize: '12px', fontWeight: 'bold' }}>✓</span>
+										</div>
+									) : null;
+								})()}
+							</div>
+						)}
+
+						<div className={styles.newsTitle} style={{ position: 'relative', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', width: '100%' }}>
+							<div style={{ 
+								flex: 1, 
+								minWidth: 0, 
+								paddingRight: item.id ? '50px' : '0',
+								overflow: 'hidden',
+								display: '-webkit-box',
+								WebkitLineClamp: 2,
+								WebkitBoxOrient: 'vertical',
+								lineHeight: '1.4',
+							}}>
+								{currentUser?.account_type === 'Dùng thử' && item.isPublic !== true && (
+									<span style={{ marginRight: '6px', fontSize: '14px', verticalAlign: 'middle' }}>🔒</span>
+								)}
+								{item.title}
+							</div>
+							
+							{/* ID - Top right corner */}
+							{item.id && (
+								<div style={{
+									position: 'absolute',
+									top: '0',
+									right: '0',
+									fontSize: '10px',
+									color: '#9F9F9F',
+									backgroundColor: '#f5f5f5',
+									padding: '2px 6px',
+									borderRadius: '4px',
+									zIndex: 1,
+									flexShrink: 0
+								}}>
+									ID: {item.id}
+								</div>
+							)}
 						</div>
 						<div style={{ display: 'flex', alignItems: 'start', gap: '10px' }}>
 							{item.avatarUrl && (

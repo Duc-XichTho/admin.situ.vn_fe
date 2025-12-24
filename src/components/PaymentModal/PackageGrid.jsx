@@ -1,9 +1,24 @@
 import React from 'react';
 import { Card, Row, Col, Typography, Divider, Button } from 'antd';
 
-const PackageGrid = ({ onPackageSelect, loading = false }) => {
+const PackageGrid = ({ onPackageSelect, loading = false, currentUser }) => {
+	// Map account_type to package name
+	const getCurrentPackageName = () => {
+		if (!currentUser?.account_type) return null;
+		const accountType = currentUser.account_type;
+		
+		if (accountType === 'Dùng thử') return 'Dùng thử';
+		if (accountType === 'Pro 90') return 'Starter';
+		if (accountType === 'Pro 365') return 'M12';
+		if (accountType === 'Pro 730') return 'M24';
+		
+		return null;
+	};
+
+	const currentPackageName = getCurrentPackageName();
 
     const packages = [
+
         {
             name: 'Dùng thử',
             duration: 3,
@@ -14,6 +29,15 @@ const PackageGrid = ({ onPackageSelect, loading = false }) => {
             popular: false,
             isTrial: true
         },
+        // {
+        //     name: 'Test',
+        //     duration: 90,
+        //     durationText: 'Test',
+        //     price: 3000,
+        //     originalPrice: 100000,
+        //     features: ['Dùng trong 3 tháng', 'Tất cả tính năng Pro', 'Hỗ trợ 24/7'],
+        //     popular: false
+        // },
         {
             name: 'Starter',
             duration: 90,
@@ -45,23 +69,54 @@ const PackageGrid = ({ onPackageSelect, loading = false }) => {
 
     return (
         <Row gutter={[16, 16]}>
-            {packages.map((pkg) => (
+            {packages.map((pkg) => {
+                const isCurrentPackage = currentPackageName === pkg.name;
+                return (
                 <Col xs={24} sm={12} md={8} lg={6} xl={6} key={pkg.name}>
                     <Card
-                        hoverable
+                        hoverable={!isCurrentPackage}
                         style={{
                             height: '100%',
-                            border: pkg.popular ? '2px solid #1890ff' : '1px solid #d9d9d9',
+                            border: isCurrentPackage 
+                                ? '2px solid #52c41a' 
+                                : pkg.popular 
+                                    ? '2px solid #1890ff' 
+                                    : '1px solid #d9d9d9',
                             borderRadius: '12px',
                             position: 'relative',
                             transition: 'all 0.3s ease',
-                            background: pkg.popular ? 'linear-gradient(135deg, #e6f7ff 0%, #ffffff 100%)' : '#ffffff',
-                            cursor: 'pointer'
+                            background: isCurrentPackage
+                                ? 'linear-gradient(135deg, #f6ffed 0%, #ffffff 100%)'
+                                : pkg.popular 
+                                    ? 'linear-gradient(135deg, #e6f7ff 0%, #ffffff 100%)' 
+                                    : '#ffffff',
+                            cursor: isCurrentPackage ? 'not-allowed' : 'pointer',
+                            opacity: isCurrentPackage ? 0.9 : 1
                         }}
                         bodyStyle={{ padding: '20px' }}
-                        onClick={() => onPackageSelect(pkg)}
+                        onClick={() => {
+                            if (!isCurrentPackage) {
+                                onPackageSelect(pkg);
+                            }
+                        }}
                     >
-                        {pkg.popular && (
+                        {isCurrentPackage && (
+                            <div style={{
+                                position: 'absolute',
+                                top: '-10px',
+                                right: '20px',
+                                background: '#52c41a',
+                                color: 'white',
+                                padding: '4px 12px',
+                                borderRadius: '12px',
+                                fontSize: '12px',
+                                fontWeight: '600',
+                                zIndex: 10
+                            }}>
+                                Gói hiện tại của bạn
+                            </div>
+                        )}
+                        {!isCurrentPackage && pkg.popular && (
                             <div style={{
                                 position: 'absolute',
                                 top: '-10px',
@@ -146,22 +201,29 @@ const PackageGrid = ({ onPackageSelect, loading = false }) => {
                         </div>
 
                         <Button
-                            type={pkg.popular ? "primary" : "default"}
+                            type={isCurrentPackage ? "default" : pkg.popular ? "primary" : "default"}
                             block
                             size="large"
                             loading={loading}
+                            disabled={isCurrentPackage}
                             style={{
                                 height: '44px',
                                 fontSize: '16px',
                                 fontWeight: '600',
-                                borderRadius: '8px'
+                                borderRadius: '8px',
+                                ...(isCurrentPackage && {
+                                    background: '#f0f0f0',
+                                    borderColor: '#d9d9d9',
+                                    color: '#8c8c8c',
+                                    cursor: 'not-allowed'
+                                })
                             }}
                         >
-                            Chọn gói này
+                            {isCurrentPackage ? 'Đang sử dụng' : 'Chọn gói này'}
                         </Button>
                     </Card>
                 </Col>
-            ))}
+            )})}
         </Row>
     );
 };

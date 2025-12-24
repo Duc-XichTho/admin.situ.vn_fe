@@ -65,6 +65,7 @@ const K9 = () => {
 	const [tag2Options, setTag2Options] = useState([]);
 	const [tag3Options, setTag3Options] = useState([]);
 	const [tag4Options, setTag4Options] = useState([]);
+	const [coursesOptions, setCoursesOptions] = useState([]);
 	const [tag4Filter, setTag4Filter] = useState('all');
 
 	// Home filters state
@@ -187,9 +188,17 @@ const K9 = () => {
 				getK9ByTypePublic('longForm'),
 				getK9ByTypePublic('home'),
 			]);
+			if (currentUser?.account_type === 'Dùng thử') {
+				// Sort: isPublic = true lên trước, isPublic = false xuống sau
+				// b.isPublic - a.isPublic: true (1) - false (0) = 1, nên true sẽ đứng trước
+				newsData.sort((a, b) => (b.isPublic ? 1 : 0) - (a.isPublic ? 1 : 0));
+				caseTrainingData.sort((a, b) => (b.isPublic ? 1 : 0) - (a.isPublic ? 1 : 0));
+				longFormData.sort((a, b) => (b.isPublic ? 1 : 0) - (a.isPublic ? 1 : 0));
+				homeData.sort((a, b) => (b.isPublic ? 1 : 0) - (a.isPublic ? 1 : 0));
+			}
 			setNewsItems(newsData || []);
-			setLibraryItems(libraryData || []);
-			setStoryItems(storyData || []);
+			// setLibraryItems(libraryData || []);
+			// setStoryItems(storyData || []);
 			setCaseTrainingItems(caseTrainingData || []);
 			setLongFormItems(longFormData || []);
 			setHomeItems(homeData || []);
@@ -255,6 +264,12 @@ const K9 = () => {
 			const tag4Setting = await getSettingByTypePublic('TAG4_OPTIONS');
 			if (tag4Setting?.setting) {
 				setTag4Options(tag4Setting.setting);
+			}
+
+			// Load COURSES_OPTIONS (Học phần)
+			const coursesSetting = await getSettingByTypePublic('COURSES_OPTIONS');
+			if (coursesSetting?.setting) {
+				setCoursesOptions(coursesSetting.setting);
 			}
 		} catch (error) {
 			console.error('Error loading tag options:', error);
@@ -463,8 +478,15 @@ const K9 = () => {
 			if (tag4Filter && tag4Filter !== 'all') {
 				if (!Array.isArray(item.tag4)) return false; // bỏ qua nếu không phải mảng
 
-				if (!item.tag4.includes(tag4Filter)) {
-					return false;
+				// Support both string and array for tag4Filter
+				if (Array.isArray(tag4Filter)) {
+					if (!tag4Filter.some(prog => item.tag4.includes(prog))) {
+						return false;
+					}
+				} else {
+					if (!item.tag4.includes(tag4Filter)) {
+						return false;
+					}
 				}
 			}
 
@@ -848,6 +870,9 @@ const K9 = () => {
 
 	useEffect(() => {
 		loadData();
+	}, [currentUser]);
+
+	useEffect(() => {
 		loadReportData();
 		// loadCompanyReportData();
 		loadBackgroundAudioSettings();
@@ -963,8 +988,8 @@ const K9 = () => {
 
 	// Tab options (đã tách tab Phân tích doanh nghiệp ra khỏi đây, chỉ còn trong header menu)
 	const tabOptions = [
-		{ key: 'caseTraining', label: 'Case Study' },
 		{ key: 'stream', label: 'Lý thuyết' },
+		{ key: 'caseTraining', label: 'Case Study' },
 		{ key: 'longForm', label: 'Business Wiki' },
 		{ key: 'home', label: 'Về AiMBA' },
 	];
@@ -1141,6 +1166,7 @@ const K9 = () => {
 		}
 	};
 
+
 	const generateShareableLink = (item = null) => {
 		const url = new URL(window.location);
 		// Add current state
@@ -1196,14 +1222,14 @@ const K9 = () => {
 
 	return (
 		<div className={styles.container}>
-			{
+			{/* {
 				showFirstTimePopup && (
 					<FirstTimePopup
 						visible={showFirstTimePopup}
 						onClose={() => setShowFirstTimePopup(false)}
 					/>
 				)
-			}
+			} */}
 			<K9Header
 				updateURL={updateURL}
 				selectedProgram={selectedProgram}
@@ -1219,6 +1245,7 @@ const K9 = () => {
 				dropdownVisible={dropdownVisible}
 				setDropdownVisible={setDropdownVisible}
 				tag4Options={tag4Options}
+				coursesOptions={coursesOptions}
 				activeTab={activeTab}
 				streamFilters={streamFilters}
 				longFormFilters={longFormFilters}
@@ -1251,29 +1278,29 @@ const K9 = () => {
 				</div>
 			)}
 
-		{/* Home Tab */}
-		{activeTab === 'home' && (
-			<HomeTab
-				loading={loading}
-				filteredNews={filteredHome}
-				filters={homeFilters}
-				expandedItem={expandedItem}
-				showDetailId={showDetailId}
-				onFilterChange={handleHomeFilterChange}
-				onSearchChange={handleHomeSearchChange}
-				onItemClick={handleItemClick}
-				onShowDetail={showDetail}
-				onOpenSource={openSource}
-				onShare={copyShareableLink}
-				activeTab={activeTab}
-				totalCount={homeItems.filter(item => item.status === 'published').length}
-				newsItems={homeItems}
-				isHome={true}
-				viewMode={viewMode}
-				updateURL={updateURL}
-				getTabDisplayName={getTabDisplayName}
-			/>
-		)}
+			{/* Home Tab */}
+			{activeTab === 'home' && (
+				<HomeTab
+					loading={loading}
+					filteredNews={filteredHome}
+					filters={homeFilters}
+					expandedItem={expandedItem}
+					showDetailId={showDetailId}
+					onFilterChange={handleHomeFilterChange}
+					onSearchChange={handleHomeSearchChange}
+					onItemClick={handleItemClick}
+					onShowDetail={showDetail}
+					onOpenSource={openSource}
+					onShare={copyShareableLink}
+					activeTab={activeTab}
+					totalCount={homeItems.filter(item => item.status === 'published').length}
+					newsItems={homeItems}
+					isHome={true}
+					viewMode={viewMode}
+					updateURL={updateURL}
+					getTabDisplayName={getTabDisplayName}
+				/>
+			)}
 
 			{/* Story Tab */}
 			{activeTab === 'story' && (
@@ -1297,86 +1324,90 @@ const K9 = () => {
 				/>
 			)}
 
-		{/* Stream News Tab */}
-		{activeTab === 'stream' && (
-			<NewsTab
-				updateURL={updateURL}
-				selectedProgram={selectedProgram}
-				loading={loading}
-				filteredNews={filteredNews}
-				filters={streamFilters}
-				expandedItem={expandedItem}
-				showDetailId={showDetailId}
-				onFilterChange={handleStreamFilterChange}
-				onSearchChange={handleStreamSearchChange}
-				onItemClick={handleItemClick}
-				onShowDetail={showDetail}
-				onOpenSource={openSource}
-				onShare={copyShareableLink}
-				activeTab={activeTab}
-				totalCount={newsItems.filter(item => item.status === 'published').length}
-				newsItems={newsItems}
-				showSearchSection={showSearchSection}
-				viewMode={viewMode}
-				getTabDisplayName={getTabDisplayName}
-			/>
-		)}
+			{/* Stream News Tab */}
+			{activeTab === 'stream' && (
+				<NewsTab
+					currentTab={activeTab}
+					setExpandedItem={setExpandedItem}
+					updateURL={updateURL}
+					selectedProgram={selectedProgram}
+					loading={loading}
+					filteredNews={filteredNews}
+					filters={streamFilters}
+					expandedItem={expandedItem}
+					showDetailId={showDetailId}
+					onFilterChange={handleStreamFilterChange}
+					onSearchChange={handleStreamSearchChange}
+					onItemClick={handleItemClick}
+					onShowDetail={showDetail}
+					onOpenSource={openSource}
+					onShare={copyShareableLink}
+					activeTab={activeTab}
+					totalCount={newsItems.filter(item => item.status === 'published').length}
+					newsItems={newsItems}
+					showSearchSection={showSearchSection}
+					viewMode={viewMode}
+					getTabDisplayName={getTabDisplayName}
+				/>
+			)}
 
-		{activeTab === 'longForm' && (
-			<NewsTab
-				updateURL={updateURL}
-				selectedProgram={selectedProgram}
-				loading={loading}
-				filteredNews={filteredLongForm}
-				filters={longFormFilters}
-				expandedItem={expandedItem}
-				showDetailId={showDetailId}
-				onFilterChange={handleLongFormFilterChange}
-				onSearchChange={handleLongFormSearchChange}
-				onItemClick={handleItemClick}
-				onShowDetail={showDetail}
-				onOpenSource={openSource}
-				onShare={copyShareableLink}
-				activeTab={activeTab}
-				totalCount={longFormItems.filter(item => item.status === 'published').length}
-				newsItems={longFormItems}
-				showSearchSection={showSearchSection}
-				viewMode={viewMode}
-				getTabDisplayName={getTabDisplayName}
-			/>
-		)}
-		{/* Case Training Tab */}
-		{activeTab === 'caseTraining' && (
-			<CaseTrainingTab
-				updateURL={updateURL}
-				selectedProgram={selectedProgram}
-				tag4Filter={tag4Filter}
-				loading={loading}
-				filteredCaseTraining={filteredCaseTraining}
-				filters={caseTrainingFilters}
-				expandedItem={expandedItem}
-				showDetailId={showDetailId}
-				onFilterChange={handleCaseTrainingFilterChange}
-				onSearchChange={handleCaseTrainingSearchChange}
-				onItemClick={handleItemClick}
-				onShowDetail={showDetail}
-				onOpenSource={openSource}
-				activeTab={activeTab}
-				totalCount={caseTrainingItems.filter(item => item.status === 'published').length}
-				caseTrainingItems={caseTrainingItems}
-				tag1Options={tag1Options}
-				tag2Options={tag2Options}
-				tag3Options={tag3Options}
-				onShare={copyShareableLink}
-				showSearchSection={showSearchSection}
-				viewMode={viewMode}
-				getTabDisplayName={getTabDisplayName}
-			/>
-		)}
+			{activeTab === 'longForm' && (
+				<NewsTab
+					currentTab={activeTab}
+					setExpandedItem={setExpandedItem}
+					updateURL={updateURL}
+					selectedProgram={selectedProgram}
+					loading={loading}
+					filteredNews={filteredLongForm}
+					filters={longFormFilters}
+					expandedItem={expandedItem}
+					showDetailId={showDetailId}
+					onFilterChange={handleLongFormFilterChange}
+					onSearchChange={handleLongFormSearchChange}
+					onItemClick={handleItemClick}
+					onShowDetail={showDetail}
+					onOpenSource={openSource}
+					onShare={copyShareableLink}
+					activeTab={activeTab}
+					totalCount={longFormItems.filter(item => item.status === 'published').length}
+					newsItems={longFormItems}
+					showSearchSection={showSearchSection}
+					viewMode={viewMode}
+					getTabDisplayName={getTabDisplayName}
+				/>
+			)}
+			{/* Case Training Tab */}
+			{activeTab === 'caseTraining' && (
+				<CaseTrainingTab
+					setExpandedItem={setExpandedItem}
+					updateURL={updateURL}
+					selectedProgram={selectedProgram}
+					tag4Filter={tag4Filter}
+					loading={loading}
+					filteredCaseTraining={filteredCaseTraining}
+					filters={caseTrainingFilters}
+					expandedItem={expandedItem}
+					showDetailId={showDetailId}
+					onFilterChange={handleCaseTrainingFilterChange}
+					onSearchChange={handleCaseTrainingSearchChange}
+					onItemClick={handleItemClick}
+					onShowDetail={showDetail}
+					onOpenSource={openSource}
+					activeTab={activeTab}
+					totalCount={caseTrainingItems.filter(item => item.status === 'published').length}
+					caseTrainingItems={caseTrainingItems}
+					tag1Options={tag1Options}
+					tag2Options={tag2Options}
+					tag3Options={tag3Options}
+					onShare={copyShareableLink}
+					showSearchSection={showSearchSection}
+					viewMode={viewMode}
+					getTabDisplayName={getTabDisplayName}
+				/>
+			)}
 
 			{activeTab === 'caseUser' && (
 				<CaseUser
-					selectedProgram={selectedProgram}
 					loading={loading}
 					filteredNews={filteredLongForm}
 					filters={longFormFilters}

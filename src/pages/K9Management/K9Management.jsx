@@ -719,6 +719,7 @@ Format your response as:
 
   const [tag4Options, setTag4Options] = useState([]);
   const [programOptions, setProgramOptions] = useState([]);
+  const [coursesOptions, setCoursesOptions] = useState([]);
 
   // Filter states
 
@@ -2134,6 +2135,12 @@ Format your response as:
 
       }
 
+      // Load courses options
+      const coursesSettings = await getSettingByType('COURSES_OPTIONS');
+      if (coursesSettings?.setting) {
+        setCoursesOptions(coursesSettings.setting);
+      }
+
       const tag4Settings = await getSettingByType('TAG4_OPTIONS');
 
       if (tag4Settings?.setting) {
@@ -2312,6 +2319,32 @@ Format your response as:
       console.error('Error saving tag options:', error);
 
       message.error('Lỗi khi lưu cấu hình tag!');
+
+    }
+
+  };
+
+  const handleSaveCourses = async (coursesList) => {
+
+    try {
+
+      await createOrUpdateSetting({
+
+        type: 'COURSES_OPTIONS',
+
+        setting: coursesList
+
+      });
+
+      setCoursesOptions(coursesList);
+
+      message.success('Đã lưu cấu hình học phần thành công!');
+
+    } catch (error) {
+
+      console.error('Error saving courses options:', error);
+
+      message.error('Lỗi khi lưu cấu hình học phần!');
 
     }
 
@@ -7023,6 +7056,21 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
 
       },
       {
+
+        title: 'Số bài',
+
+        dataIndex: 'lessonNumber',
+
+        key: 'lessonNumber',
+
+        width: 100,
+
+        fixed: 'left',
+
+        render: (lessonNumber) => lessonNumber || '-',
+
+      },
+      {
         title: 'Public',
         fixed: 'left',
         dataIndex: 'isPublic',
@@ -7296,31 +7344,31 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
           return countA - countB;
         }
       },
-      {
-        title: 'User Class Allowed',
-        dataIndex: 'allowed_user_class',
-        key: 'allowed_user_class',
-        width: 200,
-        render: (allowedClasses) => {
-          if (!allowedClasses || allowedClasses.length === 0) {
-            return <Tag>Chưa gắn</Tag>;
-          }
+      // {
+      //   title: 'User Class Allowed',
+      //   dataIndex: 'allowed_user_class',
+      //   key: 'allowed_user_class',
+      //   width: 200,
+      //   render: (allowedClasses) => {
+      //     if (!allowedClasses || allowedClasses.length === 0) {
+      //       return <Tag>Chưa gắn</Tag>;
+      //     }
 
-          // Find user class names from userClasses array
-          const classNames = allowedClasses
-            .map(id => {
-              const userClass = userClasses.find(c => c.id === id);
-              return userClass?.name || `Class #${id}`;
-            })
-            .join(', ');
+      //     // Find user class names from userClasses array
+      //     const classNames = allowedClasses
+      //       .map(id => {
+      //         const userClass = userClasses.find(c => c.id === id);
+      //         return userClass?.name || `Class #${id}`;
+      //       })
+      //       .join(', ');
 
-          return (
-            <Tooltip title={classNames}>
-              <span> {classNames}</span>
-            </Tooltip>
-          );
-        },
-      },
+      //     return (
+      //       <Tooltip title={classNames}>
+      //         <span> {classNames}</span>
+      //       </Tooltip>
+      //     );
+      //   },
+      // },
 
 
 
@@ -12021,17 +12069,30 @@ Chỉ trả về JSON, không thêm text khác.`;
 
         // Create file list for display
 
-        const imageFileList = record.imgUrls.map((url, index) => ({
-
-          uid: `-${index}`,
-
-          name: `image-${index + 1}`,
-
-          status: 'done',
-
-          url: url,
-
-        }));
+        const imageFileList = record.imgUrls.map((item, index) => {
+          // imgUrls can be array of strings or array of objects with {url, description}
+          let urlString = '';
+          if (typeof item === 'string') {
+            // If item is a string, use it directly
+            urlString = item;
+          } else if (item && typeof item === 'object') {
+            // If item is an object, extract url property
+            urlString = item.url || item.URL || '';
+            if (typeof urlString !== 'string') {
+              urlString = String(urlString || '');
+            }
+          } else {
+            // Fallback: convert to string
+            urlString = String(item || '');
+          }
+          
+          return {
+            uid: `-${index}`,
+            name: `image-${index + 1}`,
+            status: 'done',
+            url: urlString,
+          };
+        });
 
         setSelectedImages(imageFileList);
 
@@ -12040,20 +12101,21 @@ Chỉ trả về JSON, không thêm text khác.`;
 
 
       if (record.videoUrl) {
-
-        setUploadedVideoUrl(record.videoUrl);
-
-        setSelectedVideo({
-
-          uid: '-1',
-
-          name: 'video',
-
-          status: 'done',
-
-          url: record.videoUrl,
-
-        });
+        // Ensure videoUrl is a string
+        let videoUrl = record.videoUrl;
+        if (typeof videoUrl !== 'string') {
+          console.warn('videoUrl is not a string:', typeof videoUrl, videoUrl);
+          videoUrl = Array.isArray(videoUrl) ? (videoUrl[0] || '') : String(videoUrl || '');
+        }
+        if (videoUrl) {
+          setUploadedVideoUrl(videoUrl);
+          setSelectedVideo({
+            uid: '-1',
+            name: 'video',
+            status: 'done',
+            url: videoUrl,
+          });
+        }
 
       }
 
@@ -12061,24 +12123,48 @@ Chỉ trả về JSON, không thêm text khác.`;
 
     // Load avatar data
     if (record.avatarUrl) {
-      setUploadedAvatarUrl(record.avatarUrl);
-      setSelectedAvatar({
-        uid: '-1',
-        name: 'avatar',
-        status: 'done',
-        url: record.avatarUrl,
-      });
+      // Ensure avatarUrl is a string - Ant Design Upload requires string URL
+      let avatarUrl = record.avatarUrl;
+      if (typeof avatarUrl !== 'string') {
+        console.warn('avatarUrl is not a string:', typeof avatarUrl, avatarUrl);
+        if (Array.isArray(avatarUrl)) {
+          avatarUrl = avatarUrl[0] || '';
+        } else {
+          avatarUrl = String(avatarUrl || '');
+        }
+      }
+      if (avatarUrl) {
+        setUploadedAvatarUrl(avatarUrl);
+        setSelectedAvatar({
+          uid: '-1',
+          name: 'avatar',
+          status: 'done',
+          url: avatarUrl,
+        });
+      }
     }
 
     // Load diagram data
     if (record.diagramUrl) {
-      setUploadedDiagramUrl(record.diagramUrl);
-      setSelectedDiagram({
-        uid: '-1',
-        name: 'diagram',
-        status: 'done',
-        url: record.diagramUrl,
-      });
+      // diagramUrl can be an array for kroki mode, but Upload component needs string
+      let diagramUrl = record.diagramUrl;
+      if (typeof diagramUrl !== 'string') {
+        console.warn('diagramUrl is not a string:', typeof diagramUrl, diagramUrl);
+        if (Array.isArray(diagramUrl) && diagramUrl.length > 0) {
+          diagramUrl = typeof diagramUrl[0] === 'string' ? diagramUrl[0] : String(diagramUrl[0] || '');
+        } else {
+          diagramUrl = String(diagramUrl || '');
+        }
+      }
+      if (diagramUrl) {
+        setUploadedDiagramUrl(diagramUrl);
+        setSelectedDiagram({
+          uid: '-1',
+          name: 'diagram',
+          status: 'done',
+          url: diagramUrl,
+        });
+      }
     }
 
     if (record.type === 'news' || record.type === 'home' || record.type === 'longForm' || record.type === 'caseTraining') {
@@ -12091,8 +12177,13 @@ Chỉ trả về JSON, không thêm text khác.`;
         // Create file list for display
 
         const fileList = record.fileUrls.map((url, index) => {
-
-          const fileName = url.split('/').pop() || `file-${index + 1}`;
+          // Ensure url is a string - Ant Design Upload requires string URL
+          let urlString = url;
+          if (typeof urlString !== 'string') {
+            console.warn(`fileUrls[${index}] is not a string:`, typeof urlString, urlString);
+            urlString = Array.isArray(urlString) ? (urlString[0] || '') : String(urlString || '');
+          }
+          const fileName = urlString.split('/').pop() || `file-${index + 1}`;
 
           return {
 
@@ -12102,7 +12193,7 @@ Chỉ trả về JSON, không thêm text khác.`;
 
             status: 'done',
 
-            url: url,
+            url: urlString,
 
           };
 
@@ -12122,17 +12213,30 @@ Chỉ trả về JSON, không thêm text khác.`;
 
         // Create file list for display
 
-        const imageFileList = record.imgUrls.map((url, index) => ({
-
-          uid: `-${index}`,
-
-          name: `image-${index + 1}`,
-
-          status: 'done',
-
-          url: url,
-
-        }));
+        const imageFileList = record.imgUrls.map((item, index) => {
+          // imgUrls can be array of strings or array of objects with {url, description}
+          let urlString = '';
+          if (typeof item === 'string') {
+            // If item is a string, use it directly
+            urlString = item;
+          } else if (item && typeof item === 'object') {
+            // If item is an object, extract url property
+            urlString = item.url || item.URL || '';
+            if (typeof urlString !== 'string') {
+              urlString = String(urlString || '');
+            }
+          } else {
+            // Fallback: convert to string
+            urlString = String(item || '');
+          }
+          
+          return {
+            uid: `-${index}`,
+            name: `image-${index + 1}`,
+            status: 'done',
+            url: urlString,
+          };
+        });
 
         setSelectedImages(imageFileList);
 
@@ -12143,20 +12247,21 @@ Chỉ trả về JSON, không thêm text khác.`;
       // Load existing video for news type
 
       if (record.videoUrl) {
-
-        setUploadedVideoUrl(record.videoUrl);
-
-        setSelectedVideo({
-
-          uid: '-1',
-
-          name: 'video',
-
-          status: 'done',
-
-          url: record.videoUrl,
-
-        });
+        // Ensure videoUrl is a string
+        let videoUrl = record.videoUrl;
+        if (typeof videoUrl !== 'string') {
+          console.warn('videoUrl is not a string:', typeof videoUrl, videoUrl);
+          videoUrl = Array.isArray(videoUrl) ? (videoUrl[0] || '') : String(videoUrl || '');
+        }
+        if (videoUrl) {
+          setUploadedVideoUrl(videoUrl);
+          setSelectedVideo({
+            uid: '-1',
+            name: 'video',
+            status: 'done',
+            url: videoUrl,
+          });
+        }
 
       }
 
@@ -12203,8 +12308,13 @@ Chỉ trả về JSON, không thêm text khác.`;
         // Create file list for display
 
         const fileList = record.fileUrls.map((url, index) => {
-
-          const fileName = url.split('/').pop() || `file-${index + 1}`;
+          // Ensure url is a string - Ant Design Upload requires string URL
+          let urlString = url;
+          if (typeof urlString !== 'string') {
+            console.warn(`fileUrls[${index}] is not a string:`, typeof urlString, urlString);
+            urlString = Array.isArray(urlString) ? (urlString[0] || '') : String(urlString || '');
+          }
+          const fileName = urlString.split('/').pop() || `file-${index + 1}`;
 
           return {
 
@@ -12214,7 +12324,7 @@ Chỉ trả về JSON, không thêm text khác.`;
 
             status: 'done',
 
-            url: url,
+            url: urlString,
 
           };
 
@@ -12513,6 +12623,7 @@ Chỉ trả về JSON, không thêm text khác.`;
 
         ...valuesWithoutFiledLabels,
 
+        lessonNumber: values.lessonNumber || null,
         type: contentType,
 
         status: values.status || 'draft',
@@ -12801,6 +12912,29 @@ Chỉ trả về JSON, không thêm text khác.`;
 
   };
 
+  // Helper function to normalize fileList - ensure all URLs are strings
+  // This prevents "url2.split is not a function" error from Ant Design Upload
+  const normalizeFileList = (fileList) => {
+    if (!fileList || !Array.isArray(fileList)) return [];
+    return fileList.map(file => {
+      if (!file) return file;
+      const normalizedFile = { ...file };
+      // Ensure url is always a string (Ant Design requires string for .split() method)
+      if (normalizedFile.url !== undefined && normalizedFile.url !== null) {
+        if (typeof normalizedFile.url !== 'string') {
+          // If url is array, take first element
+          if (Array.isArray(normalizedFile.url) && normalizedFile.url.length > 0) {
+            normalizedFile.url = String(normalizedFile.url[0] || '');
+          } else {
+            // Convert to string
+            normalizedFile.url = String(normalizedFile.url || '');
+          }
+        }
+      }
+      return normalizedFile;
+    });
+  };
+
   const getFormFields = () => {
 
     // Determine content type from selected record or current tab
@@ -12836,6 +12970,26 @@ Chỉ trả về JSON, không thêm text khác.`;
       <Form.Item key="cid" name="cid" label="CID">
 
         <Input placeholder="Nhập CID" />
+
+      </Form.Item>
+
+    );
+
+    // Số bài field
+
+    fields.push(
+
+      <Form.Item key="lessonNumber" name="lessonNumber" label="Số bài">
+
+        <InputNumber
+
+          placeholder="Nhập số bài"
+
+          min={1}
+
+          style={{ width: '100%' }}
+
+        />
 
       </Form.Item>
 
@@ -13279,7 +13433,7 @@ Chỉ trả về JSON, không thêm text khác.`;
         <Form.Item key="avatarUrl" label="Avatar">
           <Upload
             listType="picture-card"
-            fileList={selectedAvatar ? [selectedAvatar] : []}
+            fileList={normalizeFileList(selectedAvatar ? [selectedAvatar] : [])}
             beforeUpload={() => false} // Prevent auto upload
             onChange={({ fileList }) => {
               if (fileList.length > 0) {
@@ -13315,7 +13469,7 @@ Chỉ trả về JSON, không thêm text khác.`;
 
             listType="picture-card"
 
-            fileList={selectedImages}
+            fileList={normalizeFileList(selectedImages)}
 
             multiple
 
@@ -13409,7 +13563,7 @@ Chỉ trả về JSON, không thêm text khác.`;
 
           <Dragger
 
-            fileList={selectedVideo ? [selectedVideo] : []}
+            fileList={normalizeFileList(selectedVideo ? [selectedVideo] : [])}
 
             beforeUpload={() => false} // Prevent auto upload
 
@@ -13499,7 +13653,7 @@ Chỉ trả về JSON, không thêm text khác.`;
 
             listType="text"
 
-            fileList={selectedFiles}
+            fileList={normalizeFileList(selectedFiles)}
 
             multiple
 
@@ -13787,7 +13941,7 @@ Chỉ trả về JSON, không thêm text khác.`;
 
             listType="picture-card"
 
-            fileList={selectedImages}
+            fileList={normalizeFileList(selectedImages)}
 
             multiple
 
@@ -13881,7 +14035,7 @@ Chỉ trả về JSON, không thêm text khác.`;
 
           <Dragger
 
-            fileList={selectedVideo ? [selectedVideo] : []}
+            fileList={normalizeFileList(selectedVideo ? [selectedVideo] : [])}
 
             beforeUpload={() => false} // Prevent auto upload
 
@@ -13979,7 +14133,7 @@ Chỉ trả về JSON, không thêm text khác.`;
 
             listType="text"
 
-            fileList={selectedFiles}
+            fileList={normalizeFileList(selectedFiles)}
 
             multiple
 
@@ -14261,7 +14415,7 @@ Chỉ trả về JSON, không thêm text khác.`;
 
             <Dragger
 
-              fileList={selectedAudio ? [selectedAudio] : []}
+              fileList={normalizeFileList(selectedAudio ? [selectedAudio] : [])}
 
               beforeUpload={() => false} // Prevent auto upload
 
@@ -15821,14 +15975,14 @@ Chỉ trả về nội dung theo đúng định dạng trên, không thêm phầ
                     />
                   </Tooltip>
 
-                  <Tooltip title="Cấu hình tóm tắt Detail">
+                  {/* <Tooltip title="Cấu hình tóm tắt Detail">
                     <Button
                       type="text"
                       icon={<ThunderboltOutlined />}
                       onClick={() => setSummaryDetailConfigModalVisible(true)}
                       style={{ color: '#722ed1' }}
                     />
-                  </Tooltip>
+                  </Tooltip> */}
 
                   <Tooltip title="Quản lý Tag">
 
@@ -15879,7 +16033,7 @@ Chỉ trả về nội dung theo đúng định dạng trên, không thêm phầ
                   </Tooltip>
 
 
-                  <Tooltip title="Cài đặt Prompt AI Update Quiz & Content">
+                  {/* <Tooltip title="Cài đặt Prompt AI Update Quiz & Content">
 
                     <Button
 
@@ -15893,7 +16047,7 @@ Chỉ trả về nội dung theo đúng định dạng trên, không thêm phầ
 
                     />
 
-                  </Tooltip>
+                  </Tooltip> */}
 
                   <Tooltip title="Cài đặt Prompt AI (Danh sách)">
 
@@ -16395,7 +16549,7 @@ Chỉ trả về nội dung theo đúng định dạng trên, không thêm phầ
                   Tắt làm lại Quiz ({selectedRowKeys.length})
                 </Button>
 
-                <Button
+                {/* <Button
                   icon={<TagsOutlined />}
                   onClick={() => {
                     // Nếu chỉ chọn 1 bản ghi, load allowed_user_class hiện tại
@@ -16429,7 +16583,7 @@ Chỉ trả về nội dung theo đúng định dạng trên, không thêm phầ
                   >
                     Clear User Class ({selectedRowKeys.length})
                   </Button>
-                </Popconfirm>
+                </Popconfirm> */}
 
                 {(currentTab === 'home' || currentTab === 'news' || currentTab === 'caseTraining' || currentTab === 'longForm') && (
 
@@ -18500,6 +18654,10 @@ Chỉ trả về nội dung theo đúng định dạng trên, không thêm phầ
             tag4Options={tag4Options}
 
             onSave={handleSaveTags}
+
+            coursesOptions={coursesOptions}
+
+            onSaveCourses={handleSaveCourses}
 
           />
 

@@ -1,5 +1,5 @@
 import { BookOutlined, DeleteOutlined, DownOutlined, HistoryOutlined, UploadOutlined, UserOutlined } from '@ant-design/icons';
-import { Avatar, Button, Card, Checkbox, Col, Divider, Dropdown, Empty, Form, Input, message, Modal, Radio, Row, Select, Spin, Statistic, Table, Tag, Typography, Upload } from 'antd';
+import { Avatar, Button, Card, Checkbox, Col, Divider, Dropdown, Empty, Form, Input, message, Modal, Radio, Row, Select, Spin, Statistic, Table, Tag, Tooltip, Typography, Upload } from 'antd';
 import confetti from 'canvas-confetti';
 import React, { useContext, useEffect, useState } from 'react';
 import { getSettingByTypePublic } from '../../../apis/public/publicService.jsx';
@@ -17,7 +17,7 @@ import PaymentModal from '../../../components/PaymentModal/PaymentModal.jsx';
 import TermsModal from '../../../components/TermsModal/TermsModal.jsx';
 import CertificateModal from './CertificateModal.jsx';
 import homepageStyles from '../../Homepage/Homepage.module.css';
-
+import newsTabStyles from './NewsTab.module.css';
 const { Option } = Select;
 
 const K9Header = ({
@@ -33,6 +33,7 @@ const K9Header = ({
 	dropdownVisible,
 	setDropdownVisible,
 	tag4Options,
+	coursesOptions,
 	activeTab,
 	streamFilters,
 	longFormFilters,
@@ -50,6 +51,7 @@ const K9Header = ({
 }) => {
 	const { loadQuiz, setLoadQuiz, fetchCurrentUser } = useContext(MyContext)
 	const [isMobile, setIsMobile] = useState(false);
+	const [programNameMaxWidth, setProgramNameMaxWidth] = useState('200px');
 	const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
 
 	useEffect(() => {
@@ -131,6 +133,8 @@ const K9Header = ({
 	const [tempImageUrl, setTempImageUrl] = useState(null);
 	const [uploading, setUploading] = useState(false);
 	const [isHeaderBackgroundModalOpen, setIsHeaderBackgroundModalOpen] = useState(false);
+	const [programSearchText, setProgramSearchText] = useState('');
+	const [selectedCourseFilter, setSelectedCourseFilter] = useState('all'); // Single select
 
 	// Update profile modal states
 	const [isUpdateProfileModalOpen, setIsUpdateProfileModalOpen] = useState(false);
@@ -241,6 +245,36 @@ const K9Header = ({
 			loadHeaderStats();
 		}
 	}, [currentUser?.id, newsItems, caseTrainingItems, loadQuiz, selectedProgram]);
+
+	// Reload historyData when loadQuiz changes (quiz completed) to sync progress bar
+	useEffect(() => {
+		if (currentUser?.id && loadQuiz !== undefined) {
+			// Reload historyData to sync progress bar in program selection modal
+			getListQuestionHistoryByUser({ where: { user_id: currentUser.id } })
+				.then((response) => {
+					const historyDataResponse = response || [];
+					setHistoryData(historyDataResponse);
+				})
+				.catch((error) => {
+					console.error('Error reloading history data after quiz completion:', error);
+				});
+		}
+	}, [loadQuiz, currentUser?.id]);
+
+	// Load historyData when program modal opens (for progress bar display)
+	useEffect(() => {
+		if (isProgramModalOpen && currentUser?.id && (!historyData?.data || historyData.data.length === 0)) {
+			// Load historyData if not already loaded
+			getListQuestionHistoryByUser({ where: { user_id: currentUser.id } })
+				.then((response) => {
+					const historyDataResponse = response || [];
+					setHistoryData(historyDataResponse);
+				})
+				.catch((error) => {
+					console.error('Error loading history data for progress bar:', error);
+				});
+		}
+	}, [isProgramModalOpen, currentUser?.id]);
 
 	// Load header background setting
 	useEffect(() => {
@@ -387,6 +421,24 @@ const K9Header = ({
 		}
 	};
 
+	// Helper function to check if a program is selected (supports both string and array)
+	const isProgramSelected = (programValue) => {
+		if (!selectedProgram) return false;
+		if (Array.isArray(selectedProgram)) {
+			return selectedProgram.includes(programValue);
+		}
+		return selectedProgram === programValue;
+	};
+
+	// Helper function to check if item matches selectedProgram (supports string and array)
+	const matchesSelectedProgram = (itemTag4Array) => {
+		if (!selectedProgram) return false; // Must have a program selected
+		if (Array.isArray(selectedProgram)) {
+			return selectedProgram.some(prog => itemTag4Array.includes(prog));
+		}
+		return itemTag4Array.includes(selectedProgram);
+	};
+
 	// Load header statistics
 	const loadHeaderStats = async () => {
 		try {
@@ -411,14 +463,9 @@ const K9Header = ({
 			// Add news items with questions, filtered by selectedProgram
 			newsItems.forEach(item => {
 				if (item.questionContent != null && item.questionContent != undefined) {
-					// Filter by selectedProgram if it's not 'all'
-					if (selectedProgram === 'all' || !selectedProgram) {
+					const itemTag4Array = Array.isArray(item.tag4) ? item.tag4 : [];
+					if (matchesSelectedProgram(itemTag4Array)) {
 						currentQuestionIds.add(item.id);
-					} else {
-						const itemTag4Array = Array.isArray(item.tag4) ? item.tag4 : [];
-						if (itemTag4Array.includes(selectedProgram)) {
-							currentQuestionIds.add(item.id);
-						}
 					}
 				}
 			});
@@ -426,14 +473,9 @@ const K9Header = ({
 			// Add case training items with questions, filtered by selectedProgram
 			caseTrainingItems.forEach(item => {
 				if (item.questionContent != null && item.questionContent != undefined) {
-					// Filter by selectedProgram if it's not 'all'
-					if (selectedProgram === 'all' || !selectedProgram) {
+					const itemTag4Array = Array.isArray(item.tag4) ? item.tag4 : [];
+					if (matchesSelectedProgram(itemTag4Array)) {
 						currentQuestionIds.add(item.id);
-					} else {
-						const itemTag4Array = Array.isArray(item.tag4) ? item.tag4 : [];
-						if (itemTag4Array.includes(selectedProgram)) {
-							currentQuestionIds.add(item.id);
-						}
 					}
 				}
 			});
@@ -488,9 +530,10 @@ const K9Header = ({
 	// Check program selection on component mount and when tag4Options change
 	useEffect(() => {
 		checkAndSetProgramSelection();
-	}, [tag4Options,]);
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [tag4Options]);
 
-	// Check program selection logic
+	// Check program selection logic - Force user to select a program if none selected
 	const checkAndSetProgramSelection = () => {
 		if (!tag4Options || tag4Options.length === 0) return;
 
@@ -498,30 +541,52 @@ const K9Header = ({
 		const savedProgram = localStorage.getItem('selectedProgram');
 
 		if (savedProgram) {
-			// Check if saved program still exists in current options
-			const programExists = tag4Options.find(option => option.value === savedProgram);
+			try {
+				// Try to parse as JSON (for array) or use as string
+				let parsedProgram = savedProgram;
+				if (savedProgram.startsWith('[')) {
+					parsedProgram = JSON.parse(savedProgram);
+				}
 
-			if (programExists) {
-				// Program exists, set it and don't open modal
-				setSelectedProgram(savedProgram);
-				setTag4Filter(savedProgram);
-				setIsProgramModalOpen(false);
-				setIsProgramModalForced(false);
-			} else {
-				// Program doesn't exist anymore, set to 'all' and don't force modal
-				setSelectedProgram('all');
-				setTag4Filter('all');
-				localStorage.setItem('selectedProgram', 'all');
-				setIsProgramModalOpen(false);
-				setIsProgramModalForced(false);
+				// Check if saved program(s) still exist in current options
+				let programExists = false;
+				if (parsedProgram === 'all') {
+					// 'all' is no longer valid, force user to select
+					programExists = false;
+				} else if (Array.isArray(parsedProgram)) {
+					programExists = parsedProgram.length > 0 && parsedProgram.every(prog =>
+						tag4Options.find(option => option.value === prog)
+					);
+				} else {
+					programExists = tag4Options.find(option => option.value === parsedProgram);
+				}
+
+				if (programExists) {
+					// Program(s) exist, set it and don't open modal
+					setSelectedProgram(parsedProgram);
+					setTag4Filter(parsedProgram);
+					setIsProgramModalOpen(false);
+					setIsProgramModalForced(false);
+				} else {
+					// Program doesn't exist or is 'all', force user to select
+					setSelectedProgram(null);
+					setTag4Filter(null);
+					setIsProgramModalOpen(true);
+					setIsProgramModalForced(true);
+				}
+			} catch (e) {
+				// Invalid format, force user to select
+				setSelectedProgram(null);
+				setTag4Filter(null);
+				setIsProgramModalOpen(true);
+				setIsProgramModalForced(true);
 			}
 		} else {
-			// No saved program, set to 'all' and don't force modal
-			setSelectedProgram('all');
-			setTag4Filter('all');
-			localStorage.setItem('selectedProgram', 'all');
-			setIsProgramModalOpen(false);
-			setIsProgramModalForced(false);
+			// No saved program, force user to select
+			setSelectedProgram(null);
+			setTag4Filter(null);
+			setIsProgramModalOpen(true);
+			setIsProgramModalForced(true);
 		}
 	};
 
@@ -532,10 +597,51 @@ const K9Header = ({
 			setIsMobile(window.innerWidth <= 768);
 		};
 
-		checkMobile();
-		window.addEventListener('resize', checkMobile);
+		// Calculate maxWidth for program name based on screen size
+		const calculateProgramNameMaxWidth = () => {
+			const screenWidth = window.innerWidth;
+			console.log('screenWidth', screenWidth);
+			if (screenWidth >= 1800) {
+				// Medium laptops
+				return '650px';
+			}
+			else if (screenWidth >= 1700) {
+				// Small laptops
+				return '550px';
+			}
+			else if (screenWidth >= 1600) {
+				// Small laptops
+				return '450px';
+			}
+			else if (screenWidth >= 1500) {
+				// Small laptops
+				return '350px';
+			}
+			else if (screenWidth >= 1400) {
+				// Small laptops
+				return '200px';
+			}
+			else if (screenWidth >= 1000) {
+				// Small laptops
+				return '150px';
+			}
+			else {
+				// Tablets, large phones
+				return '200px';
+			}
 
-		return () => window.removeEventListener('resize', checkMobile);
+		};
+
+		const handleResize = () => {
+			checkMobile();
+			setProgramNameMaxWidth(calculateProgramNameMaxWidth());
+		};
+
+		checkMobile();
+		setProgramNameMaxWidth(calculateProgramNameMaxWidth());
+		window.addEventListener('resize', handleResize);
+
+		return () => window.removeEventListener('resize', handleResize);
 	}, []);
 
 	const handleHistoryClick = async () => {
@@ -571,14 +677,9 @@ const K9Header = ({
 		// Add news items with questions, filtered by selectedProgram
 		newsItems.forEach(item => {
 			if (item.questionContent != null && item.questionContent != undefined) {
-				// Filter by selectedProgram if it's not 'all'
-				if (selectedProgram === 'all' || !selectedProgram) {
+				const itemTag4Array = Array.isArray(item.tag4) ? item.tag4 : [];
+				if (matchesSelectedProgram(itemTag4Array)) {
 					currentQuestionIds.add(item.id);
-				} else {
-					const itemTag4Array = Array.isArray(item.tag4) ? item.tag4 : [];
-					if (itemTag4Array.includes(selectedProgram)) {
-						currentQuestionIds.add(item.id);
-					}
 				}
 			}
 		});
@@ -586,14 +687,9 @@ const K9Header = ({
 		// Add case training items with questions, filtered by selectedProgram
 		caseTrainingItems.forEach(item => {
 			if (item.questionContent != null && item.questionContent != undefined) {
-				// Filter by selectedProgram if it's not 'all'
-				if (selectedProgram === 'all' || !selectedProgram) {
+				const itemTag4Array = Array.isArray(item.tag4) ? item.tag4 : [];
+				if (matchesSelectedProgram(itemTag4Array)) {
 					currentQuestionIds.add(item.id);
-				} else {
-					const itemTag4Array = Array.isArray(item.tag4) ? item.tag4 : [];
-					if (itemTag4Array.includes(selectedProgram)) {
-						currentQuestionIds.add(item.id);
-					}
 				}
 			}
 		});
@@ -682,11 +778,15 @@ const K9Header = ({
 		// Add news items with questions, filtered by program
 		newsItems.forEach(item => {
 			if (item.questionContent != null && item.questionContent != undefined) {
-				// Filter by program if it's not 'all'
-				if (programToFilter === 'all' || !programToFilter) {
+				const itemTag4Array = Array.isArray(item.tag4) ? item.tag4 : [];
+				// Check if programToFilter matches (supports string and array)
+				if (!programToFilter || programToFilter === 'all') {
 					currentQuestionIds.add(item.id);
+				} else if (Array.isArray(programToFilter)) {
+					if (programToFilter.some(prog => itemTag4Array.includes(prog))) {
+						currentQuestionIds.add(item.id);
+					}
 				} else {
-					const itemTag4Array = Array.isArray(item.tag4) ? item.tag4 : [];
 					if (itemTag4Array.includes(programToFilter)) {
 						currentQuestionIds.add(item.id);
 					}
@@ -697,11 +797,15 @@ const K9Header = ({
 		// Add case training items with questions, filtered by program
 		caseTrainingItems.forEach(item => {
 			if (item.questionContent != null && item.questionContent != undefined) {
-				// Filter by program if it's not 'all'
-				if (programToFilter === 'all' || !programToFilter) {
+				const itemTag4Array = Array.isArray(item.tag4) ? item.tag4 : [];
+				// Check if programToFilter matches (supports string and array)
+				if (!programToFilter || programToFilter === 'all') {
 					currentQuestionIds.add(item.id);
+				} else if (Array.isArray(programToFilter)) {
+					if (programToFilter.some(prog => itemTag4Array.includes(prog))) {
+						currentQuestionIds.add(item.id);
+					}
 				} else {
-					const itemTag4Array = Array.isArray(item.tag4) ? item.tag4 : [];
 					if (itemTag4Array.includes(programToFilter)) {
 						currentQuestionIds.add(item.id);
 					}
@@ -772,19 +876,234 @@ const K9Header = ({
 	const handleTag4Change = (value) => {
 		setTag4Filter(value);
 		setSelectedProgram(value);
-		// Save to localStorage
-		localStorage.setItem('selectedProgram', value);
+		// Save to localStorage - convert array to JSON string if needed
+		const valueToSave = Array.isArray(value) ? JSON.stringify(value) : value;
+		localStorage.setItem('selectedProgram', valueToSave);
 		setIsProgramModalOpen(false);
 		setIsProgramModalForced(false);
-		updateURL({ program: value });
+		setProgramSearchText('');
+		updateURL({ program: valueToSave });
+	};
+
+	// Handle select all programs for a course
+	const handleSelectAllProgramsForCourse = (courseId) => {
+		const programsInCourse = tag4Options
+			.filter(option => option.courseId === courseId)
+			.map(option => option.value);
+
+		if (programsInCourse.length > 0) {
+			handleTag4Change(programsInCourse);
+		}
 	};
 
 	// Get current selected program name
 	const getCurrentProgramName = () => {
-		if (!selectedProgram) return 'Chọn chương trình';
-		if (selectedProgram === 'all') return 'Chương trình (Tất cả)';
+		if (!selectedProgram || selectedProgram === 'all') return 'Chọn chương trình';
+		if (Array.isArray(selectedProgram)) {
+			if (selectedProgram.length === 0) return 'Chọn chương trình';
+			if (selectedProgram.length === 1) {
+				const option = tag4Options?.find(opt => opt.value === selectedProgram[0]);
+				return option?.displayName || option?.label || 'Chương trình';
+			}
+			// Check if all programs belong to the same course
+			const programOptions = selectedProgram
+				.map(progValue => tag4Options?.find(opt => opt.value === progValue))
+				.filter(Boolean);
+
+			if (programOptions.length > 0) {
+				// Get unique courseIds
+				const courseIds = [...new Set(programOptions.map(opt => opt.courseId).filter(Boolean))];
+
+				// If all programs belong to the same course, show course name
+				if (courseIds.length === 1 && courseIds[0]) {
+					const courseName = getCourseName(courseIds[0]);
+					if (courseName) {
+						return courseName;
+					}
+				}
+			}
+
+			// Fallback: show number of programs
+			return `${selectedProgram.length} chương trình`;
+		}
 		const selectedProgramOption = tag4Options?.find(option => option.value === selectedProgram);
-		return selectedProgramOption?.label || 'Chọn chương trình';
+		return selectedProgramOption?.displayName || selectedProgramOption?.label || 'Chọn chương trình';
+	};
+
+	// Helper function to get course name by courseId
+	const getCourseName = (courseId) => {
+		if (!courseId) return null;
+		const course = coursesOptions?.find(c => c.value === courseId);
+		return course?.label || null;
+	};
+
+	// Render program card component
+	const renderProgramCard = (option) => {
+		const stats = getProgramStats(option.value);
+		const portfolioStats = getProgramPortfolioStats(option.value);
+		const isSelected = isProgramSelected(option.value);
+
+		return (
+			<Card
+				key={option.value}
+				hoverable
+				onClick={() => handleTag4Change(option.value)}
+				style={{
+					cursor: 'pointer',
+					border: isSelected ? '2px solid #1890ff' : '1px solid #d9d9d9',
+					borderRadius: '12px',
+					transition: 'all 0.3s ease',
+					overflow: 'visible',
+					height: '100%',
+					position: 'relative'
+				}}
+				bodyStyle={{ padding: isMobile ? '16px' : '20px', height: '100%' }}
+			>
+				{/* Course Badge - Top Right Corner on Card Edge */}
+				{option.courseId && getCourseName(option.courseId) && (
+					<div style={{
+						position: 'absolute',
+						top: '-8px',
+						right: '12px',
+						zIndex: 10
+					}}>
+						<Tag
+							color="blue"
+							style={{
+								fontSize: isMobile ? '10px' : '11px',
+								padding: '4px 8px',
+								borderRadius: '6px',
+								fontWeight: '500',
+								margin: 0,
+								boxShadow: '0 2px 4px rgba(0,0,0,0.15)'
+							}}
+						>
+							📖 {getCourseName(option.courseId)}
+						</Tag>
+					</div>
+				)}
+
+				{/* Selection Indicator */}
+				{isSelected && (
+					<div style={{
+						width: isMobile ? 28 : 24,
+						height: isMobile ? 28 : 24,
+						borderRadius: '50%',
+						background: '#1890ff',
+						display: 'flex',
+						alignItems: 'center',
+						justifyContent: 'center',
+						flexShrink: 0,
+						boxShadow: '0 2px 8px rgba(24, 144, 255, 0.3)',
+						position: 'absolute',
+						top: '26px',
+						right: '6px',
+						zIndex: 25
+					}}>
+						<span style={{ color: 'white', fontSize: isMobile ? '14px' : '12px', fontWeight: 'bold' }}>✓</span>
+					</div>
+				)}
+
+				<div style={{
+					display: 'flex',
+					flexDirection: 'column',
+					gap: '12px',
+					height: '100%',
+					position: 'relative'
+				}}>
+					{/* Program Content */}
+					<div style={{
+						flex: 1,
+						display: 'flex',
+						flexDirection: 'column',
+						minWidth: 0
+					}}>
+						<Typography.Title
+							level={5}
+							style={{
+								margin: 0,
+								color: '#262626',
+								marginBottom: '8px',
+								fontSize: isMobile ? '16px' : '18px',
+								lineHeight: '1.3',
+								wordBreak: 'break-word'
+							}}
+						>
+							{option.displayName || option.label}
+						</Typography.Title>
+						<Typography.Text
+							type="secondary"
+							style={{
+								fontSize: isMobile ? '12px' : '13px',
+								lineHeight: '1.5',
+								color: '#868686',
+								marginBottom: '12px',
+								display: 'block',
+								flex: 1,
+								wordBreak: 'break-word',
+								overflowWrap: 'break-word'
+							}}
+						>
+							{option.description || 'Chương trình đào tạo chuyên nghiệp với các bài tập thực hành và tài liệu học tập chất lượng cao.'}
+						</Typography.Text>
+
+						{/* Progress Bar - Trước Program Statistics */}
+						{portfolioStats.total > 0 && (
+							<div style={{
+								marginBottom: '12px',
+								display: 'flex',
+								flexDirection: 'column',
+								gap: '4px'
+							}}>
+								<div style={{
+									width: '100%',
+									height: '10px',
+									backgroundColor: '#f0f0f0',
+									borderRadius: '5px',
+									overflow: 'hidden',
+									position: 'relative'
+								}}>
+									<div style={{
+										width: `${portfolioStats.completionRate}%`,
+										height: '100%',
+										backgroundColor: portfolioStats.completionRate === 100 ? '#52c41a' :
+											portfolioStats.completionRate >= 50 ? '#1890ff' :
+												portfolioStats.completionRate > 0 ? '#faad14' : '#d9d9d9',
+										borderRadius: '5px',
+										transition: 'all 0.3s ease',
+										boxShadow: portfolioStats.completionRate > 0 ? '0 2px 4px rgba(0,0,0,0.1)' : 'none'
+									}} />
+								</div>
+								<div style={{
+									display: 'flex',
+									justifyContent: 'space-between',
+									alignItems: 'center',
+									fontSize: '11px',
+									color: '#8c8c8c',
+									fontWeight: '500'
+								}}>
+									<span>{portfolioStats.completed}/{portfolioStats.total} bài đã làm</span>
+									<span>{portfolioStats.completionRate}% hoàn thành</span>
+								</div>
+							</div>
+						)}
+
+						{/* Program Statistics */}
+						<div className={styles.programStatsContainer}>
+							<span className={styles.programStatTag}>
+								{stats.theory} lý thuyết
+							</span>
+							<span className={styles.programStatTag}>
+								{stats.practice} Case thực hành
+							</span>
+							<span className={styles.programStatTag}>
+								Thời gian {formatTimeDisplay(stats.totalHours, stats.totalWeeks)}
+							</span>
+						</div>
+					</div>
+				</div>
+			</Card>
+		);
 	};
 
 	// Calculate program statistics
@@ -802,6 +1121,12 @@ const K9Header = ({
 		if (programValue === 'all') {
 			// For 'all', include all items
 			programItems = allItems;
+		} else if (Array.isArray(programValue)) {
+			// Filter items by multiple programs
+			programItems = allItems.filter(item => {
+				const itemTag4Array = Array.isArray(item.tag4) ? item.tag4 : [];
+				return programValue.some(prog => itemTag4Array.includes(prog));
+			});
 		} else {
 			// Filter items by specific program
 			programItems = allItems.filter(item => {
@@ -927,23 +1252,23 @@ const K9Header = ({
 	// Check if program passes certificate requirements
 	const checkProgramPass = (programValue) => {
 		const stats = getProgramCertificateStats(programValue);
-		
+
 		// Excellence: Điểm TB > 80% + Hoàn thành ≥ 75% lý thuyết và ≥ 75% quiz
 		if (stats.averageScore > 80 && stats.theoryPercent >= 75 && stats.quizPercent >= 75) {
 			return { passed: true, level: 'Excellence' };
 		}
-		
+
 		// Qualified: Điểm TB > 60% + Hoàn thành ≥ 70% lý thuyết và ≥ 70% quiz
 		if (stats.averageScore > 60 && stats.theoryPercent >= 70 && stats.quizPercent >= 70) {
 			return { passed: true, level: 'Qualified' };
 		}
-		
+
 		return { passed: false, level: null };
 	};
 
 	// Get portfolio stats for a specific program
 	const getProgramPortfolioStats = (programValue) => {
-		if (!programValue || !historyData?.data) {
+		if (!programValue) {
 			return {
 				completed: 0,
 				total: 0,
@@ -953,7 +1278,7 @@ const K9Header = ({
 			};
 		}
 
-		// Get all questions for this program
+		// Get all questions for this program - calculate total first (doesn't need historyData)
 		const currentQuestionIds = new Set();
 		const allItems = [...newsItems, ...caseTrainingItems];
 
@@ -970,13 +1295,25 @@ const K9Header = ({
 			}
 		});
 
-		// Filter history for this program
+		const total = currentQuestionIds.size;
+
+		// If no historyData, return with total but completed/completionRate = 0
+		if (!historyData?.data) {
+			return {
+				completed: 0,
+				total,
+				averageScore: 0,
+				highScoreCount: 0,
+				completionRate: 0
+			};
+		}
+
+		// Filter history for this program (only when historyData exists)
 		const validHistoryData = historyData.data.filter(item =>
 			currentQuestionIds.has(item.question_id)
 		);
 
 		const completed = validHistoryData.filter(item => item.score && parseFloat(item.score) >= 0).length;
-		const total = currentQuestionIds.size;
 
 		// Calculate average score
 		const validScores = validHistoryData
@@ -1168,7 +1505,7 @@ const K9Header = ({
 			<div className={styles.navContainer} style={{ padding: isMobile ? '0px' : '0px 12px' }}>
 				<div className={styles.header_left} style={{ padding: isMobile ? '8px 0px' : '8px 12px' }}>
 					<div className={styles.logo} style={{ padding: isMobile ? '0px' : '0px 4px' }}>
-						<img style={{ width: isMobile ? '80px' : '150px', height: isMobile ? '20px' : '32px' }} src="/Layer.png" alt="" />
+						<img style={{ width: isMobile ? '28px' : '175px', height: isMobile ? '26px' : '38px' }} src={isMobile ? '/Favicon.png' : '/Layer.png'} />
 						{/* {
 							!isMobile && (
 								<div className={styles.desc}>
@@ -1179,111 +1516,44 @@ const K9Header = ({
 						} */}
 						{shouldShowTag4Filter && (
 							<>
-								<Button
-									// icon={<Program_Icon width={22} height={24} />}
-									type="text"
-									onClick={() => setIsProgramModalOpen(true)}
-									style={{
-										fontWeight: '500',
-										width: isMobile ? 'auto' : 'auto',
-										minWidth: isMobile ? '85px' : '150px',
-										maxWidth: isMobile ? '110px' : '500px',
-										marginLeft: isMobile ? 4 : 0,
-										marginRight: isMobile ? 4 : 12,
-										height: isMobile ? '28px' : '36px',
-										// backgroundColor: '#F7F7F7',
-										// border: '1px solid #e0e0e0',
-										// borderRadius: '10px',
-										boxShadow: 'none',
-										transition: 'all 0.2s ease',
-									}}
-									// onMouseEnter={(e) => {
-									// 	// e.currentTarget.style.backgroundColor = '#e8e8e8';
-									// 	e.currentTarget.style.boxShadow = '0 6px 12px rgba(0, 0, 0, 0.2), 0 4px 8px rgba(0, 0, 0, 0.15)';
-									// 	e.currentTarget.style.transform = 'translateY(-2px)';
-									// }}
-									// onMouseLeave={(e) => {
-									// 	// e.currentTarget.style.backgroundColor = '#F7F7F7';
-									// 	e.currentTarget.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.15), 0 2px 4px rgba(0, 0, 0, 0.1)';
-									// 	e.currentTarget.style.transform = 'translateY(0)';
-									// }}
+								<Tooltip
+									title={getCurrentProgramName()}
+									placement="bottom"
+									overlayStyle={{ maxWidth: '300px' }}
 								>
-									<span style={{
-										overflow: 'hidden',
-										textOverflow: 'ellipsis',
-										whiteSpace: 'nowrap',
-										fontSize: isMobile ? '13px' : '16px',
-										color: 'white',
-										display: 'block'
-									}}>
-										{isMobile ? (selectedProgram ? getCurrentProgramName() : 'Chọn') : getCurrentProgramName()}
-									</span>
-								</Button>
-
-								{/* View Mode Toggle - Only for specific tabs on desktop */}
-								{!isMobile && viewMode && toggleViewMode && (
-									<>
-										<div style={{
-											display: 'flex',
-											gap: '16px',
+									<Button
+										icon={<Program_Icon width={16} height={16} />}
+										type="text"
+										onClick={() => setIsProgramModalOpen(true)}
+										style={{
+											fontWeight: '500',
+											width: isMobile ? 'auto' : 'auto',
+											flex: 1,
+											...(isMobile
+												&& {
+												minWidth: '80px',
+												maxWidth: programNameMaxWidth,
+											}),
+											marginLeft: isMobile ? 4 : 0,
 											marginRight: isMobile ? 4 : 12,
 											height: isMobile ? '28px' : '36px',
-											alignItems: 'center'
+											boxShadow: 'none',
+											transition: 'all 0.2s ease',
+										}}
+									>
+										<span style={{
+											overflow: 'hidden',
+											textOverflow: 'ellipsis',
+											whiteSpace: 'nowrap',
+											fontSize: isMobile ? '13px' : '16px',
+											color: 'white',
+											display: 'block',
+											maxWidth: programNameMaxWidth
 										}}>
-											<div
-												onClick={() => toggleViewMode('grid')}
-												style={{
-													display: 'flex',
-													alignItems: 'center',
-													gap: '6px',
-													padding: '0 8px',
-													cursor: 'pointer',
-													height: '100%',
-													borderBottom: viewMode === 'grid' ? '2px solid white' : '2px solid transparent',
-													transition: 'all 0.3s ease',
-													color: 'white',
-												}}
-												onMouseEnter={(e) => {
-													if (viewMode !== 'grid') {
-														e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
-													}
-												}}
-												onMouseLeave={(e) => {
-													e.currentTarget.style.background = 'transparent';
-												}}
-											>
-												<GridView_Icon width={14} height={14} />
-												<span style={{ color: 'white', fontSize: '14px', fontWeight: '500' }}>Grid view</span>
-											</div>
-
-											<div
-												onClick={() => toggleViewMode('list')}
-												style={{
-													display: 'flex',
-													alignItems: 'center',
-													gap: '6px',
-													padding: '0 8px',
-													cursor: 'pointer',
-													height: '100%',
-													borderBottom: viewMode === 'list' ? '2px solid white' : '2px solid transparent',
-													transition: 'all 0.3s ease',
-													color: 'white',
-												}}
-												onMouseEnter={(e) => {
-													if (viewMode !== 'list') {
-														e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
-													}
-												}}
-												onMouseLeave={(e) => {
-													e.currentTarget.style.background = 'transparent';
-												}}
-											>
-												<ListView_Icon width={14} height={14} />
-												<span style={{ color: 'white', fontSize: '14px', fontWeight: '500' }}>List view</span>
-											</div>
-										</div>
-									</>
-								)}
+											{isMobile ? (selectedProgram ? getCurrentProgramName() : 'Chọn') : getCurrentProgramName()}
+										</span>
+									</Button>
+								</Tooltip>
 							</>
 						)}
 					</div>
@@ -1403,29 +1673,54 @@ const K9Header = ({
 								...(isMobile && currentUser ? [{
 									key: 'accountType',
 									label: (
-										<div style={{
-											display: 'flex',
-											alignItems: 'center',
-											justifyContent: 'space-between',
-											padding: '4px 0',
-											gap: `6px`
-										}}>
-
-											<span style={{ fontSize: '14px', color: '#666' }}>Gói tài khoản: </span>
-											{renderAccountTypeTag(currentUser?.account_type, currentUser?.isAdmin, 'small')}
-										</div>
+										<Tooltip title="Gói tài khoản" placement="left">
+											<div style={{
+												display: 'flex',
+												alignItems: 'center',
+												justifyContent: 'space-between',
+												padding: '4px 0',
+												gap: `6px`,
+												maxWidth: '200px',
+												overflow: 'hidden'
+											}}>
+												<span style={{ fontSize: '14px', color: '#666' }}>Gói tài khoản: </span>
+												{renderAccountTypeTag(currentUser?.account_type, currentUser?.isAdmin, 'small')}
+											</div>
+										</Tooltip>
 									),
 									disabled: true,
 									style: { cursor: 'default' }
 								}] : []),
 								{
 									key: 'purchasePackage',
-									label: '💳 Mua gói',
+									label: (
+										<Tooltip title="💳 Mua gói" placement="left">
+											<div style={{
+												maxWidth: '200px',
+												overflow: 'hidden',
+												textOverflow: 'ellipsis',
+												whiteSpace: 'nowrap'
+											}}>
+												💳 Mua gói
+											</div>
+										</Tooltip>
+									),
 									onClick: () => setIsPaymentModalOpen(true),
 								},
 								{
 									key: 'updateProfile',
-									label: 'Cập nhật thông tin',
+									label: (
+										<Tooltip title="Cập nhật thông tin" placement="left">
+											<div style={{
+												maxWidth: '200px',
+												overflow: 'hidden',
+												textOverflow: 'ellipsis',
+												whiteSpace: 'nowrap'
+											}}>
+												Cập nhật thông tin
+											</div>
+										</Tooltip>
+									),
 									onClick: () => {
 										setIsUpdateProfileModalOpen(true);
 										profileForm.setFieldsValue({
@@ -1435,12 +1730,108 @@ const K9Header = ({
 										setProfileImageFile(null);
 									},
 								},
+								// View Mode Options - Only for specific tabs
+								...(viewMode && toggleViewMode && !isMobile && shouldShowTag4Filter ? [
+									{
+										type: 'divider',
+									},
+									{
+										key: 'viewModeGrid',
+										label: (
+											<Tooltip title="Grid view" placement="left">
+												<div style={{
+													display: 'flex',
+													alignItems: 'center',
+													gap: '8px',
+													maxWidth: '200px',
+													overflow: 'hidden',
+													textOverflow: 'ellipsis',
+													whiteSpace: 'nowrap'
+												}}>
+													<GridView_Icon width={14} height={14} />
+													<span style={{
+														color: viewMode === 'grid' ? '#1890ff' : '#666',
+														fontWeight: viewMode === 'grid' ? '600' : '400'
+													}}>
+														Grid view
+													</span>
+													{viewMode === 'grid' && <span style={{ color: '#1890ff' }}>✓</span>}
+												</div>
+											</Tooltip>
+										),
+										onClick: () => {
+											toggleViewMode('grid');
+											setDropdownVisible(false);
+										},
+									},
+									{
+										key: 'viewModeList',
+										label: (
+											<Tooltip title="List view" placement="left">
+												<div style={{
+													display: 'flex',
+													alignItems: 'center',
+													gap: '8px',
+													maxWidth: '200px',
+													overflow: 'hidden',
+													textOverflow: 'ellipsis',
+													whiteSpace: 'nowrap'
+												}}>
+													<ListView_Icon width={14} height={14} />
+													<span style={{
+														color: viewMode === 'list' ? '#1890ff' : '#666',
+														fontWeight: viewMode === 'list' ? '600' : '400'
+													}}>
+														List view
+													</span>
+													{viewMode === 'list' && <span style={{ color: '#1890ff' }}>✓</span>}
+												</div>
+											</Tooltip>
+										),
+										onClick: () => {
+											toggleViewMode('list');
+											setDropdownVisible(false);
+										},
+									}
+								] : []),
 								(currentUser?.isAdmin && {
 									key: 'headerBackground',
-									label: 'Header Background',
+									label: (
+										<Tooltip title="Header Background" placement="left">
+											<div style={{
+												maxWidth: '200px',
+												overflow: 'hidden',
+												textOverflow: 'ellipsis',
+												whiteSpace: 'nowrap'
+											}}>
+												Header Background
+											</div>
+										</Tooltip>
+									),
 									onClick: () => setIsHeaderBackgroundModalOpen(true),
 								}),
-								...getMenuItems()
+								// Wrap menu items from getMenuItems() with tooltip and max-width
+								...getMenuItems().map(item => {
+									// Skip if it's a divider or already has a React component as label
+									if (item.type === 'divider' || typeof item.label !== 'string') {
+										return item;
+									}
+									return {
+										...item,
+										label: (
+											<Tooltip title={item.label} placement="left">
+												<div style={{
+													maxWidth: '200px',
+													overflow: 'hidden',
+													textOverflow: 'ellipsis',
+													whiteSpace: 'nowrap'
+												}}>
+													{item.label}
+												</div>
+											</Tooltip>
+										)
+									};
+								})
 							],
 							onClick: handleMenuClick,
 						}}
@@ -1557,312 +1948,232 @@ const K9Header = ({
 					<div style={{
 						display: 'flex',
 						alignItems: 'center',
+						justifyContent: 'space-between',
 						gap: '8px',
 						fontSize: '18px',
 						fontWeight: '600',
-						color: '#262626'
+						color: '#262626',
+						width: '100%'
 					}}>
-						📚 Chọn chương trình
+						<span>📚 Chọn chương trình</span>
+						{selectedCourseFilter === 'all' && (() => {
+							const stats = getProgramStats('all');
+							return (
+								<div style={{
+									display: 'flex',
+									alignItems: 'center',
+									gap: '12px',
+									fontSize: '14px',
+									fontWeight: '500',
+									color: '#595959',
+									flexWrap: 'wrap',
+									justifyContent: 'flex-end'
+								}}>
+									<span>Tổng trữ lượng</span>
+									<span>{stats.theory} lý thuyết</span>
+									<span>{stats.practice} Case thực hành</span>
+									<span>Thời gian {formatTimeDisplay(stats.totalHours, stats.totalWeeks)}</span>
+								</div>
+							);
+						})()}
 					</div>
-				}
+				} 
 				open={isProgramModalOpen}
-				onCancel={isProgramModalForced ? undefined : () => setIsProgramModalOpen(false)}
+				onCancel={isProgramModalForced ? undefined : () => {
+					setIsProgramModalOpen(false);
+					setProgramSearchText('');
+				}}
 				footer={null}
 				width={isMobile ? '95%' : '1600px'}
 				maskClosable={!isProgramModalForced}
 				closable={!isProgramModalForced}
 				style={{
-					...(isMobile && { top: 10 }),
+					top: 20,
+					paddingBottom: 0,
 				}}
+				className={newsTabStyles.modalContentMidHeight}
 			>
 				<div style={{ overflowY: 'scroll', height: '100%', paddingBottom: 60, overflowX: 'hidden' }}>
-					<div style={{ marginBottom: '20px' }}>
-						<Typography.Text type="secondary">
-							Chọn chương trình bạn muốn lọc nội dung. Mỗi chương trình có các bài tập và tài liệu riêng biệt.
-						</Typography.Text>
-					</div>
 
-					{/* All Programs Option - Full Width */}
-					<div style={{ marginBottom: '20px' }}>
-						<Card
-							hoverable
-							onClick={() => handleTag4Change('all')}
-							style={{
-								cursor: 'pointer',
-								border: selectedProgram === 'all' ? '2px solid #1890ff' : '1px solid #d9d9d9',
-								borderRadius: '12px',
-								transition: 'all 0.3s ease',
-								background: selectedProgram === 'all' ? '#f0f8ff' : 'white',
-								overflow: 'hidden'
-							}}
-							bodyStyle={{ padding: isMobile ? '16px' : '20px' }}
-						>
-							<div style={{
-								display: 'flex',
-								alignItems: 'center',
-								gap: isMobile ? '12px' : '16px',
-								position: 'relative'
-							}}>
-								<div style={{ flex: 1, minWidth: 0 }}>
-									<Typography.Title
-										level={4}
-										style={{
-											margin: 0,
-											color: '#262626',
-											marginBottom: '8px',
-											fontSize: isMobile ? '18px' : '20px',
-											lineHeight: '1.3',
-											wordBreak: 'break-word'
-										}}
-									>
-										Tất cả chương trình
-									</Typography.Title>
-									<Typography.Text
-										type="secondary"
-										style={{
-											fontSize: isMobile ? '12px' : '14px',
-											lineHeight: '1.5',
-											color: '#868686',
-											marginBottom: '12px',
-											display: 'block',
-											wordBreak: 'break-word',
-											overflowWrap: 'break-word'
-										}}
-									>
-										Xem tất cả nội dung từ tất cả các chương trình đào tạo có sẵn.
-									</Typography.Text>
 
-									{/* All Programs Statistics */}
-									<div style={{
-										display: 'flex',
-										alignItems: 'center',
-										gap: isMobile ? '8px' : '12px',
-										fontSize: isMobile ? '11px' : '13px',
-										color: '#495057',
-										flexWrap: 'wrap'
-									}}>
-										{(() => {
-											const stats = getProgramStats('all');
-											return (
-												<>
-													<span style={{
-														backgroundColor: '#e3f2fd',
-														color: '#1976d2',
-														padding: isMobile ? '3px 8px' : '4px 8px',
-														borderRadius: '6px',
-														fontWeight: '500',
-														fontSize: isMobile ? '10px' : '12px'
-													}}>
-														{stats.theory} lý thuyết
-													</span>
-													<span style={{
-														backgroundColor: '#fff3e0',
-														color: '#f57c00',
-														padding: isMobile ? '3px 8px' : '4px 8px',
-														borderRadius: '6px',
-														fontWeight: '500',
-														fontSize: isMobile ? '10px' : '12px'
-													}}>
-														{stats.practice} thực hành
-													</span>
-													<span style={{
-														backgroundColor: '#e8f5e8',
-														color: '#388e3c',
-														padding: isMobile ? '3px 8px' : '4px 8px',
-														borderRadius: '6px',
-														fontWeight: '500',
-														fontSize: isMobile ? '10px' : '12px'
-													}}>
-														{formatTimeDisplay(stats.totalHours, stats.totalWeeks)}
-													</span>
-												</>
-											);
-										})()}
-									</div>
-								</div>
-								{selectedProgram === 'all' && (
-									<div style={{
-										width: isMobile ? 28 : 24,
-										height: isMobile ? 28 : 24,
-										borderRadius: '50%',
-										background: '#1890ff',
-										display: 'flex',
-										alignItems: 'center',
-										justifyContent: 'center',
-										flexShrink: 0,
-										position: isMobile ? 'absolute' : 'relative',
-										top: isMobile ? '12px' : 'auto',
-										right: isMobile ? '12px' : 'auto'
-									}}>
-										<span style={{ color: 'white', fontSize: isMobile ? '14px' : '14px' }}>✓</span>
-									</div>
-								)}
-							</div>
-						</Card>
-					</div>
-
-					{/* Individual Program Options - Grid Layout */}
+					{/* Filters Section */}
 					<div style={{
-						display: 'grid',
-						gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)',
-						gap: '16px'
+						marginBottom: '24px',
+						padding: '20px',
+						backgroundColor: '#f8f9fa',
+						borderRadius: '12px',
+						border: '1px solid #e9ecef'
 					}}>
-						{tag4Options?.map(option => {
-							const stats = getProgramStats(option.value);
-							return (
-								<Card
-									key={option.value}
-									hoverable
-									onClick={() => handleTag4Change(option.value)}
-									style={{
-										cursor: 'pointer',
-										border: selectedProgram === option.value ? '2px solid #1890ff' : '1px solid #d9d9d9',
-										borderRadius: '12px',
-										transition: 'all 0.3s ease',
-										overflow: 'hidden',
-										height: '100%'
-									}}
-									bodyStyle={{ padding: isMobile ? '16px' : '20px', height: '100%' }}
-								>
-									<div style={{
-										display: 'flex',
-										flexDirection: isMobile ? 'column' : 'row',
-										alignItems: isMobile ? 'stretch' : 'center',
-										gap: isMobile ? '12px' : '16px',
-										height: '100%',
-										position: 'relative'
-									}}>
-										{/* Program Image */}
-										{option.imageUrl && (
-											<div style={{
-												width: isMobile ? '100%' : '205px',
-												height: isMobile ? '160px' : '235px',
-												minHeight: isMobile ? '160px' : '235px',
-												overflow: 'hidden',
-												flexShrink: 0,
-												background: '#f5f5f5',
-												display: 'flex',
-												alignItems: 'center',
-												justifyContent: 'center',
-												borderRadius: isMobile ? '8px' : '0'
-											}}>
-												<img
-													src={option.imageUrl}
-													alt={option.label}
-													style={{
-														width: '100%',
-														height: '100%',
-														objectFit: 'cover'
-													}}
-												/>
-											</div>
-										)}
-										{/* Program Content */}
-										<div style={{
-											flex: 1,
-											display: 'flex',
-											flexDirection: 'column',
-											height: '100%',
-											minWidth: 0, // Prevent text overflow
-											width: isMobile ? '100%' : 'auto'
-										}}>
-											<Typography.Title
-												level={5}
-												style={{
-													margin: 0,
-													color: '#262626',
-													marginBottom: '8px',
-													fontSize: isMobile ? '16px' : '18px',
-													lineHeight: '1.3',
-													wordBreak: 'break-word'
+						{/* Course Filter Badges and Search Input - Same Row */}
+						<div style={{
+							display: 'flex',
+							alignItems: 'center',
+							gap: '12px',
+							flexWrap: 'wrap'
+						}}>
+							{/* Course Filter Badges */}
+							{coursesOptions && coursesOptions.length > 0 && (
+								<div style={{
+									display: 'flex',
+									flexWrap: 'wrap',
+									gap: '8px',
+									flex: 1,
+									minWidth: '200px'
+								}}>
+									<Button
+										type={selectedCourseFilter === 'all' ? 'primary' : 'default'}
+										onClick={() => {
+											setSelectedCourseFilter('all');
+										}}
+										className="course-filter-btn"
+										style={{
+											height: '36px',
+											padding: '0 20px',
+											fontSize: '14px',
+											fontWeight: '500',
+											borderRadius: '20px',
+											overflow: 'hidden'
+										}}
+									>
+										✨ Tất cả
+									</Button>
+									{coursesOptions.map(course => {
+										const isSelected = selectedCourseFilter === course.value;
+										return (
+											<Button
+												key={course.value}
+												type={isSelected ? 'primary' : 'default'}
+												onClick={() => {
+													setSelectedCourseFilter(course.value);
 												}}
-											>
-												{option.label}
-											</Typography.Title>
-											<Typography.Text
-												type="secondary"
+												className="course-filter-btn"
 												style={{
-													fontSize: isMobile ? '12px' : '13px',
-													lineHeight: '1.5',
-													color: '#868686',
-													marginBottom: '12px',
-													display: 'block',
-													flex: 1,
-													wordBreak: 'break-word',
-													overflowWrap: 'break-word'
-												}}
-											>
-												{option.description || 'Chương trình đào tạo chuyên nghiệp với các bài tập thực hành và tài liệu học tập chất lượng cao.'}
-											</Typography.Text>
-
-											{/* Program Statistics */}
-											<div style={{
-												display: 'flex',
-												flexDirection: 'column',
-												gap: '6px',
-												fontSize: isMobile ? '11px' : '12px',
-												color: '#495057'
-											}}>
-												<div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-													<span style={{
-														backgroundColor: '#e3f2fd',
-														color: '#1976d2',
-														padding: isMobile ? '3px 8px' : '2px 6px',
-														borderRadius: '4px',
-														fontWeight: '500',
-														fontSize: isMobile ? '10px' : '11px'
-													}}>
-														{stats.theory} lý thuyết
-													</span>
-													<span style={{
-														backgroundColor: '#fff3e0',
-														color: '#f57c00',
-														padding: isMobile ? '3px 8px' : '2px 6px',
-														borderRadius: '4px',
-														fontWeight: '500',
-														fontSize: isMobile ? '10px' : '11px'
-													}}>
-														{stats.practice} thực hành
-													</span>
-												</div>
-												<span style={{
-													backgroundColor: '#e8f5e8',
-													color: '#388e3c',
-													padding: isMobile ? '3px 8px' : '2px 6px',
-													borderRadius: '4px',
+													height: '36px',
+													padding: '0 20px',
+													fontSize: '14px',
 													fontWeight: '500',
-													fontSize: isMobile ? '10px' : '11px',
-													width: 'fit-content'
-												}}>
-													{formatTimeDisplay(stats.totalHours, stats.totalWeeks)}
-												</span>
-											</div>
-										</div>
+													borderRadius: '20px',
+													overflow: 'hidden'
+												}}
+											>
+												📖 {course.label}
+											</Button>
+										);
+									})}
+								</div>
+							)}
 
-										{/* Selection Indicator */}
-										{selectedProgram === option.value && (
-											<div style={{
-												width: isMobile ? 28 : 24,
-												height: isMobile ? 28 : 24,
-												borderRadius: '50%',
-												background: '#1890ff',
-												display: 'flex',
-												alignItems: 'center',
-												justifyContent: 'center',
-												flexShrink: 0,
-												boxShadow: '0 2px 8px rgba(24, 144, 255, 0.3)',
-												position: isMobile ? 'absolute' : 'relative',
-												top: isMobile ? '12px' : 'auto',
-												right: isMobile ? '12px' : 'auto'
-											}}>
-												<span style={{ color: 'white', fontSize: isMobile ? '14px' : '12px' }}>✓</span>
-											</div>
-										)}
-									</div>
-								</Card>
-							);
-						})}
+							{/* Search Input */}
+							<div style={{ flex: '0 0 auto', minWidth: '250px' }}>
+								<Input
+									placeholder="Nhập tên chương trình để tìm kiếm..."
+									value={programSearchText}
+									onChange={(e) => setProgramSearchText(e.target.value)}
+									allowClear
+									size="large"
+									style={{
+										width: '100%',
+										borderRadius: '8px',
+										backgroundColor: '#ffffff'
+									}}
+									prefix={<span style={{ color: '#8c8c8c', fontSize: '16px' }}>🔍</span>}
+								/>
+							</div>
+						</div>
 					</div>
+
+
+					{/* Individual Program Options - Grouped by Course */}
+					{coursesOptions && coursesOptions.length > 0 && selectedCourseFilter !== 'all' ? (
+						// Show programs grouped by selected course
+						<div>
+							{(() => {
+								const course = coursesOptions.find(c => c.value === selectedCourseFilter);
+								const programsInCourse = tag4Options?.filter(option => {
+									if (!option.courseId || option.courseId !== selectedCourseFilter) return false;
+									if (!programSearchText) return true;
+									const searchLower = programSearchText.toLowerCase();
+									const displayName = option.displayName || option.label || '';
+									return (
+										displayName.toLowerCase().includes(searchLower) ||
+										option.label?.toLowerCase().includes(searchLower) ||
+										option.description?.toLowerCase().includes(searchLower) ||
+										option.displayName?.toLowerCase().includes(searchLower)
+									);
+								}) || [];
+
+								if (programsInCourse.length === 0) return null;
+
+								return (
+									<div key={selectedCourseFilter} style={{ marginBottom: '24px' }}>
+										{/* Course Header with Select All Button */}
+										{/* <div style={{
+											display: 'flex',
+											alignItems: 'center',
+											justifyContent: 'space-between',
+											marginBottom: '16px',
+											padding: '12px 16px',
+											backgroundColor: '#f0f8ff',
+											borderRadius: '8px',
+											border: '1px solid #d6e4ff'
+										}}>
+											<Typography.Text strong style={{ fontSize: '16px', color: '#262626' }}>
+												📖 {course?.label || 'Học phần'}
+											</Typography.Text>
+											<Button
+												type="default"
+												onClick={(e) => {
+													e.stopPropagation();
+													handleSelectAllProgramsForCourse(selectedCourseFilter);
+												}}
+												style={{
+													height: '32px',
+													padding: '0 16px',
+													fontSize: '13px',
+													borderRadius: '6px'
+												}}
+											>
+												✓ Chọn tất cả ({programsInCourse.length})
+											</Button>
+										</div> */}
+
+										{/* Programs Grid */}
+										<div style={{
+											display: 'grid',
+											gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)',
+											gap: '16px'
+										}}>
+											{programsInCourse.map(option => {
+												return renderProgramCard(option);
+											})}
+										</div>
+									</div>
+								);
+							})()}
+						</div>
+					) : (
+						// Show all programs when "Tất cả học phần" is selected
+						<div style={{
+							display: 'grid',
+							gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)',
+							gap: '16px'
+						}}>
+							{tag4Options?.filter(option => {
+								// Filter by search text only when showing all
+								if (!programSearchText) return true;
+								const searchLower = programSearchText.toLowerCase();
+								const displayName = option.displayName || option.label || '';
+								return (
+									displayName.toLowerCase().includes(searchLower) ||
+									option.label?.toLowerCase().includes(searchLower) ||
+									option.description?.toLowerCase().includes(searchLower) ||
+									option.displayName?.toLowerCase().includes(searchLower)
+								);
+							}).map(option => {
+								return renderProgramCard(option);
+							})}
+						</div>
+					)}
 				</div>
 			</Modal>
 
@@ -1896,7 +2207,10 @@ const K9Header = ({
 								<div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '14px', color: '#1890ff' }}>
 									<Program_Icon style={{ fontSize: '16px' }} />
 									<Typography.Text style={{ fontSize: '14px', color: '#1890ff', fontWeight: '500' }}>
-										{selectedPortfolioProgram === 'all' ? 'Tất cả chương trình' : tag4Options?.find(opt => opt.value === selectedPortfolioProgram)?.label || selectedPortfolioProgram}
+										{selectedPortfolioProgram === 'all' ? 'Tất cả chương trình' : (() => {
+											const program = tag4Options?.find(opt => opt.value === selectedPortfolioProgram);
+											return program?.displayName || program?.label || selectedPortfolioProgram;
+										})()}
 									</Typography.Text>
 								</div>
 							)}
@@ -1925,7 +2239,7 @@ const K9Header = ({
 					...(isMobile && { top: 10 }),
 					maxHeight: '98vh'
 				}}
-		
+
 			>
 				{loading ? (
 					<div style={{
@@ -2024,8 +2338,8 @@ const K9Header = ({
 							<Typography.Title level={4} style={{ marginBottom: '16px', color: '#262626' }}>
 								Chương trình học
 							</Typography.Title>
-							<div style={{ 
-								display: 'flex', 
+							<div style={{
+								display: 'flex',
 								flexDirection: 'column',
 								background: '#fff',
 								borderRadius: '8px',
@@ -2066,9 +2380,9 @@ const K9Header = ({
 														Xem tổng quan tất cả các bài học
 													</Typography.Text>
 												</div>
-												<div style={{ 
-													display: 'flex', 
-													flexDirection: 'column', 
+												<div style={{
+													display: 'flex',
+													flexDirection: 'column',
 													alignItems: 'flex-end',
 													gap: '4px'
 												}}>
@@ -2139,16 +2453,33 @@ const K9Header = ({
 										>
 											<div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px' }}>
 												<div style={{ flex: 1 }}>
+													{/* Course Badge */}
+													{program.courseId && getCourseName(program.courseId) && (
+														<div style={{ marginBottom: '6px' }}>
+															<Tag
+																color="blue"
+																style={{
+																	fontSize: '11px',
+																	padding: '2px 8px',
+																	borderRadius: '4px',
+																	fontWeight: '500',
+																	margin: 0
+																}}
+															>
+																📖 {getCourseName(program.courseId)}
+															</Tag>
+														</div>
+													)}
 													<Typography.Title level={5} style={{ margin: 0, marginBottom: '4px', color: '#262626' }}>
-														{program.label}
+														{program.displayName || program.label}
 													</Typography.Title>
 													<Typography.Text type="secondary" style={{ fontSize: '13px' }}>
 														{program.description || 'Chương trình đào tạo chuyên nghiệp'}
 													</Typography.Text>
 												</div>
-												<div style={{ 
-													display: 'flex', 
-													flexDirection: 'column', 
+												<div style={{
+													display: 'flex',
+													flexDirection: 'column',
 													alignItems: 'flex-end',
 													gap: '4px'
 												}}>
@@ -3212,6 +3543,19 @@ const K9Header = ({
 				checkProgramPass={checkProgramPass}
 				getProgramCertificateStats={getProgramCertificateStats}
 			/>
+
+			{/* Style for course filter buttons to ensure rounded corners */}
+			<style>{`
+				.course-filter-btn {
+					border-radius: 20px !important;
+				}
+				.course-filter-btn.ant-btn-primary {
+					border-radius: 20px !important;
+				}
+				.course-filter-btn.ant-btn-default {
+					border-radius: 20px !important;
+				}
+			`}</style>
 		</div>
 	);
 };

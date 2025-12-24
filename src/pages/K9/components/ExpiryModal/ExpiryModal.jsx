@@ -312,8 +312,8 @@ const ExpiryModal = ({}) => {
 						</Paragraph>
 						<ul className={styles.contactList}>
 							{/* <li><Gmail_Icon height={16} width={16}/> Email: support@visao.com</li> */}
-							<li><Telephone_Icon height={16} width={16}/> Hotline: 0985611911</li>
-							<li><ZaLo_Icon height={16} width={16}/> Zalo: 0985611911</li>
+							<li><Telephone_Icon height={16} width={16}/> Hotline: 0948088586</li>
+							<li><ZaLo_Icon height={16} width={16}/> Zalo: 0948088586</li>
 						</ul>
 					</div>
 				</div>

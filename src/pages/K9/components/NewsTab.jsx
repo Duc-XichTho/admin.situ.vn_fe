@@ -18,7 +18,7 @@ import NewsItem from './NewsItem';
 import newsTabStyles from './NewsTab.module.css';
 import QuizComponent from './QuizComponent.jsx';
 import ShareButton from './ShareButton.jsx';
-
+import PaymentModal from '../../../components/PaymentModal/PaymentModal';
 import EditDetailModal from './EditDetailModal.jsx';
 import FeedbackModal from './FeedbackModal.jsx';
 
@@ -37,7 +37,9 @@ import { Clock_Icon, Customize_Icon, Document_Icon, FeedBack_Icon, Expand_Icon, 
 import AccessDenied from './AccessDenied.jsx';
 import ExcalidrawViewer from '../../K9Management/components/ExcalidrawViewer';
 const NewsTab = ({
+  currentTab,
   updateURL,
+  setExpandedItem,
   selectedProgram,
   loading,
   filteredNews,
@@ -150,6 +152,9 @@ const NewsTab = ({
 
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
 
+  // Package purchase modal states
+  const [isPackageModalOpen, setIsPackageModalOpen] = useState(false);
+
   // Table of Contents sidebar states
   const [showTOCSidebar, setShowTOCSidebar] = useState(false);
   const [headings, setHeadings] = useState([]);
@@ -170,8 +175,8 @@ const NewsTab = ({
   const [renderedCount, setRenderedCount] = useState(20);
 
   // Persist filters to localStorage
-  const NEWS_FILTERS_KEY = 'k9_news_filters_v1';
-  const NEWS_PARENT_FILTERS_KEY = 'k9_news_parent_filters_v1';
+  const NEWS_FILTERS_KEY = 'k9_news_filters_v1' + currentTab;
+  const NEWS_PARENT_FILTERS_KEY = 'k9_news_parent_filters_v1' + currentTab;
 
   // Load categories from API
   useEffect(() => {
@@ -613,6 +618,10 @@ const NewsTab = ({
     if (selectedProgram && selectedProgram !== 'all') {
       filtered = filtered.filter(item => {
         if (!Array.isArray(item.tag4)) return false; // bỏ qua nếu không phải mảng
+        // Support both string and array for selectedProgram
+        if (Array.isArray(selectedProgram)) {
+          return selectedProgram.some(prog => item.tag4.includes(prog));
+        }
         return item.tag4.includes(selectedProgram);
       });
     }
@@ -629,18 +638,18 @@ const NewsTab = ({
       filtered = filtered.filter(item => !(readItems || []).includes(item.id));
     }
 
-    // Apply quiz status filter (>60 completed)
+    // Apply quiz status filter (>=70 completed)
     if (quizStatusFilter === 'completed') {
       filtered = filtered.filter(item => {
         const score = questionScoreMap[item.id];
         const n = typeof score === 'number' ? score : parseFloat(score);
-        return !isNaN(n) && n >= 60;
+        return !isNaN(n) && n >= 70;
       });
     } else if (quizStatusFilter === 'incomplete') {
       filtered = filtered.filter(item => {
         const score = questionScoreMap[item.id];
         const n = typeof score === 'number' ? score : parseFloat(score);
-        return isNaN(n) || n < 60;
+        return isNaN(n) || n < 70;
       });
     }
 
@@ -715,8 +724,12 @@ const NewsTab = ({
   const getNewsListForCategoryCount = () => {
     let list = newsItems.filter(item => item.status === 'published');
 
-    if (selectedProgram !== 'all') {
-      list = list.filter(item => item.tag4?.includes(selectedProgram));
+    if (selectedProgram && selectedProgram !== 'all') {
+      if (Array.isArray(selectedProgram)) {
+        list = list.filter(item => selectedProgram.some(prog => item.tag4?.includes(prog)));
+      } else {
+        list = list.filter(item => item.tag4?.includes(selectedProgram));
+      }
     }
 
     // Apply bookmark filter
@@ -731,18 +744,18 @@ const NewsTab = ({
       list = list.filter(item => !(readItems || []).includes(item.id));
     }
 
-    // Apply quiz status filter (>60 completed)
+    // Apply quiz status filter (>=70 completed)
     if (quizStatusFilter === 'completed') {
       list = list.filter(item => {
         const score = questionScoreMap[item.id];
         const n = typeof score === 'number' ? score : parseFloat(score);
-        return !isNaN(n) && n >= 60;
+        return !isNaN(n) && n >= 70;
       });
     } else if (quizStatusFilter === 'incomplete') {
       list = list.filter(item => {
         const score = questionScoreMap[item.id];
         const n = typeof score === 'number' ? score : parseFloat(score);
-        return isNaN(n) || n < 60;
+        return isNaN(n) || n < 70;
       });
     }
 
@@ -912,23 +925,17 @@ const NewsTab = ({
       return true;
     }
 
-    // 3. If isPublic is false, check if user's id_user_class is in allowed_user_class
-    if (item.isPublic === false && item.allowed_user_class) {
-      const userClassIds = currentUser?.id_user_class || [];
-      const allowedClasses = Array.isArray(item.allowed_user_class) ? item.allowed_user_class : [];
+    // 3. If isPublic is false, only non-trial accounts can access
+    // Note: Trial accounts (account_type === 'Dùng thử') are NOT allowed to access non-public items
+    if (item.isPublic === false) {
+      // Check if user is a trial account - if yes, deny access
+      const isTrialAccount = currentUser?.account_type === 'Dùng thử';
+      if (isTrialAccount) {
+        return false;
+      }
 
-      // Get valid user class IDs (those that still exist in the system)
-      const validUserClassIds = userClassIds.filter(classId => {
-        // Check if this class ID exists in the userClasses array
-        return userClasses.some(uc => uc.id === classId);
-      });
-
-      // Check if any of user's valid classes are in allowed classes
-      const hasPermission = validUserClassIds.some(userClassId =>
-        allowedClasses.includes(userClassId)
-      );
-
-      return hasPermission;
+      // Non-trial accounts can access non-public items
+      return true;
     }
 
     // Default: deny access
@@ -1433,12 +1440,16 @@ const NewsTab = ({
 
     // Check access permission
     if (!hasAccess(item)) {
+      const isTrialAccount = currentUser?.account_type === 'Dùng thử';
       return (
         <div
           ref={contentPanelRef}
           className={`${styles.contentPanel} ${newsTabStyles.contentPanel}`}
         >
-          <AccessDenied />
+          <AccessDenied 
+            isTrialAccount={isTrialAccount}
+            onUpgradeClick={() => setIsPackageModalOpen(true)}
+          />
         </div>
       );
     }
@@ -1564,6 +1575,28 @@ const NewsTab = ({
                 <span className={`${styles.contentTitle} ${newsTabStyles.contentTitle}`}>{item.title}</span>
               </div>
             </div>
+            {item.summary  && (
+              <div className={`${styles.contentDetail} ${newsTabStyles.contentDetail}`} style={{ marginTop: '12px', marginBottom: '12px' }}>
+                <div
+                  className={styles.markdownContent}
+                  style={{ fontSize: '16px' }}
+                  dangerouslySetInnerHTML={{
+                    __html: (() => {
+                      const { processedText, latexBlocks } = preprocessLatex(item.summary || '');
+                      let html = marked.parse(processedText, {
+                        headerIds: true,
+                        mangle: false,
+                        headerPrefix: '',
+                        breaks: false,
+                        gfm: true
+                      });
+                      const finalHtml = postprocessLatex(html, latexBlocks);
+                      return DOMPurify.sanitize(finalHtml);
+                    })(),
+                  }}
+                />
+              </div>
+            )}
             {item.summaryDetail && showSummaryDetail && (
               <div className={`${styles.contentDetail} ${newsTabStyles.contentDetail}`} style={{ marginTop: '12px', marginBottom: '12px' }}>
                 <div
@@ -1920,7 +1953,7 @@ const NewsTab = ({
           {/* TOC Sidebar */}
 
           <div className={`${styles.contentBody} ${newsTabStyles.contentBody}`}>
-            {item.detail && (
+            {item.detail && item.showDetail !== false && (
               <div className={`${styles.contentDetail} ${newsTabStyles.contentDetail}`}>
                 <div
                   ref={markdownContentRef}
@@ -1997,6 +2030,18 @@ const NewsTab = ({
           />
         )
       }
+
+      {/* Package Purchase Modal */}
+      <PaymentModal
+        open={isPackageModalOpen}
+        onCancel={() => setIsPackageModalOpen(false)}
+        currentUser={currentUser}
+        isMobile={isMobile}
+        onTrialActivated={() => {
+          // Reload user data để cập nhật quyền truy cập
+          window.location.reload();
+        }}
+      />
       {/* Chỉ hiển thị K9Filters khi không phải là Home tab và showSearchSection = true */}
       {!isHome && showSearchSection && (
         <K9Filters
@@ -2054,6 +2099,7 @@ const NewsTab = ({
                   quizScore={questionScoreMap[item.id]}
                   data-item-id={item.id}
                   isHome={isHome}
+                  currentUser={currentUser}
                 />
               </div>
             ))
@@ -2111,7 +2157,7 @@ const NewsTab = ({
                       ref={index === visibleItems.length - 1 ? lastItemRef : null}
                       title={`${item.title}${item.summary ? '\n\n' + item.summary : ''}`}
                       style={{
-                        height: '240px',
+                        height: '210px',
                         overflow: 'hidden',
                         cursor: 'pointer',
                         border: isSelected ? '2px solid #1890ff' : '1px solid #f0f0f0',
@@ -2119,7 +2165,7 @@ const NewsTab = ({
                         transition: 'all 0.3s ease',
                         backgroundColor: isSelected ? '#e6f7ff' : '#fff',
                         boxShadow: isSelected ? '0 4px 12px rgba(24, 144, 255, 0.2)' : 'none',
-                        padding: '16px'
+                        padding: '16px 16px 5px 16px'
                       }}
                       onMouseEnter={(e) => {
                         if (!isSelected) {
@@ -2149,6 +2195,7 @@ const NewsTab = ({
                         data-item-id={item.id}
                         isHome={isHome}
                         isGridView={true}
+                        currentUser={currentUser}
                       />
                     </div>
                   );
@@ -2239,7 +2286,7 @@ const NewsTab = ({
               )
             }
             open={selectedItem !== null && viewMode === 'grid'}
-            onCancel={() => { setSelectedItem(null); updateURL({ item: null }) }}
+            onCancel={() => { setSelectedItem(null); updateURL({ item: null }) , setExpandedItem(null)}}
             footer={null}
             width={selectedItem?.hasTitle ? 1400 : 1000}
             style={{
@@ -2403,6 +2450,7 @@ const NewsTab = ({
                     quizScore={questionScoreMap[item.id]}
                     data-item-id={item.id}
                     isHome={isHome}
+                    currentUser={currentUser}
                   />
                 </div>
               ))

@@ -37,6 +37,10 @@
   /* top: -100px !important; */
 }
 
+.modalContentMidHeight :global(.ant-modal-content) {
+  height: 95vh !important;
+}
+
 
 /* Override Ant Design Modal styles with higher specificity */
 /* .modalContent :global(.ant-modal),

@@ -24,13 +24,13 @@ const FloatButtons = ({ onShowGuideline }) => {
 	const floatButtonsContent = (
 		<div className={styles.floatButtonsContainer}>
 			{/* Guideline Button */}
-			<button
+			{/* <button
 				className={`${styles.floatButton} ${styles.guidelineButton}`}
 				onClick={onShowGuideline}
 				title="Hướng dẫn sử dụng"
 			>
 				📖
-			</button>
+			</button> */}
 
 			{/* Email Button */}
 			{/* <button

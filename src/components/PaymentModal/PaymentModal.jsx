@@ -126,6 +126,7 @@ const PaymentModal = ({ open, onCancel, currentUser, isMobile = false, onTrialAc
 				<PackageGrid
 					onPackageSelect={handlePurchasePackage}
 					loading={paymentLoading}
+					currentUser={currentUser}
 				/>
 
 				<div style={{

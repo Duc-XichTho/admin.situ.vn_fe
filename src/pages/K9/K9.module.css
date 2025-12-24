@@ -1504,7 +1504,9 @@ html {
 
 
 .markdownContent :global(.katex *) {
-    color: #3E51CA !important;
+    /* color: #3E51CA !important; */
+    color: #374151 !important;
+    
 }
 
 .markdownContent :global(.katex-display) {
@@ -2503,6 +2505,7 @@ html {
 }
 
 .searchContainer2 {
+    flex: 1;
     display: flex;
     gap: 5px;
     align-items: center;
@@ -3369,31 +3372,49 @@ html {
 /* Grid view avatar container - responsive */
 .avatarGridWrapper {
     width: 240px;
-    height: 100%;
+    height: 160px;
     overflow: hidden;
-    border-radius: 6px;
-    flex-shrink: 1;
+    border-radius: 8px;
+    flex-shrink: 0;
     position: relative;
+    background-color: #f5f5f5;
+}
+
+.avatarGridWrapper :global(.ant-image) {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+.avatarGridWrapper :global(.ant-image-img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    display: block;
+    border-radius: 8px;
 }
 
 .avatarGridWrapper img {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    object-position: center;
     display: block;
+    border-radius: 8px;
 }
 
 @media (max-width: 1200px) {
     .avatarGridWrapper {
-        max-width: 35%;
-        min-width: 80px;
+        width: 180px;
+        height: 140px;
     }
 }
 
 @media (max-width: 768px) {
     .avatarGridWrapper {
-        max-width: 30%;
-        min-width: 60px;
+        width: 120px;
+        height: 100px;
     }
 }
 
@@ -6095,4 +6116,36 @@ html {
     height: calc(85vh - 110px) !important;
     overflow-y: auto !important;
     padding: 16px !important;
+}
+
+/* Program Statistics Styles */
+.programStatsContainer {
+    display: flex;
+    flex-direction: row;
+    gap: 6px;
+    flex-wrap: wrap;
+    font-size: 12px;
+}
+
+@media (max-width: 768px) {
+    .programStatsContainer {
+        font-size: 11px;
+    }
+}
+
+.programStatTag {
+    background-color: #ffffff;
+    color: #454545;
+    border: 1px solid #d9d9d9;
+    padding: 4px 8px;
+    border-radius: 8px;
+    font-weight: 500;
+    font-size: 11px;
+}
+
+@media (max-width: 768px) {
+    .programStatTag {
+        padding: 3px 8px;
+        font-size: 10px;
+    }
 }

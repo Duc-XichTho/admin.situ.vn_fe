@@ -196,3 +196,13 @@ export const loginWithUsername = async (username, password, deviceFingerprint) =
 		throw error;
 	}
 };
+
+// Đăng nhập bằng username
+export const updateAccountTrial = async (id , data) => {
+	try {
+		const response = await instance.post(`${URL}/update-account-trial/${id}`, data);
+		return response.data;
+	} catch (error) {
+		throw error;
+	}
+};

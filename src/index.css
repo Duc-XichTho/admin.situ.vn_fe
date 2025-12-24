@@ -11,6 +11,21 @@
     font-family: var(--font-family), serif;
 }
 
+body {
+    font-family: var(--font-family), serif;
+    font-optical-sizing: auto;
+    font-style: normal;
+    font-variation-settings: "GRAD" 0;
+}
+
+html {
+    font-family: var(--font-family), serif;
+    font-optical-sizing: auto;
+    font-style: normal;
+    font-variation-settings: "GRAD" 0;
+    scroll-behavior: smooth;
+}
+
 ::-webkit-scrollbar {
     width: 6px;
     height: 6px;
@@ -154,4 +169,54 @@
 #react-doc-viewer{
     height: 100% !important;
     border-radius: 10px;
+}
+
+/* LandingPage sử dụng font Inter riêng, override CSS chung */
+/* Định nghĩa @font-face cho Inter - phải đặt trước khi sử dụng */
+/* Sử dụng đường dẫn từ CDN để đảm bảo hoạt động cả local và production */
+@font-face {
+    src: url(/aimba/font/Inter_18pt-Regular.ttf);
+    font-family: Inter;
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    src: url(/aimba/font/Inter_18pt-SemiBold.ttf);
+    font-family: Inter;
+    font-weight: 600;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    src: url(/aimba/font/Inter_18pt-Bold.ttf);
+    font-family: Inter;
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    src: url(/aimba/font/Inter_18pt-BoldItalic.ttf);
+    font-family: Inter;
+    font-weight: 700;
+    font-style: italic;
+    font-display: swap;
+}
+
+@font-face {
+    src: url(/aimba/font/Inter_18pt-Black.ttf);
+    font-family: Inter;
+    font-weight: 900;
+    font-style: normal;
+    font-display: swap;
+}
+
+.landing-page-root,
+.landing-page-root * {
+    font-family: Inter, sans-serif !important;
+    font-optical-sizing: auto;
+    font-style: normal;
 }

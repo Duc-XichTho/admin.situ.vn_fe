@@ -13,7 +13,6 @@ import SettingsModal from './SettingsModal';
 import Toolbar from './Toolbar';
 
 const CaseUser = ({
-  selectedProgram,
   loading,
   filteredNews,
   filters,
@@ -219,47 +218,6 @@ const CaseUser = ({
   const handleAddCaseSubmit = (formData) => {
     setCaseUser([formData, ...caseUser]);
     handleCloseAdd();
-  };
-
-  // Filter news based on bookmark and read filters
-  const getFilteredNewsWithFilters = () => {
-    let filtered = filteredNews;
-
-    if (selectedProgram && selectedProgram !== 'all') {
-      filtered = filtered.filter(item => {
-        if (!Array.isArray(item.tag4)) return false; // bỏ qua nếu không phải mảng
-        return item.tag4.includes(selectedProgram);
-      });
-    }
-
-    // Apply bookmark filter
-    if (bookmarkFilter === 'bookmarked') {
-      filtered = filtered.filter(item => (bookmarkedItems || []).includes(item.id));
-    }
-
-    // Apply read filter
-    if (readFilter === 'read') {
-      filtered = filtered.filter(item => (readItems || []).includes(item.id));
-    } else if (readFilter === 'unread') {
-      filtered = filtered.filter(item => !(readItems || []).includes(item.id));
-    }
-
-    // Apply quiz status filter (>60 completed)
-    if (quizStatusFilter === 'completed') {
-      filtered = filtered.filter(item => {
-        const score = questionScoreMap[item.id];
-        const n = typeof score === 'number' ? score : parseFloat(score);
-        return !isNaN(n) && n >= 60;
-      });
-    } else if (quizStatusFilter === 'incomplete') {
-      filtered = filtered.filter(item => {
-        const score = questionScoreMap[item.id];
-        const n = typeof score === 'number' ? score : parseFloat(score);
-        return isNaN(n) || n < 60;
-      });
-    }
-
-    return filtered;
   };
 
   // Render content panel

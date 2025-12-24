@@ -33,8 +33,12 @@ const K9Tabs = ({ activeTab, onTabChange, tabOptions, newsItems, caseTrainingIte
 		// Filter items by selectedProgram if not 'all'
 		if (selectedProgram && selectedProgram !== 'all') {
 			items = items.filter(item => {
-				if ( !Array.isArray(item?.tag4)) {
+				if (!Array.isArray(item?.tag4)) {
 					return false;
+				}
+				// Support both string and array for selectedProgram
+				if (Array.isArray(selectedProgram)) {
+					return selectedProgram.some(prog => item?.tag4.includes(prog));
 				}
 				return item?.tag4.includes(selectedProgram);
 			});

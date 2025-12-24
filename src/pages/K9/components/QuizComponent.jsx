@@ -873,51 +873,29 @@ LƯU Ý: Chỉ dùng số nguyên từ 1-10, không dùng 7.5, 8.3, v.v.`;
                           let essayCount = 0;
                           const pointsPerQuestion = 100 / ((quizData.questionQuiz?.length || 0) + (quizData.questionEssay?.length || 0));
 
-                          console.log('Calculating essay score:');
-                          console.log('pointsPerQuestion:', pointsPerQuestion);
-                          console.log('aiGrading:', aiGrading);
-
                           quizData.questionEssay.forEach((question, index) => {
                             const answer = essayAnswers[index];
                             const aiResult = aiGrading[index];
-
-                            console.log(`Essay ${index}:`, {
-                              answer: answer?.trim(),
-                              aiResult: aiResult,
-                              hasAnswer: answer && answer.trim() !== '',
-                              hasAiGrading: !!aiGrading[index]
-                            });
 
                             if (answer && answer.trim() !== '' && aiGrading[index]) {
                               essayCount++;
                               // Try multiple regex patterns to extract score
                               let scoreMatch = aiResult.match(/ĐIỂM:\s*(\d+(?:\.\d+)?)\/10/i);
-                              console.log(`Score match for essay ${index}:`, scoreMatch);
 
                               if (!scoreMatch) {
                                 // Fallback: try to find any number before /10
                                 scoreMatch = aiResult.match(/(\d+(?:\.\d+)?)\/10/i);
-                                console.log(`Fallback score match for essay ${index}:`, scoreMatch);
                               }
 
                               if (scoreMatch) {
                                 const score = parseFloat(scoreMatch[1]);
                                 const essayScore = (score / 10) * pointsPerQuestion;
                                 essayTotalScore += essayScore;
-                                console.log(`Essay ${index}: AI Score ${score}/10, Converted to ${essayScore.toFixed(2)}, Running total: ${essayTotalScore.toFixed(2)}`);
                               } else {
                                 console.warn(`Could not extract score from AI result for essay ${index}:`, aiResult);
-                                console.warn(`Full AI result:`, aiResult);
                               }
                             }
-                          });
-
-                          console.log('Final essay calculation:', {
-                            essayCount,
-                            essayTotalScore,
-                            roundedScore: Math.round(essayTotalScore)
-                          });
-
+                          })
                           return Math.round(essayTotalScore);
                         })()}/{Math.round((quizData.questionEssay?.length || 0) * (100 / ((quizData.questionQuiz?.length || 0) + (quizData.questionEssay?.length || 0))))} điểm
                       </div>

@@ -22,6 +22,9 @@ import PaymentSuccess from './pages/K9/PaymentSuccess.jsx';
 import AIQuestionEvaluation from './pages/K9/AIQuestionEvaluation.jsx';
 import AISummaryDetailGeneration from './pages/K9/AISummaryDetailGeneration.jsx';
 import React from 'react';
+import Homepage2 from './pages/Homepage/Homepage2.jsx';
+import LandingPage from './pages/LandingPage/LandingPage.jsx';
+import LandingPageEditor from './pages/LandingPage/LandingPageEditor.jsx';
 
 // Wrapper component to route between PublicHistory and PublicCertificate
 const PublicK9Route = () => {
@@ -41,12 +44,13 @@ const App = () => {
         <Routes>
             {/* Redirect root to K9 page */}
             {/* <Route path="/" element={<Navigate to={ROUTES.HOME_PAGE} replace />} /> */}
-            <Route path="/" element={<Homepage />} />
+            {/* <Route path="/" element={<Homepage2 />} /> */}
+            <Route path="/" element={<LandingPage />} />
 
 
             {/* Trang mặc định là Homepage */}
             {/* <Route path={ROUTES.LOGIN} element={<Homepage />} /> */}
-            <Route path={ROUTES.HOME_PAGE} element={<Homepage />} />
+            {/* <Route path={ROUTES.HOME_PAGE} element={<Homepage />} /> */}
             <Route path="/k9" element={<PublicK9Route />} />
             <Route path="/payment-success" element={<PaymentSuccess />} />
 
@@ -60,6 +64,7 @@ const App = () => {
             <Route element={<AuthRouteAdmin />}>
                 <Route path="/ai-question-evaluation" element={<AIQuestionEvaluation />} />
                 <Route path="/ai-summary-detail-generation" element={<AISummaryDetailGeneration />} />
+                <Route path="/landing-page-editor" element={<LandingPageEditor />} />
                 <Route path={ROUTES.ADMIN} element={<Admin />}>
                     <Route index element={<AIGen />} />
                     <Route path="homepage-content" element={<HomepageContentEditor />} />

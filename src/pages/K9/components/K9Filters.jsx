@@ -67,11 +67,19 @@ const K9Filters = ({
 
 	// Get titles for a specific category
 	const getTitlesForCategory = (categoryKey) => {
-		const newsData = selectedProgram === 'all' ? newsItems : newsItems.filter(item => item.tag4.includes(selectedProgram));
+		let newsData = newsItems;
+		if (selectedProgram && selectedProgram !== 'all') {
+			if (Array.isArray(selectedProgram)) {
+				newsData = newsItems.filter(item => selectedProgram.some(prog => item.tag4?.includes(prog)));
+			} else {
+				newsData = newsItems.filter(item => item.tag4?.includes(selectedProgram));
+			}
+		}
 		if (categoryKey === 'all') return newsData;
 		return newsData.filter(item => item.category === categoryKey).map(item => ({
 			id: item.id,
-			title: item.title
+			title: item.title,
+			lessonNumber: item.lessonNumber
 		}));
 	};
 
@@ -119,7 +127,8 @@ const K9Filters = ({
 		return newsData.map(item => ({
 			id: item.id,
 			title: item.title,
-			category: item.category
+			category: item.category,
+			lessonNumber: item.lessonNumber
 		}));
 	};
 
@@ -220,7 +229,14 @@ const K9Filters = ({
 														setMobileTitleDropdownOpen(false);
 													}}
 												>
-													<div className={styles.mobileTitleItemTitle}>{item.title}</div>
+													<div className={styles.mobileTitleItemTitle}>
+														{item.lessonNumber && (
+														<>	
+																{item.lessonNumber}:
+														</>
+														)}
+														<> {item.title}</>
+													</div>
 													<div className={styles.mobileTitleItemCategory}>{item.category}</div>
 												</button>
 											))}
@@ -399,7 +415,12 @@ const K9Filters = ({
 													className={styles.dropdownItem}
 													onClick={(e) => handleItemSelect(item.id, e , cat.key)}
 												>
-													{item.title}
+														{item.lessonNumber && (
+														<>	
+																{item.lessonNumber}:
+														</>
+													)}
+													<> {item.title}</>
 												</button>
 											))}
 										</div>
