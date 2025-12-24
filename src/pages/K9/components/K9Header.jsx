@@ -1505,7 +1505,7 @@ const K9Header = ({
 			<div className={styles.navContainer} style={{ padding: isMobile ? '0px' : '0px 12px' }}>
 				<div className={styles.header_left} style={{ padding: isMobile ? '8px 0px' : '8px 12px' }}>
 					<div className={styles.logo} style={{ padding: isMobile ? '0px' : '0px 4px' }}>
-						<img style={{ width: isMobile ? '28px' : '175px', height: isMobile ? '26px' : '38px' }} src={isMobile ? '/Favicon.png' : '/Layer.png'} />
+						<img style={{ width: isMobile ? '28px' : '38px', height: isMobile ? '26px' : '38px' }} src={isMobile ? '/Favicon.png' : '/Layer.png'} />
 						{/* {
 							!isMobile && (
 								<div className={styles.desc}>
