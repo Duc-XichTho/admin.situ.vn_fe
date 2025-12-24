@@ -741,7 +741,7 @@ export default function TagProgramModal ({ visible, onClose, tag4Options, onSave
 				</Button>,
 			]}
 		>
-			<div style={{height: '70vh', overflowY: 'auto', padding: 10}}>
+			<div style={{height: '100%', overflowY: 'auto', padding: 10}}>
 				<Tabs
 					activeKey={activeTab}
 					onChange={setActiveTab}
