@@ -1,4 +1,4 @@
-import { Button, Image, Input, Modal } from 'antd';
+import { Button, Image, Input, Modal, Popover } from 'antd';
 import { SearchOutlined, CloseOutlined } from '@ant-design/icons';
 import { IconButton } from '@mui/material';
 import DOMPurify from 'dompurify';
@@ -7,7 +7,7 @@ import 'katex/dist/katex.min.css';
 import { marked } from 'marked';
 import markedKatex from 'marked-katex-extension';
 import React, { useContext, useEffect, useMemo, useRef, useState } from 'react';
-import { getK9ByIdPublic, getSettingByTypePublic } from '../../../apis/public/publicService.jsx';
+import { getK9ByIdPublic, getSettingByTypePublic, getK9ByCidTypePublic } from '../../../apis/public/publicService.jsx';
 import { getListQuestionHistoryByUser } from '../../../apis/questionHistoryService.jsx';
 import { getAllUserClass } from '../../../apis/userClassService';
 import { getCurrentUserLogin, updateUser } from '../../../apis/userService';
@@ -152,6 +152,11 @@ const NewsTab = ({
 
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
 
+  // Quiz/Practice popover state
+  const [quizPopoverVisible, setQuizPopoverVisible] = useState(false);
+  const [relatedCaseTrainingItems, setRelatedCaseTrainingItems] = useState([]);
+  const [relatedQuizScores, setRelatedQuizScores] = useState({});
+
   // Package purchase modal states
   const [isPackageModalOpen, setIsPackageModalOpen] = useState(false);
 
@@ -217,22 +222,49 @@ const NewsTab = ({
     if (item) {
       setSelectedItem(item);
       onItemClick(item);
-      setShowMobileModal(true);
-      // Scroll to the specific item in the sidebar list
-      setTimeout(() => {
-        const targetElement = document.querySelector(`[data-item-id="${id}"]`);
-        if (targetElement) {
-          targetElement.scrollIntoView({
-            behavior: 'smooth',
-            block: 'center',
-            inline: 'nearest'
-          });
-        }
-      }, 100); // Small delay to ensure the item is rendered
+      if (isMobile) {
+        setShowMobileModal(true);
+      }
 
+      // Ensure the item is in visibleItems before scrolling
+      // Find the index of the item in filteredItems
+      const filteredItems = getFilteredNewsWithFilters();
+      const itemIndex = filteredItems.findIndex(i => i.id === id);
+      
+      if (itemIndex >= 0) {
+        // If item is beyond renderedCount, increase renderedCount to include it
+        if (itemIndex >= renderedCount) {
+          setRenderedCount(itemIndex + 1);
+          // Wait for visibleItems to update before scrolling
+          setTimeout(() => {
+            scrollToItemWithRetry(id);
+          }, 500);
+        } else {
+          // Item is already in visibleItems, scroll immediately
+          scrollToItemWithRetry(id);
+        }
+      } else {
+        // Item not found in filteredItems, try scrolling anyway
+        scrollToItemWithRetry(id);
+      }
       return;
     }
   }
+
+  // Helper function to scroll to item with retry logic
+  const scrollToItemWithRetry = (id, retryCount = 0) => {
+    const targetElement = document.querySelector(`[data-item-id="${id}"]`);
+    if (targetElement) {
+      targetElement.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center',
+        inline: 'nearest'
+      });
+    } else if (retryCount < 10) {
+      // Retry up to 10 times with increasing delay
+      setTimeout(() => scrollToItemWithRetry(id, retryCount + 1), 200 * (retryCount + 1));
+    }
+  };
 
   useEffect(() => {
     if (expandedItem) {
@@ -788,6 +820,228 @@ const NewsTab = ({
         ? list.length
         : list.filter(item => item.category === cat.key).length
     }));
+  };
+
+  // Fetch related caseTraining items by CID
+  const fetchRelatedCaseTrainingItems = async (cid) => {
+    if (!cid) {
+      setRelatedCaseTrainingItems([]);
+      setRelatedQuizScores({});
+      return;
+    }
+    try {
+      const data = await getK9ByCidTypePublic(cid, 'caseTraining' , currentUser?.id);
+      if (data && Array.isArray(data)) {
+        // Filter only items with questionContent (quiz items)
+        const quizItems = data.filter(item => 
+          item.status === 'published'  
+        );
+        setRelatedCaseTrainingItems(quizItems);
+        
+        // Fetch quiz scores for these items
+        if (currentUser?.id && quizItems.length > 0) {
+          try {
+            const histories = await getListQuestionHistoryByUser({ where: { user_id: currentUser.id } });
+            if (Array.isArray(histories?.data)) {
+              const scoreMap = {};
+              quizItems.forEach(item => {
+                const history = histories.data.find(h => {
+                  const qid = h.question_id ?? h.questionId ?? h.idQuestion;
+                  return qid === item.id;
+                });
+                if (history) {
+                  const raw = history.score;
+                  const num = typeof raw === 'number' ? raw : parseFloat(raw);
+                  scoreMap[item.id] = isNaN(num) ? null : num;
+                } else {
+                  scoreMap[item.id] = null;
+                }
+              });
+              setRelatedQuizScores(scoreMap);
+            } else {
+              setRelatedQuizScores({});
+            }
+          } catch (err) {
+            console.error('Error fetching quiz scores:', err);
+            setRelatedQuizScores({});
+          }
+        } else {
+          setRelatedQuizScores({});
+        }
+      } else {
+        setRelatedCaseTrainingItems([]);
+        setRelatedQuizScores({});
+      }
+    } catch (error) {
+      console.error('Error fetching related caseTraining items:', error);
+      setRelatedCaseTrainingItems([]);
+      setRelatedQuizScores({});
+    }
+  };
+
+  // Fetch related caseTraining when selectedItem changes
+  useEffect(() => {
+    if ( activeTab === 'stream' && selectedItem && selectedItem.cid && currentUser?.id) {
+      fetchRelatedCaseTrainingItems(selectedItem.cid);
+    } else {
+      setRelatedCaseTrainingItems([]);
+    }
+  }, [selectedItem?.cid , activeTab , currentUser?.id]);
+
+  // Handle quiz item click - open in new tab (caseTraining tab)
+  const handleQuizItemClick = (quizItem) => {
+    const url = new URL(`${window.location.origin}/home`);
+    url.searchParams.set('tab', 'caseTraining');
+    url.searchParams.set('item', quizItem.id);
+    if (selectedProgram && selectedProgram !== 'all') {
+      url.searchParams.set('program', selectedProgram);
+    }
+    window.open(url.toString(), '_blank');
+    setQuizPopoverVisible(false);
+  };
+
+  // Render quiz popover content
+  const renderQuizPopoverContent = () => {
+    const quizItems = relatedCaseTrainingItems;
+    
+    if (quizItems.length === 0) {
+      return (
+        <div style={{ padding: '12px', textAlign: 'center', color: '#999' }}>
+          Không có quiz nào
+        </div>
+      );
+    }
+
+    return (
+      <div style={{ 
+        maxWidth:  isMobile ? '350px' : '500px'  , 
+        maxHeight: '400px', 
+        overflowY: 'auto',
+        padding: '8px 0'
+      }}>
+        <div style={{ 
+          padding: '8px 12px', 
+          borderBottom: '1px solid #f0f0f0',
+          fontWeight: '600',
+          fontSize: '14px',
+          color: '#262626',
+          marginBottom: '4px'
+        }}>
+          Quiz / Practice ({quizItems.length})
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          {quizItems.map((quizItem) => {
+            const quizScore = relatedQuizScores[quizItem.id];
+            const hasScore = quizScore !== undefined && quizScore !== null;
+            const numeric = hasScore ? Number(quizScore) : null;
+            const pass = numeric !== null && !isNaN(numeric) && numeric >= 70;
+            
+            return (
+              <div
+                key={quizItem.id}
+                onClick={() => handleQuizItemClick(quizItem)}
+                style={{
+                  padding: '10px 12px',
+                  cursor: 'pointer',
+                  borderRadius: '4px',
+                  transition: 'all 0.2s',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = '#f5f5f5';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = 'transparent';
+                }}
+              >
+                {quizItem.avatarUrl && (
+                  <Image
+                    src={quizItem.avatarUrl}
+                    alt={quizItem.title}
+                    width={70}
+                    height={70}
+                    style={{
+                      objectFit: 'cover',
+                      borderRadius: '4px',
+                      flexShrink: 0
+                    }}
+                    preview={false}
+                  />
+                )}
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{
+                    fontSize: '13px',
+                    fontWeight: '500',
+                    color: '#262626',
+                    marginBottom: '4px',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap'
+                  }}>
+                    {quizItem.title}
+                  </div>
+                  {quizItem.summary && (
+                    <div style={{
+                      fontSize: '11px',
+                      color: '#8c8c8c',
+                      marginBottom: '6px',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap'
+                    }}>
+                      {quizItem.summary}
+                    </div>
+                  )}
+                  {/* ID and Quiz Status Row */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                    <span style={{
+                      fontSize: '10px',
+                      color: '#8c8c8c',
+                      fontWeight: '500'
+                    }}>
+                      ID: {quizItem.id}
+                    </span>
+                    {hasScore ? (
+                      <span
+                        style={{
+                          padding: '2px 8px',
+                          borderRadius: '6px',
+                          fontSize: '12px',
+                          fontWeight: '600',
+                          backgroundColor: pass ? '#E5F6DD' : '#E9EEFF',
+                          color: pass ? '#75C341' : '#7A8ED7',
+                          border: pass ? '1px solid #9FDE7D' : '1px solid #B9C4F7',
+                        }}
+                        title={`Đạt ${numeric}/100`}
+                      >
+                        {numeric}/100
+                      </span>
+                    ) : (
+                      <span
+                        style={{
+                          padding: '2px 8px',
+                          borderRadius: '6px',
+                          fontSize: '12px',
+                          fontWeight: '600',
+                          backgroundColor: '#FFE9ED',
+                          color: '#E39191',
+                          border: '1px solid #F3B2B2',
+                        }}
+                        title='Chưa làm'
+                      >
+                        Chưa làm
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
   };
 
 
@@ -1568,7 +1822,7 @@ const NewsTab = ({
 
 
         {/* File URLs Section */}
-        <div className={newsTabStyles.contentMain} style={{ padding: isMobile ? '0px' : '0 100px' }}>
+        <div className={newsTabStyles.contentMain} style={{ padding: isMobile ? '0px' : viewMode === 'grid' ? '0 50px' : '0 100px' }}>
           <div className={styles.contentTitleContainer}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -1672,6 +1926,32 @@ const NewsTab = ({
                   <span onClick={() => setShowFeedbackModal(true)} style={{ display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }} title="Góp ý/Feedback cho nội dung">
                     <FeedBack_Icon width={17} height={17} /> Góp ý, feedback cho nội dung
                   </span>
+                )
+              }
+              {
+                activeTab === 'stream' && (
+                  <Popover
+                    content={renderQuizPopoverContent}
+                    title={null}
+                    trigger="click"
+                    open={quizPopoverVisible}
+                    onOpenChange={setQuizPopoverVisible}
+                    placement="bottomLeft"
+                    overlayStyle={{ zIndex: 1001 }}
+                  >
+                    <span 
+                      style={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        gap: '4px', 
+                        cursor: 'pointer',
+                        color: '#9F9F9F'
+                      }} 
+                      title="Quiz / Practice"
+                    >
+                      <span style={{ fontSize: '17px' }}>📝</span> Quiz / Practice
+                    </span>
+                  </Popover>
                 )
               }
 

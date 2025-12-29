@@ -1,0 +1,450 @@
+.mapViewContainer {
+	width: 100%;
+	height: 100vh;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+}
+
+.mapViewContent {
+	width: 96%;
+	height: 98%;
+	display: flex;
+	flex-direction: column;
+}
+
+/* Progress Section */
+.progressSection {
+	border-radius: 8px;
+	padding: 20px 24px;
+	background-color: #fff;
+	border-bottom: 1px solid #e8e8e8;
+	margin: 16px 0  16px 0;
+}
+
+.progressHeader {
+	display: flex;
+	align-items: flex-start;
+	gap: 20px;
+}
+
+.progressLeft {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	flex: 0 0 auto;
+	width: 320px;
+	justify-content: flex-start;
+}
+
+.programName {
+	font-size: 18px;
+	font-weight: 600;
+	color: #262626;
+}
+
+.progressStats {
+	display: flex;
+	align-items: center;
+	gap: 16px;
+	font-size: 14px;
+	color: #595959;
+}
+
+.completionRate {
+	font-weight: 600;
+	color: #1890ff;
+}
+
+.progressBarContainer {
+	width: 100%;
+	height: 12px;
+	background-color: #f0f0f0;
+	border-radius: 6px;
+	overflow: hidden;
+	position: relative;
+	margin-top: 4px;
+}
+
+.progressBar {
+	height: 100%;
+	border-radius: 6px;
+	transition: all 0.3s ease;
+	box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Two Panel Layout */
+.panelsContainer {
+	flex: 1;
+	display: flex;
+	gap: 16px;
+	overflow: hidden;
+}
+
+.leftPanel {
+	width: 70%;
+	display: flex;
+	flex-direction: column;
+	background-color: #fff;
+	border-radius: 8px;
+	overflow: hidden;
+}
+
+.panel1Columns {
+	display: flex;
+	flex: 1;
+	gap: 145px;
+	overflow: hidden;
+}
+
+.panel1Column {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+}
+
+.rightPanel {
+	width: 30%;
+	display: flex;
+	flex-direction: column;
+	background-color: #fff;
+	border-radius: 8px;
+	overflow: hidden;
+}
+
+.panelContent {
+	flex: 1;
+	padding: 24px;
+	overflow-y: auto;
+}
+
+.panelContent h3 {
+	margin-bottom: 16px;
+	color: #262626;
+	font-size: 20px;
+	font-weight: 600;
+}
+
+.panelContent p {
+	margin-bottom: 8px;
+	color: #595959;
+	font-size: 14px;
+}
+
+/* Right Panel Header */
+.rightPanelHeader {
+	padding: 12px 16px;
+	border-bottom: 1px solid #f0f0f0;
+	flex-shrink: 0;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+}
+
+.rightPanelTitle {
+	font-weight: 600;
+	font-size: 14px;
+	color: #262626;
+	flex-shrink: 0;
+}
+
+.rightPanelSearch {
+	flex: 1;
+	max-width: 200px;
+}
+
+/* Item List */
+.itemsList {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+}
+
+.emptyState {
+	padding: 20px;
+	text-align: center;
+	color: #999;
+}
+
+/* Item Card */
+.itemCard {
+	padding: 10px 12px;
+	cursor: pointer;
+	border-radius: 4px;
+	transition: all 0.2s;
+	display: flex;
+	align-items: center;
+	gap: 10px;
+}
+
+.itemCard:hover {
+	background-color: #f5f5f5;
+}
+
+.itemCardContent {
+	flex: 1;
+	min-width: 0;
+}
+
+.itemCardTitle {
+	font-size: 14px;
+	font-weight: 500;
+	color: #262626;
+	margin-bottom: 4px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.itemCardTitleFlexWrap {
+	font-size: 14px;
+	font-weight: 500;
+	color: #262626;
+	margin-bottom: 4px;
+	overflow: hidden;
+	display: -webkit-box;
+	-webkit-line-clamp: 2;
+	line-clamp: 2;
+	-webkit-box-orient: vertical;
+	text-overflow: ellipsis;
+	line-height: 1.4;
+}
+
+.itemCardSummary {
+	font-size: 13px;
+	color: #8c8c8c;
+	margin-bottom: 6px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.itemCardMeta {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	flex-wrap: wrap;
+}
+
+.itemCardId {
+	font-size: 12px;
+	color: #8c8c8c;
+	font-weight: 500;
+}
+
+/* Quiz Status Badge */
+.quizStatusBadge {
+	padding: 2px 8px;
+	border-radius: 6px;
+	font-size: 12px;
+	font-weight: 600;
+	line-height: 1.4;
+}
+
+.quizStatusReference {
+	background-color: #E9FBFF;
+	color: #88B7CD;
+	border: 1px solid #9ED5D8;
+}
+
+.quizStatusPass {
+	background-color: #E5F6DD;
+	color: #75C341;
+	border: 1px solid #9FDE7D;
+}
+
+.quizStatusFail {
+	background-color: #E9EEFF;
+	color: #7A8ED7;
+	border: 1px solid #B9C4F7;
+}
+
+.quizStatusNotDone {
+	background-color: #FFE9ED;
+	color: #E39191;
+	border: 1px solid #F3B2B2;
+}
+
+.itemCardAvatar {
+	object-fit: cover;
+	border-radius: 4px;
+	flex-shrink: 0;
+}
+
+.itemCardSelected {
+	background-color: #e6f7ff;
+	border: 2px solid #1890ff;
+}
+
+/* Tag5 Filter Right Section */
+.tag5FilterRight {
+	flex: 1;
+	min-width: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	flex-shrink: 0;
+}
+
+.tag5FilterHeader {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+}
+
+.tag5FilterTitle {
+	font-size: 14px;
+	font-weight: 600;
+	color: #262626;
+	white-space: nowrap;
+}
+
+.tag5FilterClearBtn {
+	height: 28px;
+	padding: 0 12px;
+	font-size: 12px;
+	font-weight: 500;
+	border-radius: 6px;
+	display: flex;
+	align-items: center;
+	gap: 4px;
+}
+
+.tag5FilterList {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	max-height: 200px;
+	overflow-y: auto;
+	overflow-x: hidden;
+	padding-right: 4px;
+}
+
+.tag5FilterListHidden {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	position: absolute;
+	visibility: hidden;
+	top: -9999px;
+	left: -9999px;
+}
+
+.tag5FilterList::-webkit-scrollbar {
+	width: 6px;
+}
+
+.tag5FilterList::-webkit-scrollbar-track {
+	background: #f5f5f5;
+	border-radius: 3px;
+}
+
+.tag5FilterList::-webkit-scrollbar-thumb {
+	background: #d9d9d9;
+	border-radius: 3px;
+}
+
+.tag5FilterList::-webkit-scrollbar-thumb:hover {
+	background: #bfbfbf;
+}
+
+.tag5FilterItem {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	padding: 8px 12px;
+	background: #fafafa;
+	border: 1.5px solid #e8e8e8;
+	border-radius: 6px;
+	cursor: pointer;
+	transition: all 0.2s ease;
+	flex-shrink: 0;
+}
+
+.tag5FilterItem:hover {
+	background: #f0f9ff;
+	border-color: #1890ff;
+	transform: translateY(-1px);
+	box-shadow: 0 2px 4px rgba(24, 144, 255, 0.1);
+}
+
+.tag5FilterItemActive {
+	background: #e6f7ff;
+	border-color: #1890ff;
+	box-shadow: 0 2px 8px rgba(24, 144, 255, 0.15);
+}
+
+.tag5FilterTag {
+	margin: 0;
+	font-size: 12px;
+	font-weight: 500;
+	flex-shrink: 0;
+}
+
+.tag5FilterProgressWrapper {
+	flex: 1;
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	min-width: 0;
+}
+
+.tag5FilterProgressBar {
+	flex: 1;
+	height: 6px;
+	background-color: #f0f0f0;
+	border-radius: 3px;
+	overflow: hidden;
+	position: relative;
+	min-width: 60px;
+}
+
+.tag5FilterProgressFill {
+	height: 100%;
+	border-radius: 3px;
+	transition: width 0.3s ease, background-color 0.3s ease;
+}
+
+.tag5FilterPercent {
+	font-size: 11px;
+	font-weight: 600;
+	color: #595959;
+	white-space: nowrap;
+	flex-shrink: 0;
+	min-width: 35px;
+	text-align: right;
+}
+
+.tag5FilterItemActive .tag5FilterPercent {
+	color: #1890ff;
+}
+
+.tag5FilterMoreBtn {
+	height: 32px;
+	padding: 0 12px;
+	font-size: 12px;
+	font-weight: 500;
+	border-radius: 6px;
+	flex-shrink: 0;
+}
+
+.tag5FilterDropdownItem {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	padding: 8px 12px;
+	cursor: pointer;
+	transition: all 0.2s ease;
+}
+
+.tag5FilterDropdownItem:hover {
+	background-color: #f5f5f5;
+}
+
+.tag5FilterDropdownItemActive {
+	background-color: #e6f7ff;
+}
+

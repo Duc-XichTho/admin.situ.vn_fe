@@ -860,7 +860,7 @@ const CaseTrainingTab = ({
 
 
   const fetchCidSourceInfo = async (cid) => {
-    const data = await getK9ByCidTypePublic(cid, 'news');
+    const data = await getK9ByCidTypePublic(cid, 'news' );
     if (data) {
       setCidSourceInfo(data);
     } else {
@@ -874,22 +874,49 @@ const CaseTrainingTab = ({
       setSelectedItem(item);
       onItemClick(item);
       fetchCidSourceInfo(item.cid);
-      setShowMobileModal(true);
+      if (isMobile) {
+        setShowMobileModal(true);
+      }
 
-      // Scroll to the specific item in the sidebar list
-      setTimeout(() => {
-        const targetElement = document.querySelector(`[data-item-id="${id}"]`);
-        if (targetElement) {
-          targetElement.scrollIntoView({
-            behavior: 'smooth',
-            block: 'center',
-            inline: 'nearest'
-          });
+      // Ensure the item is in visibleItems before scrolling
+      // Find the index of the item in filteredItems
+      const filteredItems = getFilteredItems();
+      const itemIndex = filteredItems.findIndex(i => i.id === id);
+      
+      if (itemIndex >= 0) {
+        // If item is beyond renderedCount, increase renderedCount to include it
+        if (itemIndex >= renderedCount) {
+          setRenderedCount(itemIndex + 1);
+          // Wait for visibleItems to update before scrolling
+          setTimeout(() => {
+            scrollToItemWithRetry(id);
+          }, 500);
+        } else {
+          // Item is already in visibleItems, scroll immediately
+          scrollToItemWithRetry(id);
         }
-      }, 100); // Small delay to ensure the item is rendered
+      } else {
+        // Item not found in filteredItems, try scrolling anyway
+        scrollToItemWithRetry(id);
+      }
       return;
     }
   }
+
+  // Helper function to scroll to item with retry logic
+  const scrollToItemWithRetry = (id, retryCount = 0) => {
+    const targetElement = document.querySelector(`[data-item-id="${id}"]`);
+    if (targetElement) {
+      targetElement.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center',
+        inline: 'nearest'
+      });
+    } else if (retryCount < 10) {
+      // Retry up to 10 times with increasing delay
+      setTimeout(() => scrollToItemWithRetry(id, retryCount + 1), 200 * (retryCount + 1));
+    }
+  };
 
   useEffect(() => {
     if (expandedItem) {
@@ -1850,19 +1877,7 @@ const CaseTrainingTab = ({
                 )}
                 {item.title}
               </span>
-              {item.summaryDetail && (
-                <IconButton
-                  onClick={() => setShowSummaryDetail(!showSummaryDetail)}
-                  title={showSummaryDetail ? 'Ẩn SummaryDetail' : 'Hiện SummaryDetail'}
-                  size="small"
-                  style={{
-                    padding: '4px',
-                    color: '#ff4d4f'
-                  }}
-                >
-                  {showSummaryDetail ? <Close_Icon width={16} height={16} /> : <Expand_Icon width={16} height={16} />}
-                </IconButton>
-              )}
+             
             </div>
             {item.summaryDetail && showSummaryDetail && (
               <div className={`${styles.contentDetail} ${newsTabStyles.contentDetail}`} style={{ marginTop: '12px', marginBottom: '12px' }}>

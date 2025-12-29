@@ -19,6 +19,10 @@ export const Home_Icon = ({ width = 20, height = 17 }) => (
 	</svg>
 );
 
+export const Icon_View_Modal = ({ width = 20, height = 17 }) => (
+<svg xmlns="http://www.w3.org/2000/svg" width={width} height={height} viewBox="0 0 24 24"><path fill="none" stroke="#454545" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4m-8-2l8-8m0 0v5m0-5h-5"/></svg>
+);
+
 export const Expand_Icon = ({ width = 20, height = 17 }) => (
 	<svg width={width} height={height} viewBox="0 0 18 16" fill="none" xmlns="http://www.w3.org/2000/svg">
 		<path d="M9.6629 15C9.278 15.6667 8.31575 15.6667 7.93085 15L0.136622 1.5C-0.248278 0.833331 0.232848 -1.71034e-06 1.00265 -1.64304e-06L16.5911 -2.80257e-07C17.3609 -2.12959e-07 17.842 0.833333 17.4571 1.5L9.6629 15Z" fill="#333333"/>

@@ -23,6 +23,7 @@ import HomeTab from './components/HomeTab.jsx';
 import K9Header from './components/K9Header.jsx';
 import K9Tabs from './components/K9Tabs.jsx';
 import LibraryTab from './components/LibraryTab.jsx';
+import MapView from './components/MapView.jsx';
 import NewsTab from './components/NewsTab.jsx';
 import ReportOverviewCharts from './components/ReportOverviewCharts.jsx';
 import ReportTab from './components/ReportTab.jsx';
@@ -47,11 +48,18 @@ const K9 = () => {
 	const [selectedProgram, setSelectedProgram] = useState(null);
 	const [showFirstTimePopup, setShowFirstTimePopup] = useState(false);
 	const [tabLoading, setTabLoading] = useState(false);
-
+	const [headerStats, setHeaderStats] = useState({
+		completedQuizzes: 0,
+		totalQuizzes: 0,
+		averageScore: 0,
+		highScoreCount: 0,
+		completedTheory: 0,
+		totalTheory: 0
+	});
 	// Search section toggle state
 	const [showSearchSection, setShowSearchSection] = useState(true);
 
-	// View mode state (list or grid) - only for desktop stream tab
+	// View mode state (list, grid, or map) - only for desktop stream tab
 	const [viewMode, setViewMode] = useState(() => {
 		try {
 			return localStorage.getItem('k9_view_mode') || 'grid';
@@ -1035,9 +1043,21 @@ const K9 = () => {
 		setShowSearchSection(!showSearchSection);
 	};
 
-	// Toggle view mode
-	const toggleViewMode = () => {
-		const newMode = viewMode === 'list' ? 'grid' : 'list';
+	// Toggle view mode (list -> grid -> map -> list)
+	const toggleViewMode = (mode = null) => {
+		let newMode;
+		if (mode) {
+			newMode = mode;
+		} else {
+			// Cycle through: list -> grid -> map -> list
+			if (viewMode === 'list') {
+				newMode = 'grid';
+			} else if (viewMode === 'grid') {
+				newMode = 'map';
+			} else {
+				newMode = 'list';
+			}
+		}
 		setViewMode(newMode);
 		try {
 			localStorage.setItem('k9_view_mode', newMode);
@@ -1231,6 +1251,8 @@ const K9 = () => {
 				)
 			} */}
 			<K9Header
+				headerStats={headerStats}
+				setHeaderStats={setHeaderStats}
 				updateURL={updateURL}
 				selectedProgram={selectedProgram}
 				setSelectedProgram={setSelectedProgram}
@@ -1259,27 +1281,44 @@ const K9 = () => {
 				toggleViewMode={toggleViewMode}
 			/>
 
-			<K9Tabs
-				activeTab={activeTab}
-				onTabChange={handleTabChange}
-				tabOptions={tabOptions}
-				newsItems={newsItems}
-				caseTrainingItems={caseTrainingItems}
-				longFormItems={longFormItems}
-				selectedProgram={selectedProgram}
-			/>
+			{/* Show Map View when viewMode is 'map' */}
+			{viewMode === 'map' ? (
+				<MapView
+					headerStats={headerStats}
+					setHeaderStats={setHeaderStats}
+					newsItems={newsItems}
+					caseTrainingItems={caseTrainingItems}
+					longFormItems={longFormItems}
+					homeItems={homeItems}
+					activeTab={activeTab}
+					selectedProgram={selectedProgram}
+					tag4Filter={tag4Filter}
+					currentUser={currentUser}
+					tag4Options={tag4Options}
+				/>
+			) : (
+				<>
+					<K9Tabs
+						activeTab={activeTab}
+						onTabChange={handleTabChange}
+						tabOptions={tabOptions}
+						newsItems={newsItems}
+						caseTrainingItems={caseTrainingItems}
+						longFormItems={longFormItems}
+						selectedProgram={selectedProgram}
+					/>
 
-			{/* Tab Loading Overlay */}
-			{tabLoading && (
-				<div className={styles.tabLoadingOverlay}>
-					<div className={styles.tabLoadingContent}>
-						<BookLoader text="Đang tải dữ liệu..." />
-					</div>
-				</div>
-			)}
+					{/* Tab Loading Overlay */}
+					{tabLoading && (
+						<div className={styles.tabLoadingOverlay}>
+							<div className={styles.tabLoadingContent}>
+								<BookLoader text="Đang tải dữ liệu..." />
+							</div>
+						</div>
+					)}
 
-			{/* Home Tab */}
-			{activeTab === 'home' && (
+					{/* Home Tab */}
+					{activeTab === 'home' && (
 				<HomeTab
 					loading={loading}
 					filteredNews={filteredHome}
@@ -1549,6 +1588,8 @@ const K9 = () => {
 			{/* AI Chat Tab */}
 			{activeTab === 'ai' && (
 				<AiChatTab />
+			)}
+				</>
 			)}
 
 			{/* Expiry Modal */}

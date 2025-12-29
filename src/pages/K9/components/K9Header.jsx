@@ -21,6 +21,8 @@ import newsTabStyles from './NewsTab.module.css';
 const { Option } = Select;
 
 const K9Header = ({
+	headerStats,
+	setHeaderStats,
 	updateURL,
 	newsItems,
 	caseTrainingItems,
@@ -120,14 +122,7 @@ const K9Header = ({
 	const [portfolioView, setPortfolioView] = useState('overview'); // 'overview' or 'detail'
 	const [selectedPortfolioProgram, setSelectedPortfolioProgram] = useState(null);
 	const [isCertificateModalOpen, setIsCertificateModalOpen] = useState(false);
-	const [headerStats, setHeaderStats] = useState({
-		completedQuizzes: 0,
-		totalQuizzes: 0,
-		averageScore: 0,
-		highScoreCount: 0,
-		completedTheory: 0,
-		totalTheory: 0
-	});
+
 	const [showFireworks, setShowFireworks] = useState(false);
 	const [headerBackgroundImage, setHeaderBackgroundImage] = useState(null);
 	const [tempImageUrl, setTempImageUrl] = useState(null);
@@ -1792,7 +1787,36 @@ const K9Header = ({
 											toggleViewMode('list');
 											setDropdownVisible(false);
 										},
-									}
+									},
+									(!isMobile && {
+										key: 'viewModeMap',
+										label: (
+											<Tooltip title="Map view" placement="left">
+												<div style={{
+													display: 'flex',
+													alignItems: 'center',
+													gap: '8px',
+													maxWidth: '200px',
+													overflow: 'hidden',
+													textOverflow: 'ellipsis',
+													whiteSpace: 'nowrap'
+												}}>
+													<span style={{ fontSize: '14px' }}>🗺️</span>
+													<span style={{
+														color: viewMode === 'map' ? '#1890ff' : '#666',
+														fontWeight: viewMode === 'map' ? '600' : '400'
+													}}>
+														Map view
+													</span>
+													{viewMode === 'map' && <span style={{ color: '#1890ff' }}>✓</span>}
+												</div>
+											</Tooltip>
+										),
+										onClick: () => {
+											toggleViewMode('map');
+											setDropdownVisible(false);
+										},
+									})
 								] : []),
 								(currentUser?.isAdmin && {
 									key: 'headerBackground',

@@ -319,6 +319,25 @@ const LandingPageEditor = () => {
         return false;
     };
 
+    const handleVideoUpload = async (file, fieldPath) => {
+        setUploading(prev => ({ ...prev, [fieldPath]: true }));
+        try {
+            const response = await uploadFiles([file]);
+            const videoUrl = response.files?.[0]?.fileUrl || response.files?.[0]?.url || '';
+            if (videoUrl) {
+                const pathArray = fieldPath.split('.');
+                form.setFieldValue(pathArray, videoUrl);
+                message.success('Upload video thành công!');
+            }
+        } catch (error) {
+            console.error('Error uploading video:', error);
+            message.error('Upload video thất bại!');
+        } finally {
+            setUploading(prev => ({ ...prev, [fieldPath]: false }));
+        }
+        return false;
+    };
+
     const handleSave = async () => {
         try {
             const values = await form.validateFields();
@@ -432,10 +451,13 @@ const LandingPageEditor = () => {
                             Upload ảnh
                         </Button>
                     </Upload>
-                    <Input
-                        placeholder="Hoặc nhập URL ảnh trực tiếp"
-                        size="small"
-                    />
+                    <Form.Item noStyle name={pathArray}>
+                        <Input
+                            placeholder="Hoặc nhập URL ảnh trực tiếp"
+                            size="small"
+                            onChange={(e) => form.setFieldValue(pathArray, e.target.value)}
+                        />
+                    </Form.Item>
                 </Space>
             </Form.Item>
         );
@@ -455,6 +477,8 @@ const LandingPageEditor = () => {
                         </div>
                         {fields.map(({ key, name, ...restField }) => {
                             const currentSrc = form.getFieldValue([...fieldName, name, 'src']);
+                            const uploadFieldPath = `${fieldPath}.${name}.src`;
+                            const fullPathArray = [...fieldName, name, 'src'];
                             return (
                                 <Card key={key} size="small" style={{ marginBottom: 16 }}>
                                     <Row gutter={16}>
@@ -463,7 +487,7 @@ const LandingPageEditor = () => {
                                                 {...restField}
                                                 name={[name, 'src']}
                                                 label="URL ảnh"
-                                                rules={[{ required: true, message: 'Vui lòng nhập URL ảnh!' }]}
+                                                rules={[{ required: true, message: 'Vui lòng nhập URL ảnh hoặc upload!' }]}
                                             >
                                                 <Input placeholder="Nhập URL ảnh" size="small" />
                                             </Form.Item>
@@ -488,14 +512,38 @@ const LandingPageEditor = () => {
                                             />
                                         </Col>
                                     </Row>
-                                    {currentSrc && (
-                                        <Image
-                                            src={currentSrc}
-                                            alt="Preview"
-                                            style={{ maxWidth: '100%', maxHeight: '150px', objectFit: 'contain', marginTop: 8 }}
-                                            preview
-                                        />
-                                    )}
+                                    <Row gutter={16} style={{ marginTop: 8 }}>
+                                        <Col span={24}>
+                                            <Space direction="vertical" style={{ width: '100%' }}>
+                                                {currentSrc && (
+                                                    <Image
+                                                        src={currentSrc}
+                                                        alt="Preview"
+                                                        style={{ maxWidth: '100%', maxHeight: '150px', objectFit: 'contain' }}
+                                                        preview
+                                                    />
+                                                )}
+                                                <Upload
+                                                    beforeUpload={(file) => {
+                                                        handleImageUpload(file, uploadFieldPath);
+                                                        return false;
+                                                    }}
+                                                    showUploadList={false}
+                                                    accept="image/*"
+                                                >
+                                                    <Button
+                                                        icon={<UploadOutlined />}
+                                                        loading={uploading[uploadFieldPath]}
+                                                        disabled={uploading[uploadFieldPath]}
+                                                        size="small"
+                                                        block
+                                                    >
+                                                        Upload ảnh
+                                                    </Button>
+                                                </Upload>
+                                            </Space>
+                                        </Col>
+                                    </Row>
                                 </Card>
                             );
                         })}
@@ -517,42 +565,103 @@ const LandingPageEditor = () => {
                                 Thêm video
                             </Button>
                         </div>
-                        {fields.map(({ key, name, ...restField }) => (
-                            <Card key={key} size="small" style={{ marginBottom: 16 }}>
-                                <Form.Item
-                                    {...restField}
-                                    name={[name, 'src']}
-                                    label="URL video"
-                                    rules={[{ required: true, message: 'Vui lòng nhập URL video!' }]}
-                                >
-                                    <Input placeholder="Nhập URL video" size="small" />
-                                </Form.Item>
-                                <Form.Item
-                                    {...restField}
-                                    name={[name, 'poster']}
-                                    label="Poster (ảnh thumbnail)"
-                                >
-                                    <Input placeholder="URL ảnh thumbnail" size="small" />
-                                </Form.Item>
-                                <Form.Item
-                                    {...restField}
-                                    name={[name, 'muted']}
-                                    valuePropName="checked"
-                                    label="Muted (tắt tiếng)"
-                                >
-                                    <Switch size="small" />
-                                </Form.Item>
-                                <Button
-                                    type="text"
-                                    danger
-                                    icon={<DeleteOutlined />}
-                                    onClick={() => remove(name)}
-                                    size="small"
-                                >
-                                    Xóa video
-                                </Button>
-                            </Card>
-                        ))}
+                        {fields.map(({ key, name, ...restField }) => {
+                            const currentPoster = form.getFieldValue([...fieldName, name, 'poster']);
+                            const currentVideoSrc = form.getFieldValue([...fieldName, name, 'src']);
+                            const posterUploadFieldPath = `${fieldPath}.${name}.poster`;
+                            const videoUploadFieldPath = `${fieldPath}.${name}.src`;
+                            return (
+                                <Card key={key} size="small" style={{ marginBottom: 16 }}>
+                                    <Form.Item
+                                        {...restField}
+                                        name={[name, 'src']}
+                                        label="URL video"
+                                        rules={[{ required: true, message: 'Vui lòng nhập URL video hoặc upload!' }]}
+                                    >
+                                        <Input placeholder="Nhập URL video" size="small" />
+                                    </Form.Item>
+                                    {currentVideoSrc && (
+                                        <div style={{ marginBottom: 8 }}>
+                                            <video
+                                                src={currentVideoSrc}
+                                                controls
+                                                style={{ maxWidth: '100%', maxHeight: '200px', borderRadius: '4px' }}
+                                            >
+                                                Trình duyệt của bạn không hỗ trợ video.
+                                            </video>
+                                        </div>
+                                    )}
+                                    <Upload
+                                        beforeUpload={(file) => {
+                                            handleVideoUpload(file, videoUploadFieldPath);
+                                            return false;
+                                        }}
+                                        showUploadList={false}
+                                        accept="video/*"
+                                    >
+                                        <Button
+                                            icon={<UploadOutlined />}
+                                            loading={uploading[videoUploadFieldPath]}
+                                            disabled={uploading[videoUploadFieldPath]}
+                                            size="small"
+                                            style={{ marginBottom: 8 }}
+                                        >
+                                            Upload video
+                                        </Button>
+                                    </Upload>
+                                    <Form.Item
+                                        {...restField}
+                                        name={[name, 'poster']}
+                                        label="Poster (ảnh thumbnail)"
+                                    >
+                                        <Input placeholder="URL ảnh thumbnail" size="small" />
+                                    </Form.Item>
+                                    {currentPoster && (
+                                        <Image
+                                            src={currentPoster}
+                                            alt="Poster Preview"
+                                            style={{ maxWidth: '100%', maxHeight: '150px', objectFit: 'contain', marginBottom: 8 }}
+                                            preview
+                                        />
+                                    )}
+                                    <Upload
+                                        beforeUpload={(file) => {
+                                            handleImageUpload(file, posterUploadFieldPath);
+                                            return false;
+                                        }}
+                                        showUploadList={false}
+                                        accept="image/*"
+                                    >
+                                        <Button
+                                            icon={<UploadOutlined />}
+                                            loading={uploading[posterUploadFieldPath]}
+                                            disabled={uploading[posterUploadFieldPath]}
+                                            size="small"
+                                            style={{ marginBottom: 8 }}
+                                        >
+                                            Upload ảnh thumbnail
+                                        </Button>
+                                    </Upload>
+                                    <Form.Item
+                                        {...restField}
+                                        name={[name, 'muted']}
+                                        valuePropName="checked"
+                                        label="Muted (tắt tiếng)"
+                                    >
+                                        <Switch size="small" />
+                                    </Form.Item>
+                                    <Button
+                                        type="text"
+                                        danger
+                                        icon={<DeleteOutlined />}
+                                        onClick={() => remove(name)}
+                                        size="small"
+                                    >
+                                        Xóa video
+                                    </Button>
+                                </Card>
+                            );
+                        })}
                     </>
                 )}
             </Form.List>
@@ -570,56 +679,86 @@ const LandingPageEditor = () => {
                                 Thêm testimonial
                             </Button>
                         </div>
-                        {fields.map(({ key, name, ...restField }) => (
-                            <Card key={key} size="small" style={{ marginBottom: 16 }}>
-                                <Row gutter={16}>
-                                    <Col span={12}>
-                                        <Form.Item
-                                            {...restField}
-                                            name={[name, 'avatar']}
-                                            label="Avatar URL"
+                        {fields.map(({ key, name, ...restField }) => {
+                            const currentAvatar = form.getFieldValue(['beingTrusted', 'testimonials', name, 'avatar']);
+                            const avatarUploadFieldPath = `beingTrusted.testimonials.${name}.avatar`;
+                            return (
+                                <Card key={key} size="small" style={{ marginBottom: 16 }}>
+                                    <Row gutter={16}>
+                                        <Col span={12}>
+                                            <Form.Item
+                                                {...restField}
+                                                name={[name, 'avatar']}
+                                                label="Avatar URL"
+                                            >
+                                                <Input placeholder="URL ảnh đại diện" size="small" />
+                                            </Form.Item>
+                                        </Col>
+                                        <Col span={12}>
+                                            <Form.Item
+                                                {...restField}
+                                                name={[name, 'name']}
+                                                label="Tên"
+                                                rules={[{ required: true, message: 'Vui lòng nhập tên!' }]}
+                                            >
+                                                <Input placeholder="Tên người" size="small" />
+                                            </Form.Item>
+                                        </Col>
+                                    </Row>
+                                    {currentAvatar && (
+                                        <Image
+                                            src={currentAvatar}
+                                            alt="Avatar Preview"
+                                            style={{ maxWidth: '100px', maxHeight: '100px', objectFit: 'contain', marginBottom: 8, borderRadius: '50%' }}
+                                            preview
+                                        />
+                                    )}
+                                    <Upload
+                                        beforeUpload={(file) => {
+                                            handleImageUpload(file, avatarUploadFieldPath);
+                                            return false;
+                                        }}
+                                        showUploadList={false}
+                                        accept="image/*"
+                                    >
+                                        <Button
+                                            icon={<UploadOutlined />}
+                                            loading={uploading[avatarUploadFieldPath]}
+                                            disabled={uploading[avatarUploadFieldPath]}
+                                            size="small"
+                                            style={{ marginBottom: 8 }}
                                         >
-                                            <Input placeholder="URL ảnh đại diện" size="small" />
-                                        </Form.Item>
-                                    </Col>
-                                    <Col span={12}>
-                                        <Form.Item
-                                            {...restField}
-                                            name={[name, 'name']}
-                                            label="Tên"
-                                            rules={[{ required: true, message: 'Vui lòng nhập tên!' }]}
-                                        >
-                                            <Input placeholder="Tên người" size="small" />
-                                        </Form.Item>
-                                    </Col>
-                                </Row>
-                                <Form.Item
-                                    {...restField}
-                                    name={[name, 'title']}
-                                    label="Chức danh"
-                                    rules={[{ required: true, message: 'Vui lòng nhập chức danh!' }]}
-                                >
-                                    <Input placeholder="Ví dụ: CEO Công ty ABC" size="small" />
-                                </Form.Item>
-                                <Form.Item
-                                    {...restField}
-                                    name={[name, 'message']}
-                                    label="Nội dung"
-                                    rules={[{ required: true, message: 'Vui lòng nhập nội dung!' }]}
-                                >
-                                    <TextArea rows={4} placeholder="Nội dung testimonial" size="small" />
-                                </Form.Item>
-                                <Button
-                                    type="text"
-                                    danger
-                                    icon={<DeleteOutlined />}
-                                    onClick={() => remove(name)}
-                                    size="small"
-                                >
-                                    Xóa testimonial
-                                </Button>
-                            </Card>
-                        ))}
+                                            Upload Avatar
+                                        </Button>
+                                    </Upload>
+                                    <Form.Item
+                                        {...restField}
+                                        name={[name, 'title']}
+                                        label="Chức danh"
+                                        rules={[{ required: true, message: 'Vui lòng nhập chức danh!' }]}
+                                    >
+                                        <Input placeholder="Ví dụ: CEO Công ty ABC" size="small" />
+                                    </Form.Item>
+                                    <Form.Item
+                                        {...restField}
+                                        name={[name, 'message']}
+                                        label="Nội dung"
+                                        rules={[{ required: true, message: 'Vui lòng nhập nội dung!' }]}
+                                    >
+                                        <TextArea rows={4} placeholder="Nội dung testimonial" size="small" />
+                                    </Form.Item>
+                                    <Button
+                                        type="text"
+                                        danger
+                                        icon={<DeleteOutlined />}
+                                        onClick={() => remove(name)}
+                                        size="small"
+                                    >
+                                        Xóa testimonial
+                                    </Button>
+                                </Card>
+                            );
+                        })}
                     </>
                 )}
             </Form.List>
