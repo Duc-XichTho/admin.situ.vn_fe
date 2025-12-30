@@ -1,16 +1,16 @@
 import React, { useEffect, useRef, useState } from 'react';
 
-const MapViewConnectionLines = ({ 
-	selectedItemId,
-	allItems = [],
-	containerRef,
-	itemRefs,
-	visibleItemIds = [],
-	sourceType = null, // 'theory' or 'case'
-	targetType = null,  // 'theory' or 'case'
-	theoryItems = [], // Theory items array
-	caseItems = [] // Case items array
-}) => {
+const MapViewConnectionLines = ({
+									selectedItemId,
+									allItems = [],
+									containerRef,
+									itemRefs,
+									visibleItemIds = [],
+									sourceType = null, // 'theory' or 'case'
+									targetType = null,  // 'theory' or 'case'
+									theoryItems = [], // Theory items array
+									caseItems = [] // Case items array
+								}) => {
 	const svgRef = useRef(null);
 	const [lines, setLines] = useState([]);
 	const [containerRect, setContainerRect] = useState(null);
@@ -58,8 +58,8 @@ const MapViewConnectionLines = ({
 
 			// Find all items with the same cid
 			// If sourceType is 'theory' and targetType is 'case', only connect to case items
-			let relatedItems = allItems.filter(item => 
-				item.id !== selectedItemId && 
+			let relatedItems = allItems.filter(item =>
+				item.id !== selectedItemId &&
 				item.cid === selectedItem.cid &&
 				item.status === 'published'
 			);
@@ -168,8 +168,8 @@ const MapViewConnectionLines = ({
 		const selectedStartY = selectedRect.top - currentRect.top + selectedRect.height / 2;
 
 		// Find all items with the same cid
-		const relatedItems = allItems.filter(item => 
-			item.id !== selectedItemId && 
+		const relatedItems = allItems.filter(item =>
+			item.id !== selectedItemId &&
 			item.cid === selectedItem.cid &&
 			item.status === 'published'
 		);
@@ -213,35 +213,35 @@ const MapViewConnectionLines = ({
 		>
 			<defs>
 				<linearGradient id="mapViewConnectionGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-					<stop offset="0%" stopColor="#22c55e" />
-					<stop offset="30%" stopColor="#16a34a" />
-					<stop offset="70%" stopColor="#16a34a" />
-					<stop offset="100%" stopColor="#15803d" />
+					<stop offset="0%" stopColor="#3b82f6" />
+					<stop offset="30%" stopColor="#2563eb" />
+					<stop offset="70%" stopColor="#2563eb" />
+					<stop offset="100%" stopColor="#1d4ed8" />
 				</linearGradient>
 				<filter id="mapViewGlow">
 					<feGaussianBlur stdDeviation="1" result="coloredBlur"/>
-					<feMerge> 
+					<feMerge>
 						<feMergeNode in="coloredBlur"/>
 						<feMergeNode in="SourceGraphic"/>
 					</feMerge>
 				</filter>
 			</defs>
-			
+
 			{lines.map(line => {
 				const distance = Math.abs(line.x2 - line.x1);
 				const controlPoint1X = line.x1 + distance * 0.3;
 				const controlPoint1Y = line.y1;
 				const controlPoint2X = line.x2 - distance * 0.3;
 				const controlPoint2Y = line.y2;
-				
+
 				const pathData = `M ${line.x1} ${line.y1} C ${controlPoint1X} ${controlPoint1Y}, ${controlPoint2X} ${controlPoint2Y}, ${line.x2} ${line.y2}`;
-				
+
 				return (
 					<g key={line.id}>
 						{/* Glow effect */}
 						<path
 							d={pathData}
-							stroke="#22c55e"
+							stroke="#3b82f6"
 							strokeWidth="1.5"
 							fill="none"
 							filter="url(#mapViewGlow)"
@@ -266,7 +266,7 @@ const MapViewConnectionLines = ({
 								orient="auto"
 								markerUnits="strokeWidth"
 							>
-								<path d="M0,0 L0,6 L9,3 z" fill="#15803d" />
+								<path d="M0,0 L0,6 L9,3 z" fill="#1d4ed8" />
 							</marker>
 						</defs>
 						<path

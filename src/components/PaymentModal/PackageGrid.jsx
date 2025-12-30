@@ -7,7 +7,7 @@ const PackageGrid = ({ onPackageSelect, loading = false, currentUser }) => {
 		if (!currentUser?.account_type) return null;
 		const accountType = currentUser.account_type;
 		
-		if (accountType === 'Dùng thử') return 'Dùng thử';
+		// if (accountType === 'Dùng thử') return 'Dùng thử';
 		if (accountType === 'Pro 90') return 'Starter';
 		if (accountType === 'Pro 365') return 'M12';
 		if (accountType === 'Pro 730') return 'M24';
@@ -19,16 +19,16 @@ const PackageGrid = ({ onPackageSelect, loading = false, currentUser }) => {
 
     const packages = [
 
-        {
-            name: 'Dùng thử',
-            duration: 3,
-            durationText: 'Dùng thử 3 ngày',
-            price: 0,
-            originalPrice: null,
-            features: ['Dùng thử miễn phí 3 ngày', 'Tất cả tính năng Pro', 'Không cần thanh toán'],
-            popular: false,
-            isTrial: true
-        },
+        // {
+        //     name: 'Dùng thử',
+        //     duration: 3,
+        //     durationText: 'Dùng thử 3 ngày',
+        //     price: 0,
+        //     originalPrice: null,
+        //     features: ['Dùng thử miễn phí 3 ngày', 'Tất cả tính năng Pro', 'Không cần thanh toán'],
+        //     popular: false,
+        //     isTrial: true
+        // },
         // {
         //     name: 'Test',
         //     duration: 90,
@@ -38,15 +38,15 @@ const PackageGrid = ({ onPackageSelect, loading = false, currentUser }) => {
         //     features: ['Dùng trong 3 tháng', 'Tất cả tính năng Pro', 'Hỗ trợ 24/7'],
         //     popular: false
         // },
-        {
-            name: 'Starter',
-            duration: 90,
-            durationText: 'Dùng trong 3 tháng',
-            price: 399000,
-            originalPrice: 799000,
-            features: ['Dùng trong 3 tháng', 'Tất cả tính năng Pro', 'Hỗ trợ 24/7'],
-            popular: false
-        },
+        // {
+        //     name: 'Starter',
+        //     duration: 90,
+        //     durationText: 'Dùng trong 3 tháng',
+        //     price: 399000,
+        //     originalPrice: 799000,
+        //     features: ['Dùng trong 3 tháng', 'Tất cả tính năng Pro', 'Hỗ trợ 24/7'],
+        //     popular: false
+        // },
         {
             name: 'M12',
             duration: 450,
@@ -54,7 +54,7 @@ const PackageGrid = ({ onPackageSelect, loading = false, currentUser }) => {
             price: 699000,
             originalPrice: 1490000,
             features: ['Truy cập 12 tháng', 'Tặng thêm 3 tháng', 'Tất cả tính năng Pro', 'Ưu đãi tốt nhất', 'Hỗ trợ 24/7'],
-            popular: true
+            popular: false
         },
         {
             name: 'M24',
@@ -63,7 +63,7 @@ const PackageGrid = ({ onPackageSelect, loading = false, currentUser }) => {
             price: 999000,
             originalPrice: 2290000,
             features: ['Truy cập 24 tháng', 'Tặng thêm 6 tháng', 'Tất cả tính năng Pro', 'Tiết kiệm nhất', 'Hỗ trợ 24/7'],
-            popular: false
+            popular: true
         }
     ];
 
@@ -128,7 +128,7 @@ const PackageGrid = ({ onPackageSelect, loading = false, currentUser }) => {
                                 fontSize: '12px',
                                 fontWeight: '600'
                             }}>
-                                Phổ biến
+                                Best value
                             </div>
                         )}
                         

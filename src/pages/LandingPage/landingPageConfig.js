@@ -123,28 +123,28 @@ export const createLandingPageConfig = (handlers) => {
                 {
                   name: "Phạm Than Hoài",
                   title: "Trưởng phòng Marketing tại Digital Agency",
-                  avatar: "/aimba/img/being-trusted-person-01.jpg",
+                  avatar: "https://bucket-xichtho.hn.ss.bfcplatform.vn/hongky.info/2.jpg",
                   message:
                     "Tôi từng cân nhắc học MBA nhưng chi phí, công sức và thời gian nghỉ việc hiện tại là rào cản quá lớn. Với AiMBA, chỉ sau vài giờ học tôi đã có thể áp dụng ngay kiến thức vào công việc và thấy kết quả rõ rệt trong hiệu suất đội nhóm, giúp 1 dự án marketing tối ưu 15% chi phí nhờ cách phân tích tình huống. Sếp tôi đã rất hài lòng.",
                 },
                 {
                   name: "Lưu Hương Giang",
                   title: "Manager doanh nghiệp SME F&B",
-                  avatar: "/aimba/img/being-trusted-person-02.jpg",
+                  avatar: "https://bucket-xichtho.hn.ss.bfcplatform.vn/hongky.info/4.jpg",
                   message:
                     "Điều tôi ấn tượng nhất ở AiMBA là mọi kiến thức MBA không còn nằm trong sách vở, mà được đặt thẳng vào những tình huống doanh nghiệp Việt Nam. Thay vì học SWOT hay BSC theo lý thuyết, tôi được thực hành trên case thực tế và thấy ngay cách áp dụng vào công việc. Đây là điểm khác biệt mà tôi rất thích.",
                 },
                 {
                   name: "Phạm Thành Công",
                   title: "CEO Công ty SaaS",
-                  avatar: "/aimba/img/being-trusted-person-03.jpg",
+                  avatar: "https://bucket-xichtho.hn.ss.bfcplatform.vn/hongky.info/3.jpg",
                   message:
                     "AIMBA trang bị cho tôi 'ngôn ngữ lãnh đạo' sắc bén để đặt đề bài đúng, phản biện chiến lược và kiểm soát rủi ro thay vì chỉ nghe báo cáo một chiều từ chuyên viên. Những bài học thực chiến, đậm chất tình huống Việt Nam tại đây giúp tôi giải quyết các điểm nghẽn vận hành.Giờ đây, đội ngũ phục tôi vì năng lực dẫn dắt thực thụ chứ không chỉ vì được trả lương cuối tháng.",
                 },
                 {
                   name: "Trần Linh An",
                   title: "Sinh Viên QTKD FTU",
-                  avatar: "/aimba/img/being-trusted-person-04.jpg",
+                  avatar: "https://bucket-xichtho.hn.ss.bfcplatform.vn/hongky.info/1.jpg",
                   message:
                     "Từng trượt Management Trainee vì thiếu tư duy tổng thể dù GPA cao, AIMBA là bước ngoặt của mình. Thay vì tốn hàng trăm triệu cho MBA, mình chọn đầu tư nghiêm túc vào lộ trình này để rèn sự sắc bén trong giải quyết vấn đề, tư duy chiến lược, kỹ năng teamwork và thấu hiểu cách doanh nghiệp vận hành qua 1.000 Case Study. Kết quả là mình đã cầm chắc offer Big 4 trong tay!",
                 },

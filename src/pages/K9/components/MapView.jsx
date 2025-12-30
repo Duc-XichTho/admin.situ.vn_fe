@@ -93,7 +93,7 @@ const MapView = ({
 
 	// Panel 1 states - Case column
 	const [caseSearchText, setCaseSearchText] = useState(''); // Search text for case column
-	const [caseSortByConnection, setCaseSortByConnection] = useState(false); // Sort by connection for case
+	const [caseSortByConnection, setCaseSortByConnection] = useState(true); // Sort by connection for case
 	const [selectedCaseItem, setSelectedCaseItem] = useState(null); // Selected item in case column
 	const [caseModalVisible, setCaseModalVisible] = useState(false); // Modal visibility for case item
 	const [caseModalItem, setCaseModalItem] = useState(null); // Full item data for case modal
@@ -2494,7 +2494,7 @@ const MapView = ({
 											className={styles.rightPanelSearch}
 										/>
 										<div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', whiteSpace: 'nowrap' }}>
-											<span>Sắp xếp</span>
+											<span>Auto-Arrange</span>
 											<Switch
 												size="small"
 												checked={caseSortByConnection}

@@ -342,21 +342,21 @@ const LandingPageEditor = () => {
         try {
             const values = await form.validateFields();
             
-            const defaultContents = defaultConfig?.contents || {};
-            const configContents = {
-                banner: values.banner || defaultContents.banner || {},
-                ecoSystem: values.ecoSystem || defaultContents.ecoSystem || {},
-                resources: values.resources || defaultContents.resources || {},
-                modules: values.modules || defaultContents.modules || {},
-                coreValues: values.coreValues || defaultContents.coreValues || {},
-                ourSolution: values.ourSolution || defaultContents.ourSolution || {},
-                learningStrategy: values.learningStrategy || defaultContents.learningStrategy || {},
-                targetAudience: values.targetAudience || defaultContents.targetAudience || {},
-                beingTrusted: values.beingTrusted || defaultContents.beingTrusted || {},
-                registration: values.registration || defaultContents.registration || {},
-                frequentlyAskedQuestions: values.frequentlyAskedQuestions || defaultContents.frequentlyAskedQuestions || {},
-                footer: values.footer || defaultContents.footer || {}
-            };
+            // Load existing config from DB to preserve unchanged fields
+            let existingConfigContents = null;
+            try {
+                const setting = await getSettingByType('LANDING_PAGE_CONFIG');
+                if (setting && setting.setting && setting.setting.contents) {
+                    existingConfigContents = setting.setting.contents;
+                }
+            } catch (error) {
+                console.log('Không tìm thấy config trong database, sẽ tạo mới');
+            }
+
+            // Merge: existing DB data (base) + form values (overrides)
+            // This preserves fields that user didn't edit
+            const baseContents = existingConfigContents || defaultConfig?.contents || {};
+            const configContents = deepMerge(baseContents, values);
 
             setSaving(true);
             
