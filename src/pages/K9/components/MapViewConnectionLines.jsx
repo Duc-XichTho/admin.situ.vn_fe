@@ -212,14 +212,8 @@ const MapViewConnectionLines = ({
 			}}
 		>
 			<defs>
-				<linearGradient id="mapViewConnectionGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-					<stop offset="0%" stopColor="#3b82f6" />
-					<stop offset="30%" stopColor="#2563eb" />
-					<stop offset="70%" stopColor="#2563eb" />
-					<stop offset="100%" stopColor="#1d4ed8" />
-				</linearGradient>
 				<filter id="mapViewGlow">
-					<feGaussianBlur stdDeviation="1" result="coloredBlur"/>
+					<feGaussianBlur stdDeviation="0.5" result="coloredBlur"/>
 					<feMerge>
 						<feMergeNode in="coloredBlur"/>
 						<feMergeNode in="SourceGraphic"/>
@@ -241,17 +235,17 @@ const MapViewConnectionLines = ({
 						{/* Glow effect */}
 						<path
 							d={pathData}
-							stroke="#3b82f6"
-							strokeWidth="1.5"
+							stroke="#868686"
+							strokeWidth="0.8"
 							fill="none"
 							filter="url(#mapViewGlow)"
-							opacity="0.4"
+							opacity="0.3"
 						/>
 						{/* Main line */}
 						<path
 							d={pathData}
-							stroke="url(#mapViewConnectionGradient)"
-							strokeWidth="1"
+							stroke="#868686"
+							strokeWidth="0.8"
 							fill="none"
 							strokeLinecap="round"
 						/>
@@ -259,23 +253,22 @@ const MapViewConnectionLines = ({
 						<defs>
 							<marker
 								id={`mapViewArrow-${line.id}`}
-								markerWidth="10"
-								markerHeight="10"
-								refX="9"
+								markerWidth="8"
+								markerHeight="8"
+								refX="7"
 								refY="3"
 								orient="auto"
 								markerUnits="strokeWidth"
 							>
-								<path d="M0,0 L0,6 L9,3 z" fill="#1d4ed8" />
+								<path d="M0,0 L0,6 L7,3 z" fill="#868686" />
 							</marker>
 						</defs>
 						<path
 							d={pathData}
-							stroke="url(#mapViewConnectionGradient)"
-							strokeWidth="1"
+							stroke="#868686"
+							strokeWidth="0.8"
 							fill="none"
 							markerEnd={`url(#mapViewArrow-${line.id})`}
-							opacity="0"
 						/>
 					</g>
 				);

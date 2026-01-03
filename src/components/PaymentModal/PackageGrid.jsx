@@ -49,20 +49,20 @@ const PackageGrid = ({ onPackageSelect, loading = false, currentUser }) => {
         // },
         {
             name: 'M12',
-            duration: 450,
-            durationText: '12 tháng + Tặng 3 tháng',
+            duration: 365,
+            durationText: '12 tháng',
             price: 699000,
             originalPrice: 1490000,
-            features: ['Truy cập 12 tháng', 'Tặng thêm 3 tháng', 'Tất cả tính năng Pro', 'Ưu đãi tốt nhất', 'Hỗ trợ 24/7'],
+            features: ['Truy cập 12 tháng', 'Tất cả tính năng Pro', 'Ưu đãi tốt nhất', 'Hỗ trợ 24/7'],
             popular: false
         },
         {
             name: 'M24',
-            duration: 900,
-            durationText: '24 tháng + Tặng 6 tháng',
+            duration: 820,
+            durationText: '24 tháng + Tặng 3 tháng',
             price: 999000,
             originalPrice: 2290000,
-            features: ['Truy cập 24 tháng', 'Tặng thêm 6 tháng', 'Tất cả tính năng Pro', 'Tiết kiệm nhất', 'Hỗ trợ 24/7'],
+            features: ['Truy cập 24 tháng', 'Tặng thêm 3 tháng', 'Tất cả tính năng Pro', 'Tiết kiệm nhất', 'Hỗ trợ 24/7'],
             popular: true
         }
     ];

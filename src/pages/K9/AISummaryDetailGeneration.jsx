@@ -1,4 +1,4 @@
-import { CheckCircleOutlined, CloseCircleOutlined, DeleteOutlined, FileImageOutlined, FileTextOutlined, HomeOutlined, LoadingOutlined, PictureOutlined, SearchOutlined, SettingOutlined, ThunderboltOutlined } from '@ant-design/icons';
+import { CheckCircleOutlined, CloseCircleOutlined, DeleteOutlined, FileImageOutlined, FileTextOutlined, HomeOutlined, LoadingOutlined, PictureOutlined, SearchOutlined, SettingOutlined, ThunderboltOutlined, UploadOutlined } from '@ant-design/icons';
 import { Badge, Button, Card, Empty, Image, Input, message, Modal, Popconfirm, Select, Space, Switch, Table, Tabs, Tag, Tooltip } from 'antd';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -34,6 +34,7 @@ const AISummaryDetailGeneration = () => {
     const [deletingHtml, setDeletingHtml] = useState(false);
     const [deletingExcalidraw, setDeletingExcalidraw] = useState(false);
     const [deletingImgUrls, setDeletingImgUrls] = useState(false);
+    const [deletingDetailImageUrls, setDeletingDetailImageUrls] = useState(false);
     const shouldStopRef = useRef(false);
 
     // Queue states for HTML and Excalidraw
@@ -67,6 +68,7 @@ const AISummaryDetailGeneration = () => {
     const [diagramHtmlFilter, setDiagramHtmlFilter] = useState('all'); // 'all', 'has', 'none'
     const [diagramExcalidrawFilter, setDiagramExcalidrawFilter] = useState('all'); // 'all', 'has', 'none'
     const [imgUrlsFilter, setImgUrlsFilter] = useState('all'); // 'all', 'has', 'none'
+    const [detailImageUrlsFilter, setDetailImageUrlsFilter] = useState('all'); // 'all', 'has', 'none'
     const [showDetailFilter, setShowDetailFilter] = useState('all'); // 'all', 'has', 'none'
     const [lessonNumberFilter, setLessonNumberFilter] = useState(''); // Text search for lessonNumber
 
@@ -80,12 +82,17 @@ const AISummaryDetailGeneration = () => {
     const [togglingShowHtml, setTogglingShowHtml] = useState(false);
     const [togglingShowExcalidraw, setTogglingShowExcalidraw] = useState(false);
     const [togglingShowImgUrls, setTogglingShowImgUrls] = useState(false);
+    const [togglingShowDetailImageUrls, setTogglingShowDetailImageUrls] = useState(false);
     const [togglingShowDetail, setTogglingShowDetail] = useState(false);
     // Preview imgUrls modal
     const [imgUrlsPreviewModalVisible, setImgUrlsPreviewModalVisible] = useState(false);
     const [previewingRecord, setPreviewingRecord] = useState(null);
+    // Preview detailImageUrls modal
+    const [detailImageUrlsPreviewModalVisible, setDetailImageUrlsPreviewModalVisible] = useState(false);
+    const [previewingDetailImageUrlsRecord, setPreviewingDetailImageUrlsRecord] = useState(null);
     const [editingDescriptions, setEditingDescriptions] = useState({}); // { index: description }
     const [savingDescription, setSavingDescription] = useState(false);
+    const [uploadingImageIndex, setUploadingImageIndex] = useState(null); // Track which image is being uploaded
 
     // Queue states for Image generation from SummaryDetail (tạo imageUrl JSON)
     const [imageGenerationQueue, setImageGenerationQueue] = useState([]);
@@ -96,6 +103,16 @@ const AISummaryDetailGeneration = () => {
     const [selectImagePromptModalVisible, setSelectImagePromptModalVisible] = useState(false);
     const [pendingImageRecord, setPendingImageRecord] = useState(null);
     const [pendingImageRecords, setPendingImageRecords] = useState([]);
+
+    // Queue states for Multi Image generation from Detail (tách detail -> nhiều ảnh)
+    const [multiImageFromDetailQueue, setMultiImageFromDetailQueue] = useState([]);
+    const [processingMultiImageFromDetailQueue, setProcessingMultiImageFromDetailQueue] = useState(false);
+    const [currentMultiImageFromDetailProcessing, setCurrentMultiImageFromDetailProcessing] = useState(null);
+    const [multiImageFromDetailQueueModalVisible, setMultiImageFromDetailQueueModalVisible] = useState(false);
+    const [multiImageFromDetailQueueResults, setMultiImageFromDetailQueueResults] = useState([]);
+    const [selectMultiImageFromDetailPromptModalVisible, setSelectMultiImageFromDetailPromptModalVisible] = useState(false);
+    const [pendingMultiImageFromDetailRecord, setPendingMultiImageFromDetailRecord] = useState(null);
+    const [pendingMultiImageFromDetailRecords, setPendingMultiImageFromDetailRecords] = useState([]);
 
     // K9 data for each tab
     const [k9Data, setK9Data] = useState({
@@ -1076,6 +1093,340 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
         message.success(`📸 Đã thêm ${records.length} bản ghi vào hàng đợi tạo ảnh!`);
     };
 
+    // Add Multi Image from Detail to queue
+    const addMultiImageFromDetailToQueue = (recordId, title, promptConfig = null) => {
+        const task = {
+            id: `multi_image_detail_${recordId}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+            recordId,
+            title: title.length > 50 ? title.substring(0, 50) + '...' : title,
+            promptConfig: promptConfig,
+            createdAt: new Date().toISOString()
+        };
+        setMultiImageFromDetailQueue(prev => [...prev, task]);
+        message.success(`📸 Đã thêm "${task.title}" vào hàng đợi tạo nhiều ảnh từ Detail!`);
+        return task;
+    };
+
+    // Process Multi Image from Detail queue
+    const processMultiImageFromDetailQueue = async () => {
+        if (multiImageFromDetailQueue.length === 0 || processingMultiImageFromDetailQueue) {
+            return;
+        }
+
+        setProcessingMultiImageFromDetailQueue(true);
+        setMultiImageFromDetailQueueResults([]);
+        const queue = [...multiImageFromDetailQueue];
+
+        for (let i = 0; i < queue.length; i++) {
+            if (shouldStopRef.current) {
+                message.info('Đã dừng quá trình tạo nhiều ảnh từ Detail');
+                setProcessingMultiImageFromDetailQueue(false);
+                setCurrentMultiImageFromDetailProcessing(null);
+                setMultiImageFromDetailQueue([]);
+                break;
+            }
+
+            const task = queue[i];
+            setCurrentMultiImageFromDetailProcessing(task);
+            setMultiImageFromDetailQueue(prev => prev.filter(item => item.id !== task.id));
+
+            try {
+                // Find record from all tabs
+                let record = null;
+                for (const tab of ['news', 'caseTraining', 'longForm', 'home']) {
+                    const found = k9Data[tab]?.find(item => item.id === task.recordId);
+                    if (found) {
+                        record = found;
+                        break;
+                    }
+                }
+                if (!record) {
+                    throw new Error('Không tìm thấy record');
+                }
+
+                await generateMultiImageFromDetailForRecord(record, task.promptConfig);
+
+                setMultiImageFromDetailQueueResults(prev => [...prev, {
+                    task,
+                    status: 'success',
+                    message: 'Tạo nhiều ảnh từ Detail thành công'
+                }]);
+            } catch (error) {
+                console.error(`Error processing multi image from detail for ${task.recordId}:`, error);
+                setMultiImageFromDetailQueueResults(prev => [...prev, {
+                    task,
+                    status: 'error',
+                    message: error.message || 'Lỗi không xác định'
+                }]);
+            }
+
+            setCurrentMultiImageFromDetailProcessing(null);
+        }
+
+        setProcessingMultiImageFromDetailQueue(false);
+        if (queue.length > 0) {
+            message.success(`Hoàn thành xử lý ${queue.length} task tạo nhiều ảnh từ Detail`);
+        }
+    };
+
+    // Auto process Multi Image from Detail queue
+    useEffect(() => {
+        if (multiImageFromDetailQueue.length > 0 && !processingMultiImageFromDetailQueue) {
+            processMultiImageFromDetailQueue();
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [multiImageFromDetailQueue.length, processingMultiImageFromDetailQueue]);
+
+    // Generate Multi Image from Detail for single record
+    // Luồng: Detail -> Tách thành nhiều phần -> Tạo description cho mỗi phần -> Tạo ảnh cho mỗi description -> Lưu vào detailImageUrls
+    const generateMultiImageFromDetailForRecord = async (record, promptConfig = null) => {
+        if (!record.detail || record.detail.trim() === '') {
+            throw new Error('Không có detail để tạo ảnh!');
+        }
+
+        if (record.detailImageUrls && Array.isArray(record.detailImageUrls) && record.detailImageUrls.length > 0) {
+            throw new Error('Record này đã có detailImageUrls');
+        }
+
+        // Validate prompt config
+        if (!promptConfig) {
+            throw new Error('Vui lòng chọn cài đặt prompt từ "Nhiều ảnh từ Detail" trước!');
+        }
+
+        let splitPrompt = promptConfig.splitPrompt;
+        const splitModel = promptConfig.splitModel;
+        const descriptionPrompt = promptConfig.descriptionPrompt;
+        const descriptionModel = promptConfig.descriptionModel;
+        const imagePrompt = promptConfig.imagePrompt;
+        const imageModel = promptConfig.imageModel;
+        let quantity = promptConfig.quantity;
+
+        if (!splitPrompt || !splitModel || !descriptionPrompt || !descriptionModel || !imageModel) {
+            throw new Error('Cài đặt prompt chưa đầy đủ! Vui lòng kiểm tra lại cấu hình trong "Nhiều ảnh từ Detail".');
+        }
+
+        message.info(`🔄 Đang tạo nhiều ảnh từ detail cho: ${record.title}${promptConfig ? ` (Cài đặt: ${promptConfig.name})` : ''}`);
+
+        // Step 1: Tách detail thành nhiều phần
+        message.info(`📝 Bước 1: Đang tách detail thành nhiều phần...`);
+        let splitPromptText = `${record.detail}`;
+        if (quantity) {
+            splitPrompt += `\n\nYêu cầu: Tách nội dung detail thành ${quantity} phần, mỗi phần là một khái niệm hoặc bước riêng biệt.`;
+        } else {
+            splitPrompt += `\n\nYêu cầu: Tách nội dung detail thành các phần cần thiết.`;
+        }
+        splitPrompt += `\n\nTrả về dưới dạng JSON array với format:\n[\n  {\n    "partNumber": 1,\n    "content": "Nội dung phần 1"\n  },\n  {\n    "partNumber": 2,\n    "content": "Nội dung phần 2"\n  }\n]`;
+
+        const splitResponse = await aiGen(
+            splitPromptText,
+            splitPrompt,
+            splitModel
+        );
+
+        const splitResult = splitResponse.result || splitResponse.answer || splitResponse.content || splitResponse;
+        
+        // Parse JSON từ response (có thể có markdown code block)
+        let parts = [];
+        try {
+            // Thử parse trực tiếp
+            parts = JSON.parse(splitResult);
+        } catch (parseError) {
+            // Thử extract từ markdown code block
+            const jsonMatch = splitResult.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+            if (jsonMatch) {
+                parts = JSON.parse(jsonMatch[1]);
+            } else {
+                // Thử tìm JSON trong text
+                const jsonMatch2 = splitResult.match(/\[[\s\S]*\]/);
+                if (jsonMatch2) {
+                    parts = JSON.parse(jsonMatch2[0]);
+                } else {
+                    throw new Error('Không thể parse kết quả tách detail. Response: ' + splitResult.substring(0, 200));
+                }
+            }
+        }
+
+        if (!Array.isArray(parts) || parts.length === 0) {
+            throw new Error('Kết quả tách detail không hợp lệ hoặc không có phần nào');
+        }
+
+        message.success(`✅ Đã tách detail thành ${parts.length} phần`);
+
+        // Step 2 & 3: Với mỗi phần, tạo description và ảnh
+        const allImageUrls = [];
+        
+        for (let i = 0; i < parts.length; i++) {
+            const part = parts[i];
+            const partContent = part.content || part.text || '';
+            
+            if (!partContent || partContent.trim() === '') {
+                console.warn(`Phần ${i + 1} không có nội dung, bỏ qua`);
+                continue;
+            }
+
+            message.info(`🔄 Đang xử lý phần ${i + 1}/${parts.length}...`);
+
+            // Step 2: Tạo description từ phần này
+            const descriptionPromptText = `${record.title} - Phần ${i + 1}: ${partContent}\n\n⚠️ CRITICAL FORMAT REQUIREMENT - MUST BE FOLLOWED EXACTLY:\n\nYou MUST return ONLY the numbered description in the exact format. Do NOT include any headers, explanations, or additional content. Failure to follow this format will cause system parsing errors and break the image generation process.\n\n⚠️ WARNING: Any deviation from the numbered format will result in parsing failure and system errors. Your response must start immediately with "1." and contain only the numbered description.`;
+
+            const descriptionResponse = await aiGen(
+                descriptionPromptText,
+                descriptionPrompt,
+                descriptionModel,
+                'text'
+            );
+
+            const descriptionResult = descriptionResponse.result || descriptionResponse.answer || descriptionResponse.content || descriptionResponse;
+
+            // Parse English description
+            const descriptionLines = descriptionResult.split('\n');
+            let englishDescription = '';
+
+            const startLineIndex = descriptionLines.findIndex(l => l.trim().startsWith('1.'));
+            if (startLineIndex !== -1) {
+                let endLineIndex = descriptionLines.findIndex(l => l.trim().startsWith('2.'));
+                if (endLineIndex === -1) {
+                    endLineIndex = descriptionLines.length;
+                }
+
+                const descriptionLinesForPart = descriptionLines.slice(startLineIndex, endLineIndex);
+                englishDescription = descriptionLinesForPart
+                    .map(line => line.trim())
+                    .filter(line => line.length > 0)
+                    .join(' ')
+                    .replace(/^\d+\.\s*/, '')
+                    .trim();
+            } else {
+                englishDescription = descriptionResult;
+            }
+
+            if (!englishDescription) {
+                console.warn(`Không tạo được description cho phần ${i + 1}, bỏ qua`);
+                continue;
+            }
+
+            // Step 3: Tạo ảnh từ description
+            message.info(`🎨 Đang tạo ảnh cho phần ${i + 1}...`);
+            const imageResponse = await aiGen2(
+                englishDescription,
+                imagePrompt || '',
+                imageModel,
+                'img'
+            );
+
+            const imageResult = imageResponse.result || imageResponse.answer || imageResponse.content || imageResponse;
+
+            if (imageResult && imageResult.image_url) {
+                allImageUrls.push({
+                    url: imageResult.image_url,
+                    description: englishDescription,
+                    partNumber: part.partNumber || (i + 1),
+                    partContent: partContent
+                });
+            } else {
+                console.warn(`Không tạo được ảnh cho phần ${i + 1}`);
+            }
+
+            // Delay giữa các request để tránh rate limit
+            if (i < parts.length - 1) {
+                await new Promise(resolve => setTimeout(resolve, 2000));
+            }
+        }
+
+        if (allImageUrls.length === 0) {
+            throw new Error('Không tạo được ảnh nào từ detail');
+        }
+
+        // Lưu vào detailImageUrls
+        const updateData = {
+            id: record.id,
+            detailImageUrls: allImageUrls,
+            showDetailImageUrls: true // Mặc định bật hiển thị khi tạo mới
+        };
+
+        const updateResponse = await updateK9(updateData);
+        const updatedRecord = updateResponse?.data || updateResponse;
+        const updater = (list) => list.map(item =>
+            item.id === record.id ? { ...item, ...updatedRecord } : item
+        );
+
+        setK9Data(prev => ({
+            news: updater(prev.news || []),
+            caseTraining: updater(prev.caseTraining || []),
+            longForm: updater(prev.longForm || []),
+            home: updater(prev.home || []),
+        }));
+
+        message.success(`✅ Tạo ${allImageUrls.length} ảnh từ detail thành công cho "${record.title}"!`);
+    };
+
+    // Handle create Multi Image from Detail (single record - now uses queue)
+    const handleCreateMultiImageFromDetail = async (record) => {
+        if (!record.detail || record.detail.trim() === '') {
+            message.warning('Không có detail để tạo ảnh!');
+            return;
+        }
+
+        if (record.detailImageUrls && Array.isArray(record.detailImageUrls) && record.detailImageUrls.length > 0) {
+            message.warning('Record này đã có detailImageUrls. Vui lòng xóa detailImageUrls cũ trước khi tạo mới.');
+            return;
+        }
+
+        if (multiImageFromDetailQueue.find(task => task.recordId === record.id) || currentMultiImageFromDetailProcessing?.recordId === record.id) {
+            message.warning('Record này đã có trong hàng đợi hoặc đang được xử lý!');
+            return;
+        }
+
+        // Show prompt selection modal
+        setPendingMultiImageFromDetailRecord(record);
+        setSelectMultiImageFromDetailPromptModalVisible(true);
+    };
+
+    const handleMultiImageFromDetailPromptSelected = (prompt) => {
+        setSelectMultiImageFromDetailPromptModalVisible(false);
+        if (pendingMultiImageFromDetailRecord) {
+            addMultiImageFromDetailToQueue(pendingMultiImageFromDetailRecord.id, pendingMultiImageFromDetailRecord.title, prompt);
+        }
+        setPendingMultiImageFromDetailRecord(null);
+    };
+
+    // Handle bulk create Multi Image from Detail
+    const handleBulkCreateMultiImageFromDetail = async () => {
+        if (selectedRowKeys.length === 0) {
+            message.warning('Vui lòng chọn ít nhất một bản ghi để tạo nhiều ảnh từ Detail!');
+            return;
+        }
+
+        const selectedRecords = filteredData.filter(item =>
+            selectedRowKeys.includes(item.id) &&
+            item.detail &&
+            !(item.detailImageUrls && Array.isArray(item.detailImageUrls) && item.detailImageUrls.length > 0) &&
+            !multiImageFromDetailQueue.find(task => task.recordId === item.id) &&
+            currentMultiImageFromDetailProcessing?.recordId !== item.id
+        );
+
+        if (selectedRecords.length === 0) {
+            message.warning('Tất cả bản ghi đã có detailImageUrls hoặc đang trong hàng đợi!');
+            return;
+        }
+
+        // Show prompt selection modal
+        setPendingMultiImageFromDetailRecords(selectedRecords);
+        setSelectMultiImageFromDetailPromptModalVisible(true);
+    };
+
+    const handleBulkMultiImageFromDetailPromptSelected = (prompt) => {
+        setSelectMultiImageFromDetailPromptModalVisible(false);
+        const records = pendingMultiImageFromDetailRecords;
+        records.forEach(record => {
+            addMultiImageFromDetailToQueue(record.id, record.title, prompt);
+        });
+        setMultiImageFromDetailQueueModalVisible(true);
+        setSelectedRowKeys([]);
+        setPendingMultiImageFromDetailRecords([]);
+        message.success(`📸 Đã thêm ${records.length} bản ghi vào hàng đợi tạo nhiều ảnh từ Detail!`);
+    };
+
     // Handle create HTML from summaryDetail (single record - now uses queue)
     const handleCreateHtmlFromSummaryDetail = async (record) => {
         if (!record.summaryDetail || record.summaryDetail.trim() === '') {
@@ -1446,6 +1797,49 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
         }
     };
 
+    const handleBulkDeleteDetailImageUrls = async () => {
+        if (selectedRowKeys.length === 0) {
+            message.warning('Vui lòng chọn ít nhất một bản ghi để xóa detailImageUrls!');
+            return;
+        }
+
+        try {
+            setDeletingDetailImageUrls(true);
+            
+            // Sử dụng updateK9Bulk API
+            const updateData = {
+                ids: selectedRowKeys,
+                fieldToUpdate: 'detailImageUrls',
+                value: null
+            };
+
+            await updateK9Bulk(updateData);
+
+            // Update local data
+            const updater = (list) => list.map(item =>
+                selectedRowKeys.includes(item.id)
+                    ? { ...item, detailImageUrls: null }
+                    : item
+            );
+
+            setK9Data(prev => ({
+                news: updater(prev.news || []),
+                caseTraining: updater(prev.caseTraining || []),
+                longForm: updater(prev.longForm || []),
+                home: updater(prev.home || []),
+            }));
+
+            message.success(`Đã xóa detailImageUrls cho ${selectedRowKeys.length} bản ghi!`);
+            setSelectedRowKeys([]);
+        } catch (error) {
+            console.error('Error deleting detailImageUrls:', error);
+            message.error('Xóa detailImageUrls thất bại!');
+        } finally {
+            setDeletingDetailImageUrls(false);
+        }
+    };
+
+
     // Handle bulk delete ImgUrls from SummaryDetail
     const handleBulkDeleteImgUrls = async () => {
         if (selectedRowKeys.length === 0) {
@@ -1616,6 +2010,48 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
         }
     };
 
+    // Handle bulk toggle showDetailImageUrls
+    const handleBulkToggleShowDetailImageUrls = async (toggleTo) => {
+        if (selectedRowKeys.length === 0) {
+            message.warning('Vui lòng chọn ít nhất một bản ghi để cập nhật!');
+            return;
+        }
+
+        try {
+            setTogglingShowDetailImageUrls(true);
+            
+            // Sử dụng updateK9Bulk API
+            const updateData = {
+                ids: selectedRowKeys,
+                fieldToUpdate: 'showDetailImageUrls',
+                value: toggleTo
+            };
+
+            await updateK9Bulk(updateData);
+
+            // Update local data
+            const updater = (list) => list.map(item =>
+                selectedRowKeys.includes(item.id)
+                    ? { ...item, showDetailImageUrls: toggleTo }
+                    : item
+            );
+
+            setK9Data(prev => ({
+                news: updater(prev.news || []),
+                caseTraining: updater(prev.caseTraining || []),
+                longForm: updater(prev.longForm || []),
+                home: updater(prev.home || []),
+            }));
+
+            message.success(`Đã ${toggleTo ? 'bật' : 'tắt'} hiển thị detailImageUrls cho ${selectedRowKeys.length} bản ghi!`);
+        } catch (error) {
+            console.error('Error toggling showDetailImageUrls:', error);
+            message.error('Cập nhật thất bại!');
+        } finally {
+            setTogglingShowDetailImageUrls(false);
+        }
+    };
+
     // Handle bulk toggle showDetail
     const handleBulkToggleShowDetail = async (toggleTo) => {
         if (selectedRowKeys.length === 0) {
@@ -1673,7 +2109,7 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
     // Reset to page 1 when tab, search, or filters change
     useEffect(() => {
         setCurrentPage(1);
-    }, [activeTab, searchText, summaryDetailFilter, diagramHtmlFilter, diagramExcalidrawFilter, imgUrlsFilter, showDetailFilter, lessonNumberFilter]);
+    }, [activeTab, searchText, summaryDetailFilter, diagramHtmlFilter, diagramExcalidrawFilter, imgUrlsFilter, detailImageUrlsFilter, showDetailFilter, lessonNumberFilter]);
 
     // Optimize filter with useMemo
     const filteredData = useMemo(() => {
@@ -1754,7 +2190,7 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
         }
 
         return data;
-    }, [searchText, summaryDetailFilter, diagramHtmlFilter, diagramExcalidrawFilter, imgUrlsFilter, showDetailFilter, lessonNumberFilter, currentTabData]);
+    }, [searchText, summaryDetailFilter, diagramHtmlFilter, diagramExcalidrawFilter, imgUrlsFilter, detailImageUrlsFilter, showDetailFilter, lessonNumberFilter, currentTabData]);
 
     const renderDetail = useCallback((text, record) => {
         if (!text) return '-';
@@ -1819,12 +2255,15 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
         const isHtmlInQueue = htmlQueue.find(task => task.recordId === record.id);
         const isExcalidrawInQueue = excalidrawQueue.find(task => task.recordId === record.id);
         const isImageInQueue = imageGenerationQueue.find(task => task.recordId === record.id);
+        const isMultiImageFromDetailInQueue = multiImageFromDetailQueue.find(task => task.recordId === record.id);
         const isHtmlProcessing = currentHtmlProcessing?.recordId === record.id;
         const isExcalidrawProcessing = currentExcalidrawProcessing?.recordId === record.id;
         const isImageProcessing = currentImageProcessing?.recordId === record.id;
+        const isMultiImageFromDetailProcessing = currentMultiImageFromDetailProcessing?.recordId === record.id;
         const hasHtml = record.diagramHtmlCodeFromSummaryDetail;
         const hasExcalidraw = record.diagramExcalidrawJson && record.diagramExcalidrawJson.length > 0;
         const hasImageUrl = record.imgUrls && Array.isArray(record.imgUrls) && record.imgUrls.length > 0;
+        const hasDetailImageUrls = record.detailImageUrls && Array.isArray(record.detailImageUrls) && record.detailImageUrls.length > 0;
 
         return (
             <Space>
@@ -1918,9 +2357,30 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
                         Ảnh
                     </Button>
                 </Tooltip>
+                <Tooltip title={
+                    hasDetailImageUrls ? 'Đã có nhiều ảnh từ detail' :
+                    isMultiImageFromDetailProcessing ? 'Đang tạo nhiều ảnh từ detail' :
+                    isMultiImageFromDetailInQueue ? 'Đang trong hàng đợi' :
+                    'Tạo nhiều ảnh từ Detail'
+                }>
+                    <Button
+                        type="link"
+                        size="small"
+                        icon={<FileImageOutlined />}
+                        onClick={() => handleCreateMultiImageFromDetail(record)}
+                        loading={isMultiImageFromDetailProcessing}
+                        disabled={!!hasDetailImageUrls || isMultiImageFromDetailProcessing || !!isMultiImageFromDetailInQueue}
+                        style={{
+                            color: hasDetailImageUrls ? '#52c41a' :
+                                isMultiImageFromDetailProcessing || isMultiImageFromDetailInQueue ? '#1890ff' : '#722ed1'
+                        }}
+                    >
+                        Nhiều ảnh
+                    </Button>
+                </Tooltip>
             </Space>
         );
-    }, [htmlQueue, excalidrawQueue, imageGenerationQueue, currentHtmlProcessing, currentExcalidrawProcessing, currentImageProcessing, handleCreateImageFromSummaryDetail, handleDiagramPreview]);
+    }, [htmlQueue, excalidrawQueue, imageGenerationQueue, multiImageFromDetailQueue, currentHtmlProcessing, currentExcalidrawProcessing, currentImageProcessing, currentMultiImageFromDetailProcessing, handleCreateImageFromSummaryDetail, handleCreateMultiImageFromDetail, handleDiagramPreview]);
 
     // Memoize columns to prevent table re-render on every component update
     const columns = useMemo(() => [
@@ -2184,6 +2644,104 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
             }
         },
         {
+            title: <span style={{ color: '#722ed1', fontWeight: 'bold' }}>detailImageUrls</span>,
+            key: 'detailImageUrls',
+            width: 120,
+            render: (_, record) => {
+                // Kiểm tra detailImageUrls (là mảng các object JSON)
+                const hasDetailImageUrls = record.detailImageUrls && Array.isArray(record.detailImageUrls) && record.detailImageUrls.length > 0;
+
+                if (hasDetailImageUrls) {
+                    // Lấy ảnh đầu tiên để hiển thị thumbnail
+                    const firstImage = record.detailImageUrls[0];
+                    const thumbnailUrl = typeof firstImage === 'string' ? firstImage : (firstImage?.url || firstImage?.image_url || '');
+                    
+                    return (
+                        <div
+                            onClick={() => {
+                                setPreviewingDetailImageUrlsRecord(record);
+                                setDetailImageUrlsPreviewModalVisible(true);
+                            }}
+                            style={{
+                                width: 50,
+                                height: 50,
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                backgroundColor: '#f9f0ff',
+                                borderRadius: '8px',
+                                border: '2px solid #d3adf7',
+                                cursor: 'pointer',
+                                overflow: 'hidden',
+                                position: 'relative',
+                                transition: 'all 0.3s ease'
+                            }}
+                            onMouseEnter={(e) => {
+                                e.currentTarget.style.transform = 'scale(1.1)';
+                                e.currentTarget.style.boxShadow = '0 4px 12px rgba(114, 46, 209, 0.3)';
+                            }}
+                            onMouseLeave={(e) => {
+                                e.currentTarget.style.transform = 'scale(1)';
+                                e.currentTarget.style.boxShadow = 'none';
+                            }}
+                            title={`detailImageUrls từ Detail (${record.detailImageUrls.length} ảnh) - Click để xem`}
+                        >
+                            {thumbnailUrl ? (
+                                <img
+                                    src={thumbnailUrl}
+                                    alt="Thumbnail"
+                                    style={{
+                                        width: '100%',
+                                        height: '100%',
+                                        objectFit: 'cover',
+                                        borderRadius: '6px'
+                                    }}
+                                />
+                            ) : (
+                                <FileImageOutlined style={{ fontSize: '20px', color: '#722ed1' }} />
+                            )}
+                            {record.detailImageUrls.length > 1 && (
+                                <div style={{
+                                    position: 'absolute',
+                                    top: '-4px',
+                                    right: '-4px',
+                                    backgroundColor: '#ff4d4f',
+                                    color: 'white',
+                                    borderRadius: '50%',
+                                    width: '20px',
+                                    height: '20px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    fontSize: '10px',
+                                    fontWeight: 'bold',
+                                    border: '2px solid white',
+                                    boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                                }}>
+                                    {record.detailImageUrls.length}
+                                </div>
+                            )}
+                        </div>
+                    );
+                }
+                return (
+                    <div style={{
+                        width: 40,
+                        height: 40,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        backgroundColor: '#f0f0f0',
+                        borderRadius: '4px'
+                    }}
+                        title="Chưa tạo detailImageUrls từ Detail"
+                    >
+                        <FileImageOutlined style={{ fontSize: '16px', color: '#999' }} />
+                    </div>
+                );
+            }
+        },
+        {
             title: <span style={{ fontSize: '12px' }}>Hiển thị HTML</span>,
             key: 'showHtml',
             width: 110,
@@ -2306,6 +2864,45 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
             }
         },
         {
+            title: <span style={{ fontSize: '12px' }}>Hiển thị detailImageUrls</span>,
+            key: 'showDetailImageUrls',
+            width: 150,
+            render: (_, record) => {
+                const hasDetailImageUrls = record.detailImageUrls && Array.isArray(record.detailImageUrls) && record.detailImageUrls.length > 0;
+                
+                return (
+                    <Switch
+                        checked={record.showDetailImageUrls !== false} // Default true nếu không có giá trị
+                        disabled={!hasDetailImageUrls}
+                        onChange={async (checked) => {
+                            try {
+                                const updateData = {
+                                    id: record.id,
+                                    showDetailImageUrls: checked
+                                };
+                                const updateResponse = await updateK9(updateData);
+                                const updatedRecord = updateResponse?.data || updateResponse;
+                                const updater = (list) => list.map(item =>
+                                    item.id === record.id ? { ...item, ...updatedRecord } : item
+                                );
+                                setK9Data(prev => ({
+                                    news: updater(prev.news || []),
+                                    caseTraining: updater(prev.caseTraining || []),
+                                    longForm: updater(prev.longForm || []),
+                                    home: updater(prev.home || []),
+                                }));
+                                message.success(`Đã ${checked ? 'bật' : 'tắt'} hiển thị detailImageUrls`);
+                            } catch (error) {
+                                console.error('Error updating showDetailImageUrls:', error);
+                                message.error('Cập nhật thất bại!');
+                            }
+                        }}
+                        size="small"
+                    />
+                );
+            }
+        },
+        {
             title: <span style={{ fontSize: '12px' }}>Hiển thị Detail</span>,
             key: 'showDetail',
             width: 120,
@@ -2347,7 +2944,7 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
         {
             title: 'Thao tác',
             key: 'action',
-            width: 520,
+            width: 570,
             fixed: 'right',
             render: renderAction,
         },
@@ -2434,6 +3031,17 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
                             <Select.Option value="has">Đã có</Select.Option>
                             <Select.Option value="none">Chưa có</Select.Option>
                         </Select>
+                        <span style={{ fontSize: '13px', fontWeight: 500 }}>Lọc detailImageUrls:</span>
+                        <Select
+                            value={detailImageUrlsFilter}
+                            onChange={setDetailImageUrlsFilter}
+                            style={{ width: 140 }}
+                            size="small"
+                        >
+                            <Select.Option value="all">Tất cả</Select.Option>
+                            <Select.Option value="has">Đã có</Select.Option>
+                            <Select.Option value="none">Chưa có</Select.Option>
+                        </Select>
                         <span style={{ fontSize: '13px', fontWeight: 500 }}>Lọc ShowDetail:</span>
                         <Select
                             value={showDetailFilter}
@@ -2499,6 +3107,16 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
                     >
                         Tạo ImgUrls ({selectedRowKeys.length})
                     </Button>
+                    <Button
+                        type="default"
+                        icon={<FileImageOutlined />}
+                        onClick={handleBulkCreateMultiImageFromDetail}
+                        disabled={selectedRowKeys.length === 0 || processingMultiImageFromDetailQueue}
+                        loading={processingMultiImageFromDetailQueue}
+                        size="small"
+                    >
+                        Tạo Nhiều ảnh từ Detail ({selectedRowKeys.length})
+                    </Button>
                 </div>
 
                 {/* Row 4: Queue Buttons */}
@@ -2543,6 +3161,16 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
                             Queue ImgUrls ({imageGenerationQueue.length + (currentImageProcessing ? 1 : 0)})
                         </Button>
                     )}
+                    {(multiImageFromDetailQueue.length > 0 || currentMultiImageFromDetailProcessing) && (
+                        <Button
+                            type="default"
+                            icon={<FileImageOutlined />}
+                            onClick={() => setMultiImageFromDetailQueueModalVisible(true)}
+                            size="small"
+                        >
+                            Queue Nhiều ảnh từ Detail ({multiImageFromDetailQueue.length + (currentMultiImageFromDetailProcessing ? 1 : 0)})
+                        </Button>
+                    )}
                 </div>
 
                 {/* Row 5: Selection Actions */}
@@ -2568,7 +3196,7 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
                                 danger
                                 icon={<DeleteOutlined />}
                                 loading={deletingSummaryDetail}
-                                disabled={loading || deletingSummaryDetail || deletingHtml || deletingExcalidraw || deletingImgUrls}
+                                disabled={loading || deletingSummaryDetail || deletingHtml || deletingExcalidraw || deletingImgUrls || deletingDetailImageUrls}
                                 size="small"
                             >
                                 Xóa SummaryDetail
@@ -2587,7 +3215,7 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
                                 danger
                                 icon={<FileTextOutlined />}
                                 loading={deletingHtml}
-                                disabled={loading || deletingSummaryDetail || deletingHtml || deletingExcalidraw || deletingImgUrls}
+                                disabled={loading || deletingSummaryDetail || deletingHtml || deletingExcalidraw || deletingImgUrls || deletingDetailImageUrls}
                                 size="small"
                             >
                                 Xóa HTML
@@ -2606,7 +3234,7 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
                                 danger
                                 icon={<PictureOutlined />}
                                 loading={deletingExcalidraw}
-                                disabled={loading || deletingSummaryDetail || deletingHtml || deletingExcalidraw || deletingImgUrls}
+                                disabled={loading || deletingSummaryDetail || deletingHtml || deletingExcalidraw || deletingImgUrls || deletingDetailImageUrls}
                                 size="small"
                             >
                                 Xóa Excalidraw
@@ -2625,10 +3253,29 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
                                 danger
                                 icon={<FileImageOutlined />}
                                 loading={deletingImgUrls}
-                                disabled={loading || deletingSummaryDetail || deletingHtml || deletingExcalidraw || deletingImgUrls}
+                                disabled={loading || deletingSummaryDetail || deletingHtml || deletingExcalidraw || deletingImgUrls || deletingDetailImageUrls}
                                 size="small"
                             >
                                 Xóa ImgUrls
+                            </Button>
+                        </Popconfirm>
+
+                        <Popconfirm
+                            title="Xác nhận xóa detailImageUrls"
+                            description={`Bạn có chắc chắn muốn xóa detailImageUrls cho ${selectedRowKeys.length} bản ghi đã chọn?`}
+                            onConfirm={handleBulkDeleteDetailImageUrls}
+                            okText="Xác nhận"
+                            cancelText="Hủy"
+                            okButtonProps={{ danger: true }}
+                        >
+                            <Button
+                                danger
+                                icon={<FileImageOutlined />}
+                                loading={deletingDetailImageUrls}
+                                disabled={loading || deletingSummaryDetail || deletingHtml || deletingExcalidraw || deletingImgUrls || deletingDetailImageUrls}
+                                size="small"
+                            >
+                                Xóa DetailImageUrls
                             </Button>
                         </Popconfirm>
 
@@ -2697,6 +3344,27 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
                             size="small"
                         >
                             Tắt imgUrls
+                        </Button>
+
+                        <Button
+                            type="default"
+                            icon={<FileImageOutlined />}
+                            onClick={() => handleBulkToggleShowDetailImageUrls(true)}
+                            loading={togglingShowDetailImageUrls}
+                            disabled={selectedRowKeys.length === 0 || togglingShowDetailImageUrls}
+                            size="small"
+                        >
+                            Bật detailImageUrls
+                        </Button>
+                        <Button
+                            type="default"
+                            icon={<FileImageOutlined />}
+                            onClick={() => handleBulkToggleShowDetailImageUrls(false)}
+                            loading={togglingShowDetailImageUrls}
+                            disabled={selectedRowKeys.length === 0 || togglingShowDetailImageUrls}
+                            size="small"
+                        >
+                            Tắt detailImageUrls
                         </Button>
 
                         <Button
@@ -3164,6 +3832,24 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
                 title="Chọn cài đặt Prompt - Tạo ảnh từ SummaryDetail (ImageUrl)"
             />
 
+            <SelectPromptModal
+                visible={selectMultiImageFromDetailPromptModalVisible}
+                onCancel={() => {
+                    setSelectMultiImageFromDetailPromptModalVisible(false);
+                    setPendingMultiImageFromDetailRecord(null);
+                    setPendingMultiImageFromDetailRecords([]);
+                }}
+                onSelect={(prompt) => {
+                    if (pendingMultiImageFromDetailRecord) {
+                        handleMultiImageFromDetailPromptSelected(prompt);
+                    } else if (pendingMultiImageFromDetailRecords.length > 0) {
+                        handleBulkMultiImageFromDetailPromptSelected(prompt);
+                    }
+                }}
+                promptType="MULTI_IMAGE_FROM_DETAIL_PROMPTS"
+                title="Chọn cài đặt Prompt - Tạo nhiều ảnh từ Detail"
+            />
+
             {/* Image Generation Queue Modal */}
             <Modal
                 title={
@@ -3225,6 +3911,180 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
                     <div>
                         <h5>📊 Kết quả ({imageQueueResults.length})</h5>
                         {imageQueueResults.map((result, index) => (
+                            <div key={index} style={{
+                                padding: '12px',
+                                border: '1px solid #d9d9d9',
+                                borderRadius: '6px',
+                                marginBottom: '8px',
+                                backgroundColor: result.status === 'success' ? '#f6ffed' : '#fff2f0'
+                            }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    {result.status === 'success' ? (
+                                        <CheckCircleOutlined style={{ color: '#52c41a' }} />
+                                    ) : (
+                                        <CloseCircleOutlined style={{ color: '#ff4d4f' }} />
+                                    )}
+                                    <div>
+                                        <div><strong>{result.task.title}</strong></div>
+                                        <div style={{ fontSize: '12px', color: '#666' }}>
+                                            {result.message}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </Modal>
+
+            {/* Multi Image from Detail Queue Modal */}
+            <Modal
+                title={
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <FileImageOutlined />
+                        <span>Multi Image from Detail Generation Queue</span>
+                    </div>
+                }
+                open={multiImageFromDetailQueueModalVisible}
+                onCancel={() => setMultiImageFromDetailQueueModalVisible(false)}
+                width={900}
+                footer={[
+                    <Button key="close" onClick={() => setMultiImageFromDetailQueueModalVisible(false)}>
+                        Đóng
+                    </Button>,
+                ]}
+            >
+                {currentMultiImageFromDetailProcessing && (
+                    <div style={{ marginBottom: '24px' }}>
+                        <h5>🔄 Đang xử lý</h5>
+                        <div style={{
+                            padding: '16px',
+                            border: '2px solid #1890ff',
+                            borderRadius: '8px',
+                            backgroundColor: '#e6f7ff'
+                        }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <LoadingOutlined spin style={{ fontSize: '24px', color: '#1890ff' }} />
+                                <div>
+                                    <div><strong>{currentMultiImageFromDetailProcessing.title}</strong></div>
+                                    <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
+                                        Record ID: {currentMultiImageFromDetailProcessing.recordId}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+                {multiImageFromDetailQueue.length > 0 && (
+                    <div style={{ marginBottom: '24px' }}>
+                        <h5>📝 Hàng đợi ({multiImageFromDetailQueue.length})</h5>
+                        {multiImageFromDetailQueue.map((task, index) => (
+                            <div key={task.id} style={{
+                                padding: '12px',
+                                border: '1px solid #d9d9d9',
+                                borderRadius: '6px',
+                                marginBottom: '8px',
+                                backgroundColor: '#fafafa'
+                            }}>
+                                <div>#{index + 1} {task.title}</div>
+                                <div style={{ fontSize: '12px', color: '#666' }}>
+                                    Record ID: {task.recordId}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
+                {multiImageFromDetailQueueResults.length > 0 && (
+                    <div>
+                        <h5>📊 Kết quả ({multiImageFromDetailQueueResults.length})</h5>
+                        {multiImageFromDetailQueueResults.map((result, index) => (
+                            <div key={index} style={{
+                                padding: '12px',
+                                border: '1px solid #d9d9d9',
+                                borderRadius: '6px',
+                                marginBottom: '8px',
+                                backgroundColor: result.status === 'success' ? '#f6ffed' : '#fff2f0'
+                            }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    {result.status === 'success' ? (
+                                        <CheckCircleOutlined style={{ color: '#52c41a' }} />
+                                    ) : (
+                                        <CloseCircleOutlined style={{ color: '#ff4d4f' }} />
+                                    )}
+                                    <div>
+                                        <div><strong>{result.task.title}</strong></div>
+                                        <div style={{ fontSize: '12px', color: '#666' }}>
+                                            {result.message}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </Modal>
+
+            {/* Multi Image from Detail Queue Modal */}
+            <Modal
+                title={
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <FileImageOutlined />
+                        <span>Multi Image from Detail Generation Queue</span>
+                    </div>
+                }
+                open={multiImageFromDetailQueueModalVisible}
+                onCancel={() => setMultiImageFromDetailQueueModalVisible(false)}
+                width={900}
+                footer={[
+                    <Button key="close" onClick={() => setMultiImageFromDetailQueueModalVisible(false)}>
+                        Đóng
+                    </Button>,
+                ]}
+            >
+                {currentMultiImageFromDetailProcessing && (
+                    <div style={{ marginBottom: '24px' }}>
+                        <h5>🔄 Đang xử lý</h5>
+                        <div style={{
+                            padding: '16px',
+                            border: '2px solid #1890ff',
+                            borderRadius: '8px',
+                            backgroundColor: '#e6f7ff'
+                        }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <LoadingOutlined spin style={{ fontSize: '24px', color: '#1890ff' }} />
+                                <div>
+                                    <div><strong>{currentMultiImageFromDetailProcessing.title}</strong></div>
+                                    <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
+                                        Record ID: {currentMultiImageFromDetailProcessing.recordId}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+                {multiImageFromDetailQueue.length > 0 && (
+                    <div style={{ marginBottom: '24px' }}>
+                        <h5>📝 Hàng đợi ({multiImageFromDetailQueue.length})</h5>
+                        {multiImageFromDetailQueue.map((task, index) => (
+                            <div key={task.id} style={{
+                                padding: '12px',
+                                border: '1px solid #d9d9d9',
+                                borderRadius: '6px',
+                                marginBottom: '8px',
+                                backgroundColor: '#fafafa'
+                            }}>
+                                <div>#{index + 1} {task.title}</div>
+                                <div style={{ fontSize: '12px', color: '#666' }}>
+                                    Record ID: {task.recordId}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
+                {multiImageFromDetailQueueResults.length > 0 && (
+                    <div>
+                        <h5>📊 Kết quả ({multiImageFromDetailQueueResults.length})</h5>
+                        {multiImageFromDetailQueueResults.map((result, index) => (
                             <div key={index} style={{
                                 padding: '12px',
                                 border: '1px solid #d9d9d9',
@@ -3535,6 +4395,298 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
                     }}>
                         <FileImageOutlined style={{ fontSize: '64px', marginBottom: '20px', opacity: 0.2 }} />
                         <div style={{ fontSize: '18px', fontWeight: 500 }}>Không có imgUrls</div>
+                    </div>
+                )}
+            </Modal>
+
+            {/* Preview detailImageUrls Modal */}
+            <Modal
+                title={
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <FileImageOutlined style={{ color: '#722ed1', fontSize: '20px' }} />
+                        <span style={{ fontSize: '18px', fontWeight: 600 }}>
+                            {previewingDetailImageUrlsRecord?.title || 'Preview detailImageUrls'}
+                        </span>
+                        {previewingDetailImageUrlsRecord?.detailImageUrls && Array.isArray(previewingDetailImageUrlsRecord.detailImageUrls) && (
+                            <Tag color="purple" style={{ fontSize: '13px', padding: '4px 12px' }}>
+                                {previewingDetailImageUrlsRecord.detailImageUrls.length} ảnh
+                            </Tag>
+                        )}
+                    </div>
+                }
+                open={detailImageUrlsPreviewModalVisible}
+                onCancel={() => {
+                    setDetailImageUrlsPreviewModalVisible(false);
+                    setPreviewingDetailImageUrlsRecord(null);
+                    setEditingDescriptions({});
+                }}
+                footer={[
+                    <Button key="close" onClick={() => {
+                        setDetailImageUrlsPreviewModalVisible(false);
+                        setPreviewingDetailImageUrlsRecord(null);
+                    }}>
+                        Đóng
+                    </Button>
+                ]}
+                width={1400}
+                className={styles.modalContent}
+            >
+
+                {previewingDetailImageUrlsRecord?.detailImageUrls && Array.isArray(previewingDetailImageUrlsRecord.detailImageUrls) && previewingDetailImageUrlsRecord.detailImageUrls.length > 0 ? (
+                    <div style={{              
+                        height : '100%',
+                        width: '100%',
+                        overflow: 'auto', 
+                        position: 'relative'    ,
+                        marginTop: '16px'                   
+                    }}>
+                        {previewingDetailImageUrlsRecord.detailImageUrls.map((imgItem, index) => {
+                            const imageUrl = typeof imgItem === 'string' ? imgItem : (imgItem?.url || imgItem?.image_url || '');
+                            const description = typeof imgItem === 'object' ? imgItem?.description : '';
+                            const partNumber = typeof imgItem === 'object' ? imgItem?.partNumber : (index + 1);
+                            const partContent = typeof imgItem === 'object' ? imgItem?.partContent : '';
+                            if (!imageUrl) return null;
+                            
+                            return (
+                                <Card
+                                    key={index}
+                                    hoverable={false}
+                                    style={{
+                                        borderRadius: '12px',
+                                        overflow: 'hidden',
+                                        boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+                                        border: '1px solid #e8e8e8',
+                                        width: '100%',
+                                        marginBottom: '16px'
+                                    }}
+                                    bodyStyle={{ padding: 0 }}
+                                >
+                                    <div style={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
+                                        {/* Image Section */}
+                                        <div style={{ 
+                                            position: 'relative',
+                                            width: '100%',
+                                            backgroundColor: '#fafafa',
+                                            minHeight: '200px',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            overflow: 'hidden',
+                                            borderBottom: '1px solid #f0f0f0',
+                                            padding: '16px'
+                                        }}>
+                                            <Image
+                                                src={imageUrl}
+                                                alt={`Ảnh ${index + 1}`}
+                                                style={{
+                                                    width: 'auto',
+                                                    height: 'auto',
+                                                    maxWidth: '100%',
+                                                    maxHeight: '400px',
+                                                    objectFit: 'contain'
+                                                }}
+                                                preview={{
+                                                    mask: (
+                                                        <div style={{
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            gap: '6px',
+                                                            fontSize: '13px',
+                                                            fontWeight: 500,
+                                                            color: 'white'
+                                                        }}>
+                                                            <span>🔍</span>
+                                                            <span>Xem</span>
+                                                        </div>
+                                                    )
+                                                }}
+                                            />
+                                            <div style={{
+                                                position: 'absolute',
+                                                top: '8px',
+                                                right: '8px',
+                                                backgroundColor: 'rgba(114, 46, 209, 0.85)',
+                                                color: 'white',
+                                                padding: '2px 10px',
+                                                borderRadius: '12px',
+                                                fontSize: '11px',
+                                                fontWeight: 600,
+                                                backdropFilter: 'blur(4px)'
+                                            }}>
+                                                Phần {partNumber}
+                                            </div>
+                                            {/* Upload Button */}
+                                            <div style={{
+                                                position: 'absolute',
+                                                bottom: '8px',
+                                                right: '8px',
+                                                display: 'flex',
+                                                gap: '8px'
+                                            }}>
+                                                <input
+                                                    type="file"
+                                                    accept="image/*"
+                                                    style={{ display: 'none' }}
+                                                    id={`upload-detail-image-${index}`}
+                                                    onChange={async (e) => {
+                                                        const file = e.target.files?.[0];
+                                                        if (!file) return;
+
+                                                        try {
+                                                            setUploadingImageIndex(index);
+                                                            message.loading('Đang upload ảnh...', 0);
+
+                                                            // Upload file
+                                                            const response = await uploadFiles([file]);
+                                                            const newImageUrl = response.files?.[0]?.fileUrl || response.files?.[0]?.url || '';
+
+                                                            if (!newImageUrl) {
+                                                                throw new Error('Upload ảnh thất bại');
+                                                            }
+
+                                                            // Update detailImageUrls với URL mới, giữ nguyên partContent và description
+                                                            const updatedDetailImageUrls = [...previewingDetailImageUrlsRecord.detailImageUrls];
+                                                            updatedDetailImageUrls[index] = {
+                                                                ...updatedDetailImageUrls[index],
+                                                                url: newImageUrl
+                                                            };
+
+                                                            const updateData = {
+                                                                id: previewingDetailImageUrlsRecord.id,
+                                                                detailImageUrls: updatedDetailImageUrls
+                                                            };
+
+                                                            const updateResponse = await updateK9(updateData);
+                                                            const updatedRecord = updateResponse?.data || updateResponse;
+
+                                                            // Update local state
+                                                            const updater = (list) => list.map(item =>
+                                                                item.id === previewingDetailImageUrlsRecord.id 
+                                                                    ? { ...item, ...updatedRecord }
+                                                                    : item
+                                                            );
+
+                                                            setK9Data(prev => ({
+                                                                news: updater(prev.news || []),
+                                                                caseTraining: updater(prev.caseTraining || []),
+                                                                longForm: updater(prev.longForm || []),
+                                                                home: updater(prev.home || []),
+                                                            }));
+
+                                                            // Update previewing record
+                                                            setPreviewingDetailImageUrlsRecord(prev => ({
+                                                                ...prev,
+                                                                detailImageUrls: updatedDetailImageUrls
+                                                            }));
+
+                                                            message.destroy();
+                                                            message.success('Upload ảnh thành công!');
+                                                        } catch (error) {
+                                                            console.error('Error uploading image:', error);
+                                                            message.destroy();
+                                                            message.error('Upload ảnh thất bại!');
+                                                        } finally {
+                                                            setUploadingImageIndex(null);
+                                                            // Reset input
+                                                            e.target.value = '';
+                                                        }
+                                                    }}
+                                                />
+                                                <Button
+                                                    type="primary"
+                                                    icon={<UploadOutlined />}
+                                                    size="small"
+                                                    loading={uploadingImageIndex === index}
+                                                    onClick={() => {
+                                                        document.getElementById(`upload-detail-image-${index}`)?.click();
+                                                    }}
+                                                    style={{
+                                                        backgroundColor: '#722ed1',
+                                                        borderColor: '#722ed1',
+                                                        boxShadow: '0 2px 4px rgba(114, 46, 209, 0.3)'
+                                                    }}
+                                                >
+                                                    Upload lại ảnh
+                                                </Button>
+                                            </div>
+                                        </div>
+                                        
+                                        {/* Part Content Section */}
+                                        {partContent && (
+                                            <div style={{ 
+                                                padding: '12px 16px',
+                                                backgroundColor: '#f9f0ff',
+                                                borderBottom: '1px solid #f0f0f0'
+                                            }}>
+                                                <div style={{
+                                                    fontSize: '12px',
+                                                    color: '#595959',
+                                                    fontWeight: 500,
+                                                    marginBottom: '6px'
+                                                }}>
+                                                    Nội dung phần {partNumber}:
+                                                </div>
+                                                <div style={{
+                                                    fontSize: '13px',
+                                                    color: '#434343',
+                                                    lineHeight: '1.6',
+                                                    wordBreak: 'break-word'
+                                                }}>
+                                                    {partContent}
+                                                </div>
+                                            </div>
+                                        )}
+                                        
+                                        {/* Description Section */}
+                                        <div style={{ 
+                                            padding: '16px',
+                                            backgroundColor: '#fff'
+                                        }}>
+                                            <div style={{
+                                                marginBottom: '10px'
+                                            }}>
+                                                <span style={{
+                                                    fontSize: '12px',
+                                                    color: '#595959',
+                                                    fontWeight: 500
+                                                }}>
+                                                    Mô tả
+                                                </span>
+                                            </div>
+                                            
+                                            {description ? (
+                                                <div style={{
+                                                    fontSize: '13px',
+                                                    color: '#434343',
+                                                    lineHeight: '1.6',
+                                                    wordBreak: 'break-word',
+                                                    fontWeight: 400
+                                                }}>
+                                                    {description}
+                                                </div>
+                                            ) : (
+                                                <div style={{
+                                                    color: '#bfbfbf',
+                                                    fontSize: '12px',
+                                                    fontStyle: 'italic'
+                                                }}>
+                                                    Chưa có mô tả
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                </Card>
+                            );
+                        })}
+                    </div>
+                ) : (
+                    <div style={{
+                        textAlign: 'center',
+                        padding: '80px 20px',
+                        color: '#8c8c8c'
+                    }}>
+                        <FileImageOutlined style={{ fontSize: '64px', marginBottom: '20px', opacity: 0.2 }} />
+                        <div style={{ fontSize: '18px', fontWeight: 500 }}>Không có detailImageUrls</div>
                     </div>
                 )}
             </Modal>

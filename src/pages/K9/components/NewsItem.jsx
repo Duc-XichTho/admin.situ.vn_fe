@@ -1,4 +1,5 @@
 import { Image } from 'antd';
+import { EyeOutlined } from '@ant-design/icons';
 import { Star } from 'lucide-react';
 import React from 'react';
 import ReactDOM from 'react-dom';
@@ -173,15 +174,57 @@ const NewsItem = ({
 					{item.avatarUrl && (
 						<div
 							className={styles.avatarGridWrapper}
+							style={{ position: 'relative' }}
 						>
 							<Image
 								src={item.avatarUrl}
 								alt={item.title}
 								preview={{
-									mask: 'Xem ảnh',
-									maskClassName: 'custom-mask'
+									mask: false
 								}}
 							/>
+							<div
+								style={{
+									position: 'absolute',
+									bottom: '8px',
+									right: '8px',
+									width: '24px',
+									height: '24px',
+									backgroundColor: 'rgba(0, 0, 0, 0.5)',
+									borderRadius: '50%',
+									display: 'flex',
+									alignItems: 'center',
+									justifyContent: 'center',
+									cursor: 'pointer',
+									zIndex: 10,
+									transition: 'all 0.2s',
+									backdropFilter: 'blur(4px)'
+								}}
+								onClick={(e) => {
+									e.stopPropagation();
+									// Trigger image preview by finding and clicking the ant-image element
+									const imageWrapper = e.currentTarget.parentElement;
+									const imageElement = imageWrapper?.querySelector('.ant-image');
+									if (imageElement) {
+										const clickEvent = new MouseEvent('click', {
+											bubbles: true,
+											cancelable: true,
+											view: window
+										});
+										imageElement.dispatchEvent(clickEvent);
+									}
+								}}
+								onMouseEnter={(e) => {
+									e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+									e.currentTarget.style.transform = 'scale(1.1)';
+								}}
+								onMouseLeave={(e) => {
+									e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+									e.currentTarget.style.transform = 'scale(1)';
+								}}
+							>
+								<EyeOutlined style={{ color: '#fff', fontSize: '12px', opacity: 0.7 }} />
+							</div>
 						</div>
 					)}
 

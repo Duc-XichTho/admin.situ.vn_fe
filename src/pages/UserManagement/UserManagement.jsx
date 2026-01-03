@@ -1256,7 +1256,7 @@ const UserManagement = () => {
                 const accountTypeMap = {
                   'Pro 90': 90,
                   'Pro 365': 365,
-                  'Pro 730': 730
+                  'Pro 730': 820
                 };
                 // Chỉ tự động tính toán cho các gói Pro
                 if (value && accountTypeMap[value]) {

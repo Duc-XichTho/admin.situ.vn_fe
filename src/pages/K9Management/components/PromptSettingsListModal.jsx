@@ -25,6 +25,7 @@ const PromptSettingsListModal = ({
     const [selectedHtmlFromSummaryDetailId, setSelectedHtmlFromSummaryDetailId] = useState(null);
     const [selectedCaseFromLearningBlockId, setSelectedCaseFromLearningBlockId] = useState(null);
     const [selectedImageUrlFromSummaryDetailId, setSelectedImageUrlFromSummaryDetailId] = useState(null);
+    const [selectedMultiImageFromDetailId, setSelectedMultiImageFromDetailId] = useState(null);
 
     // State for each prompt type
     const [improveDetailPrompts, setImproveDetailPrompts] = useState([]);
@@ -36,6 +37,8 @@ const PromptSettingsListModal = ({
     const [caseFromLearningBlockPrompts, setCaseFromLearningBlockPrompts] = useState([]);
     // New: prompts để tạo ImageUrl từ SummaryDetail
     const [imageUrlFromSummaryDetailPrompts, setImageUrlFromSummaryDetailPrompts] = useState([]);
+    // New: prompts để tạo nhiều ảnh từ Detail (tách detail -> description -> ảnh)
+    const [multiImageFromDetailPrompts, setMultiImageFromDetailPrompts] = useState([]);
     // Summary Detail Config (AI tóm tắt Detail)
     const [summaryDetailConfig, setSummaryDetailConfig] = useState({
         aiModel: '',
@@ -105,6 +108,14 @@ const PromptSettingsListModal = ({
         }
     }, [imageUrlFromSummaryDetailPrompts, selectedImageUrlFromSummaryDetailId]);
 
+    useEffect(() => {
+        if (!selectedMultiImageFromDetailId && multiImageFromDetailPrompts.length > 0) {
+            setSelectedMultiImageFromDetailId(multiImageFromDetailPrompts[0].id);
+        } else if (selectedMultiImageFromDetailId && !multiImageFromDetailPrompts.find(p => p.id === selectedMultiImageFromDetailId)) {
+            setSelectedMultiImageFromDetailId(multiImageFromDetailPrompts.length > 0 ? multiImageFromDetailPrompts[0].id : null);
+        }
+    }, [multiImageFromDetailPrompts, selectedMultiImageFromDetailId]);
+
     const loadAllSettings = async () => {
         setLoading(true);
         try {
@@ -162,6 +173,14 @@ const PromptSettingsListModal = ({
                 setImageUrlFromSummaryDetailPrompts(imageUrlFromSummaryDetailSettings.setting);
             } else {
                 setImageUrlFromSummaryDetailPrompts([]);
+            }
+
+            // Load Multi Image from Detail Prompts
+            const multiImageFromDetailSettings = await getSettingByType('MULTI_IMAGE_FROM_DETAIL_PROMPTS');
+            if (multiImageFromDetailSettings?.setting && Array.isArray(multiImageFromDetailSettings.setting)) {
+                setMultiImageFromDetailPrompts(multiImageFromDetailSettings.setting);
+            } else {
+                setMultiImageFromDetailPrompts([]);
             }
 
             // Load Summary Detail Config
@@ -222,6 +241,12 @@ const PromptSettingsListModal = ({
             await createOrUpdateSetting({
                 type: 'IMAGEURL_FROM_SUMMARYDETAIL_PROMPTS',
                 setting: imageUrlFromSummaryDetailPrompts
+            });
+
+            // Save Multi Image from Detail Prompts
+            await createOrUpdateSetting({
+                type: 'MULTI_IMAGE_FROM_DETAIL_PROMPTS',
+                setting: multiImageFromDetailPrompts
             });
 
             // Save Summary Detail Config
@@ -1154,6 +1179,41 @@ const PromptSettingsListModal = ({
         ));
     };
 
+    const addMultiImageFromDetailPrompt = () => {
+        const newPrompt = {
+            id: `multi_image_detail_${Date.now()}`,
+            name: `Cài đặt ${multiImageFromDetailPrompts.length + 1}`,
+            // Step 1: Tách detail thành nhiều phần
+            splitPrompt: '',
+            splitModel: '',
+            // Step 2: Tạo description từ mỗi phần
+            descriptionPrompt: '',
+            descriptionModel: '',
+            // Step 3: Tạo ảnh từ description
+            imagePrompt: '',
+            imageModel: '',
+            // Số phần muốn tách (optional, có thể để AI tự quyết định)
+            quantity: null
+        };
+        const updatedPrompts = [...multiImageFromDetailPrompts, newPrompt];
+        setMultiImageFromDetailPrompts(updatedPrompts);
+        setSelectedMultiImageFromDetailId(newPrompt.id);
+    };
+
+    const removeMultiImageFromDetailPrompt = (id) => {
+        const updatedPrompts = multiImageFromDetailPrompts.filter(p => p.id !== id);
+        setMultiImageFromDetailPrompts(updatedPrompts);
+        if (selectedMultiImageFromDetailId === id) {
+            setSelectedMultiImageFromDetailId(updatedPrompts.length > 0 ? updatedPrompts[0].id : null);
+        }
+    };
+
+    const updateMultiImageFromDetailPrompt = (id, field, value) => {
+        setMultiImageFromDetailPrompts(multiImageFromDetailPrompts.map(p =>
+            p.id === id ? { ...p, [field]: value } : p
+        ));
+    };
+
     const renderCaseFromLearningBlockTab = () => {
         const selectedItem = caseFromLearningBlockPrompts.find(p => p.id === selectedCaseFromLearningBlockId);
 
@@ -1478,6 +1538,193 @@ const PromptSettingsListModal = ({
         );
     };
 
+    const renderMultiImageFromDetailTab = () => {
+        const selectedItem = multiImageFromDetailPrompts.find(p => p.id === selectedMultiImageFromDetailId);
+
+        return (
+            <div style={{ height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+                <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
+                    <h4>Danh sách cài đặt Nhiều ảnh từ Detail</h4>
+                    <Button type="primary" icon={<PlusOutlined />} onClick={addMultiImageFromDetailPrompt}>
+                        Thêm cài đặt
+                    </Button>
+                </div>
+                <Layout style={{ flex: 1, background: '#fff', border: '1px solid #f0f0f0', borderRadius: 4, minHeight: 0, overflow: 'hidden', display: 'flex' }}>
+                    <Sider 
+                        width={280} 
+                        style={{ 
+                            background: '#fafafa', 
+                            borderRight: '1px solid #f0f0f0',
+                            overflowY: 'auto',
+                            overflowX: 'hidden',
+                            height: '100%',
+                            flexShrink: 0
+                        }}
+                    >
+                        <div style={{ padding: '8px' }}>
+                            {multiImageFromDetailPrompts.length === 0 ? (
+                                <div style={{ padding: '16px', textAlign: 'center', color: '#999' }}>
+                                    Chưa có cài đặt nào
+                                </div>
+                            ) : (
+                                multiImageFromDetailPrompts.map((item) => (
+                                    <div
+                                        key={item.id}
+                                        onClick={() => setSelectedMultiImageFromDetailId(item.id)}
+                                        style={{
+                                            padding: '12px 16px',
+                                            marginBottom: '4px',
+                                            cursor: 'pointer',
+                                            borderRadius: '4px',
+                                            backgroundColor: selectedMultiImageFromDetailId === item.id ? '#e6f7ff' : 'transparent',
+                                            border: selectedMultiImageFromDetailId === item.id ? '1px solid #91d5ff' : '1px solid transparent',
+                                            transition: 'all 0.2s'
+                                        }}
+                                        onMouseEnter={(e) => {
+                                            if (selectedMultiImageFromDetailId !== item.id) {
+                                                e.currentTarget.style.backgroundColor = '#f5f5f5';
+                                            }
+                                        }}
+                                        onMouseLeave={(e) => {
+                                            if (selectedMultiImageFromDetailId !== item.id) {
+                                                e.currentTarget.style.backgroundColor = 'transparent';
+                                            }
+                                        }}
+                                    >
+                                        <div style={{ fontWeight: selectedMultiImageFromDetailId === item.id ? 600 : 400 }}>
+                                            {item.name || `Cài đặt ${item.id}`}
+                                        </div>
+                                    </div>
+                                ))
+                            )}
+                        </div>
+                    </Sider>
+                    <Content style={{ padding: '24px', overflowY: 'auto', overflowX: 'hidden', height: '100%', flex: 1, minWidth: 0 }}>
+                        {selectedItem ? (
+                            <Card>
+                                <Space direction="vertical" style={{ width: '100%' }} size="middle">
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <h4 style={{ margin: 0 }}>Chi tiết cài đặt</h4>
+                                        <Popconfirm
+                                            title="Xóa cài đặt này?"
+                                            onConfirm={() => removeMultiImageFromDetailPrompt(selectedItem.id)}
+                                            okText="Xóa"
+                                            cancelText="Hủy"
+                                        >
+                                            <Button danger icon={<DeleteOutlined />}>
+                                                Xóa
+                                            </Button>
+                                        </Popconfirm>
+                                    </div>
+                                    <Form.Item label="Tên cài đặt">
+                                        <Input
+                                            placeholder="Tên cài đặt"
+                                            value={selectedItem.name}
+                                            onChange={(e) => updateMultiImageFromDetailPrompt(selectedItem.id, 'name', e.target.value)}
+                                        />
+                                    </Form.Item>
+                                    <Divider>Bước 1: Tách Detail thành nhiều phần</Divider>
+                                    <Form.Item label="Split Prompt (System Message)">
+                                        <TextArea
+                                            rows={6}
+                                            value={selectedItem.splitPrompt}
+                                            onChange={(e) => updateMultiImageFromDetailPrompt(selectedItem.id, 'splitPrompt', e.target.value)}
+                                            placeholder="Nhập prompt để AI tách detail thành nhiều phần. Ví dụ: 'Tách nội dung detail thành X phần logic, mỗi phần là một khái niệm hoặc bước riêng biệt. Trả về dưới dạng JSON array với mỗi phần là một object có field: partNumber, content'"
+                                        />
+                                    </Form.Item>
+                                    <Form.Item label="Split Model">
+                                        <Select
+                                            value={selectedItem.splitModel}
+                                            onChange={(value) => updateMultiImageFromDetailPrompt(selectedItem.id, 'splitModel', value)}
+                                            style={{ width: '100%' }}
+                                            placeholder="Chọn model"
+                                        >
+                                            {MODEL_AI_LIST.map(model => (
+                                                <Option key={model.value} value={model.value}>
+                                                    {model.name}
+                                                </Option>
+                                            ))}
+                                        </Select>
+                                    </Form.Item>
+                                    <Form.Item label="Số phần muốn tách (Optional - để trống nếu muốn AI tự quyết định)">
+                                        <Input
+                                            type="number"
+                                            min={1}
+                                            value={selectedItem.quantity}
+                                            onChange={(e) => updateMultiImageFromDetailPrompt(selectedItem.id, 'quantity', e.target.value ? parseInt(e.target.value) : null)}
+                                            placeholder="Để trống nếu muốn AI tự quyết định"
+                                        />
+                                    </Form.Item>
+                                    <Divider>Bước 2: Tạo Description từ mỗi phần</Divider>
+                                    <Form.Item label="Description Prompt (System Message)">
+                                        <TextArea
+                                            rows={4}
+                                            value={selectedItem.descriptionPrompt}
+                                            onChange={(e) => updateMultiImageFromDetailPrompt(selectedItem.id, 'descriptionPrompt', e.target.value)}
+                                            placeholder="Nhập prompt để tạo English description từ mỗi phần detail đã tách..."
+                                        />
+                                    </Form.Item>
+                                    <Form.Item label="Description Model">
+                                        <Select
+                                            value={selectedItem.descriptionModel}
+                                            onChange={(value) => updateMultiImageFromDetailPrompt(selectedItem.id, 'descriptionModel', value)}
+                                            style={{ width: '100%' }}
+                                            placeholder="Chọn model"
+                                        >
+                                            {MODEL_AI_LIST.map(model => (
+                                                <Option key={model.value} value={model.value}>
+                                                    {model.name}
+                                                </Option>
+                                            ))}
+                                        </Select>
+                                    </Form.Item>
+                                    <Divider>Bước 3: Tạo ảnh từ Description (aiGen2)</Divider>
+                                    <Form.Item label="Image Prompt (System Message)">
+                                        <TextArea
+                                            rows={4}
+                                            value={selectedItem.imagePrompt}
+                                            onChange={(e) => updateMultiImageFromDetailPrompt(selectedItem.id, 'imagePrompt', e.target.value)}
+                                            placeholder="Nhập prompt system message cho aiGen2 tạo ảnh..."
+                                        />
+                                    </Form.Item>
+                                    <Form.Item label="Image Model">
+                                        <Select
+                                            value={selectedItem.imageModel}
+                                            onChange={(value) => updateMultiImageFromDetailPrompt(selectedItem.id, 'imageModel', value)}
+                                            style={{ width: '100%' }}
+                                            placeholder="Chọn model"
+                                        >
+                                            {MODEL_IMG_AI_LIST.map(model => (
+                                                <Option key={model.value} value={model.value}>
+                                                    {model.name}
+                                                </Option>
+                                            ))}
+                                        </Select>
+                                    </Form.Item>
+                                    <div style={{ fontSize: '13px', color: '#666', marginTop: '8px' }}>
+                                        Lưu ý: Luồng xử lý: Detail → Tách thành nhiều phần → Tạo description cho mỗi phần → Tạo ảnh cho mỗi description → Lưu vào detailImageUrls (mảng)
+                                    </div>
+                                </Space>
+                            </Card>
+                        ) : (
+                            <div style={{ 
+                                display: 'flex', 
+                                alignItems: 'center', 
+                                justifyContent: 'center', 
+                                height: '100%',
+                                color: '#999'
+                            }}>
+                                {multiImageFromDetailPrompts.length === 0 
+                                    ? 'Chưa có cài đặt nào. Hãy thêm cài đặt mới.' 
+                                    : 'Chọn một cài đặt từ danh sách bên trái'}
+                            </div>
+                        )}
+                    </Content>
+                </Layout>
+            </div>
+        );
+    };
+
     const renderSummaryDetailConfigTab = () => {
         return (
             <div>
@@ -1571,7 +1818,10 @@ const PromptSettingsListModal = ({
                     <TabPane tab="7. ImageUrl từ SummaryDetail" key="imageurl_from_summarydetail">
                         {renderImageUrlFromSummaryDetailTab()}
                     </TabPane>
-                    <TabPane tab="8. AI Tóm tắt Detail" key="summary_detail_config">
+                    <TabPane tab="8. Nhiều ảnh từ Detail" key="multi_image_from_detail">
+                        {renderMultiImageFromDetailTab()}
+                    </TabPane>
+                    <TabPane tab="9. AI Tóm tắt Detail" key="summary_detail_config">
                         {renderSummaryDetailConfigTab()}
                     </TabPane>
                 </Tabs>

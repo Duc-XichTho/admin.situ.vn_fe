@@ -130,34 +130,6 @@ const advisors = [
 	},
 ];
 
-const jobTemplates = [
-	{
-		key: 'stock-news',
-		label: 'Tóm tắt tin tức cổ phiếu',
-		template: 'Hãy tóm tắt và phân tích những tin tức gần đây liên quan đến cổ phiếu &&&. Đánh giá tác động đến giá cổ phiếu và đưa ra khuyến nghị đầu tư.',
-	},
-	{
-		key: 'sector-analysis',
-		label: 'Phân tích ngành và cơ hội',
-		template: 'Phân tích tình hình ngành &&& hiện tại, xác định các cơ hội đầu tư tiềm năng và những rủi ro cần lưu ý.',
-	},
-	{
-		key: 'financial-comparison',
-		label: 'So sánh tỷ số tài chính',
-		template: 'So sánh các tỷ số tài chính chính của &&& trong cùng ngành. Phân tích điểm mạnh, điểm yếu và đưa ra khuyến nghị đầu tư.',
-	},
-	{
-		key: 'valuation-analysis',
-		label: 'Phân tích định giá',
-		template: 'Thực hiện phân tích định giá cho cổ phiếu &&& sử dụng các phương pháp DCF, P/E, P/B. Đánh giá liệu cổ phiếu có đang được định giá thấp hay cao.',
-	},
-	{
-		key: 'risk-assessment',
-		label: 'Đánh giá rủi ro',
-		template: 'Đánh giá các rủi ro tiềm ẩn khi đầu tư vào &&&. Đưa ra chiến lược quản lý rủi ro phù hợp.',
-	},
-];
-
 const AiChatTab = () => {
 	const { currentUser } = useContext(MyContext);
 	const [selectedAdvisor, setSelectedAdvisor] = useState('Chọn Advisor');
@@ -176,19 +148,19 @@ const AiChatTab = () => {
 	const [advisorList, setAdvisorList] = useState([]);
 	const [pipelineList, setPipelineList] = useState([]);
 	const [advisorLoading, setAdvisorLoading] = useState(false);
-	const [templateList, setTemplateList] = useState(jobTemplates);
+	const [templateList, setTemplateList] = useState([]);
 	const [showTemplateSuggestions, setShowTemplateSuggestions] = useState(false);
 	const [templateSuggestions, setTemplateSuggestions] = useState([]);
 	const [cursorPosition, setCursorPosition] = useState(0);
 	const [editingKey, setEditingKey] = useState('');
 	const [form] = Form.useForm();
 	const [advisorEditModal, setAdvisorEditModal] = useState({ visible: false, editing: null });
-	
+
 	// Sidebar state management - REDONE
 	const [sidebarCollapsed, setSidebarCollapsed] = useState(false); // Desktop: luôn mở
 	const [templateSidebarCollapsed, setTemplateSidebarCollapsed] = useState(false); // Desktop: luôn mở
 	const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
-	
+
 	// Track typing state per session with localStorage persistence
 	const [sessionTypingStates, setSessionTypingStates] = useState(() => {
 		// Load typing states from localStorage on component mount
@@ -202,7 +174,7 @@ const AiChatTab = () => {
 			return {};
 		}
 	});
-	
+
 	// Track pending messages per session (messages not yet saved to database)
 	const [sessionPendingMessages, setSessionPendingMessages] = useState({});
 
@@ -224,7 +196,7 @@ const AiChatTab = () => {
 			return newStates;
 		});
 	};
-	
+
 	const [templateError, setTemplateError] = useState(false);
 
 	// Embedding search states
@@ -368,7 +340,7 @@ ${content}`,
 			message.warning('Không thể mở modal thesis khi AI đang trả lời. Vui lòng đợi AI hoàn thành.');
 			return;
 		}
-		
+
 		if (!messageContent || !currentUser) return;
 
 		// Load danh sách thesis
@@ -495,7 +467,7 @@ Tóm tắt:`;
 			message.warning('Không thể mở modal thesis khi AI đang trả lời. Vui lòng đợi AI hoàn thành.');
 			return;
 		}
-		
+
 		if (!currentUser || !messages || messages.length <= 1) {
 			message.warning('Không có cuộc trò chuyện nào để lưu');
 			return;
@@ -856,7 +828,7 @@ Tóm tắt:`;
 		// Reset tất cả typing states khi component mount
 		updateSessionTypingStates({});
 		setIsTyping(false);
-		
+
 		// Log để debug
 		console.log('✅ Initial state reset completed');
 	}, []);
@@ -891,7 +863,7 @@ Tóm tắt:`;
 		// 			hasStuckState = true;
 		// 		}
 		// 	});
-			
+
 		// 	if (hasStuckState) {
 		// 		console.log('🔄 Periodic check: Found stuck typing states, resetting...');
 		// 		updateSessionTypingStates(prev => {
@@ -903,7 +875,7 @@ Tóm tắt:`;
 		// 			return newState;
 		// 			});
 		// 	}
-			
+
 		// 	if (isTyping) {
 		// 		console.log('🔄 Periodic check: Found stuck isTyping, resetting...');
 		// 		setIsTyping(false);
@@ -926,7 +898,7 @@ Tóm tắt:`;
 		// 			hasReset = true;
 		// 		}
 		// 	});
-			
+
 		// 	if (hasReset) {
 		// 		updateSessionTypingStates(prev => {
 		// 			const newState = { ...prev };
@@ -937,7 +909,7 @@ Tóm tắt:`;
 		// 			console.log('⏰ Auto-reset completed for all sessions:', newState);
 		// 			return newState;
 		// 		});
-				
+
 		// 		// Cũng reset isTyping nếu nó vẫn đang true
 		// 		if (isTyping) {
 		// 			setIsTyping(false);
@@ -965,7 +937,7 @@ Tóm tắt:`;
 		const handleResize = () => {
 			const newIsMobile = window.innerWidth <= 768;
 			setIsMobile(newIsMobile);
-			
+
 			// Desktop: luôn mở cả 2 sidebar, Mobile: đóng cả 2 sidebar khi resize
 			if (!newIsMobile) {
 				// Desktop: luôn mở
@@ -1025,30 +997,10 @@ Tóm tắt:`;
 				const userEmail = currentUser?.email || currentUser?.id;
 				const userTemplates = await getAITemplateSettingByEmail(userEmail);
 
-				// Template default (hardcode) - luôn hiển thị cho mọi user
-				const defaultTemplates = [
-					{
-						id: 'stock-news',
-						label: 'Giải thích khái niệm',
-						template: 'Giải thích, phân biệt, làm rõ khái niệm/lý thuyết sau đây: &&&',
-					},
-				];
-
-				// Kết hợp template default (hardcode) + template cá nhân (từ DB)
-				// Template default luôn có và không lưu vào DB
-				const combinedTemplates = [...defaultTemplates, ...userTemplates];
-
-				setTemplateList(combinedTemplates);
+				setTemplateList(userTemplates);
 			} catch {
-				// Nếu lỗi, vẫn hiển thị template default
-				const defaultTemplates = [
-					{
-						id: 'stock-news',
-						label: 'Giải thích khái niệm',
-						template: 'Giải thích, phân biệt, làm rõ khái niệm/lý thuyết sau đây: &&&',
-					},
-				];
-				setTemplateList(defaultTemplates);
+				// Nếu lỗi, hiển thị danh sách rỗng
+				setTemplateList([]);
 			}
 		};
 		fetchTemplates();
@@ -1156,19 +1108,19 @@ Tóm tắt:`;
 
 	const loadChatHistory = async (sessionId) => {
 		try {
-					// Khôi phục typing state của session này nếu có
-		const sessionTypingState = sessionTypingStates[sessionId] || false;
-		
-		// Chỉ restore typing state nếu nó thực sự đang active và không bị stuck
-		if (sessionTypingState) {
-			// console.log(`🔄 Restoring typing state for session ${sessionId}`);
-			setIsTyping(true);
-		} else {
-			// Đảm bảo typing state được reset nếu không có session nào đang typing
-			// console.log(`✅ No typing state to restore for session ${sessionId}`);
-			setIsTyping(false);
-		}
-			
+			// Khôi phục typing state của session này nếu có
+			const sessionTypingState = sessionTypingStates[sessionId] || false;
+
+			// Chỉ restore typing state nếu nó thực sự đang active và không bị stuck
+			if (sessionTypingState) {
+				// console.log(`🔄 Restoring typing state for session ${sessionId}`);
+				setIsTyping(true);
+			} else {
+				// Đảm bảo typing state được reset nếu không có session nào đang typing
+				// console.log(`✅ No typing state to restore for session ${sessionId}`);
+				setIsTyping(false);
+			}
+
 			const chatData = await getAiChatHistoryById(sessionId);
 			if (chatData?.chatHistory) {
 				let loadedMessages = chatData.chatHistory.map((msg, idx) => ({
@@ -1185,16 +1137,16 @@ Tóm tắt:`;
 					citations: msg.citations || null,
 					embeddingResults: msg.embeddingResults || null,
 				}));
-				
+
 				// Thêm pending messages nếu có (messages chưa được lưu vào database)
 				const pendingMessages = sessionPendingMessages[sessionId] || [];
 				if (pendingMessages.length > 0) {
 					// console.log(`📝 Adding ${pendingMessages.length} pending messages to session ${sessionId}`);
 					loadedMessages = [...loadedMessages, ...pendingMessages];
 				}
-				
+
 				setMessages(loadedMessages);
-				
+
 				// Chỉ set advisor từ database nếu chưa khôi phục session từ localStorage và chưa có advisor nào được chọn
 				if (!hasRestoredSession && (!selectedAdvisor || selectedAdvisor === 'Chọn Advisor')) {
 					const allAdvisors = [...advisorList, ...pipelineList];
@@ -1220,7 +1172,7 @@ Tóm tắt:`;
 			setIsTyping(false);
 			// console.log('✅ Typing state reset, proceeding with new session creation...');
 		}
-		
+
 		try {
 			const sessionTitle = `Chat ${new Date().toLocaleString('vi-VN')}`;
 			const newSession = await createNewChatSession(
@@ -1234,13 +1186,13 @@ Tóm tắt:`;
 				setCurrentSessionId(newSession.data.id);
 				// Reset typing state khi tạo session mới
 				setIsTyping(false);
-				
+
 				// Reset typing state cho session mới
 				updateSessionTypingStates(prev => ({
 					...prev,
 					[newSession.data.id]: false
 				}));
-				
+
 				// Set message chào mừng cho session mới
 				setMessages([{
 					id: 1,
@@ -1306,7 +1258,7 @@ Tóm tắt:`;
 				// Thường là user message và assistant message vừa được thêm trong quá trình AI đang trả lời
 				return msg.id > 1000000000000; // Messages với ID lớn là messages mới chưa được lưu
 			});
-			
+
 			if (currentPendingMessages.length > 0) {
 				// console.log(`💾 Saving ${currentPendingMessages.length} pending messages for session ${currentSessionId}`);
 				setSessionPendingMessages(prev => ({
@@ -1315,9 +1267,9 @@ Tóm tắt:`;
 				}));
 			}
 		}
-		
+
 		// console.log(`🔄 Switching to session ${sessionId}`);
-		
+
 		setCurrentSessionId(sessionId);
 		setHasRestoredSession(false); // Reset khi user chọn session mới
 		// Lưu ngay lập tức khi user chọn session
@@ -1336,7 +1288,7 @@ Tóm tắt:`;
 			message.warning('Không thể xóa session khi AI đang trả lời. Vui lòng đợi AI hoàn thành.');
 			return;
 		}
-		
+
 		try {
 			await deleteAiChatHistory(sessionId);
 			if (currentSessionId === sessionId) {
@@ -1349,20 +1301,20 @@ Tóm tắt:`;
 					canSave: false,
 				}]);
 			}
-			
+
 			// Xóa typing state và pending messages của session bị xóa
 			setSessionTypingStates(prev => {
 				const newState = { ...prev };
 				delete newState[sessionId];
 				return newState;
 			});
-			
+
 			setSessionPendingMessages(prev => {
 				const newState = { ...prev };
 				delete newState[sessionId];
 				return newState;
 			});
-			
+
 			await loadChatSessions();
 		} catch {
 			message.error('Không thể xóa chat session');
@@ -1375,7 +1327,7 @@ Tóm tắt:`;
 			message.warning('Không thể chọn template khi AI đang trả lời. Vui lòng đợi AI hoàn thành.');
 			return;
 		}
-		
+
 		if (!jobId) {
 			// Khi clear template
 			setInputMessage('');
@@ -1427,7 +1379,7 @@ Tóm tắt:`;
 			message.warning('Không thể thay đổi advisor khi AI đang trả lời. Vui lòng đợi AI hoàn thành.');
 			return;
 		}
-		
+
 		setSelectedAdvisor(advisorKey);
 		// Lưu ngay lập tức khi thay đổi advisor
 		saveLastSelectedSession(currentSessionId, advisorKey);
@@ -1472,7 +1424,7 @@ Tóm tắt:`;
 			message.warning('Không thể chọn template khi AI đang trả lời. Vui lòng đợi AI hoàn thành.');
 			return;
 		}
-		
+
 		setShowTemplateSuggestions(false);
 
 		// Tự động chọn advisor mặc định nếu có
@@ -1560,7 +1512,7 @@ Tóm tắt:`;
 
 		// Tạo session mới trước
 		await createNewSessionQuick();
-		
+
 		// Sau khi tạo session mới, set template đã điền vào input
 		setInputMessage(filledTemplate);
 		setTemplateError(false);
@@ -1585,21 +1537,21 @@ Tóm tắt:`;
 		setMessages(prev => [...prev, userMessage]);
 		setInputMessage('');
 		setIsTyping(true);
-		
+
 		// Lưu typing state và pending messages cho session hiện tại
 		if (currentSessionId) {
 			updateSessionTypingStates(prev => ({
 				...prev,
 				[currentSessionId]: true
 			}));
-			
+
 			// Lưu user message vào pending messages
 			setSessionPendingMessages(prev => ({
 				...prev,
 				[currentSessionId]: [userMessage]
 			}));
 		}
-		
+
 		setNoEmbeddingResults(false); // Reset no results state
 
 		try {
@@ -1950,11 +1902,11 @@ Tóm tắt:`;
 					...sessionPendingMessages[currentSessionId] || [],
 					assistantMessage
 				];
-				
+
 				if (dataSourcesMessage) {
 					pendingMessages.push(dataSourcesMessage);
 				}
-				
+
 				setSessionPendingMessages(prev => ({
 					...prev,
 					[currentSessionId]: pendingMessages
@@ -2009,11 +1961,11 @@ Tóm tắt:`;
 				canSave: false,
 			}]);
 			message.error('Không thể gửi tin nhắn. Vui lòng thử lại.');
-			
+
 			// Đảm bảo reset typing state khi có lỗi
 			// console.log('❌ Error occurred, resetting all typing states');
 			setIsTyping(false);
-			
+
 			// Reset tất cả typing states khi có lỗi
 			updateSessionTypingStates(prev => {
 				const newState = { ...prev };
@@ -2026,7 +1978,7 @@ Tóm tắt:`;
 		} finally {
 			// console.log('✅ sendMessage completed, resetting all typing states');
 			setIsTyping(false);
-			
+
 			// Reset tất cả typing states để đảm bảo không có session nào bị stuck
 			updateSessionTypingStates(prev => {
 				const newState = { ...prev };
@@ -2037,7 +1989,7 @@ Tóm tắt:`;
 				// console.log('🔄 Reset all session typing states to false:', newState);
 				return newState;
 			});
-			
+
 			// Xóa pending messages của tất cả sessions vì đã hoàn thành
 			setSessionPendingMessages(prev => {
 				const newState = { ...prev };
@@ -2060,17 +2012,17 @@ Tóm tắt:`;
 	// Reset typing state khi user tương tác với UI
 	const resetTypingState = () => {
 		let hasReset = false;
-		
+
 		// Kiểm tra xem có session nào đang typing không
 		Object.keys(sessionTypingStates).forEach(sessionId => {
 			if (sessionTypingStates[sessionId]) {
 				hasReset = true;
 			}
 		});
-		
+
 		if (hasReset || isTyping) {
 			// console.log(`🔄 User interaction detected, resetting all typing states`);
-			
+
 			// Reset tất cả typing states
 			updateSessionTypingStates(prev => {
 				const newState = { ...prev };
@@ -2079,7 +2031,7 @@ Tóm tắt:`;
 				});
 				return newState;
 			});
-			
+
 			// Reset isTyping
 			setIsTyping(false);
 		}
@@ -2184,23 +2136,12 @@ Tóm tắt:`;
 
 	// Callback để refresh template list khi có thay đổi từ modal
 	const handleTemplateUpdate = (newTemplateList) => {
-		// Template default (hardcode) - luôn hiển thị cho mọi user
-		const defaultTemplates = [
-			{
-				id: 'stock-news',
-				label: 'Giải thích khái niệm',
-				template: 'Giải thích, phân biệt, làm rõ khái niệm/lý thuyết sau đây: &&&',
-			},
-		];
-
 		if (newTemplateList && Array.isArray(newTemplateList) && newTemplateList.length > 0) {
 			// newTemplateList đã là template cá nhân từ API
-			// Kết hợp template default (hardcode) + template cá nhân (từ DB)
-			const combinedTemplates = [...defaultTemplates, ...newTemplateList];
-			setTemplateList(combinedTemplates);
+			setTemplateList(newTemplateList);
 		} else {
-			// Nếu không có template từ modal, chỉ hiển thị template default
-			setTemplateList(defaultTemplates);
+			// Nếu không có template từ modal, hiển thị danh sách rỗng
+			setTemplateList([]);
 		}
 	};
 
@@ -2239,7 +2180,7 @@ Tóm tắt:`;
 			...prev,
 			[sessionId]: isTyping
 		}));
-		
+
 		if (pendingMessages.length > 0) {
 			setSessionPendingMessages(prev => ({
 				...prev,
@@ -2437,7 +2378,7 @@ Nội dung: ${bestChunk ? bestChunk.chunkText : 'Không có nội dung chi tiế
 			message.warning('Không thể mở modal chi tiết khi AI đang trả lời. Vui lòng đợi AI hoàn thành.');
 			return;
 		}
-		
+
 		console.log('🔍 Showing embedding detail:', item);
 		console.log('🔍 Item structure:', {
 			sourceId: item.sourceId,
@@ -2579,24 +2520,24 @@ Nội dung: ${bestChunk ? bestChunk.chunkText : 'Không có nội dung chi tiế
 										<MenuOutlined />
 									</Button>
 
-<Button
-	type="primary"
-	icon={<PlusOutlined />}
-	onClick={createNewSessionQuick}
-	className={styles.createChatSmall}
->
-</Button>
-<Space>
-	<Switch
-		checked={useEmbeddingSearch}
-		onChange={setUseEmbeddingSearch}
-		loading={embeddingSearchLoading}
-		size="small"
-	/>
-	<span className={styles.embeddingSwitchLabel}>
-{embeddingSearchLoading ? '🔍 Đang tìm kiếm...' : '📚 Kho dữ liệu'}
-</span>
-</Space>
+									<Button
+										type="primary"
+										icon={<PlusOutlined />}
+										onClick={createNewSessionQuick}
+										className={styles.createChatSmall}
+									>
+									</Button>
+									{/* <Space>
+										<Switch
+											checked={useEmbeddingSearch}
+											onChange={setUseEmbeddingSearch}
+											loading={embeddingSearchLoading}
+											size="small"
+										/>
+										<span className={styles.embeddingSwitchLabel}>
+											{embeddingSearchLoading ? '🔍 Đang tìm kiếm...' : '📚 Kho dữ liệu'}
+										</span>
+									</Space> */}
 								</>
 							)}
 						</div>
@@ -2629,7 +2570,7 @@ Nội dung: ${bestChunk ? bestChunk.chunkText : 'Không có nội dung chi tiế
 								>
 									Chat mới
 								</Button>
-								<Space>
+								{/* <Space>
 									<Switch
 										checked={useEmbeddingSearch}
 										onChange={setUseEmbeddingSearch}
@@ -2637,9 +2578,9 @@ Nội dung: ${bestChunk ? bestChunk.chunkText : 'Không có nội dung chi tiế
 										size="small"
 									/>
 									<span className={styles.embeddingSwitchLabel}>
-								{embeddingSearchLoading ? '🔍 Đang tìm kiếm...' : '📚 Kho dữ liệu'}
-							</span>
-								</Space>
+										{embeddingSearchLoading ? '🔍 Đang tìm kiếm...' : '📚 Kho dữ liệu'}
+									</span>
+								</Space> */}
 							</div>
 						)}
 						<div className={styles.sidebarHeader}>
@@ -2731,7 +2672,7 @@ Nội dung: ${bestChunk ? bestChunk.chunkText : 'Không có nội dung chi tiế
 													<span className={styles.sessionTime}>
 														{formatTimeAgo(session.createAt)}
 													</span>
-																		{sessionTypingStates[session.id] && (
+													{sessionTypingStates[session.id] && (
 														<span style={{
 															marginLeft: '8px',
 															color: '#1890ff',
@@ -2739,20 +2680,20 @@ Nội dung: ${bestChunk ? bestChunk.chunkText : 'Không có nội dung chi tiế
 															animation: 'pulse 1.5s infinite'
 														}}>
 															AI đang trả lời...
-															<Button 
-																type="text" 
-																size="small" 
+															<Button
+																type="text"
+																size="small"
 																style={{ marginLeft: '4px', padding: '0 4px', fontSize: '10px' }}
 																onClick={(e) => {
-																e.stopPropagation();
-																updateSessionTypingStates(prev => ({
-																	...prev,
-																	[session.id]: false
-																}));
-																if (currentSessionId === session.id) {
-																	setIsTyping(false);
-																}
-															}}
+																	e.stopPropagation();
+																	updateSessionTypingStates(prev => ({
+																		...prev,
+																		[session.id]: false
+																	}));
+																	if (currentSessionId === session.id) {
+																		setIsTyping(false);
+																	}
+																}}
 															>
 																✕
 															</Button>
@@ -2770,8 +2711,8 @@ Nội dung: ${bestChunk ? bestChunk.chunkText : 'Không có nội dung chi tiế
 												cancelText="Hủy"
 											>
 												<Button type="text" icon={<DeleteOutlined />} size="small"
-														className={styles.deleteButton}
-														onClick={e => e.stopPropagation()} />
+													className={styles.deleteButton}
+													onClick={e => e.stopPropagation()} />
 											</Popconfirm>
 										</List.Item>
 									)}
@@ -2832,11 +2773,10 @@ Nội dung: ${bestChunk ? bestChunk.chunkText : 'Không có nội dung chi tiế
 								{messages.map((message) => (
 									<div
 										key={message.id}
-										className={`${styles.messageWrapper} ${
-											message.type === 'user' ? styles.userMessage :
+										className={`${styles.messageWrapper} ${message.type === 'user' ? styles.userMessage :
 												message.type === 'data-sources' ? styles.dataSourcesMessage :
 													styles.assistantMessage
-										}`}
+											}`}
 									>
 										<div className={styles.messageContent}>
 											{message.type === 'assistant' && (
@@ -3130,7 +3070,7 @@ Nội dung: ${bestChunk ? bestChunk.chunkText : 'Không có nội dung chi tiế
 								{currentSessionId && sessionTypingStates[currentSessionId] && (
 									<div className={`${styles.messageWrapper} ${styles.assistantMessage}`}>
 										<Avatar size={32} icon={<RobotOutlined />} className={styles.messageAvatar}
-												style={{ background: '#667eea' }} />
+											style={{ background: '#667eea' }} />
 										<div className={styles.messageContent}>
 											<div className={styles.typingIndicator}>
 												<span></span><span></span><span></span>
@@ -3158,7 +3098,7 @@ Nội dung: ${bestChunk ? bestChunk.chunkText : 'Không có nội dung chi tiế
 														marginLeft: 4,
 														fontWeight: selectedAdvisor == advisor.key ? '600' : '500',
 													}}>
-												{advisor.name}
+													{advisor.name}
 													{advisor.enableWebsearch && (
 														<GlobalOutlined
 															title="Sử dụng Websearch"
@@ -3194,11 +3134,11 @@ Nội dung: ${bestChunk ? bestChunk.chunkText : 'Không có nội dung chi tiế
 														marginLeft: 4,
 														fontWeight: selectedAdvisor == pipeline.key ? '600' : '500',
 													}}>
-												{pipeline.name}
+													{pipeline.name}
 													{pipeline.isPipeline && (
 														<svg width="10" height="10" viewBox="0 0 41 45" fill="none"
-															 xmlns="http://www.w3.org/2000/svg"
-															 style={{ marginLeft: '4px' }}>
+															xmlns="http://www.w3.org/2000/svg"
+															style={{ marginLeft: '4px' }}>
 															<path
 																d="M8.0971 14.1239C9.71415 14.1239 11.265 13.4815 12.4084 12.3381C13.5518 11.1947 14.1942 9.64384 14.1942 8.02678C14.1942 6.40973 13.5518 4.85891 12.4084 3.71549C11.265 2.57206 9.71415 1.92969 8.0971 1.92969C6.48005 1.92969 4.92923 2.57206 3.7858 3.71549C2.64237 4.85891 2 6.40973 2 8.02678C2 9.64384 2.64237 11.1947 3.7858 12.3381C4.92923 13.4815 6.48005 14.1239 8.0971 14.1239ZM8.0971 14.1239V30.3828M8.0971 30.3828C6.48005 30.3828 4.92923 31.0252 3.7858 32.1686C2.64237 33.312 2 34.8629 2 36.4799C2 38.097 2.64237 39.6478 3.7858 40.7912C4.92923 41.9346 6.48005 42.577 8.0971 42.577C9.71415 42.577 11.265 41.9346 12.4084 40.7912C13.5518 39.6478 14.1942 38.097 14.1942 36.4799C14.1942 34.8629 13.5518 33.312 12.4084 32.1686C11.265 31.0252 9.71415 30.3828 8.0971 30.3828ZM38.5826 26.3181C38.5826 27.9351 37.9402 29.4859 36.7968 30.6294C35.6534 31.7728 34.1025 32.4152 32.4855 32.4152C30.8684 32.4152 29.3176 31.7728 28.1742 30.6294C27.0308 29.4859 26.3884 27.9351 26.3884 26.3181C26.3884 24.701 27.0308 23.1502 28.1742 22.0068C29.3176 20.8633 30.8684 20.221 32.4855 20.221C34.1025 20.221 35.6534 20.8633 36.7968 22.0068C37.9402 23.1502 38.5826 24.701 38.5826 26.3181Z"
 																stroke="#7D7D7D" stroke-width="3.5"
@@ -3220,7 +3160,7 @@ Nội dung: ${bestChunk ? bestChunk.chunkText : 'Không có nội dung chi tiế
 															/>
 														</Tooltip>
 													)}
-											</span>
+												</span>
 											</Button>
 										))}
 									</div>
@@ -3580,29 +3520,29 @@ Nội dung: ${bestChunk ? bestChunk.chunkText : 'Không có nội dung chi tiế
 
 								</div>
 								<div className={styles.embeddingDetailMeta}>
-								<span className={styles.embeddingDetailType}>
-									Loại: {embeddingDetailModal.data.type}
-								</span>
+									<span className={styles.embeddingDetailType}>
+										Loại: {embeddingDetailModal.data.type}
+									</span>
 									<span className={styles.embeddingDetailCategory}>
-									Danh mục: {embeddingDetailModal.data.category}
-								</span>
+										Danh mục: {embeddingDetailModal.data.category}
+									</span>
 									<span className={styles.embeddingDetailSimilarity}>
-									Độ tương đồng: {(embeddingDetailModal.data.chunks[0].bestSimilarity * 100).toFixed(1)}%
-								</span>
+										Độ tương đồng: {(embeddingDetailModal.data.chunks[0].bestSimilarity * 100).toFixed(1)}%
+									</span>
 									{embeddingDetailModal.data.createdAt && (
 										<span className={styles.embeddingDetailDate}>
-										Ngày tạo: {new Date(embeddingDetailModal.data.createdAt).toLocaleDateString('vi-VN')}
-									</span>
+											Ngày tạo: {new Date(embeddingDetailModal.data.createdAt).toLocaleDateString('vi-VN')}
+										</span>
 									)}
 									{embeddingDetailModal.data.source && (
 										<span className={styles.embeddingDetailSource}>
-										Nguồn: {embeddingDetailModal.data.source}
-									</span>
+											Nguồn: {embeddingDetailModal.data.source}
+										</span>
 									)}
 									{embeddingDetailModal.data.emoji && (
 										<span className={styles.embeddingDetailEmoji}>
-										Emoji: {embeddingDetailModal.data.emoji}
-									</span>
+											Emoji: {embeddingDetailModal.data.emoji}
+										</span>
 									)}
 								</div>
 							</div>
@@ -3624,7 +3564,7 @@ Nội dung: ${bestChunk ? bestChunk.chunkText : 'Không có nội dung chi tiế
 											try {
 												const info = typeof embeddingDetailModal.data.info === 'string' ? JSON.parse(embeddingDetailModal.data.info) : embeddingDetailModal.data.info;
 												return info?.URLReport ? <a href={info.URLReport} target="_blank"
-																			rel="noopener noreferrer">{info.URLReport}</a> : '-';
+													rel="noopener noreferrer">{info.URLReport}</a> : '-';
 											} catch {
 												return '-';
 											}
@@ -3679,10 +3619,10 @@ Nội dung: ${bestChunk ? bestChunk.chunkText : 'Không có nội dung chi tiế
 																				fontSize: '12px',
 																				color: '#1890ff',
 																			}}>
-																		{table.type === 'quarterly' ? 'Theo quý' :
-																			table.type === 'monthly' ? 'Theo tháng' :
-																				'Theo năm'}
-																	</span>
+																				{table.type === 'quarterly' ? 'Theo quý' :
+																					table.type === 'monthly' ? 'Theo tháng' :
+																						'Theo năm'}
+																			</span>
 																		</div>
 
 																		{table.data && Object.keys(table.data).length > 0 ? (

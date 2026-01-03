@@ -13,16 +13,6 @@ const TemplateSettingModal = ({ visible, onClose, onTemplateUpdate }) => {
   const [advisorList, setAdvisorList] = useState([]);
   const [pipelineList, setPipelineList] = useState([]);
 
-  // Template mặc định
-  const defaultTemplates = [
-    {
-      id: 'stock-news',
-      label: 'Giải thích khái niệm',
-      template: 'Giải thích, phân biệt, làm rõ khái niệm/lý thuyết sau đây: &&&',
-    },
-  ];
-
-
   useEffect(() => {
     if (visible) {
       loadTemplateList();
@@ -36,63 +26,10 @@ const TemplateSettingModal = ({ visible, onClose, onTemplateUpdate }) => {
       const userEmail = currentUser?.email || currentUser?.id;
       const userTemplates = await getAITemplateSettingByEmail(userEmail);
 
-      // Kết hợp template default (hardcode) + template cá nhân (từ DB)
-      // Template default luôn có và không lưu vào DB
-      const combinedTemplates = [...defaultTemplates, ...userTemplates];
-
-      setTemplateList(combinedTemplates);
+      setTemplateList(userTemplates);
     } catch {
-      // Nếu lỗi, vẫn hiển thị template default
-      setTemplateList(defaultTemplates);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const saveTemplateList = async (newList) => {
-    setLoading(true);
-    try {
-      const userEmail = currentUser?.email || currentUser?.id;
-
-      // Loại bỏ template default (id === 'stock-news') khỏi newList trước khi lưu
-      // Template default không lưu vào DB, chỉ có ở hardcode
-      const userTemplatesToSave = newList.filter(template =>
-        template.userEmail && template.userEmail === userEmail && template.id !== 'stock-news'
-      );
-
-      // Lấy danh sách template hiện tại của user
-      const currentUserTemplates = await getAITemplateSettingByEmail(userEmail);
-
-      // Xóa tất cả template cũ của user
-      for (const template of currentUserTemplates) {
-        if (template.id) {
-          await deleteAITemplateSetting(template.id);
-        }
-      }
-
-      // Tạo mới tất cả template của user
-      const createdTemplates = [];
-      for (const template of userTemplatesToSave) {
-        const response = await createAITemplateSetting({
-          label: template.label,
-          template: template.template,
-          defaultAdvisor: template.defaultAdvisor || '',
-          userEmail: userEmail
-        });
-
-        createdTemplates.push(response);
-      }
-
-      // Cập nhật templateList: template default (hardcode) + template cá nhân mới
-      const finalList = [...defaultTemplates, ...createdTemplates];
-      setTemplateList(finalList);
-
-      antdMessage.success('Đã lưu cấu hình Template!');
-      if (onTemplateUpdate) {
-        onTemplateUpdate(createdTemplates);
-      }
-    } catch {
-      antdMessage.error('Lỗi khi lưu Template!');
+      // Nếu lỗi, hiển thị danh sách rỗng
+      setTemplateList([]);
     } finally {
       setLoading(false);
     }
@@ -130,7 +67,7 @@ const TemplateSettingModal = ({ visible, onClose, onTemplateUpdate }) => {
   };
 
   const handleCopy = (record) => {
-    // Copy template default - mở form thêm mới với dữ liệu đã điền sẵn (trừ key)
+    // Copy template - mở form thêm mới với dữ liệu đã điền sẵn
     setFormState({
       label: record.label,
       template: record.template,
@@ -140,16 +77,9 @@ const TemplateSettingModal = ({ visible, onClose, onTemplateUpdate }) => {
   };
 
   const handleDelete = async (id) => {
-    // Không cho xóa template default
-    if (id === 'stock-news') {
-      antdMessage.warning('Không thể xóa template gốc!');
-      return;
-    }
-
     // Tìm template cần xóa
     const templateToDelete = templateList.find(item => item.id === id);
 
-    // Nếu template có id (từ DB), xóa trực tiếp
     if (templateToDelete && templateToDelete.id) {
       try {
         await deleteAITemplateSetting(templateToDelete.id);
@@ -157,28 +87,17 @@ const TemplateSettingModal = ({ visible, onClose, onTemplateUpdate }) => {
         setTemplateList(newList);
         antdMessage.success('Đã xóa template!');
         if (onTemplateUpdate) {
-          const userTemplates = newList.filter(t => t.userEmail);
-          onTemplateUpdate(userTemplates);
+          onTemplateUpdate(newList);
         }
       } catch {
         antdMessage.error('Lỗi khi xóa template!');
       }
-    } else {
-      // Nếu không có id, dùng cách cũ
-      const newList = templateList.filter(item => item.id !== id);
-      await saveTemplateList(newList);
     }
   };
 
   const handleSave = async () => {
     if (!formState.label || !formState.template) {
       antdMessage.error('Vui lòng điền đầy đủ thông tin!');
-      return;
-    }
-
-    // Không cho sửa template default
-    if (editModal.editing && editModal.editing.id === 'stock-news') {
-      antdMessage.warning('Không thể sửa template gốc! Vui lòng sử dụng Copy để tạo template mới.');
       return;
     }
 
@@ -208,8 +127,7 @@ const TemplateSettingModal = ({ visible, onClose, onTemplateUpdate }) => {
           setTemplateList(newList);
 
           if (onTemplateUpdate) {
-            const userTemplates = newList.filter(t => t.userEmail);
-            onTemplateUpdate(userTemplates);
+            onTemplateUpdate(newList);
           }
         } else {
           // Template không có id - tạo mới
@@ -224,8 +142,7 @@ const TemplateSettingModal = ({ visible, onClose, onTemplateUpdate }) => {
           setTemplateList(newTemplateList);
 
           if (onTemplateUpdate) {
-            const userTemplates = newTemplateList.filter(t => t.userEmail);
-            onTemplateUpdate(userTemplates);
+            onTemplateUpdate(newTemplateList);
           }
         }
       } else {
@@ -241,8 +158,7 @@ const TemplateSettingModal = ({ visible, onClose, onTemplateUpdate }) => {
         setTemplateList(newTemplateList);
 
         if (onTemplateUpdate) {
-          const userTemplates = newTemplateList.filter(t => t.userEmail);
-          onTemplateUpdate(userTemplates);
+          onTemplateUpdate(newTemplateList);
         }
       }
 
@@ -268,15 +184,15 @@ const TemplateSettingModal = ({ visible, onClose, onTemplateUpdate }) => {
         }
       }
 
-      // Reset về template default
-      setTemplateList(defaultTemplates);
-      antdMessage.success('Đã xóa tất cả template cá nhân! Template gốc vẫn được giữ lại.');
+      // Reset về danh sách rỗng
+      setTemplateList([]);
+      antdMessage.success('Đã xóa tất cả template!');
 
       if (onTemplateUpdate) {
         onTemplateUpdate([]);
       }
     } catch {
-      antdMessage.error('Lỗi khi khôi phục template mặc định!');
+      antdMessage.error('Lỗi khi xóa template!');
     }
   };
 
@@ -309,39 +225,16 @@ const TemplateSettingModal = ({ visible, onClose, onTemplateUpdate }) => {
       )
     },
     {
-      title: 'Loại',
-      dataIndex: 'userEmail',
-      width: '10%',
-      render: (userEmail) => (
-        <span style={{
-          color: userEmail ? '#1890ff' : '#52c41a',
-          fontWeight: 500,
-          fontSize: '12px'
-        }}>
-          {userEmail ? 'Cá nhân' : 'Chung'}
-        </span>
-      )
-    },
-    {
       title: 'Hành động',
       dataIndex: 'action',
       width: '20%',
       render: (_, record) => {
-        const isDefaultTemplate = record.id === 'stock-news';
         return (
           <Space>
-            {isDefaultTemplate ? (
-              // Template default: chỉ có nút Copy, không cho sửa và xóa
-              <a onClick={() => handleCopy(record)}>Copy</a>
-            ) : (
-              // Template khác: có cả Sửa và Xóa
-              <>
-                <a onClick={() => handleEdit(record)}>Sửa</a>
-                <Popconfirm title="Xóa template này?" onConfirm={() => handleDelete(record.id)}>
-                  <a>Xóa</a>
-                </Popconfirm>
-              </>
-            )}
+            <a onClick={() => handleEdit(record)}>Sửa</a>
+            <Popconfirm title="Xóa template này?" onConfirm={() => handleDelete(record.id)}>
+              <a>Xóa</a>
+            </Popconfirm>
           </Space>
         );
       }
@@ -358,7 +251,7 @@ const TemplateSettingModal = ({ visible, onClose, onTemplateUpdate }) => {
     >
       <div style={{ marginBottom: 16, display: 'flex', gap: 8 }}>
         <Button type="primary" onClick={handleAdd}>Thêm Template</Button>
-        <Button onClick={handleResetToDefault}>Khôi phục mặc định</Button>
+        {/* <Button onClick={handleResetToDefault}>Khôi phục mặc định</Button> */}
       </div>
       <Table
         bordered

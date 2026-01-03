@@ -1977,10 +1977,11 @@ const K9Header = ({
 						fontSize: '18px',
 						fontWeight: '600',
 						color: '#262626',
-						width: '100%'
+						width: '100%',
+						flexWrap: isMobile ? 'wrap' : 'nowrap'
 					}}>
 						<span>📚 Chọn chương trình</span>
-						{selectedCourseFilter === 'all' && (() => {
+						{!isMobile && selectedCourseFilter === 'all' && (() => {
 							const stats = getProgramStats('all');
 							return (
 								<div style={{
@@ -2018,12 +2019,41 @@ const K9Header = ({
 				className={newsTabStyles.modalContentMidHeight}
 			>
 				<div style={{ overflowY: 'scroll', height: '100%', paddingBottom: 60, overflowX: 'hidden' }}>
-
+					{/* Total Stats Section - Only show on mobile */}
+					{isMobile && selectedCourseFilter === 'all' && (() => {
+						const stats = getProgramStats('all');
+						return (
+							<div style={{
+								marginBottom: '16px',
+								padding: '12px',
+								backgroundColor: '#f0f8ff',
+								borderRadius: '8px',
+								border: '1px solid #d6e4ff'
+							}}>
+								<div style={{
+									display: 'flex',
+									alignItems: 'center',
+									gap: '8px',
+									fontSize: '12px',
+									fontWeight: '500',
+									color: '#595959',
+									flexWrap: 'wrap'
+								}}>
+									<span style={{ fontWeight: '600', color: '#1890ff' }}>Tổng trữ lượng:</span>
+									<span>{stats.theory} lý thuyết</span>
+									<span>•</span>
+									<span>{stats.practice} Case thực hành</span>
+									<span>•</span>
+									<span>Thời gian {formatTimeDisplay(stats.totalHours, stats.totalWeeks)}</span>
+								</div>
+							</div>
+						);
+					})()}
 
 					{/* Filters Section */}
 					<div style={{
 						marginBottom: '24px',
-						padding: '20px',
+						padding: isMobile ? '12px' : '20px',
 						backgroundColor: '#f8f9fa',
 						borderRadius: '12px',
 						border: '1px solid #e9ecef'
@@ -2031,18 +2061,20 @@ const K9Header = ({
 						{/* Course Filter Badges and Search Input - Same Row */}
 						<div style={{
 							display: 'flex',
-							alignItems: 'center',
+							flexDirection: isMobile ? 'column' : 'row',
+							alignItems: isMobile ? 'stretch' : 'center',
 							gap: '12px',
 							flexWrap: 'wrap'
 						}}>
 							{/* Course Filter Badges */}
 							{coursesOptions && coursesOptions.length > 0 && (
 								<div style={{
-									display: 'flex',
-									flexWrap: 'wrap',
-									gap: '8px',
+									display: 'grid',
+									gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(auto-fit, minmax(150px, auto))',
+									gap: isMobile ? '6px' : '8px',
 									flex: 1,
-									minWidth: '200px'
+									width: isMobile ? '100%' : 'auto',
+									minWidth: isMobile ? '100%' : '200px'
 								}}>
 									<Button
 										type={selectedCourseFilter === 'all' ? 'primary' : 'default'}
@@ -2051,12 +2083,13 @@ const K9Header = ({
 										}}
 										className="course-filter-btn"
 										style={{
-											height: '36px',
-											padding: '0 20px',
-											fontSize: '14px',
+											height: isMobile ? '32px' : '36px',
+											padding: isMobile ? '0 12px' : '0 20px',
+											fontSize: isMobile ? '12px' : '14px',
 											fontWeight: '500',
 											borderRadius: '20px',
-											overflow: 'hidden'
+											overflow: 'hidden',
+											whiteSpace: 'nowrap'
 										}}
 									>
 										✨ Tất cả
@@ -2072,12 +2105,13 @@ const K9Header = ({
 												}}
 												className="course-filter-btn"
 												style={{
-													height: '36px',
-													padding: '0 20px',
-													fontSize: '14px',
+													height: isMobile ? '32px' : '36px',
+													padding: isMobile ? '0 12px' : '0 20px',
+													fontSize: isMobile ? '12px' : '14px',
 													fontWeight: '500',
 													borderRadius: '20px',
-													overflow: 'hidden'
+													overflow: 'hidden',
+													whiteSpace: 'nowrap'
 												}}
 											>
 												📖 {course.label}
@@ -2088,19 +2122,19 @@ const K9Header = ({
 							)}
 
 							{/* Search Input */}
-							<div style={{ flex: '0 0 auto', minWidth: '250px' }}>
+							<div style={{ flex: isMobile ? '0 0 auto' : '0 0 auto', width: isMobile ? '100%' : 'auto', minWidth: isMobile ? '100%' : '250px' }}>
 								<Input
 									placeholder="Nhập tên chương trình để tìm kiếm..."
 									value={programSearchText}
 									onChange={(e) => setProgramSearchText(e.target.value)}
 									allowClear
-									size="large"
+									size={isMobile ? "middle" : "large"}
 									style={{
 										width: '100%',
 										borderRadius: '8px',
 										backgroundColor: '#ffffff'
 									}}
-									prefix={<span style={{ color: '#8c8c8c', fontSize: '16px' }}>🔍</span>}
+									prefix={<span style={{ color: '#8c8c8c', fontSize: isMobile ? '14px' : '16px' }}>🔍</span>}
 								/>
 							</div>
 						</div>

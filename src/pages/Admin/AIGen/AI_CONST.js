@@ -13,6 +13,8 @@ export const MODEL_AI_LIST = [
     { name: 'Gemini 2.5 Pro (Google) ', value: 'gemini-2.5-pro' },
     { name: 'Gemini 3 Pro Preview (Google + Search)', value: 'gemini-3-pro-preview:search' },
     { name: 'Gemini 3 Pro Preview (Google)', value: 'gemini-3-pro-preview' },
+    { name: 'Gemini 3 Flash Preview (Google)', value: 'gemini-3-flash-preview' },
+
 ];
 
 export const MODEL_IMG_AI_LIST = [

@@ -3,6 +3,7 @@ import { Modal, Image, Input, Switch, Button, Typography, Space, Tag, Dropdown }
 import { SearchOutlined, CloseOutlined, ClearOutlined, MoreOutlined } from '@ant-design/icons';
 import { getK9ByIdPublic, getK9ByCidTypePublic } from '../../../apis/public/publicService.jsx';
 import { getListQuestionHistoryByUser } from '../../../apis/questionHistoryService';
+import { getCurrentUserLogin, updateUser } from '../../../apis/userService';
 import DOMPurify from 'dompurify';
 import { marked } from 'marked';
 import markedKatex from 'marked-katex-extension';
@@ -24,6 +25,8 @@ import caseTrainingStyles from './CaseTrainingTab.module.css';
 import { formatDateFromTimestamp } from '../../../generalFunction/format.js';
 import AccessDenied from './AccessDenied.jsx';
 import PaymentModal from '../../../components/PaymentModal/PaymentModal';
+import ContentPanel from './ContentPanel.jsx';
+import CaseTrainingContentPanel from './CaseTrainingContentPanel.jsx';
 
 const { Text } = Typography;
 
@@ -54,7 +57,6 @@ const MapView = ({
 	const [modalLoading, setModalLoading] = useState(false);
 	const [quizScores, setQuizScores] = useState({}); // Quiz scores map for longFormItems
 	const [searchText, setSearchText] = useState(''); // Search text for filtering items (panel 2)
-
 	// Search in content states (for wiki and theory modals)
 	const [modalSearchText, setModalSearchText] = useState(''); // Search text in modal content
 	const [searchResults, setSearchResults] = useState([]);
@@ -104,6 +106,10 @@ const MapView = ({
 	const [showFeedbackModal, setShowFeedbackModal] = useState(false); // Feedback modal
 	const [cidSourceInfo, setCidSourceInfo] = useState(null); // CID source info for case
 	const [isPackageModalOpen, setIsPackageModalOpen] = useState(false); // Package purchase modal
+	const [selectedDetailImageIndex, setSelectedDetailImageIndex] = useState({}); // DetailImageUrls gallery state
+	const [isAnimating, setIsAnimating] = useState(false); // Animation state
+	const [readItems, setReadItems] = useState([]); // Read items state
+	const contentPanelRef = useRef(null); // Content panel ref
 	const caseItemRefs = useRef({}); // Refs for case items
 	const caseContainerRef = useRef(null); // Container ref for case column
 
@@ -166,6 +172,28 @@ const MapView = ({
 		} else {
 			setQuizScores({});
 		}
+	}, [currentUser?.id]);
+
+	// Load read items from user info
+	useEffect(() => {
+		const loadReadItems = async () => {
+			if (currentUser?.id) {
+				try {
+					const user = (await getCurrentUserLogin()).data;
+					if (user?.info?.read_items_stream) {
+						setReadItems(user.info.read_items_stream);
+					} else {
+						setReadItems([]);
+					}
+				} catch (error) {
+					console.error('Error loading read items:', error);
+					setReadItems([]);
+				}
+			} else {
+				setReadItems([]);
+			}
+		};
+		loadReadItems();
 	}, [currentUser?.id]);
 
 
@@ -382,7 +410,6 @@ const MapView = ({
 			});
 		}
 
-		// No sorting for theory column
 		return filtered;
 	}, [newsItems, selectedProgram, selectedTag5, theorySearchText]);
 
@@ -421,19 +448,29 @@ const MapView = ({
 			});
 		}
 
-		// Sort by connection if enabled - only check selectedTheoryItem (lines only go from Theory to Case)
-		if (caseSortByConnection && selectedTheoryItem && selectedTheoryItem.cid) {
+		// Sort by connection if enabled
+		if (caseSortByConnection) {
 			filtered = [...filtered].sort((a, b) => {
-				const aHasConnection = a.cid === selectedTheoryItem.cid;
-				const bHasConnection = b.cid === selectedTheoryItem.cid;
-				if (aHasConnection && !bHasConnection) return -1;
-				if (!aHasConnection && bHasConnection) return 1;
+				// First priority: selected item goes to top
+				if (selectedCaseItem) {
+					if (a.id === selectedCaseItem.id) return -1;
+					if (b.id === selectedCaseItem.id) return 1;
+				}
+				
+				// Second priority: items with connection to selected theory item
+				if (selectedTheoryItem && selectedTheoryItem.cid) {
+					const aHasConnection = a.cid === selectedTheoryItem.cid;
+					const bHasConnection = b.cid === selectedTheoryItem.cid;
+					if (aHasConnection && !bHasConnection) return -1;
+					if (!aHasConnection && bHasConnection) return 1;
+				}
+				
 				return 0;
 			});
 		}
 
 		return filtered;
-	}, [caseTrainingItems, selectedProgram, selectedTag5, caseSearchText, caseSortByConnection, selectedTheoryItem]);
+	}, [caseTrainingItems, selectedProgram, selectedTag5, caseSearchText, caseSortByConnection, selectedTheoryItem, selectedCaseItem]);
 
 	// Get all unique tag5 values from all items (not filtered by selectedTag5)
 	useEffect(() => {
@@ -1447,752 +1484,132 @@ const MapView = ({
 		return false;
 	};
 
-	// Render content panel (full version like NewsTab)
+	// Handle toggle read status
+	const handleToggleRead = async (item) => {
+		try {
+			const itemId = item.id;
+			const currentReadItems = readItems || [];
+			const isCurrentlyRead = currentReadItems.includes(itemId);
+
+			let newReadItems;
+			if (isCurrentlyRead) {
+				// Mark as unread
+				newReadItems = currentReadItems.filter(id => id !== itemId);
+			} else {
+				// Mark as read
+				newReadItems = [...currentReadItems, itemId];
+			}
+
+			setReadItems(newReadItems);
+
+			// Update user info in database
+			const user = (await getCurrentUserLogin()).data;
+
+			if (user && user.id) {
+				await updateUser(user.id, {
+					info: {
+						...user.info,
+						read_items_stream: newReadItems
+					}
+				});
+			}
+		} catch (error) {
+			console.error('Error toggling read status:', error);
+			// Revert state if update fails
+			setReadItems(readItems || []);
+		}
+	};
+
+	// Render skeleton
+	const renderSkeleton = () => (
+		<div className={`${k9Styles.contentPanel} ${newsTabStyles.contentPanel}`}>
+			<div className={`${k9Styles.contentHeader} ${newsTabStyles.contentHeader}`}>
+				<div className={`${newsTabStyles.skeleton} ${newsTabStyles.skeletonText}`} style={{ width: '70%' }}></div>
+				<div className={`${newsTabStyles.skeleton} ${newsTabStyles.skeletonText}`} style={{ width: '20%' }}></div>
+			</div>
+			<div className={`${newsTabStyles.skeleton} ${newsTabStyles.skeletonImage}`}></div>
+			<div className={`${k9Styles.contentBody} ${newsTabStyles.contentBody}`}>
+				<div className={`${newsTabStyles.skeleton} ${newsTabStyles.skeletonText}`}></div>
+				<div className={`${newsTabStyles.skeleton} ${newsTabStyles.skeletonText}`}></div>
+				<div className={`${newsTabStyles.skeleton} ${newsTabStyles.skeletonText}`} style={{ width: '80%' }}></div>
+			</div>
+		</div>
+	);
+
+	// Render content panel using ContentPanel component
 	const renderContentPanel = (item) => {
 		if (!item) return null;
 
-		// Check access permission
-		if (!hasAccess(item)) {
-			const isTrialAccount = currentUser?.account_type === 'Dùng thử';
-			return (
-				<div className={`${k9Styles.contentPanel} ${newsTabStyles.contentPanel}`}>
-					<AccessDenied 
-						isTrialAccount={isTrialAccount}
-						onUpgradeClick={() => setIsPackageModalOpen(true)}
-					/>
-				</div>
-			);
-		}
+		const contentPanelProps = {
+			item,
+			currentUser,
+			isMobile: false,
+			isAnimating,
+			showSummaryDetail,
+			selectedDetailImageIndex: selectedDetailImageIndex[item?.id] || 0,
+			searchText: modalSearchText,
+			activeTab: selectedLongFormItem ? 'longForm' : 'stream',
+			viewMode: 'list',
+			quizPopoverVisible: false,
+			contentPanelRef,
+			markdownContentRef,
+			hasAccess,
+			renderSkeleton,
+			highlightTextInContent,
+			getFileIcon,
+			openFilePreview,
+			handleEditClick: undefined,
+			renderQuizPopoverContent: undefined,
+			onShare: () => {},
+			setShowSummaryDetail,
+			setSelectedDetailImageIndex: (index) => setSelectedDetailImageIndex(prev => ({ ...prev, [item.id]: index })),
+			setShowFeedbackModal,
+			setQuizPopoverVisible: () => {},
+			setIsPackageModalOpen,
+			setQuestionScoreMap: (qid, score) => setQuizScores(prev => ({ ...prev, [qid]: score })),
+			preprocessLatex,
+			postprocessLatex,
+			isRead: (readItems || []).includes(item?.id),
+			onToggleRead: handleToggleRead,
+		};
 
-		return (
-			<div className={`${k9Styles.contentPanel} ${newsTabStyles.contentPanel}`}>
-				<div className={`${k9Styles.contentHeader} ${newsTabStyles.contentHeader}`}
-					style={{
-						display: 'flex',
-						flexDirection: 'row',
-						alignItems: 'center',
-						justifyContent: 'space-between',
-						width: '100%',
-						gap: '0'
-					}}>
-					<div style={{
-						display: 'flex',
-						alignItems: 'center',
-						gap: '8px',
-						marginTop: '10px',
-						marginLeft: '10px',
-						width: '90%',
-						flexWrap: 'nowrap'
-					}}>
-						<span style={{
-							fontSize: '13px',
-							color: '#9F9F9F',
-							marginLeft: '40px',
-							width: 'max-content',
-							flexShrink: 0
-						}}>ID: {item.id}</span>
-
-						<ShareButton onShare={() => { }} />
-
-						{item.updatedAt && (
-							<Button
-								type="text"
-								icon={<Clock_Icon width={13} height={13} />}
-								size={'small'}
-								style={{ color: '#9F9F9F', fontSize: '13px' }}
-							>
-								{formatDateFromTimestamp(item.updatedAt)}
-							</Button>
-						)}
-						{item.tag4 && Array.isArray(item.tag4) && item.tag4.length > 0 && (
-							<div style={{
-								display: 'flex',
-								alignItems: 'center',
-								gap: '8px',
-								fontSize: '13px',
-								color: '#9F9F9F',
-								whiteSpace: 'nowrap',
-								overflow: 'hidden',
-								textOverflow: 'ellipsis',
-								maxWidth: '100%',
-								width: 'auto',
-								flexWrap: 'nowrap'
-							}}>
-								<span style={{ whiteSpace: 'nowrap' }}>Related module:  <span style={{
-									overflow: 'hidden',
-									textOverflow: 'ellipsis',
-									whiteSpace: 'nowrap',
-									flex: '0 1 auto'
-								}}>
-									{(item.tag4.length > 3
-										? item.tag4.slice(0, 3).join(', ') + '...'
-										: item.tag4.join(', '))
-									}
-								</span></span>
-							</div>
-						)}
-					</div>
-					{/* <div style={{
-						width: '5%',
-						display: 'flex',
-						justifyContent: 'flex-end'
-					}}>
-						{currentUser?.isAdmin && (
-							<Button
-								type="text"
-								size="small"
-								style={{
-									color: '#9F9F9F',
-									border: 'none',
-									boxShadow: 'none'
-								}}
-							>
-								Edit
-							</Button>
-						)}
-					</div> */}
-				</div>
-
-				<div className={newsTabStyles.contentMain} style={{ padding: '0 100px' }}>
-					<div className={k9Styles.contentTitleContainer}>
-						<div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
-							<div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-								<span className={`${k9Styles.contentTitle} ${newsTabStyles.contentTitle}`}>{item.title}</span>
-							</div>
-						</div>
-						{item.summary && (
-							<div className={`${k9Styles.contentDetail} ${newsTabStyles.contentDetail}`} style={{ marginTop: '12px', marginBottom: '12px' }}>
-								<div
-									className={k9Styles.markdownContent}
-									style={{ fontSize: '16px' }}
-									dangerouslySetInnerHTML={{
-										__html: (() => {
-											const { processedText, latexBlocks } = preprocessLatex(item.summary || '');
-											let html = marked.parse(processedText, {
-												headerIds: true,
-												mangle: false,
-												headerPrefix: '',
-												breaks: false,
-												gfm: true
-											});
-											const finalHtml = postprocessLatex(html, latexBlocks);
-											return DOMPurify.sanitize(finalHtml);
-										})(),
-									}}
-								/>
-							</div>
-						)}
-						{item.summaryDetail && showSummaryDetail && (
-							<div className={`${k9Styles.contentDetail} ${newsTabStyles.contentDetail}`} style={{ marginTop: '12px', marginBottom: '12px' }}>
-								<div
-									className={k9Styles.markdownContent}
-									style={{ fontSize: '16px' }}
-									dangerouslySetInnerHTML={{
-										__html: (() => {
-											const { processedText, latexBlocks } = preprocessLatex(item.summaryDetail || '');
-											let html = marked.parse(processedText, {
-												headerIds: true,
-												mangle: false,
-												headerPrefix: '',
-												breaks: false,
-												gfm: true
-											});
-											const finalHtml = postprocessLatex(html, latexBlocks);
-											return DOMPurify.sanitize(finalHtml);
-										})(),
-									}}
-								/>
-							</div>
-						)}
-						<div style={{
-							display: 'flex',
-							gap: '16px',
-							fontSize: '15px',
-							color: '#9F9F9F',
-							marginTop: '10px',
-							flexDirection: 'row',
-							alignItems: 'center'
-						}}>
-							{item.summaryDetail && (
-								<Button
-									type="text"
-									size="small"
-									onClick={() => setShowSummaryDetail(!showSummaryDetail)}
-									title={showSummaryDetail ? 'Ẩn Shortform' : 'Hiện Shortform'}
-									style={{
-										display: 'flex',
-										alignItems: 'center',
-										gap: '4px',
-										padding: '2px 8px',
-										color: '#595959',
-										backgroundColor: '#f5f5f5',
-										borderRadius: '8px',
-										border: 'none',
-										boxShadow: 'none'
-									}}
-									icon={showSummaryDetail ? <Close_Icon width={12} height={12} /> : <Expand_Icon width={12} height={12} />}
-								>
-									Shortform
-								</Button>
-							)}
-
-							<div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-								{item.info?.filedLabel_1 && (
-									<span style={{ display: 'flex', alignItems: 'center' }}>
-										{item.info?.filedLabel_1}
-									</span>
-								)}
-								{item.info?.filedLabel_1 && item.info?.filedLabel_2 && (
-									<span style={{ color: '#C4C4C4' }}>|</span>
-								)}
-								{item.info?.filedLabel_2 && (
-									<span style={{ display: 'flex', alignItems: 'center' }}>
-										{item.info?.filedLabel_2}
-									</span>
-								)}
-							</div>
-							{currentUser?.id && (
-								<span onClick={() => setShowFeedbackModal(true)} style={{ display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }} title="Góp ý/Feedback cho nội dung">
-									<FeedBack_Icon width={17} height={17} /> Góp ý, feedback cho nội dung
-								</span>
-							)}
-						</div>
-						{/* Audio Player Section */}
-						<div className={k9Styles.audioPlayerContainer}>
-							<AudioPlayer audioUrl={item.audioUrl} />
-						</div>
-					</div>
-
-					{item.fileUrls && item.fileUrls.length > 0 && (
-						<div className={`${k9Styles.fileTagsContainer} ${newsTabStyles.fileTagsContainer}`}>
-							{item.fileUrls.map((fileUrl, index) => {
-								const fileName = fileUrl.split('/').pop() || `file-${index + 1}`;
-								const fileExtension = fileName.split('.').pop()?.toLowerCase() || '';
-								return (
-									<div
-										key={index}
-										className={`${k9Styles.fileTag} ${newsTabStyles.fileTag}`}
-										onClick={() => openFilePreview(fileUrl, fileName)}
-										title={fileName}
-									>
-										<span className={`${k9Styles.fileTagIcon} ${newsTabStyles.fileTagIcon}`}>
-											{getFileIcon(fileExtension)}
-										</span>
-										<span className={`${k9Styles.fileTagName} ${newsTabStyles.fileTagName}`}>
-											{fileName}
-										</span>
-										<span className={`${k9Styles.fileTagExtension} ${newsTabStyles.fileTagExtension}`}>
-											{fileExtension.toUpperCase()}
-										</span>
-									</div>
-								);
-							})}
-						</div>
-					)}
-
-					{/* Diagram Section */}
-					{(item.diagramUrl || ((item.diagramHtmlCode || item.diagramHtmlCodeFromSummaryDetail) && item.showHtml !== false) || (item.diagramExcalidrawJson && item.showExcalidraw !== false) || item.diagramNote || item.diagramExcalidrawNote || (item.imgUrls && item.showImgUrls !== false)) && (
-						<div className={`${k9Styles.valueSection} ${newsTabStyles.valueSection}`}>
-							<div className={`${k9Styles.diagramSectionContent} ${newsTabStyles.diagramSectionContent}`}>
-								{/* Handle Excalidraw React Diagrams */}
-								{item.diagramExcalidrawJson && Array.isArray(item.diagramExcalidrawJson) && item.showExcalidraw !== false && (
-									item.diagramExcalidrawJson.map((jsonString, index) => {
-										const imageUrl = item.diagramExcalidrawImageUrls && Array.isArray(item.diagramExcalidrawImageUrls)
-											? item.diagramExcalidrawImageUrls[index]
-											: null;
-										return (
-											<div key={`excalidraw-${index}`} style={{ marginBottom: '20px' }}>
-												<div style={{
-													border: '1px solid #e1e4e8',
-													borderRadius: '8px',
-													padding: '16px',
-													backgroundColor: '#fff'
-												}}>
-													<ExcalidrawViewer
-														jsonString={jsonString}
-														readOnly={true}
-														height="500px"
-														imageUrl={imageUrl}
-													/>
-												</div>
-												{(Array.isArray(item.diagramExcalidrawNote) && item.diagramExcalidrawNote[index]) && (
-													<div className={`${k9Styles.diagramNote} ${newsTabStyles.diagramNote}`}>
-														<div
-															className={k9Styles.markdownContent}
-															dangerouslySetInnerHTML={{
-																__html: (() => {
-																	const { processedText, latexBlocks } = preprocessLatex(item.diagramExcalidrawNote[index] || '');
-																	const html = marked.parse(processedText);
-																	const finalHtml = postprocessLatex(html, latexBlocks);
-																	return DOMPurify.sanitize(finalHtml);
-																})(),
-															}}
-														/>
-													</div>
-												)}
-											</div>
-										);
-									})
-								)}
-
-								{/* Handle imgUrls from SummaryDetail */}
-								{item.imgUrls && Array.isArray(item.imgUrls) && item.imgUrls.length > 0 && item.showImgUrls !== false && (
-									item.imgUrls.map((imgItem, index) => {
-										const imageUrl = typeof imgItem === 'string' ? imgItem : (imgItem?.url || imgItem?.image_url || '');
-										const description = typeof imgItem === 'object' ? imgItem?.description : '';
-										if (!imageUrl) return null;
-										return (
-											<div key={`imgurls-${index}`} style={{ marginBottom: '20px' }}>
-												<div className={`${k9Styles.diagramImage} ${newsTabStyles.diagramImage}`}>
-													<Image
-														src={imageUrl}
-														alt={description || `Ảnh ${index + 1}`}
-														className={`${k9Styles.diagramImageDetail} ${newsTabStyles.diagramImageDetail}`}
-														preview={{
-															mask: 'Xem ảnh',
-															maskClassName: 'custom-mask'
-														}}
-													/>
-												</div>
-											</div>
-										);
-									})
-								)}
-
-								{/* Handle HTML Code Diagrams */}
-								{item.diagramHtmlCode && Array.isArray(item.diagramHtmlCode) && item.showHtml !== false && (
-									item.diagramHtmlCode.map((htmlCode, index) => (
-										<div key={`html-${index}`}>
-											<div className={`${k9Styles.diagramHtmlCode} ${newsTabStyles.diagramHtmlCode}`}>
-												<div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(htmlCode || '') }} />
-											</div>
-										</div>
-									))
-								)}
-
-								{/* Handle HTML Code Diagrams from SummaryDetail */}
-								{item.diagramHtmlCodeFromSummaryDetail && item.showHtml !== false && (
-									(Array.isArray(item.diagramHtmlCodeFromSummaryDetail) ? item.diagramHtmlCodeFromSummaryDetail : [item.diagramHtmlCodeFromSummaryDetail]).map((htmlCode, index) => (
-										<div key={`html-summary-${index}`}>
-											<div className={`${k9Styles.diagramHtmlCode} ${newsTabStyles.diagramHtmlCode}`}>
-												<div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(htmlCode || '') }} />
-											</div>
-										</div>
-									))
-								)}
-
-								{/* Handle Kroki Image Diagrams */}
-								{item.diagramUrl && (
-									Array.isArray(item.diagramUrl) ? (
-										item.diagramUrl.map((diagramUrl, index) => (
-											<div key={`kroki-${index}`} style={{ marginBottom: '20px' }}>
-												<div className={`${k9Styles.diagramImage} ${newsTabStyles.diagramImage}`}>
-													<Image
-														src={diagramUrl}
-														alt={`Diagram ${index + 1}`}
-														className={`${k9Styles.diagramImageDetail} ${newsTabStyles.diagramImageDetail}`}
-														preview={{
-															mask: 'Xem ảnh',
-															maskClassName: 'custom-mask'
-														}}
-													/>
-												</div>
-												{Array.isArray(item.diagramNote) && item.diagramNote[index] && (
-													<div className={`${k9Styles.diagramNote} ${newsTabStyles.diagramNote}`}>
-														<div
-															className={k9Styles.markdownContent}
-															dangerouslySetInnerHTML={{
-																__html: (() => {
-																	const { processedText, latexBlocks } = preprocessLatex(item.diagramNote[index] || '');
-																	const html = marked.parse(processedText);
-																	const finalHtml = postprocessLatex(html, latexBlocks);
-																	return DOMPurify.sanitize(finalHtml);
-																})(),
-															}}
-														/>
-													</div>
-												)}
-											</div>
-										))
-									) : (
-										<>
-											<div className={`${k9Styles.diagramImage} ${newsTabStyles.diagramImage}`}>
-												<Image
-													src={item.diagramUrl}
-													alt="Diagram"
-													className={`${k9Styles.diagramImageDetail} ${newsTabStyles.diagramImageDetail}`}
-													preview={{
-														mask: 'Xem ảnh',
-														maskClassName: 'custom-mask'
-													}}
-												/>
-											</div>
-											{item.diagramNote && (
-												<div className={`${k9Styles.diagramNote} ${newsTabStyles.diagramNote}`}>
-													<div
-														className={k9Styles.markdownContent}
-														dangerouslySetInnerHTML={{
-															__html: (() => {
-																const { processedText, latexBlocks } = preprocessLatex(
-																	Array.isArray(item.diagramNote)
-																		? item.diagramNote[0] || ''
-																		: item.diagramNote || ''
-																);
-																const html = marked.parse(processedText);
-																const finalHtml = postprocessLatex(html, latexBlocks);
-																return DOMPurify.sanitize(finalHtml);
-															})(),
-														}}
-													/>
-												</div>
-											)}
-										</>
-									)
-								)}
-							</div>
-						</div>
-					)}
-
-					<div className={`${k9Styles.contentBody} ${newsTabStyles.contentBody}`}>
-						{item.detail && item.showDetail !== false && (
-							<div className={`${k9Styles.contentDetail} ${newsTabStyles.contentDetail}`}>
-								<div
-									ref={markdownContentRef}
-									className={k9Styles.markdownContent}
-									dangerouslySetInnerHTML={{
-										__html: (() => {
-											const { processedText, latexBlocks } = preprocessLatex(item.detail || '');
-											let html = marked.parse(processedText, {
-												headerIds: true,
-												mangle: false,
-												headerPrefix: '',
-												breaks: false,
-												gfm: true
-											});
-											// Apply search highlight if modalSearchText exists
-											if (modalSearchText && modalSearchText.trim()) {
-												html = highlightTextInContent(html, modalSearchText);
-											}
-											const finalHtml = postprocessLatex(html, latexBlocks);
-											return DOMPurify.sanitize(finalHtml);
-										})(),
-									}}
-								/>
-							</div>
-						)}
-
-						{/* Quiz Component */}
-						{item.questionContent && (
-							<QuizComponent
-								allowRetake={item.allow_retake}
-								quizData={item.questionContent}
-								questionId={item.id}
-								onScoreUpdate={(qid, score) => setQuizScores(prev => ({ ...prev, [qid]: score }))}
-							/>
-						)}
-					</div>
-				</div>
-			</div>
-		);
+		return <ContentPanel {...contentPanelProps} />;
 	};
 
-	// Render Case content panel (full version like CaseTrainingTab)
+	// Render Case content panel using CaseTrainingContentPanel component
 	const renderCaseContentPanel = (item) => {
 		if (!item) return null;
 
-		// Check access permission
-		if (!hasAccess(item)) {
-			const isTrialAccount = currentUser?.account_type === 'Dùng thử';
-			return (
-				<div className={`${caseTrainingStyles.contentPanel} ${newsTabStyles.contentPanel}`}>
-					<AccessDenied 
-						isTrialAccount={isTrialAccount}
-						onUpgradeClick={() => setIsPackageModalOpen(true)}
-					/>
-				</div>
-			);
-		}
+		const caseTrainingContentPanelProps = {
+			item,
+			currentUser,
+			isMobile: false,
+			isAnimating,
+			showSummaryDetail,
+			selectedDetailImageIndex: selectedDetailImageIndex[item?.id] || 0,
+			searchText: caseModalSearchText,
+			cidSourceInfo,
+			selectedItem: selectedCaseItem,
+			contentPanelRef,
+			markdownContentRef: caseMarkdownContentRef,
+			hasAccess,
+			renderSkeleton,
+			highlightTextInContent,
+			getFileIcon,
+			openFilePreview,
+			handleEditClick: undefined,
+			handleCidSourceInfoClick,
+			onShare: () => {},
+			setShowSummaryDetail,
+			setSelectedDetailImageIndex: (index) => setSelectedDetailImageIndex(prev => ({ ...prev, [item.id]: index })),
+			setShowFeedbackModal,
+			setIsPackageModalOpen,
+			setQuizScores: (qid, score) => setQuizScores(prev => ({ ...prev, [qid]: score })),
+			preprocessLatex,
+			postprocessLatex,
+		};
 
-		return (
-			<div className={`${caseTrainingStyles.contentPanel} ${newsTabStyles.contentPanel}`}>
-				<div className={`${caseTrainingStyles.contentHeader} ${newsTabStyles.contentHeader}`}>
-					<div style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%' }}>
-						<span className={`${caseTrainingStyles.contentTitle} ${newsTabStyles.contentTitle}`}>
-							{currentUser?.account_type === 'Dùng thử' && item.isPublic !== true && (
-								<span style={{ marginRight: '6px', fontSize: '14px', verticalAlign: 'middle' }}>🔒</span>
-							)}
-							{item.title}
-						</span>
-				
-					</div>
-					{item.summaryDetail && showSummaryDetail && (
-						<div className={`${caseTrainingStyles.contentDetail} ${newsTabStyles.contentDetail}`} style={{ marginTop: '12px', marginBottom: '12px' }}>
-							<div
-								className={caseTrainingStyles.markdownContent}
-								style={{ fontSize: '16px' }}
-								dangerouslySetInnerHTML={{
-									__html: (() => {
-										const { processedText, latexBlocks } = preprocessLatex(item.summaryDetail || '');
-										let html = marked.parse(processedText, {
-											headerIds: true,
-											mangle: false,
-											headerPrefix: '',
-											breaks: false,
-											gfm: true
-										});
-										const finalHtml = postprocessLatex(html, latexBlocks);
-										return DOMPurify.sanitize(finalHtml);
-									})(),
-								}}
-							/>
-						</div>
-					)}
-					<div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginLeft: 'auto', marginTop: '20px' }}>
-						<span style={{ fontSize: '13px', color: '#6b7280', fontWeight: '500' }}>ID: {item.id}</span>
-						{cidSourceInfo && cidSourceInfo.length > 0 && (
-							cidSourceInfo.map((cidItem, idx) => (
-								<span
-									key={idx}
-									style={{
-										fontSize: '13px',
-										color: '#1890ff',
-										fontWeight: '500',
-										backgroundColor: '#f0f8ff',
-										padding: '4px 8px',
-										borderRadius: '4px',
-										border: '1px solid #d6e4ff',
-										marginLeft: '8px',
-										cursor: 'pointer'
-									}}
-									onClick={() => handleCidSourceInfoClick(cidSourceInfo)}
-								>
-									{cidItem.title} - CID {cidItem.cid} - {cidItem.id}
-								</span>
-							))
-						)}
-						<ShareButton onShare={() => { }} />
-					</div>
-				</div>
-
-				{/* Audio Player Section */}
-				<div style={{
-					display: 'flex',
-					gap: '16px',
-					fontSize: '15px',
-					color: '#9F9F9F',
-					marginTop: '10px',
-					flexDirection: 'row',
-					alignItems: 'center'
-				}}>
-					{item.summaryDetail && (
-						<Button
-							type="text"
-							size="small"
-							onClick={() => setShowSummaryDetail(!showSummaryDetail)}
-							title={showSummaryDetail ? 'Ẩn Shortform' : 'Hiện Shortform'}
-							style={{
-								display: 'flex',
-								alignItems: 'center',
-								gap: '4px',
-								padding: '2px 8px',
-								color: '#595959',
-								backgroundColor: '#f5f5f5',
-								borderRadius: '8px',
-								border: 'none',
-								boxShadow: 'none'
-							}}
-							icon={showSummaryDetail ? <Close_Icon width={12} height={12} /> : <Expand_Icon width={12} height={12} />}
-						>
-							Shortform
-						</Button>
-					)}
-					<div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-						{item.info?.filedLabel_1 && (
-							<span style={{ display: 'flex', alignItems: 'center' }}>
-								{item.info?.filedLabel_1}
-							</span>
-						)}
-						{item.info?.filedLabel_1 && item.info?.filedLabel_2 && (
-							<span style={{ color: '#C4C4C4' }}>|</span>
-						)}
-						{item.info?.filedLabel_2 && (
-							<span style={{ display: 'flex', alignItems: 'center' }}>
-								{item.info?.filedLabel_2}
-							</span>
-						)}
-					</div>
-					{currentUser?.id && (
-						<span onClick={() => setShowFeedbackModal(true)} style={{ display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }} title="Góp ý/Feedback cho nội dung">
-							<FeedBack_Icon width={17} height={17} /> Góp ý, feedback cho nội dung
-						</span>
-					)}
-				</div>
-				<div className={caseTrainingStyles.audioPlayerContainer}>
-					<AudioPlayer audioUrl={item.audioUrl} />
-				</div>
-				<div className={newsTabStyles.contentMain}>
-					{/* File URLs Section */}
-					{item.fileUrls && item.fileUrls.length > 0 && (
-						<div className={`${caseTrainingStyles.fileTagsContainer} ${newsTabStyles.fileTagsContainer}`}>
-							{item.fileUrls.map((fileUrl, index) => {
-								const fileName = fileUrl.split('/').pop() || `file-${index + 1}`;
-								const fileExtension = fileName.split('.').pop()?.toLowerCase() || '';
-								return (
-									<div
-										key={index}
-										className={`${caseTrainingStyles.fileTag} ${newsTabStyles.fileTag}`}
-										onClick={() => openFilePreview(fileUrl, fileName)}
-										title={fileName}
-									>
-										<span className={`${caseTrainingStyles.fileTagIcon} ${newsTabStyles.fileTagIcon}`}>
-											{getFileIcon(fileExtension)}
-										</span>
-										<span className={`${caseTrainingStyles.fileTagName} ${newsTabStyles.fileTagName}`}>
-											{fileName}
-										</span>
-										<span className={`${caseTrainingStyles.fileTagExtension} ${newsTabStyles.fileTagExtension}`}>
-											{fileExtension.toUpperCase()}
-										</span>
-									</div>
-								);
-							})}
-						</div>
-					)}
-
-					{/* Diagram Section - Simplified, only show if exists */}
-					{(item.diagramUrl || (item.diagramHtmlCode && item.showHtml !== false) || (item.diagramExcalidrawJson && item.showExcalidraw !== false) || item.imgUrls) && (
-						<div className={`${caseTrainingStyles.valueSection} ${newsTabStyles.valueSection}`}>
-							<div className={`${caseTrainingStyles.diagramSectionContent} ${newsTabStyles.diagramSectionContent}`}>
-								{/* Excalidraw */}
-								{item.diagramExcalidrawJson && Array.isArray(item.diagramExcalidrawJson) && item.showExcalidraw !== false && (
-									item.diagramExcalidrawJson.map((jsonString, index) => {
-										const imageUrl = item.diagramExcalidrawImageUrls && Array.isArray(item.diagramExcalidrawImageUrls)
-											? item.diagramExcalidrawImageUrls[index]
-											: null;
-										return (
-											<div key={`excalidraw-${index}`} style={{ marginBottom: '20px' }}>
-												<div style={{
-													border: '1px solid #e1e4e8',
-													borderRadius: '8px',
-													padding: '16px',
-													backgroundColor: '#fff'
-												}}>
-													<ExcalidrawViewer
-														jsonString={jsonString}
-														readOnly={true}
-														height="500px"
-														imageUrl={imageUrl}
-													/>
-												</div>
-											</div>
-										);
-									})
-								)}
-								{/* imgUrls */}
-								{item.imgUrls && Array.isArray(item.imgUrls) && item.imgUrls.length > 0 && item.showImgUrls !== false && (
-									item.imgUrls.map((imgItem, index) => {
-										const imageUrl = typeof imgItem === 'string' ? imgItem : (imgItem?.url || imgItem?.image_url || '');
-										if (!imageUrl) return null;
-										return (
-											<div key={`imgurls-${index}`} style={{ marginBottom: '20px' }}>
-												<div className={`${caseTrainingStyles.diagramImage} ${newsTabStyles.diagramImage}`}>
-													<Image
-														src={imageUrl}
-														alt={`Ảnh ${index + 1}`}
-														className={`${caseTrainingStyles.diagramImageDetail} ${newsTabStyles.diagramImageDetail}`}
-														preview={{ mask: 'Xem ảnh', maskClassName: 'custom-mask' }}
-													/>
-												</div>
-											</div>
-										);
-									})
-								)}
-								{/* HTML Code */}
-								{item.diagramHtmlCode && Array.isArray(item.diagramHtmlCode) && item.showHtml !== false && (
-									item.diagramHtmlCode.map((htmlCode, index) => (
-										<div key={`html-${index}`}>
-											<div className={`${caseTrainingStyles.diagramHtmlCode} ${newsTabStyles.diagramHtmlCode}`}>
-												<div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(htmlCode || '') }} />
-											</div>
-										</div>
-									))
-								)}
-								{/* Kroki Image */}
-								{item.diagramUrl && (
-									Array.isArray(item.diagramUrl) ? (
-										item.diagramUrl.map((diagramUrl, index) => (
-											<div key={`kroki-${index}`} style={{ marginBottom: '20px' }}>
-												<div className={`${caseTrainingStyles.diagramImage} ${newsTabStyles.diagramImage}`}>
-													<Image
-														src={diagramUrl}
-														alt={`Diagram ${index + 1}`}
-														className={`${caseTrainingStyles.diagramImageDetail} ${newsTabStyles.diagramImageDetail}`}
-														preview={{ mask: 'Xem ảnh', maskClassName: 'custom-mask' }}
-													/>
-												</div>
-											</div>
-										))
-									) : (
-										<div className={`${caseTrainingStyles.diagramImage} ${newsTabStyles.diagramImage}`}>
-											<Image
-												src={item.diagramUrl}
-												alt="Diagram"
-												className={`${caseTrainingStyles.diagramImageDetail} ${newsTabStyles.diagramImageDetail}`}
-												preview={{ mask: 'Xem ảnh', maskClassName: 'custom-mask' }}
-											/>
-										</div>
-									)
-								)}
-							</div>
-						</div>
-					)}
-
-					<div className={`${caseTrainingStyles.contentBody} ${newsTabStyles.contentBody}`}>
-						{item.description && (
-							<div className={caseTrainingStyles.contentDescription}>
-								<Text strong>Description:</Text>
-								<Text>{item.description}</Text>
-							</div>
-						)}
-						{item.detail && item.showDetail !== false && (
-							<div className={`${caseTrainingStyles.contentDetail} ${newsTabStyles.contentDetail}`}>
-								<div
-									ref={caseMarkdownContentRef}
-									className={caseTrainingStyles.markdownContent}
-									dangerouslySetInnerHTML={{
-										__html: (() => {
-											const { processedText, latexBlocks } = preprocessLatex(item.detail || '');
-											let html = marked.parse(processedText, {
-												headerIds: true,
-												mangle: false,
-												headerPrefix: '',
-												breaks: false,
-												gfm: true
-											});
-											// Apply search highlight if caseModalSearchText exists
-											if (caseModalSearchText && caseModalSearchText.trim()) {
-												html = highlightTextInContent(html, caseModalSearchText);
-											}
-											const finalHtml = postprocessLatex(html, latexBlocks);
-											return DOMPurify.sanitize(finalHtml);
-										})(),
-									}}
-								/>
-							</div>
-						)}
-						{/* Quiz Component */}
-						{item.questionContent && (
-							<QuizComponent
-								allowRetake={item.allow_retake}
-								quizData={item.questionContent}
-								questionId={item.id}
-								onScoreUpdate={(qid, score) => setQuizScores(prev => ({ ...prev, [qid]: score }))}
-							/>
-						)}
-					</div>
-				</div>
-			</div>
-		);
+		return <CaseTrainingContentPanel {...caseTrainingContentPanelProps} />;
 	};
 
 	return (
@@ -2200,44 +1617,43 @@ const MapView = ({
 			{/* Top Bar Section with Tag5 Filter and Progress */}
 			<div className={styles.mapViewContent}>
 				<div className={styles.progressSection}>
+					{/* Top Row: Program Name, Stats and Progress Bar */}
 					<div className={styles.progressHeader}>
-						{/* Left: Progress Info */}
-						<div className={styles.progressLeft}>
-							<div className={styles.programName}>{programName}</div>
-							<div className={styles.progressStats}>
-								<span>{headerStats.completedQuizzes}/{headerStats.totalQuizzes} bài đã làm</span>
-								<span className={styles.completionRate}>{completionRate}% hoàn thành</span>
-							</div>
-							<div className={styles.progressBarContainer}>
-								<div
-									className={styles.progressBar}
-									style={{
-										width: `${completionRate}%`,
-										backgroundColor: completionRate === 100 ? '#52c41a' :
-											completionRate >= 50 ? '#1890ff' :
-												completionRate > 0 ? '#faad14' : '#d9d9d9',
-									}}
-								/>
-							</div>
+						<div className={styles.programName}>{programName}</div>
+						<div className={styles.progressStats}>
+							<span>{headerStats.completedQuizzes}/{headerStats.totalQuizzes} bài đã làm</span>
+							<span className={styles.completionRate}>{completionRate}% hoàn thành</span>
 						</div>
-						
-						{/* Right: Tag5 Filter */}
-						{allTag5Options.length > 0 && (
-							<div className={styles.tag5FilterRight}>
-								<div className={styles.tag5FilterHeader}>
-									<span className={styles.tag5FilterTitle}>Tags</span>
-									{selectedTag5.length > 0 && (
-										<Button
-											type="default"
-											size="small"
-											onClick={() => setSelectedTag5([])}
-											className={styles.tag5FilterClearBtn}
-											icon={<ClearOutlined />}
-										>
-											Bỏ lọc
-										</Button>
-									)}
-								</div>
+						<div className={styles.progressBarContainer}>
+							<div
+								className={styles.progressBar}
+								style={{
+									width: `${completionRate}%`,
+									backgroundColor: completionRate === 100 ? '#52c41a' :
+										completionRate >= 50 ? '#1890ff' :
+											completionRate > 0 ? '#faad14' : '#d9d9d9',
+								}}
+							/>
+						</div>
+					</div>
+					
+					{/* Bottom Row: Tag5 Filter */}
+					{allTag5Options.length > 0 && (
+						<div className={styles.tag5FilterSection}>
+							<div className={styles.tag5FilterHeader}>
+								<span className={styles.tag5FilterTitle}>Tags</span>
+								{selectedTag5.length > 0 && (
+									<Button
+										type="default"
+										size="small"
+										onClick={() => setSelectedTag5([])}
+										className={styles.tag5FilterClearBtn}
+										icon={<ClearOutlined />}
+									>
+										Bỏ lọc
+									</Button>
+								)}
+							</div>
 								{/* Hidden container to measure all items */}
 								<div 
 									className={styles.tag5FilterListHidden} 
@@ -2372,7 +1788,6 @@ const MapView = ({
 								</div>
 							</div>
 						)}
-					</div>
 				</div>
 
 				{/* Two Panel Layout */}
@@ -2429,6 +1844,9 @@ const MapView = ({
 													<div className={styles.itemCardContent}>
 														<div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '8px' }}>
 															<div className={styles.itemCardTitleFlexWrap} style={{ flex: 1 }}>
+																{currentUser?.account_type === 'Dùng thử' && item.isPublic !== true && (
+																	<span style={{ marginRight: '6px', fontSize: '14px', verticalAlign: 'middle' }}>🔒</span>
+																)}
 																{item.title}
 															</div>
 															<Button
@@ -2449,15 +1867,21 @@ const MapView = ({
 																title="Xem chi tiết"
 															/>
 														</div>
-														{/* ID, CID, Tag5 and Quiz Status Row */}
+														{/* ID, Lesson Number, CID, Tag5 and Quiz Status Row */}
 														<div className={styles.itemCardMeta}>
 															<div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+																{item.lessonNumber && (
+																	<span className={styles.itemCardId} style={{ color: '#1890ff' }}>
+																		 {item.lessonNumber}
+																	</span>
+																)}
+																{item.lessonNumber && item.cid && <span style={{ color: '#8c8c8c' }}>|</span>}
 																{item.cid && (
 																	<span className={styles.itemCardId}>
 																		CID: {item.cid}
 																	</span>
 																)}
-																{item.cid && item.id && <span style={{ color: '#8c8c8c' }}>|</span>}
+																{(item.lessonNumber || item.cid) && item.id && <span style={{ color: '#8c8c8c' }}>|</span>}
 																<span className={styles.itemCardId}>
 																	ID: {item.id}
 																</span>
@@ -2481,7 +1905,7 @@ const MapView = ({
 							<div className={styles.panel1Column} ref={caseContainerRef}>
 								<div className={styles.rightPanelHeader}>
 									<div className={styles.rightPanelTitle}>
-										Case Study({filteredCaseItems.length})
+										Case Study ({filteredCaseItems.length})
 									</div>
 									<div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
 										<Input
@@ -2510,7 +1934,11 @@ const MapView = ({
 												Không có dữ liệu
 											</div>
 										) : (
-											filteredCaseItems.map((item) => (
+											filteredCaseItems.map((item) => {
+												// Check if this case item should be highlighted (has same CID as selected theory item)
+												const isHighlighted = selectedTheoryItem?.cid && item.cid === selectedTheoryItem.cid && selectedCaseItem?.id !== item.id;
+												
+												return (
 												<div
 													key={item.id}
 													ref={(el) => {
@@ -2518,7 +1946,7 @@ const MapView = ({
 														panel1ItemRefs.current[item.id] = el;
 													}}
 													onClick={() => handleCaseItemClick(item)}
-													className={`${styles.itemCard} ${selectedCaseItem?.id === item.id ? styles.itemCardSelected : ''}`}
+													className={`${styles.itemCard} ${selectedCaseItem?.id === item.id ? styles.itemCardSelected : ''} ${isHighlighted ? styles.itemCardHighlighted : ''}`}
 												>
 													{item.avatarUrl && (
 														<Image
@@ -2532,17 +1960,26 @@ const MapView = ({
 													)}
 													<div className={styles.itemCardContent}>
 														<div className={styles.itemCardTitleFlexWrap}>
+															{currentUser?.account_type === 'Dùng thử' && item.isPublic !== true && (
+																<span style={{ marginRight: '6px', fontSize: '14px', verticalAlign: 'middle' }}>🔒</span>
+															)}
 															{item.title}
 														</div>
-														{/* ID, CID, Tag5 and Quiz Status Row */}
+														{/* ID, Lesson Number, CID, Tag5 and Quiz Status Row */}
 														<div className={styles.itemCardMeta}>
 															<div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+																{item.lessonNumber && (
+																	<span className={styles.itemCardId} style={{ color: '#1890ff' }}>
+																		 {item.lessonNumber}
+																	</span>
+																)}
+																{item.lessonNumber && item.cid && <span style={{ color: '#8c8c8c' }}>|</span>}
 																{item.cid && (
 																	<span className={styles.itemCardId}>
 																		CID: {item.cid}
 																	</span>
 																)}
-																{item.cid && item.id && <span style={{ color: '#8c8c8c' }}>|</span>}
+																{(item.lessonNumber || item.cid) && item.id && <span style={{ color: '#8c8c8c' }}>|</span>}
 																<span className={styles.itemCardId}>
 																	ID: {item.id}
 																</span>
@@ -2556,7 +1993,8 @@ const MapView = ({
 														</div>
 													</div>
 												</div>
-											))
+												);
+											})
 										)}
 									</div>
 								</div>
@@ -2620,6 +2058,9 @@ const MapView = ({
 											)}
 											<div className={styles.itemCardContent}>
 												<div className={styles.itemCardTitle}>
+													{currentUser?.account_type === 'Dùng thử' && item.isPublic !== true && (
+														<span style={{ marginRight: '6px', fontSize: '14px', verticalAlign: 'middle' }}>🔒</span>
+													)}
 													{item.title}
 												</div>
 												{item.summary && (
@@ -2627,9 +2068,15 @@ const MapView = ({
 														{item.summary}
 													</div>
 												)}
-												{/* ID, Tag5 and Quiz Status Row */}
+												{/* Lesson Number, ID, Tag5 and Quiz Status Row */}
 												<div className={styles.itemCardMeta}>
 													<div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+														{item.lessonNumber && (
+															<span className={styles.itemCardId} style={{ color: '#1890ff' }}>
+																{item.lessonNumber}
+															</span>
+														)}
+														{item.lessonNumber && item.id && <span style={{ color: '#8c8c8c' }}>|</span>}
 														<span className={styles.itemCardId}>
 															ID: {item.id}
 														</span>
@@ -2756,7 +2203,7 @@ const MapView = ({
 							renderContentPanel(selectedLongFormItem)
 						)}
 					</div>
-					{selectedLongFormItem?.hasTitle && (
+					{selectedLongFormItem?.hasTitle && hasAccess(selectedLongFormItem) && (
 						<div style={{ width: '25%', borderLeft: '1px solid #f0f0f0', overflowY: 'auto' }}>
 							{renderTOCSidebar(selectedLongFormItem)}
 						</div>
@@ -2974,7 +2421,7 @@ const MapView = ({
 							renderContentPanel(theoryModalItem)
 						)}
 					</div>
-					{theoryModalItem?.hasTitle && (
+					{theoryModalItem?.hasTitle && hasAccess(theoryModalItem) && (
 						<div style={{ width: '25%', borderLeft: '1px solid #f0f0f0', overflowY: 'auto' }}>
 							{renderTOCSidebar(theoryModalItem)}
 						</div>
@@ -3193,7 +2640,7 @@ const MapView = ({
 							renderCaseContentPanel(caseModalItem)
 						)}
 					</div>
-					{caseModalItem?.hasTitle && (
+					{caseModalItem?.hasTitle &&  hasAccess(caseModalItem) && (
 						<div style={{ width: '25%', borderLeft: '1px solid #f0f0f0', overflowY: 'auto' }}>
 							{renderCaseTOCSidebar(caseModalItem)}
 						</div>

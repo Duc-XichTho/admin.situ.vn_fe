@@ -4,7 +4,10 @@ import {
   CloseOutlined,
   MenuOutlined,
   LockOutlined,
-  EditOutlined
+  EditOutlined,
+  LeftOutlined,
+  RightOutlined,
+  EyeOutlined
 } from '@ant-design/icons';
 import { Menu } from 'lucide-react';
 import { Customize_Icon, Document_Icon, FeedBack_Icon, Expand_Icon, Close_Icon } from '../../../icon/IconSvg.jsx';
@@ -51,6 +54,7 @@ import EditDetailModal from './EditDetailModal.jsx';
 import FeedbackModal from './FeedbackModal.jsx';
 import PaymentModal from '../../../components/PaymentModal/PaymentModal';
 import ExcalidrawViewer from '../../K9Management/components/ExcalidrawViewer';
+import CaseTrainingContentPanel from './CaseTrainingContentPanel.jsx';
 const { Option } = Select;
 const { Text, Title } = Typography;
 import { useNavigate } from 'react-router-dom';
@@ -192,6 +196,9 @@ const CaseTrainingTab = ({
 
   // SummaryDetail collapse state
   const [showSummaryDetail, setShowSummaryDetail] = useState(false);
+
+  // DetailImageUrls gallery state - track selected main image for each item
+  const [selectedDetailImageIndex, setSelectedDetailImageIndex] = useState({}); // { itemId: index }
 
   // State for category expansion
   const [showAllCategories, setShowAllCategories] = useState(false);
@@ -650,6 +657,43 @@ const CaseTrainingTab = ({
     setShowSummaryDetail(false); // Reset summaryDetail collapse when item changes
   }, [selectedItem?.id]);
 
+  // Keyboard navigation for detailImageUrls gallery
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      // Only handle arrow keys when not typing in input/textarea
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+        return;
+      }
+
+      // Check if there's a selected item with detailImageUrls
+      if (selectedItem && selectedItem.detailImageUrls && Array.isArray(selectedItem.detailImageUrls) && selectedItem.detailImageUrls.length > 1 && selectedItem.showDetailImageUrls !== false) {
+        const currentIndex = selectedDetailImageIndex[selectedItem.id] ?? 0;
+        const totalImages = selectedItem.detailImageUrls.length;
+
+        if (e.key === 'ArrowLeft') {
+          e.preventDefault();
+          const newIndex = currentIndex === 0 ? totalImages - 1 : currentIndex - 1;
+          setSelectedDetailImageIndex(prev => ({
+            ...prev,
+            [selectedItem.id]: newIndex
+          }));
+        } else if (e.key === 'ArrowRight') {
+          e.preventDefault();
+          const newIndex = currentIndex === totalImages - 1 ? 0 : currentIndex + 1;
+          setSelectedDetailImageIndex(prev => ({
+            ...prev,
+            [selectedItem.id]: newIndex
+          }));
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [selectedItem, selectedDetailImageIndex]);
+
   // Auto show panel when search results appear
   useEffect(() => {
     if (searchResults.length > 0) {
@@ -860,7 +904,7 @@ const CaseTrainingTab = ({
 
 
   const fetchCidSourceInfo = async (cid) => {
-    const data = await getK9ByCidTypePublic(cid, 'news' );
+    const data = await getK9ByCidTypePublic(cid, 'news' , currentUser?.id );
     if (data) {
       setCidSourceInfo(data);
     } else {
@@ -1821,495 +1865,37 @@ const CaseTrainingTab = ({
     // Default: deny access
     return false;
   };
-  // Render content panel (right panel)
+  // Render content panel - now using CaseTrainingContentPanel component
   const renderContentPanel = (item) => {
-    if (!item) return null;
-
-    // Check access permission
-    if (!hasAccess(item)) {
-      const isTrialAccount = currentUser?.account_type === 'Dùng thử';
       return (
-        <div
-          ref={contentPanelRef}
-          className={`${styles.contentPanel} ${newsTabStyles.contentPanel}`}
-        >
-          <AccessDenied 
-            isTrialAccount={isTrialAccount}
-            onUpgradeClick={() => setIsPackageModalOpen(true)}
-          />
-        </div>
-      );
-    }
-
-    // Show skeleton while animating
-    if (isAnimating) {
-      return renderSkeleton();
-    }
-    return (
-      <>  {currentUser?.isAdmin && !isMobile && (
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', width: '100%' }}>
-          <Button
-            type="text"
-            size="small"
-            onClick={handleEditClick}
-            style={{
-              color: '#9F9F9F',
-              border: 'none',
-              boxShadow: 'none'
-            }}
-          >
-            Edit
-          </Button>
-        </div>
-
-      )}
-        <div
-          ref={contentPanelRef}
-          className={`${styles.contentPanel} ${newsTabStyles.contentPanel}`}
-        // style={{ marginTop: (currentUser?.isAdmin && !isMobile) ? '30px' : '0px' }}
-        >
-
-          <div className={`${styles.contentHeader} ${newsTabStyles.contentHeader}`}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%' }}>
-              <span className={`${styles.contentTitle} ${newsTabStyles.contentTitle}`}>
-                {currentUser?.account_type === 'Dùng thử' && item.isPublic !== true && (
-                  <span style={{ marginRight: '6px', fontSize: '14px', verticalAlign: 'middle' }}>🔒</span>
-                )}
-                {item.title}
-              </span>
-             
-            </div>
-            {item.summaryDetail && showSummaryDetail && (
-              <div className={`${styles.contentDetail} ${newsTabStyles.contentDetail}`} style={{ marginTop: '12px', marginBottom: '12px' }}>
-                <div
-                  className={styles.markdownContent}
-                  style={{ fontSize: '16px' }}
-                  dangerouslySetInnerHTML={{
-                    __html: (() => {
-                      const { processedText, latexBlocks } = preprocessLatex(item.summaryDetail || '');
-                      let html = marked.parse(processedText, {
-                        headerIds: true,
-                        mangle: false,
-                        headerPrefix: '',
-                        breaks: false,
-                        gfm: true
-                      });
-                      const finalHtml = postprocessLatex(html, latexBlocks);
-                      return DOMPurify.sanitize(finalHtml);
-                    })(),
-                  }}
+      <CaseTrainingContentPanel
+        item={item}
+        currentUser={currentUser}
+        isMobile={isMobile}
+        isAnimating={isAnimating}
+        showSummaryDetail={showSummaryDetail}
+        selectedDetailImageIndex={selectedDetailImageIndex}
+        searchText={searchText}
+        cidSourceInfo={cidSourceInfo}
+        selectedItem={selectedItem}
+        contentPanelRef={contentPanelRef}
+        markdownContentRef={markdownContentRef}
+        hasAccess={hasAccess}
+        renderSkeleton={renderSkeleton}
+        highlightTextInContent={highlightTextInContent}
+        getFileIcon={getFileIcon}
+        openFilePreview={openFilePreview}
+        handleEditClick={handleEditClick}
+        handleCidSourceInfoClick={handleCidSourceInfoClick}
+        onShare={onShare}
+        setShowSummaryDetail={setShowSummaryDetail}
+        setSelectedDetailImageIndex={setSelectedDetailImageIndex}
+        setShowFeedbackModal={setShowFeedbackModal}
+        setIsPackageModalOpen={setIsPackageModalOpen}
+        setQuizScores={setQuizScores}
+        preprocessLatex={preprocessLatex}
+        postprocessLatex={postprocessLatex}
                 />
-              </div>
-            )}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginLeft: 'auto', marginTop: '20px' }}>
-              {/* {item.hasTitle && headings.length > 0 && (
-                <IconButton
-                  style={{ padding: '4px' }}
-                  title={showTOCSidebar ? "Ẩn mục lục" : "Hiện mục lục"}
-                  onClick={toggleTOCSidebar}
-                >
-                  <MenuOutlined style={{ fontSize: '16px' }} />
-                </IconButton>
-              )} */}
-              <span style={{ fontSize: '13px', color: '#6b7280', fontWeight: '500', }}>ID: {item.id}</span>
-
-              {/* Hiển thị thông tin CID source nếu có */}
-              {cidSourceInfo && cidSourceInfo.length > 0 && (
-                cidSourceInfo.map((item) => (
-                  <span style={{
-                    fontSize: '13px',
-                    color: '#1890ff',
-                    fontWeight: '500',
-                    backgroundColor: '#f0f8ff',
-                    padding: '4px 8px',
-                    borderRadius: '4px',
-                    border: '1px solid #d6e4ff',
-                    marginLeft: '8px',
-                    cursor: 'pointer'
-                  }}
-                    onClick={() => {
-                      handleCidSourceInfoClick(cidSourceInfo);
-                    }}
-                  >
-                    {item.title} - CID {item.cid} - {item.id}
-                  </span>
-                ))
-              )}
-
-              <ShareButton onShare={() => onShare(selectedItem)} />
-
-            </div>
-          </div>
-
-          {/* Audio Player Section */}
-          <div style={{
-            display: 'flex',
-            gap: isMobile ? '12px' : '16px',
-            fontSize: '15px',
-            color: '#9F9F9F',
-            marginTop: '10px',
-            flexDirection: isMobile ? 'column' : 'row',
-            alignItems: isMobile ? 'flex-start' : 'center'
-          }}>
-           
-
-            {item.summaryDetail && (
-              <Button
-                type="text"
-                size="small"
-                onClick={() => setShowSummaryDetail(!showSummaryDetail)}
-                title={showSummaryDetail ? 'Ẩn Shortform' : 'Hiện Shortform'}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '4px',
-                  padding: '2px 8px',
-                  color: '#595959',
-                  backgroundColor: '#f5f5f5',
-                  borderRadius: '8px',
-                  border: 'none',
-                  boxShadow: 'none'
-                }}
-                icon={showSummaryDetail ? <Close_Icon width={12} height={12} /> : <Expand_Icon width={12} height={12} />}
-              >
-                Shortform
-              </Button>
-            )}
-
-            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-              {item.info?.filedLabel_1 && (
-                <span style={{ display: 'flex', alignItems: 'center' }}>
-                  {item.info?.filedLabel_1}
-                </span>
-              )}
-              {item.info?.filedLabel_1 && item.info?.filedLabel_2 && (
-                <span style={{ color: '#C4C4C4' }}>|</span>
-              )}
-              {item.info?.filedLabel_2 && (
-                <span style={{ display: 'flex', alignItems: 'center' }}>
-                  {item.info?.filedLabel_2}
-                </span>
-              )}
-            </div>
-
-            {
-              currentUser?.id && (
-                <span onClick={() => setShowFeedbackModal(true)} style={{ display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }} title="Góp ý/Feedback cho nội dung">
-                  <FeedBack_Icon width={17} height={17} /> Góp ý, feedback cho nội dung
-                </span>
-              )
-            }
-          </div>
-          <div className={styles.audioPlayerContainer}>
-            <AudioPlayer audioUrl={item.audioUrl} />
-          </div>
-          <div className={newsTabStyles.contentMain}
-          >
-            {/* File URLs Section */}
-            {item.fileUrls && item.fileUrls.length > 0 && (
-              <div className={`${styles.fileTagsContainer} ${newsTabStyles.fileTagsContainer}`}>
-                {item.fileUrls.map((fileUrl, index) => {
-                  const fileName = fileUrl.split('/').pop() || `file-${index + 1}`;
-                  const fileExtension = fileName.split('.').pop()?.toLowerCase() || '';
-
-                  return (
-                    <div
-                      key={index}
-                      className={`${styles.fileTag} ${newsTabStyles.fileTag}`}
-                      onClick={() => openFilePreview(fileUrl, fileName)}
-                      title={fileName}
-                    >
-                      <span className={`${styles.fileTagIcon} ${newsTabStyles.fileTagIcon}`}>
-                        {getFileIcon(fileExtension)}
-                      </span>
-                      <span className={`${styles.fileTagName} ${newsTabStyles.fileTagName}`}>
-                        {fileName}
-                      </span>
-                      <span className={`${styles.fileTagExtension} ${newsTabStyles.fileTagExtension}`}>
-                        {fileExtension.toUpperCase()}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-
-            {/* {( item.avatarUrl || item.summary) && (
-          <div className={`${styles.valueSection} ${newsTabStyles.valueSection}`}>
-
-            <div className={`${styles.valueSectionContent} ${newsTabStyles.valueSectionContent}`}>
-              {
-                item.summary && (
-                  <div className={`${styles.valueSummary} ${newsTabStyles.valueSummary}`}>
-                    {item.summary}
-                  </div>
-                )
-              }
-              {
-                item.avatarUrl && (
-                  <div className={`${styles.valueImage} ${newsTabStyles.valueImage}`}>
-                    <Image
-                      src={item.avatarUrl}
-                      alt={item.title}
-                      className={`${styles.coverImageDetail} ${newsTabStyles.coverImageDetail}`}
-                    />
-                  </div>
-                )
-              }
-            </div>
-          </div>
-        )} */}
-
-            {/* Diagram Section */}
-            {(item.diagramUrl  || ((item.diagramHtmlCode || item.diagramHtmlCodeFromSummaryDetail) && item.showHtml !== false) || (item.diagramExcalidrawJson && item.showExcalidraw !== false) || item.diagramNote || item.diagramExcalidrawNote || (item.imgUrls && item.imgUrls.length > 0 && item.showImgUrls !== false)) && (
-              <div className={`${styles.valueSection} ${newsTabStyles.valueSection}`}>
-                {/* <h3 className={`${styles.valueSectionTitle} ${newsTabStyles.valueSectionTitle}`}>
-                    INFOGRAM - BẢN VẼ TRỰC QUAN HÓA
-                  </h3> */}
-                <div className={`${styles.diagramSectionContent} ${newsTabStyles.diagramSectionContent}`}>
-                  {/* Handle Excalidraw React Diagrams */}
-                  {item.diagramExcalidrawJson && Array.isArray(item.diagramExcalidrawJson) && item.showExcalidraw !== false && (
-                    item.diagramExcalidrawJson.map((jsonString, index) => {
-                      // Lấy imageUrl nếu có
-                      const imageUrl = item.diagramExcalidrawImageUrls && Array.isArray(item.diagramExcalidrawImageUrls)
-                        ? item.diagramExcalidrawImageUrls[index]
-                        : null;
-
-                      return (
-                        <div key={`excalidraw-${index}`} style={{ marginBottom: '20px' }}>
-                          <div style={{
-                            border: '1px solid #e1e4e8',
-                            borderRadius: '8px',
-                            padding: '16px',
-                            backgroundColor: '#fff'
-                          }}>
-                            <ExcalidrawViewer
-                              jsonString={jsonString}
-                              readOnly={true}
-                              height="500px"
-                              imageUrl={imageUrl}
-                            />
-                          </div>
-                          {/* Show corresponding note if available */}
-                          {(Array.isArray(item.diagramExcalidrawNote) && item.diagramExcalidrawNote[index]) && (
-                            <div className={`${styles.diagramNote} ${newsTabStyles.diagramNote}`}>
-                              <div
-                                style={{ color: 'white' }}
-                                className={styles.markdownContent}
-                                dangerouslySetInnerHTML={{
-                                  __html: (() => {
-                                    const { processedText, latexBlocks } = preprocessLatex(item.diagramExcalidrawNote[index] || '');
-                                    const html = marked.parse(processedText);
-                                    const finalHtml = postprocessLatex(html, latexBlocks);
-                                    return DOMPurify.sanitize(finalHtml);
-                                  })(),
-                                }}
-                              />
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })
-                  )}
-
-                  {/* Handle imgUrls from SummaryDetail */}
-                  {item.imgUrls && Array.isArray(item.imgUrls) && item.imgUrls.length > 0 && item.showImgUrls !== false && (
-                    item.imgUrls.map((imgItem, index) => {
-                      const imageUrl = typeof imgItem === 'string' ? imgItem : (imgItem?.url || imgItem?.image_url || '');
-                      const description = typeof imgItem === 'object' ? imgItem?.description : '';
-                      if (!imageUrl) return null;
-
-                      return (
-                        <div key={`imgurls-${index}`} style={{ marginBottom: '20px' }}>
-                          <div className={`${styles.diagramImage} ${newsTabStyles.diagramImage}`}>
-                            <Image
-                              src={imageUrl}
-                              alt={description || `Ảnh ${index + 1}`}
-                              className={`${styles.diagramImageDetail} ${newsTabStyles.diagramImageDetail}`}
-                              preview={{
-                                mask: 'Xem ảnh',
-                                maskClassName: 'custom-mask'
-                              }}
-                            />
-                          </div>
-                          {/* Show description if available */}
-                          {/* {description && (
-                          <div
-                            className={styles.markdownContent}
-                            dangerouslySetInnerHTML={{
-                              __html: (() => {
-                                const { processedText, latexBlocks } = preprocessLatex(description || '');
-                                const html = marked.parse(processedText);
-                                const finalHtml = postprocessLatex(html, latexBlocks);
-                                return DOMPurify.sanitize(finalHtml);
-                              })(),
-                            }}
-                          />
-                        )} */}
-                        </div>
-                      );
-                    })
-                  )}
-
-                  {/* Handle HTML Code Diagrams */}
-                  {item.diagramHtmlCode && Array.isArray(item.diagramHtmlCode) && item.showHtml !== false && (
-                    item.diagramHtmlCode.map((htmlCode, index) => (
-                      <div key={`html-${index}`} >
-                        <div className={`${styles.diagramHtmlCode} ${newsTabStyles.diagramHtmlCode}`}>
-                          <div
-                            dangerouslySetInnerHTML={{
-                              __html: DOMPurify.sanitize(htmlCode || ''),
-                            }}
-                          />
-                        </div>
-
-                      </div>
-                    ))
-                  )}
-
-                  {/* Handle HTML Code Diagrams from SummaryDetail */}
-                  {item.diagramHtmlCodeFromSummaryDetail && item.showHtml !== false && (
-                    (Array.isArray(item.diagramHtmlCodeFromSummaryDetail) ? item.diagramHtmlCodeFromSummaryDetail : [item.diagramHtmlCodeFromSummaryDetail]).map((htmlCode, index) => (
-                      <div key={`html-summary-${index}`} >
-                        <div className={`${styles.diagramHtmlCode} ${newsTabStyles.diagramHtmlCode}`}>
-                          <div
-                            dangerouslySetInnerHTML={{
-                              __html: DOMPurify.sanitize(htmlCode || ''),
-                            }}
-                          />
-                        </div>
-                      </div>
-                    ))
-                  )}
-
-                  {/* Handle Kroki Image Diagrams */}
-                  {item.diagramUrl && (
-                    Array.isArray(item.diagramUrl) ? (
-                      item.diagramUrl.map((diagramUrl, index) => (
-                        <div key={`kroki-${index}`} style={{ marginBottom: '20px' }}>
-                          <div className={`${styles.diagramImage} ${newsTabStyles.diagramImage}`}>
-                            <Image
-                              src={diagramUrl}
-                              alt={`Diagram ${index + 1}`}
-                              className={`${styles.diagramImageDetail} ${newsTabStyles.diagramImageDetail}`}
-                              preview={{
-                                mask: 'Xem ảnh',
-                                maskClassName: 'custom-mask'
-                              }}
-                            />
-                          </div>
-                          {/* Show corresponding note if available */}
-                          {Array.isArray(item.diagramNote) && item.diagramNote[index] && (
-                            <div className={`${styles.diagramNote} ${newsTabStyles.diagramNote}`}>
-                              <div
-                                style={{ color: 'white' }}
-                                className={styles.markdownContent}
-                                dangerouslySetInnerHTML={{
-                                  __html: (() => {
-                                    const { processedText, latexBlocks } = preprocessLatex(item.diagramNote[index] || '');
-                                    const html = marked.parse(processedText);
-                                    const finalHtml = postprocessLatex(html, latexBlocks);
-                                    return DOMPurify.sanitize(finalHtml);
-                                  })(),
-                                }}
-                              />
-                            </div>
-                          )}
-                        </div>
-                      ))
-                    ) : (
-                      /* Handle single diagram (backward compatibility) */
-                      <>
-                        <div className={`${styles.diagramImage} ${newsTabStyles.diagramImage}`}>
-                          <Image
-                            src={item.diagramUrl}
-                            alt="Diagram"
-                            className={`${styles.diagramImageDetail} ${newsTabStyles.diagramImageDetail}`}
-                            preview={{
-                              mask: 'Xem ảnh',
-                              maskClassName: 'custom-mask'
-                            }}
-                          />
-                        </div>
-                        {item.diagramNote && (
-                          <div className={`${styles.diagramNote} ${newsTabStyles.diagramNote}`}>
-                            <div
-                              style={{ color: 'white' }}
-                              className={styles.markdownContent}
-                              dangerouslySetInnerHTML={{
-                                __html: (() => {
-                                  const { processedText, latexBlocks } = preprocessLatex(
-                                    Array.isArray(item.diagramNote)
-                                      ? item.diagramNote[0] || ''
-                                      : item.diagramNote || ''
-                                  );
-                                  const html = marked.parse(processedText);
-                                  const finalHtml = postprocessLatex(html, latexBlocks);
-                                  return DOMPurify.sanitize(finalHtml);
-                                })(),
-                              }}
-                            />
-                          </div>
-                        )}
-                      </>
-                    )
-                  )}
-                </div>
-              </div>
-            )}
-
-            <div className={`${styles.contentBody} ${newsTabStyles.contentBody}`}>
-
-              {item.description && (
-                <div className={styles.contentDescription}>
-                  <Text strong>Description:</Text>
-                  <Text>{item.description}</Text>
-                </div>
-              )}
-
-              {item.detail && item.showDetail !== false && (
-                <div className={`${styles.contentDetail} ${newsTabStyles.contentDetail}`}>
-                  <div
-                    ref={markdownContentRef}
-                    className={styles.markdownContent}
-                    dangerouslySetInnerHTML={{
-                      __html: (() => {
-                        const { processedText, latexBlocks } = preprocessLatex(item.detail || '');
-                        let html = marked.parse(processedText, {
-                          headerIds: true,
-                          mangle: false,
-                          headerPrefix: '',
-                          breaks: false,
-                          gfm: true
-                        });
-
-                        // Apply search highlight if searchText exists
-                        if (searchText && searchText.trim()) {
-                          html = highlightTextInContent(html, searchText);
-                        }
-
-                        const finalHtml = postprocessLatex(html, latexBlocks);
-                        return DOMPurify.sanitize(finalHtml);
-                      })(),
-                    }}
-                  />
-                </div>
-              )}
-
-              {/* Quiz Component - Hiển thị cuối cùng khi xem chi tiết */}
-              {item.questionContent && (
-                <QuizComponent
-                  allowRetake={item.allow_retake}
-                  quizData={item.questionContent}
-                  questionId={item.id}
-                  onScoreUpdate={(qid, score) => setQuizScores(prev => ({ ...prev, [qid]: score }))}
-                />
-              )}
-            </div>
-          </div>
-        </div>
-      </>
-
     );
   };
 
@@ -2829,15 +2415,57 @@ const CaseTrainingTab = ({
                           {item.avatarUrl && (
                             <div
                               className={styles.avatarGridWrapper}
+                              style={{ position: 'relative' }}
                             >
                               <Image
                                 src={item.avatarUrl}
                                 alt={item.title}
                                 preview={{
-                                  mask: 'Xem ảnh',
-                                  maskClassName: 'custom-mask'
+                                  mask: false
                                 }}
                               />
+                              <div
+                                style={{
+                                  position: 'absolute',
+                                  bottom: '8px',
+                                  right: '8px',
+                                  width: '24px',
+                                  height: '24px',
+                                  backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                                  borderRadius: '50%',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  cursor: 'pointer',
+                                  zIndex: 10,
+                                  transition: 'all 0.2s',
+                                  backdropFilter: 'blur(4px)'
+                                }}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  // Trigger image preview by finding and clicking the ant-image element
+                                  const imageWrapper = e.currentTarget.parentElement;
+                                  const imageElement = imageWrapper?.querySelector('.ant-image');
+                                  if (imageElement) {
+                                    const clickEvent = new MouseEvent('click', {
+                                      bubbles: true,
+                                      cancelable: true,
+                                      view: window
+                                    });
+                                    imageElement.dispatchEvent(clickEvent);
+                                  }
+                                }}
+                                onMouseEnter={(e) => {
+                                  e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+                                  e.currentTarget.style.transform = 'scale(1.1)';
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+                                  e.currentTarget.style.transform = 'scale(1)';
+                                }}
+                              >
+                                <EyeOutlined style={{ color: '#fff', fontSize: '12px', opacity: 0.7 }} />
+                              </div>
                             </div>
                           )}
 
@@ -3017,7 +2645,7 @@ const CaseTrainingTab = ({
                     fontWeight: '600',
                     color: '#262626'
                   }}>
-                    <span style={{ fontSize: '18px' }}>{getTabDisplayName(activeTab)}</span>
+                    <span style={{ fontSize: '18px' , width: 'max-content' }}>{getTabDisplayName(activeTab)}</span>
                     <span>{'>'}</span>
                     <span style={{
                       fontSize: '16px',
@@ -3097,7 +2725,7 @@ const CaseTrainingTab = ({
               <div style={{ flex: 1, padding: '20px' }}>
                 {renderContentPanel(selectedItem)}
               </div>
-              {selectedItem?.hasTitle && (
+              {selectedItem?.hasTitle && hasAccess(selectedItem) && (
                 <div style={{ width: '25%', borderLeft: '1px solid #f0f0f0', overflowY: 'auto' }}>
                   {renderTOCSidebar()}
                 </div>
@@ -3519,7 +3147,7 @@ const CaseTrainingTab = ({
               </div>
             )}
           </div>
-          {selectedItem?.hasTitle && renderTOCSidebar()}
+          {selectedItem?.hasTitle && hasAccess(selectedItem) && renderTOCSidebar()}
         </div>
       )}
 
