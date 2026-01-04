@@ -1,80 +1,80 @@
 import {
-  ArrowLeftOutlined,
-  CheckCircleOutlined,
-  DeleteOutlined,
-  DownOutlined,
-  EditOutlined,
+	ArrowLeftOutlined,
+	CheckCircleOutlined,
+	DeleteOutlined,
+	DownOutlined,
+	EditOutlined,
 
-  EyeOutlined,
+	EyeOutlined,
 
-  FileExcelOutlined,
+	FileExcelOutlined,
 
-  FileTextOutlined,
+	FileTextOutlined,
 
-  HistoryOutlined,
+	HistoryOutlined,
 
-  InboxOutlined,
+	InboxOutlined,
 
-  LoadingOutlined,
-  NodeIndexOutlined,
-  PictureOutlined,
-  PlusOutlined,
-  QuestionCircleOutlined,
+	LoadingOutlined,
+	NodeIndexOutlined,
+	PictureOutlined,
+	PlusOutlined,
+	QuestionCircleOutlined,
 
-  ReloadOutlined,
+	ReloadOutlined,
 
-  SettingOutlined,
+	SettingOutlined,
 
-  SoundOutlined,
+	SoundOutlined,
 
-  TagsOutlined,
+	TagsOutlined,
 
-  AppstoreOutlined,
+	AppstoreOutlined,
 
-  ThunderboltOutlined,
+	ThunderboltOutlined,
 
-  UploadOutlined,
+	UploadOutlined,
 } from '@ant-design/icons';
 
 import {
-  AutoComplete,
+	AutoComplete,
 
-  Badge,
+	Badge,
 
-  Button,
+	Button,
 
-  Card,
-  Dropdown,
-  Form,
+	Card,
+	Dropdown,
+	Form,
 
-  Image,
+	Image,
 
-  Input,
+	Input,
 
-  InputNumber,
+	InputNumber,
 
-  message,
+	message,
 
-  Modal,
+	Modal,
 
-  Popconfirm,
+	Popconfirm,
 
-  Progress,
+	Progress,
 
-  Select,
+	Select,
 
-  Space,
+	Space,
 
-  Spin,
+	Spin,
 
-  Switch,
+	Switch,
 
-  Table,
+	Table,
 
-  Tag,
+	Tag,
 
-  Tooltip,
-  Upload
+	Tooltip,
+	Upload,
 } from 'antd';
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -85,15 +85,23 @@ import { createAISummary, deleteAISummary, getAllAISummaries, updateAISummary } 
 import { getAllCompanyInfos } from '../../apis/companyInfoService.jsx';
 import { getAllCompanyReports } from '../../apis/companyReportService.jsx';
 import {
-  createEmbeddingWithAI,
-  deleteEmbedingDataBySourceId,
-  getEmbedingDataByTable,
+	createEmbeddingWithAI,
+	deleteEmbedingDataBySourceId,
+	getEmbedingDataByTable,
 } from '../../apis/embedingDataService';
 import { getAllFinRatioBaohiems } from '../../apis/finRatioBaohiemService.jsx';
 import { getAllFinRatioChungkhoans } from '../../apis/finRatioChungkhoanService.jsx';
 import { getAllFinRatioNganhangs } from '../../apis/finRatioNganhangService.jsx';
 import { getAllFinRatios } from '../../apis/finRatioService.jsx';
-import { createK9, deleteK9, getK9ById, getK9ByType, searchK9ByTextToVector, updateK9, updateK9Bulk } from '../../apis/k9Service';
+import {
+	createK9,
+	deleteK9,
+	getK9ById,
+	getK9ByType,
+	searchK9ByTextToVector,
+	updateK9,
+	updateK9Bulk,
+} from '../../apis/k9Service';
 import { createOrUpdateSetting, getSettingByType } from '../../apis/settingService';
 import { getAllUserClass } from '../../apis/userClassService';
 import ReportOverviewModal from '../K9/components/ReportOverviewModal';
@@ -130,6 +138,7 @@ import VoiceSettingsModal from './modal/VoiceSettingsModal.jsx';
 import VoiceQueueModal from './modal/VoiceQueueModal.jsx';
 import { createTimestamp, formatDateToDDMMYYYY } from '../../generalFunction/format.js';
 import { log } from 'mathjs';
+
 const { Option } = Select;
 const { TextArea } = Input;
 const { Dragger } = Upload;
@@ -138,508 +147,487 @@ const { Dragger } = Upload;
 const K9Management = () => {
 
 
+	const navigate = useNavigate();
 
-  const navigate = useNavigate();
+	const [form] = Form.useForm();
 
-  const [form] = Form.useForm();
+	const [data, setData] = useState([]);
 
-  const [data, setData] = useState([]);
+	const [loading, setLoading] = useState(false);
 
-  const [loading, setLoading] = useState(false);
+	const [pageSize, setPageSize] = useState(1000);
 
-  const [pageSize, setPageSize] = useState(1000);
+	const [loadingClassify, setLoadingClassify] = useState(false);
 
-  const [loadingClassify, setLoadingClassify] = useState(false);
+	const [loadingGetFeeds, setLoadingGetFeeds] = useState(false);
 
-  const [loadingGetFeeds, setLoadingGetFeeds] = useState(false);
+	const [modalVisible, setModalVisible] = useState(false);
 
-  const [modalVisible, setModalVisible] = useState(false);
+	const [viewModalVisible, setViewModalVisible] = useState(false);
 
-  const [viewModalVisible, setViewModalVisible] = useState(false);
+	const [modalMode, setModalMode] = useState('create'); // 'create' | 'edit'
 
-  const [modalMode, setModalMode] = useState('create'); // 'create' | 'edit'
+	const [selectedRecord, setSelectedRecord] = useState(null);
 
-  const [selectedRecord, setSelectedRecord] = useState(null);
+	const [currentTab, setCurrentTab] = useState('home');
 
-  const [currentTab, setCurrentTab] = useState('home');
+	const [tableKey, setTableKey] = useState(0);
 
-  const [tableKey, setTableKey] = useState(0);
+	const [formKey, setFormKey] = useState(0);
 
-  const [formKey, setFormKey] = useState(0);
+	// Upload states for individual records
 
-  // Upload states for individual records
+	const [uploadingImages, setUploadingImages] = useState(false);
 
-  const [uploadingImages, setUploadingImages] = useState(false);
+	const [uploadingVideo, setUploadingVideo] = useState(false);
 
-  const [uploadingVideo, setUploadingVideo] = useState(false);
+	const [uploadingFiles, setUploadingFiles] = useState(false);
 
-  const [uploadingFiles, setUploadingFiles] = useState(false);
+	const [uploadingAudio, setUploadingAudio] = useState(false);
 
-  const [uploadingAudio, setUploadingAudio] = useState(false);
+	const [uploadProgress, setUploadProgress] = useState({ images: 0, video: 0, files: 0, audio: 0 });
 
-  const [uploadProgress, setUploadProgress] = useState({ images: 0, video: 0, files: 0, audio: 0 });
+	const [selectedImages, setSelectedImages] = useState([]);
 
-  const [selectedImages, setSelectedImages] = useState([]);
+	const [selectedVideo, setSelectedVideo] = useState(null);
 
-  const [selectedVideo, setSelectedVideo] = useState(null);
+	const [selectedFiles, setSelectedFiles] = useState([]);
 
-  const [selectedFiles, setSelectedFiles] = useState([]);
+	const [selectedAudio, setSelectedAudio] = useState(null);
 
-  const [selectedAudio, setSelectedAudio] = useState(null);
+	const [uploadedImageUrls, setUploadedImageUrls] = useState([]);
 
-  const [uploadedImageUrls, setUploadedImageUrls] = useState([]);
+	const [uploadedVideoUrl, setUploadedVideoUrl] = useState('');
 
-  const [uploadedVideoUrl, setUploadedVideoUrl] = useState('');
+	const [uploadedFileUrls, setUploadedFileUrls] = useState([]);
 
-  const [uploadedFileUrls, setUploadedFileUrls] = useState([]);
+	const [uploadedAudioUrl, setUploadedAudioUrl] = useState('');
 
-  const [uploadedAudioUrl, setUploadedAudioUrl] = useState('');
 
+	// Avatar and Diagram upload states
+	const [uploadingAvatar, setUploadingAvatar] = useState(false);
+	const [uploadingDiagram, setUploadingDiagram] = useState(false);
+	const [selectedAvatar, setSelectedAvatar] = useState(null);
+	const [selectedDiagram, setSelectedDiagram] = useState(null);
+	const [uploadedAvatarUrl, setUploadedAvatarUrl] = useState('');
+	const [uploadedDiagramUrl, setUploadedDiagramUrl] = useState('');
 
-  // Avatar and Diagram upload states
-  const [uploadingAvatar, setUploadingAvatar] = useState(false);
-  const [uploadingDiagram, setUploadingDiagram] = useState(false);
-  const [selectedAvatar, setSelectedAvatar] = useState(null);
-  const [selectedDiagram, setSelectedDiagram] = useState(null);
-  const [uploadedAvatarUrl, setUploadedAvatarUrl] = useState('');
-  const [uploadedDiagramUrl, setUploadedDiagramUrl] = useState('');
 
+	// AI Voice generation states
 
-  // AI Voice generation states
+	const [customVoiceText, setCustomVoiceText] = useState('');
 
-  const [customVoiceText, setCustomVoiceText] = useState('');
+	// Voice Settings states - chỉ lưu 3 fields có thể edit
 
-  // Voice Settings states - chỉ lưu 3 fields có thể edit
+	const [voiceSettings, setVoiceSettings] = useState({
 
-  const [voiceSettings, setVoiceSettings] = useState({
+		systemMessage: '',
+		textModel: '',
+		audioModel: '',
+		voiceType: 'nova',
+		speed: 1.0,
 
-    systemMessage: '',
-    textModel: '',
-    audioModel: '',
-    voiceType: 'nova',
-    speed: 1.0,
+	});
 
-  });
+	const [voiceSettingsVisible, setVoiceSettingsVisible] = useState(false);
 
-  const [voiceSettingsVisible, setVoiceSettingsVisible] = useState(false);
+	const [voiceQueueModalVisible, setVoiceQueueModalVisible] = useState(false);
 
-  const [voiceQueueModalVisible, setVoiceQueueModalVisible] = useState(false);
+	const [quizContent, setQuizContent] = useState('');
 
-  const [quizContent, setQuizContent] = useState('');
+	const [audioFileList, setAudioFileList] = useState([]);
 
-  const [audioFileList, setAudioFileList] = useState([]);
 
+	// Bulk import states
 
+	const [importModalVisible, setImportModalVisible] = useState(false);
 
-  // Bulk import states
+	const [uploadingImport, setUploadingImport] = useState(false);
 
-  const [importModalVisible, setImportModalVisible] = useState(false);
+	const [importPreviewData, setImportPreviewData] = useState(null);
 
-  const [uploadingImport, setUploadingImport] = useState(false);
 
-  const [importPreviewData, setImportPreviewData] = useState(null);
+	// JSON import states
 
+	const [jsonImportModalVisible, setJsonImportModalVisible] = useState(false);
 
+	const [jsonInput, setJsonInput] = useState('');
 
-  // JSON import states
+	const [jsonPreviewData, setJsonPreviewData] = useState(null);
 
-  const [jsonImportModalVisible, setJsonImportModalVisible] = useState(false);
+	const [uploadingJson, setUploadingJson] = useState(false);
 
-  const [jsonInput, setJsonInput] = useState('');
 
-  const [jsonPreviewData, setJsonPreviewData] = useState(null);
+	// Audio player states for view modal
 
-  const [uploadingJson, setUploadingJson] = useState(false);
+	const [isAudioPlaying, setIsAudioPlaying] = useState(false);
 
+	const [isAudioLoading, setIsAudioLoading] = useState(false);
 
+	const audioRef = useRef(null);
 
-  // Audio player states for view modal
 
-  const [isAudioPlaying, setIsAudioPlaying] = useState(false);
+	// Background audio settings states
 
-  const [isAudioLoading, setIsAudioLoading] = useState(false);
+	const [bgAudioSettingsVisible, setBgAudioSettingsVisible] = useState(false);
 
-  const audioRef = useRef(null);
+	const [guidelineSettingsVisible, setGuidelineSettingsVisible] = useState(false);
 
+	const [bgAudioSettings, setBgAudioSettings] = useState({
 
+		enabled: false,
 
-  // Background audio settings states
+		audioUrl: '',
 
-  const [bgAudioSettingsVisible, setBgAudioSettingsVisible] = useState(false);
+		volume: 0.5,
 
-  const [guidelineSettingsVisible, setGuidelineSettingsVisible] = useState(false);
+	});
 
-  const [bgAudioSettings, setBgAudioSettings] = useState({
+	const [bgAudioUploading, setBgAudioUploading] = useState(false);
 
-    enabled: false,
+	const [bgAudioFile, setBgAudioFile] = useState(null);
 
-    audioUrl: '',
 
-    volume: 0.5
+	// Guideline settings states
 
-  });
+	const [guidelineSettings, setGuidelineSettings] = useState({
 
-  const [bgAudioUploading, setBgAudioUploading] = useState(false);
+		imageUrl: '',
 
-  const [bgAudioFile, setBgAudioFile] = useState(null);
+		markdownText: '',
 
+	});
 
+	const [guidelineImageFile, setGuidelineImageFile] = useState(null);
 
-  // Guideline settings states
+	const [guidelineImageUploading, setGuidelineImageUploading] = useState(false);
 
-  const [guidelineSettings, setGuidelineSettings] = useState({
 
-    imageUrl: '',
+	// Bulk voice creation states
 
-    markdownText: ''
+	const [selectedRowKeys, setSelectedRowKeys] = useState([]);
 
-  });
 
-  const [guidelineImageFile, setGuidelineImageFile] = useState(null);
+	// Search states
 
-  const [guidelineImageUploading, setGuidelineImageUploading] = useState(false);
+	const [searchText, setSearchText] = useState('');
 
 
+	// Search history persistence for each tab
 
-  // Bulk voice creation states
+	const [searchHistory, setSearchHistory] = useState({
 
-  const [selectedRowKeys, setSelectedRowKeys] = useState([]);
+		news: [],
 
+		library: [],
 
+		story: [],
 
-  // Search states
+		caseTraining: [],
 
-  const [searchText, setSearchText] = useState('');
+		longForm: [],
 
+		home: [],
 
+	});
 
-  // Search history persistence for each tab
 
-  const [searchHistory, setSearchHistory] = useState({
+	// Filter history persistence for each tab
 
-    news: [],
+	const [filterHistory, setFilterHistory] = useState({
 
-    library: [],
+		news: {
 
-    story: [],
+			categoryFilter: 'all',
 
-    caseTraining: [],
+			imageFilter: 'all',
 
-    longForm: [],
+			diagramFilter: 'all',
+			quizFilter: 'all',
 
-    home: []
+			tag4Filter: [],
 
-  });
+			searchText: '',
 
+		},
 
+		library: {
 
-  // Filter history persistence for each tab
+			categoryFilter: 'all',
 
-  const [filterHistory, setFilterHistory] = useState({
+			imageFilter: 'all',
 
-    news: {
+			diagramFilter: 'all',
+			quizFilter: 'all',
 
-      categoryFilter: 'all',
+			tag4Filter: [],
 
-      imageFilter: 'all',
+			searchText: '',
 
-      diagramFilter: 'all',
-      quizFilter: 'all',
+		},
 
-      tag4Filter: [],
+		story: {
 
-      searchText: ''
+			categoryFilter: 'all',
 
-    },
+			imageFilter: 'all',
 
-    library: {
+			diagramFilter: 'all',
+			quizFilter: 'all',
 
-      categoryFilter: 'all',
+			tag4Filter: [],
 
-      imageFilter: 'all',
+			searchText: '',
 
-      diagramFilter: 'all',
-      quizFilter: 'all',
+		},
 
-      tag4Filter: [],
+		caseTraining: {
 
-      searchText: ''
+			categoryFilter: 'all',
 
-    },
+			imageFilter: 'all',
 
-    story: {
+			diagramFilter: 'all',
+			quizFilter: 'all',
 
-      categoryFilter: 'all',
+			tag1Filter: 'all',
 
-      imageFilter: 'all',
+			tag2Filter: 'all',
 
-      diagramFilter: 'all',
-      quizFilter: 'all',
+			tag3Filter: 'all',
 
-      tag4Filter: [],
+			tag4Filter: [],
 
-      searchText: ''
+			searchText: '',
 
-    },
+		},
 
-    caseTraining: {
+		longForm: {
 
-      categoryFilter: 'all',
+			categoryFilter: 'all',
 
-      imageFilter: 'all',
+			imageFilter: 'all',
 
-      diagramFilter: 'all',
-      quizFilter: 'all',
+			diagramFilter: 'all',
+			quizFilter: 'all',
 
-      tag1Filter: 'all',
+			tag4Filter: [],
 
-      tag2Filter: 'all',
+			searchText: '',
 
-      tag3Filter: 'all',
+		},
 
-      tag4Filter: [],
+		home: {
 
-      searchText: ''
+			categoryFilter: 'all',
 
-    },
+			imageFilter: 'all',
 
-    longForm: {
+			diagramFilter: 'all',
+			quizFilter: 'all',
 
-      categoryFilter: 'all',
+			tag4Filter: [],
 
-      imageFilter: 'all',
+			searchText: '',
 
-      diagramFilter: 'all',
-      quizFilter: 'all',
+		},
 
-      tag4Filter: [],
+	});
 
-      searchText: ''
+	const [searchLoading, setSearchLoading] = useState(false);
 
-    },
+	const [userClasses, setUserClasses] = useState([]);
 
-    home: {
+	const [userClassModalVisible, setUserClassModalVisible] = useState(false);
 
-      categoryFilter: 'all',
+	const [selectedUserClasses, setSelectedUserClasses] = useState([]);
 
-      imageFilter: 'all',
 
-      diagramFilter: 'all',
-      quizFilter: 'all',
+	// Voice Queue System
 
-      tag4Filter: [],
+	const [voiceQueue, setVoiceQueue] = useState([]);
 
-      searchText: ''
+	const [processingQueue, setProcessingQueue] = useState(false);
 
-    }
+	const [currentProcessing, setCurrentProcessing] = useState(null);
 
-  });
+	const queueProcessorRef = useRef(null);
 
-  const [searchLoading, setSearchLoading] = useState(false);
 
-  const [userClasses, setUserClasses] = useState([]);
+	// Embedding states
 
-  const [userClassModalVisible, setUserClassModalVisible] = useState(false);
+	const [embeddingAllLoading, setEmbeddingAllLoading] = useState(false);
 
-  const [selectedUserClasses, setSelectedUserClasses] = useState([]);
+	const [embeddingLoadingIds, setEmbeddingLoadingIds] = useState(new Set());
 
+	const [embeddingProgress, setEmbeddingProgress] = useState({ current: 0, total: 0 });
 
+	const [embeddedItems, setEmbeddedItems] = useState(new Set());
 
-  // Voice Queue System
 
-  const [voiceQueue, setVoiceQueue] = useState([]);
+	// AI Summary states
 
-  const [processingQueue, setProcessingQueue] = useState(false);
+	const [aiSummaryModalVisible, setAiSummaryModalVisible] = useState(false);
 
-  const [currentProcessing, setCurrentProcessing] = useState(null);
+	const [aiSummaryData, setAiSummaryData] = useState([]);
 
-  const queueProcessorRef = useRef(null);
+	const [aiSummaryLoading, setAiSummaryLoading] = useState(false);
 
+	const [aiSummarySelectedRowKeys, setAiSummarySelectedRowKeys] = useState([]);
 
 
-  // Embedding states
+	// Add state for reportDN data
 
-  const [embeddingAllLoading, setEmbeddingAllLoading] = useState(false);
+	const [reportDNData, setReportDNData] = useState([]);
 
-  const [embeddingLoadingIds, setEmbeddingLoadingIds] = useState(new Set());
+	const [reportDNLoading, setReportDNLoading] = useState(false);
 
-  const [embeddingProgress, setEmbeddingProgress] = useState({ current: 0, total: 0 });
 
-  const [embeddedItems, setEmbeddedItems] = useState(new Set());
+	// Table management states
 
+	const [tables, setTables] = useState([]);
 
+	const [editingTable, setEditingTable] = useState(null);
 
-  // AI Summary states
+	const [tableModalVisible, setTableModalVisible] = useState(false);
 
-  const [aiSummaryModalVisible, setAiSummaryModalVisible] = useState(false);
 
-  const [aiSummaryData, setAiSummaryData] = useState([]);
+	// Report Overview states
 
-  const [aiSummaryLoading, setAiSummaryLoading] = useState(false);
+	const [reportOverviewModalVisible, setReportOverviewModalVisible] = useState(false);
 
-  const [aiSummarySelectedRowKeys, setAiSummarySelectedRowKeys] = useState([]);
+	const [reportOverviewData, setReportOverviewData] = useState(null);
 
 
+	// Company Summary Modal states
 
-  // Add state for reportDN data
+	const [companySummaryModalVisible, setCompanySummaryModalVisible] = useState(false);
 
-  const [reportDNData, setReportDNData] = useState([]);
+	const [companySummarySearchTerm, setCompanySummarySearchTerm] = useState('');
 
-  const [reportDNLoading, setReportDNLoading] = useState(false);
+	const [companySummaryLoading, setCompanySummaryLoading] = useState(false);
 
+	const [companySummaryData, setCompanySummaryData] = useState(null);
 
+	const [isCreatingSummary, setIsCreatingSummary] = useState(false);
 
-  // Table management states
 
-  const [tables, setTables] = useState([]);
+	// Company Summary Queue states
 
-  const [editingTable, setEditingTable] = useState(null);
+	const [companySummaryQueue, setCompanySummaryQueue] = useState([]);
 
-  const [tableModalVisible, setTableModalVisible] = useState(false);
 
+	// Filter states for news tab
 
+	const [categoryFilter, setCategoryFilter] = useState('all');
 
-  // Report Overview states
+	const [imageFilter, setImageFilter] = useState('all');
 
-  const [reportOverviewModalVisible, setReportOverviewModalVisible] = useState(false);
+	const [diagramFilter, setDiagramFilter] = useState('all');
+	const [quizFilter, setQuizFilter] = useState('all');
 
-  const [reportOverviewData, setReportOverviewData] = useState(null);
+	const [tag1Filter, setTag1Filter] = useState('all');
 
+	const [tag2Filter, setTag2Filter] = useState('all');
 
+	const [tag3Filter, setTag3Filter] = useState('all');
 
-  // Company Summary Modal states
+	const [processingCompanySummaryQueue, setProcessingCompanySummaryQueue] = useState(false);
 
-  const [companySummaryModalVisible, setCompanySummaryModalVisible] = useState(false);
+	const [currentCompanySummaryProcessing, setCurrentCompanySummaryProcessing] = useState(null);
 
-  const [companySummarySearchTerm, setCompanySummarySearchTerm] = useState('');
 
-  const [companySummaryLoading, setCompanySummaryLoading] = useState(false);
+	// Image Generation states
 
-  const [companySummaryData, setCompanySummaryData] = useState(null);
+	const [imageGenerationLoading, setImageGenerationLoading] = useState(false);
 
-  const [isCreatingSummary, setIsCreatingSummary] = useState(false);
+	const [imageGenerationQueue, setImageGenerationQueue] = useState([]);
 
+	const [processingImageQueue, setProcessingImageQueue] = useState(false);
 
+	const [currentImageProcessing, setCurrentImageProcessing] = useState(null);
 
-  // Company Summary Queue states
 
-  const [companySummaryQueue, setCompanySummaryQueue] = useState([]);
+	// Diagram Generation states
+	const [diagramGenerationQueue, setDiagramGenerationQueue] = useState([]);
+	const [processingDiagramQueue, setProcessingDiagramQueue] = useState(false);
+	const [currentDiagramProcessing, setCurrentDiagramProcessing] = useState(null);
 
+	// Summary Detail Generation states
+	const [summaryDetailQueue, setSummaryDetailQueue] = useState([]);
+	const [processingSummaryDetailQueue, setProcessingSummaryDetailQueue] = useState(false);
+	const [currentSummaryDetailProcessing, setCurrentSummaryDetailProcessing] = useState(null);
 
+	// Tạo Case Training từ Learning Block - Queue states
+	const [caseFromLearningBlockQueue, setCaseFromLearningBlockQueue] = useState([]);
+	const [processingCaseFromLearningBlockQueue, setProcessingCaseFromLearningBlockQueue] = useState(false);
+	const [currentCaseFromLearningBlockProcessing, setCurrentCaseFromLearningBlockProcessing] = useState(null);
 
-  // Filter states for news tab
+	// Diagram Generation tracking states
+	const [diagramGenerationStats, setDiagramGenerationStats] = useState({
+		total: 0,
+		success: 0,
+		failed: 0,
+		type: null, // 'kroki' or 'html'
+	});
+	const [diagramGenerationResults, setDiagramGenerationResults] = useState([]);
+	const [diagramProgressModalVisible, setDiagramProgressModalVisible] = useState(false);
 
-  const [categoryFilter, setCategoryFilter] = useState('all');
+	// Case Training from Learning Block tracking states
+	const [caseFromLearningStats, setCaseFromLearningStats] = useState({
+		total: 0,
+		success: 0,
+		failed: 0,
+	});
+	const [caseFromLearningResults, setCaseFromLearningResults] = useState([]);
+	const [caseFromLearningProgressModalVisible, setCaseFromLearningProgressModalVisible] = useState(false);
+	const shouldStopRef = useRef(false);
+	const [showImproveDetail, setShowImproveDetail] = useState(false);
 
-  const [imageFilter, setImageFilter] = useState('all');
+	const [improveDetailLoading, setImproveDetailLoading] = useState(false);
 
-  const [diagramFilter, setDiagramFilter] = useState('all');
-  const [quizFilter, setQuizFilter] = useState('all');
+	const [createQuizzLoading, setCreateQuizzLoading] = useState(false);
 
-  const [tag1Filter, setTag1Filter] = useState('all');
+	const [updateCategoryLoading, setUpdateCategoryLoading] = useState(false);
 
-  const [tag2Filter, setTag2Filter] = useState('all');
+	const [showCreateQuiz, setShowCreateQuiz] = useState(false);
 
-  const [tag3Filter, setTag3Filter] = useState('all');
+	const [showUpdateQuiz, setShowUpdateQuiz] = useState(false);
 
-  const [processingCompanySummaryQueue, setProcessingCompanySummaryQueue] = useState(false);
+	const [promptSettingsModalVisible, setPromptSettingsModalVisible] = useState(false);
+	const [promptSettingsListModalVisible, setPromptSettingsListModalVisible] = useState(false);
 
-  const [currentCompanySummaryProcessing, setCurrentCompanySummaryProcessing] = useState(null);
+	// Diagram prompt selection states
+	const [selectDiagramPromptModalVisible, setSelectDiagramPromptModalVisible] = useState(false);
+	const [pendingDiagramMode, setPendingDiagramMode] = useState(null);
+	const [pendingDiagramRecords, setPendingDiagramRecords] = useState([]);
 
+	// Prompt chọn khi tạo Case Training từ Learning Block
+	const [selectCaseFromLearningPromptModalVisible, setSelectCaseFromLearningPromptModalVisible] = useState(false);
+	const [pendingCaseFromLearningRecords, setPendingCaseFromLearningRecords] = useState([]);
 
+	const [quizEditorVisible, setQuizEditorVisible] = useState(false);
 
-  // Image Generation states
+	const [quizEditorRecord, setQuizEditorRecord] = useState(null);
 
-  const [imageGenerationLoading, setImageGenerationLoading] = useState(false);
+	const [savingQuiz, setSavingQuiz] = useState(false);
 
-  const [imageGenerationQueue, setImageGenerationQueue] = useState([]);
 
-  const [processingImageQueue, setProcessingImageQueue] = useState(false);
+	// Image Generation Configuration Modal
 
-  const [currentImageProcessing, setCurrentImageProcessing] = useState(null);
+	const [imageConfigModalVisible, setImageConfigModalVisible] = useState(false);
 
+	const [imageConfig, setImageConfig] = useState({
 
-  // Diagram Generation states
-  const [diagramGenerationQueue, setDiagramGenerationQueue] = useState([]);
-  const [processingDiagramQueue, setProcessingDiagramQueue] = useState(false);
-  const [currentDiagramProcessing, setCurrentDiagramProcessing] = useState(null);
+		descriptionModel: 'gpt-4o-mini',
 
-  // Summary Detail Generation states
-  const [summaryDetailQueue, setSummaryDetailQueue] = useState([]);
-  const [processingSummaryDetailQueue, setProcessingSummaryDetailQueue] = useState(false);
-  const [currentSummaryDetailProcessing, setCurrentSummaryDetailProcessing] = useState(null);
+		descriptionSystemMessage: 'You are an expert at creating precise, technical descriptions for educational illustrations. Create clear, detailed descriptions suitable for AI image generation.',
 
-  // Tạo Case Training từ Learning Block - Queue states
-  const [caseFromLearningBlockQueue, setCaseFromLearningBlockQueue] = useState([]);
-  const [processingCaseFromLearningBlockQueue, setProcessingCaseFromLearningBlockQueue] = useState(false);
-  const [currentCaseFromLearningBlockProcessing, setCurrentCaseFromLearningBlockProcessing] = useState(null);
+		imageModel: 'imagen-3.0-generate-002',
 
-  // Diagram Generation tracking states
-  const [diagramGenerationStats, setDiagramGenerationStats] = useState({
-    total: 0,
-    success: 0,
-    failed: 0,
-    type: null // 'kroki' or 'html'
-  });
-  const [diagramGenerationResults, setDiagramGenerationResults] = useState([]);
-  const [diagramProgressModalVisible, setDiagramProgressModalVisible] = useState(false);
+		imageSystemMessage: 'Create a professional, educational illustration based on the description. Focus on clarity and educational value.',
 
-  // Case Training from Learning Block tracking states
-  const [caseFromLearningStats, setCaseFromLearningStats] = useState({
-    total: 0,
-    success: 0,
-    failed: 0
-  });
-  const [caseFromLearningResults, setCaseFromLearningResults] = useState([]);
-  const [caseFromLearningProgressModalVisible, setCaseFromLearningProgressModalVisible] = useState(false);
-  const shouldStopRef = useRef(false);
-  const [showImproveDetail, setShowImproveDetail] = useState(false);
-
-  const [improveDetailLoading, setImproveDetailLoading] = useState(false);
-
-  const [createQuizzLoading, setCreateQuizzLoading] = useState(false);
-
-  const [updateCategoryLoading, setUpdateCategoryLoading] = useState(false);
-
-  const [showCreateQuiz, setShowCreateQuiz] = useState(false);
-
-  const [showUpdateQuiz, setShowUpdateQuiz] = useState(false);
-
-  const [promptSettingsModalVisible, setPromptSettingsModalVisible] = useState(false);
-  const [promptSettingsListModalVisible, setPromptSettingsListModalVisible] = useState(false);
-
-  // Diagram prompt selection states
-  const [selectDiagramPromptModalVisible, setSelectDiagramPromptModalVisible] = useState(false);
-  const [pendingDiagramMode, setPendingDiagramMode] = useState(null);
-  const [pendingDiagramRecords, setPendingDiagramRecords] = useState([]);
-
-  // Prompt chọn khi tạo Case Training từ Learning Block
-  const [selectCaseFromLearningPromptModalVisible, setSelectCaseFromLearningPromptModalVisible] = useState(false);
-  const [pendingCaseFromLearningRecords, setPendingCaseFromLearningRecords] = useState([]);
-
-  const [quizEditorVisible, setQuizEditorVisible] = useState(false);
-
-  const [quizEditorRecord, setQuizEditorRecord] = useState(null);
-
-  const [savingQuiz, setSavingQuiz] = useState(false);
-
-
-
-  // Image Generation Configuration Modal
-
-  const [imageConfigModalVisible, setImageConfigModalVisible] = useState(false);
-
-  const [imageConfig, setImageConfig] = useState({
-
-    descriptionModel: 'gpt-4o-mini',
-
-    descriptionSystemMessage: 'You are an expert at creating precise, technical descriptions for educational illustrations. Create clear, detailed descriptions suitable for AI image generation.',
-
-    imageModel: 'imagen-3.0-generate-002',
-
-    imageSystemMessage: 'Create a professional, educational illustration based on the description. Focus on clarity and educational value.',
-
-    englishPromptTemplate: `Create a precise technical illustration description for educational purposes based on the content summary. The description must be extremely specific and clear to ensure accurate image generation.
+		englishPromptTemplate: `Create a precise technical illustration description for educational purposes based on the content summary. The description must be extremely specific and clear to ensure accurate image generation.
 
 
 
@@ -670,4306 +658,4121 @@ Format your response as:
 - [Element 3]
 
 **Visual Style:**
-[Describe the visual style, colors, layout, etc.]`
-  });
+[Describe the visual style, colors, layout, etc.]`,
+	});
 
-  // Diagram Generation Configuration Modal - Tách thành các key riêng biệt
-  const [diagramConfigModalVisible, setDiagramConfigModalVisible] = useState(false);
-  const [diagramConfig, setDiagramConfig] = useState({
-    kroki: {
-      diagramType: 'excalidraw',
-      aiModel: '',
-      ai1Model: '',
-      ai1Prompt: '',
-      ai2Model: '',
-      ai2Prompt: '',
-      ai3Model: '',
-      ai3Prompt: '',
-      quantity: 1
-    },
-    html: {
-      aiModel: '',
-      ai4Model: '',
-      ai4Prompt: ''
-    },
-    excalidrawReact: {
-      aiModel: '',
-      aiPrompt: 'Bạn là chuyên gia tạo Excalidraw diagram. Nhiệm vụ của bạn là phân tích nội dung và tạo ra JSON hợp lệ cho Excalidraw.\n\nYêu cầu:\n1. Tạo JSON theo format Excalidraw chuẩn\n2. JSON phải có cấu trúc:\n   {\n     "type": "excalidraw",\n     "version": 2,\n     "source": "https://excalidraw.com",\n     "elements": [...],\n     "appState": {...},\n     "files": {}\n   }\n3. Elements phải là mảng các object với các type: rectangle, ellipse, diamond, arrow, text, line, etc.\n4. Mỗi element phải có: id, type, x, y, width, height, angle, strokeColor, backgroundColor, fillStyle, strokeWidth, strokeStyle, roughness, opacity, groupIds, frameId, roundness, seed, versionNonce, isDeleted, boundElements, updated, link, locked\n5. Chỉ trả về JSON, không có markdown, không có giải thích',
-      noteModel: 'gpt-4o-mini',
-      notePrompt: 'Tạo ghi chú ngắn gọn (1-2 câu) mô tả diagram này dựa trên nội dung bài viết. Ghi chú phải rõ ràng, dễ hiểu và liên quan trực tiếp đến diagram.',
-      quantity: 1
-    }
-  });
-  // Diagram Preview Modal
-  const [diagramPreviewModalVisible, setDiagramPreviewModalVisible] = useState(false);
-  const [selectedDiagramData, setSelectedDiagramData] = useState(null);
+	// Diagram Generation Configuration Modal - Tách thành các key riêng biệt
+	const [diagramConfigModalVisible, setDiagramConfigModalVisible] = useState(false);
+	const [diagramConfig, setDiagramConfig] = useState({
+		kroki: {
+			diagramType: 'excalidraw',
+			aiModel: '',
+			ai1Model: '',
+			ai1Prompt: '',
+			ai2Model: '',
+			ai2Prompt: '',
+			ai3Model: '',
+			ai3Prompt: '',
+			quantity: 1,
+		},
+		html: {
+			aiModel: '',
+			ai4Model: '',
+			ai4Prompt: '',
+		},
+		excalidrawReact: {
+			aiModel: '',
+			aiPrompt: 'Bạn là chuyên gia tạo Excalidraw diagram. Nhiệm vụ của bạn là phân tích nội dung và tạo ra JSON hợp lệ cho Excalidraw.\n\nYêu cầu:\n1. Tạo JSON theo format Excalidraw chuẩn\n2. JSON phải có cấu trúc:\n   {\n     "type": "excalidraw",\n     "version": 2,\n     "source": "https://excalidraw.com",\n     "elements": [...],\n     "appState": {...},\n     "files": {}\n   }\n3. Elements phải là mảng các object với các type: rectangle, ellipse, diamond, arrow, text, line, etc.\n4. Mỗi element phải có: id, type, x, y, width, height, angle, strokeColor, backgroundColor, fillStyle, strokeWidth, strokeStyle, roughness, opacity, groupIds, frameId, roundness, seed, versionNonce, isDeleted, boundElements, updated, link, locked\n5. Chỉ trả về JSON, không có markdown, không có giải thích',
+			noteModel: 'gpt-4o-mini',
+			notePrompt: 'Tạo ghi chú ngắn gọn (1-2 câu) mô tả diagram này dựa trên nội dung bài viết. Ghi chú phải rõ ràng, dễ hiểu và liên quan trực tiếp đến diagram.',
+			quantity: 1,
+		},
+	});
+	// Diagram Preview Modal
+	const [diagramPreviewModalVisible, setDiagramPreviewModalVisible] = useState(false);
+	const [selectedDiagramData, setSelectedDiagramData] = useState(null);
 
-  // Summary Detail Config (for creating summaryDetail from detail)
-  const [summaryDetailConfig, setSummaryDetailConfig] = useState({
-    aiModel: '',
-    aiPrompt: ''
-  });
-  const [summaryDetailConfigModalVisible, setSummaryDetailConfigModalVisible] = useState(false);
-  // Tag options state
-  const [tag1Options, setTag1Options] = useState([]);
-  const [tag2Options, setTag2Options] = useState([]);
-  const [tag3Options, setTag3Options] = useState([]);
-  // Categories state
-  const [categoriesOptions, setCategoriesOptions] = useState([]);
+	// Summary Detail Config (for creating summaryDetail from detail)
+	const [summaryDetailConfig, setSummaryDetailConfig] = useState({
+		aiModel: '',
+		aiPrompt: '',
+	});
+	const [summaryDetailConfigModalVisible, setSummaryDetailConfigModalVisible] = useState(false);
+	// Tag options state
+	const [tag1Options, setTag1Options] = useState([]);
+	const [tag2Options, setTag2Options] = useState([]);
+	const [tag3Options, setTag3Options] = useState([]);
+	// Categories state
+	const [categoriesOptions, setCategoriesOptions] = useState([]);
 
-  const [tag4Options, setTag4Options] = useState([]);
-  const [programOptions, setProgramOptions] = useState([]);
-  const [coursesOptions, setCoursesOptions] = useState([]);
+	const [tag4Options, setTag4Options] = useState([]);
+	const [programOptions, setProgramOptions] = useState([]);
+	const [coursesOptions, setCoursesOptions] = useState([]);
 
-  // Filter states
+	// Filter states
 
-  const [tag4Filter, setTag4Filter] = useState([]); // Changed to array for multiple selection
+	const [tag4Filter, setTag4Filter] = useState([]); // Changed to array for multiple selection
 
-  const [chapterFilter, setChapterFilter] = useState('all'); // Filter for number of programs
+	const [chapterFilter, setChapterFilter] = useState('all'); // Filter for number of programs
 
-  const [programFilter, setProgramFilter] = useState('all'); // Filter for program selection
+	const [programFilter, setProgramFilter] = useState('all'); // Filter for program selection
 
-  const [voiceFilter, setVoiceFilter] = useState('all'); // Filter for voice: 'all' | 'hasVoice' | 'noVoice'
+	const [voiceFilter, setVoiceFilter] = useState('all'); // Filter for voice: 'all' | 'hasVoice' | 'noVoice'
 
-  const [tagManagementModalVisible, setTagManagementModalVisible] = useState(false);
+	const [tagManagementModalVisible, setTagManagementModalVisible] = useState(false);
 
-  const [categoriesManagementModalVisible, setCategoriesManagementModalVisible] = useState(false);
+	const [categoriesManagementModalVisible, setCategoriesManagementModalVisible] = useState(false);
 
-  const [programManagementModalVisible, setProgramManagementModalVisible] = useState(false);
+	const [programManagementModalVisible, setProgramManagementModalVisible] = useState(false);
 
-  const [bulkUpdateModalVisible, setBulkUpdateModalVisible] = useState(false);
+	const [bulkUpdateModalVisible, setBulkUpdateModalVisible] = useState(false);
 
-  const [fieldToUpdate, setFieldToUpdate] = useState('category');
+	const [fieldToUpdate, setFieldToUpdate] = useState('category');
 
-  const [allData, setAllData] = useState({
+	const [allData, setAllData] = useState({
 
-    news: [],
+		news: [],
 
-    library: [],
+		library: [],
 
-    story: [],
+		story: [],
 
-    caseTraining: [],
+		caseTraining: [],
 
-    longForm: []
+		longForm: [],
 
-  });
+	});
 
 
+	const [filteredData, setFilteredData] = useState({
 
-  const [filteredData, setFilteredData] = useState({
+		news: [],
 
-    news: [],
+		library: [],
 
-    library: [],
+		story: [],
 
-    story: [],
+		caseTraining: [],
 
-    caseTraining: [],
+		longForm: [],
 
-    longForm: []
+	});
 
-  });
 
+	const [audioText, setAudioText] = useState('');
 
 
-  const [audioText, setAudioText] = useState('');
+	const [selectedAISummary, setSelectedAISummary] = useState(null);
 
+	const [aiSummaryDetailModalVisible, setAISummaryDetailModalVisible] = useState(false);
 
+	const [aiSummaryEditModalVisible, setAISummaryEditModalVisible] = useState(false);
 
-  const [selectedAISummary, setSelectedAISummary] = useState(null);
+	const [aiSummaryEditForm] = Form.useForm();
 
-  const [aiSummaryDetailModalVisible, setAISummaryDetailModalVisible] = useState(false);
 
-  const [aiSummaryEditModalVisible, setAISummaryEditModalVisible] = useState(false);
+	// QuestionContent Modal states
 
-  const [aiSummaryEditForm] = Form.useForm();
+	const [questionContentModalVisible, setQuestionContentModalVisible] = useState(false);
 
+	const [selectedQuestionContent, setSelectedQuestionContent] = useState(null);
 
+	const [selectedQuestionContentTitle, setSelectedQuestionContentTitle] = useState('');
 
-  // QuestionContent Modal states
+	const [selectedQuestionContentRecord, setSelectedQuestionContentRecord] = useState(null);
 
-  const [questionContentModalVisible, setQuestionContentModalVisible] = useState(false);
 
-  const [selectedQuestionContent, setSelectedQuestionContent] = useState(null);
+	useEffect(() => {
 
-  const [selectedQuestionContentTitle, setSelectedQuestionContentTitle] = useState('');
+		setSelectedRowKeys([]);
 
-  const [selectedQuestionContentRecord, setSelectedQuestionContentRecord] = useState(null);
+	}, [currentTab]);
 
 
+	// Load search history from localStorage
 
-  useEffect(() => {
+	const loadSearchHistory = () => {
 
-    setSelectedRowKeys([]);
+		try {
 
-  }, [currentTab]);
+			const savedHistory = localStorage.getItem('k9management_search_history');
 
+			if (savedHistory) {
 
+				const parsedHistory = JSON.parse(savedHistory);
 
-  // Load search history from localStorage
+				setSearchHistory(parsedHistory);
 
-  const loadSearchHistory = () => {
+			}
 
-    try {
+		} catch (error) {
 
-      const savedHistory = localStorage.getItem('k9management_search_history');
+			console.error('Error loading search history:', error);
 
-      if (savedHistory) {
+		}
 
-        const parsedHistory = JSON.parse(savedHistory);
+	};
 
-        setSearchHistory(parsedHistory);
 
-      }
+	// Save search history to localStorage
 
-    } catch (error) {
+	const saveSearchHistory = (newHistory) => {
 
-      console.error('Error loading search history:', error);
+		try {
 
-    }
+			localStorage.setItem('k9management_search_history', JSON.stringify(newHistory));
 
-  };
+		} catch (error) {
 
+			console.error('Error saving search history:', error);
 
+		}
 
-  // Save search history to localStorage
+	};
 
-  const saveSearchHistory = (newHistory) => {
 
-    try {
+	// Add search term to history
 
-      localStorage.setItem('k9management_search_history', JSON.stringify(newHistory));
+	const addToSearchHistory = (term) => {
 
-    } catch (error) {
+		if (!term.trim()) return;
 
-      console.error('Error saving search history:', error);
 
-    }
+		const currentHistory = searchHistory[currentTab] || [];
 
-  };
+		const newHistory = [term, ...currentHistory.filter(item => item !== term)].slice(0, 10); // Keep last 10 searches
 
 
+		const updatedHistory = {
 
-  // Add search term to history
+			...searchHistory,
 
-  const addToSearchHistory = (term) => {
+			[currentTab]: newHistory,
 
-    if (!term.trim()) return;
+		};
 
 
+		setSearchHistory(updatedHistory);
 
-    const currentHistory = searchHistory[currentTab] || [];
+		saveSearchHistory(updatedHistory);
 
-    const newHistory = [term, ...currentHistory.filter(item => item !== term)].slice(0, 10); // Keep last 10 searches
+	};
 
 
+	// Load search text for current tab
 
-    const updatedHistory = {
+	const loadSearchTextForTab = () => {
 
-      ...searchHistory,
+		try {
 
-      [currentTab]: newHistory
+			const savedSearchText = localStorage.getItem(`k9management_search_${currentTab}`);
 
-    };
+			if (savedSearchText) {
 
+				setSearchText(savedSearchText);
 
+			} else {
 
-    setSearchHistory(updatedHistory);
+				setSearchText('');
 
-    saveSearchHistory(updatedHistory);
+			}
 
-  };
+		} catch (error) {
 
+			console.error('Error loading search text:', error);
 
+			setSearchText('');
 
-  // Load search text for current tab
+		}
 
-  const loadSearchTextForTab = () => {
+	};
 
-    try {
 
-      const savedSearchText = localStorage.getItem(`k9management_search_${currentTab}`);
+	// Save search text for current tab
 
-      if (savedSearchText) {
+	const saveSearchTextForTab = (text) => {
 
-        setSearchText(savedSearchText);
+		try {
 
-      } else {
+			localStorage.setItem(`k9management_search_${currentTab}`, text);
 
-        setSearchText('');
+		} catch (error) {
 
-      }
+			console.error('Error saving search text:', error);
 
-    } catch (error) {
+		}
 
-      console.error('Error loading search text:', error);
+	};
 
-      setSearchText('');
 
-    }
+	// Load filter history from localStorage
 
-  };
+	const loadFilterHistory = () => {
 
+		try {
 
+			const savedFilterHistory = localStorage.getItem('k9management_filter_history');
 
-  // Save search text for current tab
+			if (savedFilterHistory) {
 
-  const saveSearchTextForTab = (text) => {
+				const parsedHistory = JSON.parse(savedFilterHistory);
 
-    try {
+				setFilterHistory(parsedHistory);
 
-      localStorage.setItem(`k9management_search_${currentTab}`, text);
+			}
 
-    } catch (error) {
+		} catch (error) {
 
-      console.error('Error saving search text:', error);
+			console.error('Error loading filter history:', error);
 
-    }
+		}
 
-  };
+	};
 
 
+	// Save filter history to localStorage
 
-  // Load filter history from localStorage
+	const saveFilterHistory = (newHistory) => {
 
-  const loadFilterHistory = () => {
+		try {
 
-    try {
+			localStorage.setItem('k9management_filter_history', JSON.stringify(newHistory));
 
-      const savedFilterHistory = localStorage.getItem('k9management_filter_history');
+		} catch (error) {
 
-      if (savedFilterHistory) {
+			console.error('Error saving filter history:', error);
 
-        const parsedHistory = JSON.parse(savedFilterHistory);
+		}
 
-        setFilterHistory(parsedHistory);
+	};
 
-      }
 
-    } catch (error) {
+	// Load filters for current tab
 
-      console.error('Error loading filter history:', error);
+	const loadFiltersForTab = () => {
 
-    }
+		const currentFilters = filterHistory[currentTab];
 
-  };
+		if (currentFilters) {
 
+			setCategoryFilter(currentFilters.categoryFilter || 'all');
 
+			setImageFilter(currentFilters.imageFilter || 'all');
 
-  // Save filter history to localStorage
+			setDiagramFilter(currentFilters.diagramFilter || 'all');
+			setQuizFilter(currentFilters.quizFilter || 'all');
 
-  const saveFilterHistory = (newHistory) => {
+			setTag4Filter(currentFilters.tag4Filter || []);
 
-    try {
+			setChapterFilter(currentFilters.chapterFilter || 'all');
 
-      localStorage.setItem('k9management_filter_history', JSON.stringify(newHistory));
+			setProgramFilter(currentFilters.programFilter || 'all');
 
-    } catch (error) {
+			setVoiceFilter(currentFilters.voiceFilter || 'all');
 
-      console.error('Error saving filter history:', error);
+			setSearchText(currentFilters.searchText || '');
 
-    }
 
-  };
+			if (currentTab === 'caseTraining') {
 
+				setTag1Filter(currentFilters.tag1Filter || 'all');
 
+				setTag2Filter(currentFilters.tag2Filter || 'all');
 
-  // Load filters for current tab
+				setTag3Filter(currentFilters.tag3Filter || 'all');
 
-  const loadFiltersForTab = () => {
+			}
 
-    const currentFilters = filterHistory[currentTab];
+		}
 
-    if (currentFilters) {
+	};
 
-      setCategoryFilter(currentFilters.categoryFilter || 'all');
 
-      setImageFilter(currentFilters.imageFilter || 'all');
+	// Save current filters for current tab
 
-      setDiagramFilter(currentFilters.diagramFilter || 'all');
-      setQuizFilter(currentFilters.quizFilter || 'all');
+	const saveFiltersForTab = () => {
 
-      setTag4Filter(currentFilters.tag4Filter || []);
+		const currentFilters = {
 
-      setChapterFilter(currentFilters.chapterFilter || 'all');
+			categoryFilter,
 
-      setProgramFilter(currentFilters.programFilter || 'all');
+			imageFilter,
 
-      setVoiceFilter(currentFilters.voiceFilter || 'all');
+			diagramFilter,
+			quizFilter,
 
-      setSearchText(currentFilters.searchText || '');
+			tag4Filter,
 
+			chapterFilter,
 
+			searchText,
 
-      if (currentTab === 'caseTraining') {
+		};
 
-        setTag1Filter(currentFilters.tag1Filter || 'all');
 
-        setTag2Filter(currentFilters.tag2Filter || 'all');
+		if (currentTab === 'caseTraining') {
 
-        setTag3Filter(currentFilters.tag3Filter || 'all');
+			currentFilters.tag1Filter = tag1Filter;
 
-      }
+			currentFilters.tag2Filter = tag2Filter;
 
-    }
+			currentFilters.tag3Filter = tag3Filter;
 
-  };
+		}
 
 
+		const updatedHistory = {
 
-  // Save current filters for current tab
+			...filterHistory,
 
-  const saveFiltersForTab = () => {
+			[currentTab]: currentFilters,
 
-    const currentFilters = {
+		};
 
-      categoryFilter,
 
-      imageFilter,
+		setFilterHistory(updatedHistory);
 
-      diagramFilter,
-      quizFilter,
+		saveFilterHistory(updatedHistory);
 
-      tag4Filter,
+	};
 
-      chapterFilter,
 
-      searchText
+	// Filter change handlers with auto-save
 
-    };
+	const handleCategoryFilterChange = (value) => {
 
+		setCategoryFilter(value);
 
+		// Save immediately with the new value
 
-    if (currentTab === 'caseTraining') {
+		const currentFilters = {
 
-      currentFilters.tag1Filter = tag1Filter;
+			...filterHistory[currentTab],
 
-      currentFilters.tag2Filter = tag2Filter;
+			categoryFilter: value,
 
-      currentFilters.tag3Filter = tag3Filter;
+		};
 
-    }
+		const updatedHistory = {
 
+			...filterHistory,
 
+			[currentTab]: currentFilters,
 
-    const updatedHistory = {
+		};
 
-      ...filterHistory,
+		setFilterHistory(updatedHistory);
 
-      [currentTab]: currentFilters
+		saveFilterHistory(updatedHistory);
 
-    };
+	};
 
 
+	const handleImageFilterChange = (value) => {
 
-    setFilterHistory(updatedHistory);
+		setImageFilter(value);
 
-    saveFilterHistory(updatedHistory);
+		const currentFilters = {
 
-  };
+			...filterHistory[currentTab],
 
+			imageFilter: value,
 
-  // Filter change handlers with auto-save
+		};
 
-  const handleCategoryFilterChange = (value) => {
+		const updatedHistory = {
 
-    setCategoryFilter(value);
+			...filterHistory,
 
-    // Save immediately with the new value
+			[currentTab]: currentFilters,
 
-    const currentFilters = {
+		};
 
-      ...filterHistory[currentTab],
+		setFilterHistory(updatedHistory);
 
-      categoryFilter: value
+		saveFilterHistory(updatedHistory);
 
-    };
+	};
 
-    const updatedHistory = {
 
-      ...filterHistory,
+	const handleDiagramFilterChange = (value) => {
+		setDiagramFilter(value);
+		const currentFilters = {
+			...filterHistory[currentTab],
+			diagramFilter: value,
+		};
+		const updatedHistory = {
+			...filterHistory,
+			[currentTab]: currentFilters,
+		};
+		setFilterHistory(updatedHistory);
+		saveFilterHistory(updatedHistory);
+	};
 
-      [currentTab]: currentFilters
 
-    };
+	const handleQuizFilterChange = (value) => {
 
-    setFilterHistory(updatedHistory);
+		setQuizFilter(value);
 
-    saveFilterHistory(updatedHistory);
+		const currentFilters = {
 
-  };
+			...filterHistory[currentTab],
 
+			quizFilter: value,
 
+		};
 
-  const handleImageFilterChange = (value) => {
+		const updatedHistory = {
 
-    setImageFilter(value);
+			...filterHistory,
 
-    const currentFilters = {
+			[currentTab]: currentFilters,
 
-      ...filterHistory[currentTab],
+		};
 
-      imageFilter: value
+		setFilterHistory(updatedHistory);
 
-    };
+		saveFilterHistory(updatedHistory);
 
-    const updatedHistory = {
+	};
 
-      ...filterHistory,
 
-      [currentTab]: currentFilters
+	const handleTag4FilterChange = (value) => {
 
-    };
+		setTag4Filter(value);
 
-    setFilterHistory(updatedHistory);
+		const currentFilters = {
 
-    saveFilterHistory(updatedHistory);
+			...filterHistory[currentTab],
 
-  };
+			tag4Filter: value,
 
+		};
 
-  const handleDiagramFilterChange = (value) => {
-    setDiagramFilter(value);
-    const currentFilters = {
-      ...filterHistory[currentTab],
-      diagramFilter: value
-    };
-    const updatedHistory = {
-      ...filterHistory,
-      [currentTab]: currentFilters
-    };
-    setFilterHistory(updatedHistory);
-    saveFilterHistory(updatedHistory);
-  };
+		const updatedHistory = {
 
+			...filterHistory,
 
-  const handleQuizFilterChange = (value) => {
+			[currentTab]: currentFilters,
 
-    setQuizFilter(value);
+		};
 
-    const currentFilters = {
+		setFilterHistory(updatedHistory);
 
-      ...filterHistory[currentTab],
+		saveFilterHistory(updatedHistory);
 
-      quizFilter: value
+	};
 
-    };
 
-    const updatedHistory = {
+	const handleChapterFilterChange = (value) => {
 
-      ...filterHistory,
+		setChapterFilter(value);
 
-      [currentTab]: currentFilters
+		const currentFilters = {
 
-    };
+			...filterHistory[currentTab],
 
-    setFilterHistory(updatedHistory);
+			chapterFilter: value,
 
-    saveFilterHistory(updatedHistory);
+		};
 
-  };
+		const updatedHistory = {
 
+			...filterHistory,
 
-  const handleTag4FilterChange = (value) => {
+			[currentTab]: currentFilters,
 
-    setTag4Filter(value);
+		};
 
-    const currentFilters = {
+		setFilterHistory(updatedHistory);
 
-      ...filterHistory[currentTab],
+		saveFilterHistory(updatedHistory);
 
-      tag4Filter: value
+	};
 
-    };
+	const handleProgramFilterChange = (value) => {
 
-    const updatedHistory = {
+		setProgramFilter(value);
 
-      ...filterHistory,
+		const currentFilters = {
 
-      [currentTab]: currentFilters
+			...filterHistory[currentTab],
 
-    };
+			programFilter: value,
 
-    setFilterHistory(updatedHistory);
+		};
 
-    saveFilterHistory(updatedHistory);
+		const updatedHistory = {
 
-  };
+			...filterHistory,
 
+			[currentTab]: currentFilters,
 
+		};
 
-  const handleChapterFilterChange = (value) => {
+		setFilterHistory(updatedHistory);
 
-    setChapterFilter(value);
+		saveFilterHistory(updatedHistory);
 
-    const currentFilters = {
+		// Apply filters after changing program filter
+		if (['home', 'news', 'caseTraining', 'longForm'].includes(currentTab)) {
+			applyFilters();
+		}
 
-      ...filterHistory[currentTab],
+	};
 
-      chapterFilter: value
+	const handleVoiceFilterChange = (value) => {
+		setVoiceFilter(value);
 
-    };
+		const currentFilters = {
+			...filterHistory[currentTab],
+			voiceFilter: value,
+		};
 
-    const updatedHistory = {
+		const updatedHistory = {
+			...filterHistory,
+			[currentTab]: currentFilters,
+		};
 
-      ...filterHistory,
+		setFilterHistory(updatedHistory);
+		saveFilterHistory(updatedHistory);
 
-      [currentTab]: currentFilters
+		// Apply filters after changing voice filter
+		if (['home', 'news', 'caseTraining', 'longForm'].includes(currentTab)) {
+			applyFilters();
+		}
+	};
 
-    };
 
-    setFilterHistory(updatedHistory);
+	const handleTag1FilterChange = (value) => {
 
-    saveFilterHistory(updatedHistory);
+		setTag1Filter(value);
 
-  };
+		const currentFilters = {
 
-  const handleProgramFilterChange = (value) => {
+			...filterHistory[currentTab],
 
-    setProgramFilter(value);
+			tag1Filter: value,
 
-    const currentFilters = {
+		};
 
-      ...filterHistory[currentTab],
+		const updatedHistory = {
 
-      programFilter: value
+			...filterHistory,
 
-    };
+			[currentTab]: currentFilters,
 
-    const updatedHistory = {
+		};
 
-      ...filterHistory,
+		setFilterHistory(updatedHistory);
 
-      [currentTab]: currentFilters
+		saveFilterHistory(updatedHistory);
 
-    };
+	};
 
-    setFilterHistory(updatedHistory);
 
-    saveFilterHistory(updatedHistory);
+	const handleTag2FilterChange = (value) => {
 
-    // Apply filters after changing program filter
-    if (['home', 'news', 'caseTraining', 'longForm'].includes(currentTab)) {
-      applyFilters();
-    }
+		setTag2Filter(value);
 
-  };
+		const currentFilters = {
 
-  const handleVoiceFilterChange = (value) => {
-    setVoiceFilter(value);
+			...filterHistory[currentTab],
 
-    const currentFilters = {
-      ...filterHistory[currentTab],
-      voiceFilter: value
-    };
+			tag2Filter: value,
 
-    const updatedHistory = {
-      ...filterHistory,
-      [currentTab]: currentFilters
-    };
+		};
 
-    setFilterHistory(updatedHistory);
-    saveFilterHistory(updatedHistory);
+		const updatedHistory = {
 
-    // Apply filters after changing voice filter
-    if (['home', 'news', 'caseTraining', 'longForm'].includes(currentTab)) {
-      applyFilters();
-    }
-  };
+			...filterHistory,
 
+			[currentTab]: currentFilters,
 
+		};
 
-  const handleTag1FilterChange = (value) => {
+		setFilterHistory(updatedHistory);
 
-    setTag1Filter(value);
+		saveFilterHistory(updatedHistory);
 
-    const currentFilters = {
+	};
 
-      ...filterHistory[currentTab],
 
-      tag1Filter: value
+	const handleTag3FilterChange = (value) => {
 
-    };
+		setTag3Filter(value);
 
-    const updatedHistory = {
+		const currentFilters = {
 
-      ...filterHistory,
+			...filterHistory[currentTab],
 
-      [currentTab]: currentFilters
+			tag3Filter: value,
 
-    };
+		};
 
-    setFilterHistory(updatedHistory);
+		const updatedHistory = {
 
-    saveFilterHistory(updatedHistory);
+			...filterHistory,
 
-  };
+			[currentTab]: currentFilters,
 
+		};
 
+		setFilterHistory(updatedHistory);
 
-  const handleTag2FilterChange = (value) => {
+		saveFilterHistory(updatedHistory);
 
-    setTag2Filter(value);
+	};
 
-    const currentFilters = {
 
-      ...filterHistory[currentTab],
+	useEffect(() => {
 
-      tag2Filter: value
+		loadVoiceSettings();
 
-    };
+		loadBackgroundAudioSettings();
 
-    const updatedHistory = {
+		loadGuidelineSettings();
 
-      ...filterHistory,
+		loadImageConfig();
 
-      [currentTab]: currentFilters
+		loadDiagramConfig();
+		loadSummaryDetailConfig();
+		loadTagOptions();
+		loadCategoriesOptions();
 
-    };
+		loadSearchHistory();
 
-    setFilterHistory(updatedHistory);
+		loadFilterHistory();
 
-    saveFilterHistory(updatedHistory);
+	}, []);
 
-  };
+	// Load embedded items for current tab
 
+	const loadEmbeddedItems = async () => {
 
+		try {
 
-  const handleTag3FilterChange = (value) => {
 
-    setTag3Filter(value);
+			let table = currentTab;
 
-    const currentFilters = {
+			if (currentTab === 'reportDN') {
 
-      ...filterHistory[currentTab],
+				table = 'report';
 
-      tag3Filter: value
+			}
 
-    };
+			const embeddedData = await getEmbedingDataByTable(table);
 
-    const updatedHistory = {
+			const embeddedIds = new Set(embeddedData.map(item => item.sourceId));
 
-      ...filterHistory,
+			setEmbeddedItems(embeddedIds);
 
-      [currentTab]: currentFilters
+			console.log(`Loaded ${embeddedIds.size} embedded items for ${currentTab}`);
 
-    };
+		} catch (error) {
 
-    setFilterHistory(updatedHistory);
+			console.error('Error loading embedded items:', error);
 
-    saveFilterHistory(updatedHistory);
+			setEmbeddedItems(new Set());
 
-  };
+		}
 
+	};
 
 
-  useEffect(() => {
+	// Load data when tab changes
 
-    loadVoiceSettings();
+	// Load user classes on mount
+	useEffect(() => {
+		const loadUserClasses = async () => {
+			try {
+				const classes = await getAllUserClass();
+				setUserClasses(classes);
+			} catch (error) {
+				console.error('Error loading user classes:', error);
+			}
+		};
+		loadUserClasses();
+	}, []);
 
-    loadBackgroundAudioSettings();
+	useEffect(() => {
 
-    loadGuidelineSettings();
+		// Load filters for current tab
 
-    loadImageConfig();
+		loadFiltersForTab();
 
-    loadDiagramConfig();
-    loadSummaryDetailConfig();
-    loadTagOptions();
-    loadCategoriesOptions();
 
-    loadSearchHistory();
+		// Load embedded items for current tab
 
-    loadFilterHistory();
+		loadEmbeddedItems();
 
-  }, []);
+		if (currentTab === 'report' && aiSummaryData.length === 0 && !aiSummaryLoading) {
 
-  // Load embedded items for current tab
+			setAiSummaryLoading(true);
 
-  const loadEmbeddedItems = async () => {
+			getAllAISummaries().then(data => {
 
-    try {
+				// Lọc bỏ những bản ghi có info.sheetName = 'CompanySummary'
 
+				const filteredData = filterCompanySummaryRecords(data);
 
+				setAiSummaryData(filteredData);
 
-      let table = currentTab;
+			}).finally(() => setAiSummaryLoading(false));
 
-      if (currentTab === 'reportDN') {
+		} else if (currentTab === 'reportDN' && reportDNData.length === 0 && !reportDNLoading) {
 
-        table = 'report';
+			setReportDNLoading(true);
 
-      }
+			getAllAISummaries().then(data => {
 
-      const embeddedData = await getEmbedingDataByTable(table);
+				// Lấy ra các bản ghi có info.sheetName = 'CompanySummary'
 
-      const embeddedIds = new Set(embeddedData.map(item => item.sourceId));
+				const companySummaryData = (data || []).filter(item => {
 
-      setEmbeddedItems(embeddedIds);
+					if (!item.info) return false;
 
-      console.log(`Loaded ${embeddedIds.size} embedded items for ${currentTab}`);
+					try {
 
-    } catch (error) {
+						const info = typeof item.info === 'string' ? JSON.parse(item.info) : item.info;
 
-      console.error('Error loading embedded items:', error);
+						return info.sheetName === 'CompanySummary';
 
-      setEmbeddedItems(new Set());
+					} catch (e) {
 
-    }
+						return false;
 
-  };
+					}
 
+				});
 
+				setReportDNData(companySummaryData);
 
-  // Load data when tab changes
+			}).finally(() => setReportDNLoading(false));
 
-  // Load user classes on mount
-  useEffect(() => {
-    const loadUserClasses = async () => {
-      try {
-        const classes = await getAllUserClass();
-        setUserClasses(classes);
-      } catch (error) {
-        console.error('Error loading user classes:', error);
-      }
-    };
-    loadUserClasses();
-  }, []);
+		} else if (['home', 'news', 'caseTraining', 'longForm', 'library', 'story'].includes(currentTab) && (!allData[currentTab] || allData[currentTab].length === 0)) {
 
-  useEffect(() => {
+			loadAllData();
 
-    // Load filters for current tab
+		}
 
-    loadFiltersForTab();
 
+	}, [currentTab]);
 
 
-    // Load embedded items for current tab
+	useEffect(() => {
 
-    loadEmbeddedItems();
+		if (['home', 'news', 'caseTraining', 'longForm', 'library', 'story'].includes(currentTab)) {
 
-    if (currentTab === 'report' && aiSummaryData.length === 0 && !aiSummaryLoading) {
+			setData(filteredData[currentTab] || allData[currentTab] || []);
 
-      setAiSummaryLoading(true);
+		}
 
-      getAllAISummaries().then(data => {
+	}, [currentTab, allData, filteredData]);
 
-        // Lọc bỏ những bản ghi có info.sheetName = 'CompanySummary'
 
-        const filteredData = filterCompanySummaryRecords(data);
+	// Apply filters when filter states change
 
-        setAiSummaryData(filteredData);
+	useEffect(() => {
 
-      }).finally(() => setAiSummaryLoading(false));
+		if (currentTab === 'home' || currentTab === 'news' || currentTab === 'caseTraining' || currentTab === 'longForm') {
 
-    } else if (currentTab === 'reportDN' && reportDNData.length === 0 && !reportDNLoading) {
+			applyFilters();
 
-      setReportDNLoading(true);
+		}
 
-      getAllAISummaries().then(data => {
+	}, [categoryFilter, imageFilter, diagramFilter, quizFilter, tag4Filter, chapterFilter,
+		currentTab === 'caseTraining' ? tag1Filter : null,
 
-        // Lấy ra các bản ghi có info.sheetName = 'CompanySummary'
+		currentTab === 'caseTraining' ? tag2Filter : null,
 
-        const companySummaryData = (data || []).filter(item => {
+		currentTab === 'caseTraining' ? tag3Filter : null,
 
-          if (!item.info) return false;
+		searchText, currentTab, programFilter, voiceFilter]);
 
-          try {
 
-            const info = typeof item.info === 'string' ? JSON.parse(item.info) : item.info;
+	// Apply filters when any filter changes
 
-            return info.sheetName === 'CompanySummary';
+	useEffect(() => {
 
-          } catch (e) {
+		if (['home', 'news', 'caseTraining', 'longForm'].includes(currentTab)) {
 
-            return false;
+			applyFilters();
 
-          }
+		}
 
-        });
+	}, [categoryFilter, imageFilter, diagramFilter, quizFilter, tag4Filter, chapterFilter, tag1Filter, tag2Filter, tag3Filter, searchText, programFilter, voiceFilter, currentTab]);
 
-        setReportDNData(companySummaryData);
 
-      }).finally(() => setReportDNLoading(false));
+	// Apply filters when tab changes (to ensure fresh data is displayed)
 
-    } else if (['home', 'news', 'caseTraining', 'longForm', 'library', 'story'].includes(currentTab) && (!allData[currentTab] || allData[currentTab].length === 0)) {
+	useEffect(() => {
 
-      loadAllData();
+		if (['home', 'news', 'caseTraining', 'longForm'].includes(currentTab)) {
 
-    }
+			applyFilters();
 
+		}
 
+	}, [currentTab, allData]);
 
-  }, [currentTab]);
 
+	// Reset only table column filters when tab changes
 
+	useEffect(() => {
 
-  useEffect(() => {
+		if (['home', 'news', 'caseTraining', 'longForm'].includes(currentTab)) {
 
-    if (['home', 'news', 'caseTraining', 'longForm', 'library', 'story'].includes(currentTab)) {
+			// Force re-render table to reset column filters
 
-      setData(filteredData[currentTab] || allData[currentTab] || []);
+			setTableKey(prev => prev + 1);
 
-    }
+		}
 
-  }, [currentTab, allData, filteredData]);
+	}, [currentTab]);
 
 
+	// Voice Queue Processor
 
-  // Apply filters when filter states change
+	useEffect(() => {
 
-  useEffect(() => {
+		if (voiceQueue.length > 0 && !processingQueue) {
 
-    if (currentTab === 'home' || currentTab === 'news' || currentTab === 'caseTraining' || currentTab === 'longForm') {
+			processVoiceQueue();
 
-      applyFilters();
+		}
 
-    }
+	}, [voiceQueue, processingQueue]);
 
-  }, [categoryFilter, imageFilter, diagramFilter, quizFilter, tag4Filter, chapterFilter,
-    currentTab === 'caseTraining' ? tag1Filter : null,
 
-    currentTab === 'caseTraining' ? tag2Filter : null,
+	// Image Queue Processor
 
-    currentTab === 'caseTraining' ? tag3Filter : null,
+	useEffect(() => {
 
-    searchText, currentTab, programFilter, voiceFilter]);
+		if (imageGenerationQueue.length > 0 && !processingImageQueue) {
 
+			processImageQueue();
 
+		}
 
-  // Apply filters when any filter changes
+	}, [imageGenerationQueue, processingImageQueue]);
 
-  useEffect(() => {
 
-    if (['home', 'news', 'caseTraining', 'longForm'].includes(currentTab)) {
+	// Diagram Queue Processor
+	useEffect(() => {
+		if (diagramGenerationQueue.length > 0 && !processingDiagramQueue) {
+			processDiagramQueue();
+		}
+	}, [diagramGenerationQueue, processingDiagramQueue]);
 
-      applyFilters();
+	// Summary Detail Queue Processor
+	useEffect(() => {
+		if (summaryDetailQueue.length > 0 && !processingSummaryDetailQueue) {
+			processSummaryDetailQueue();
+		}
+	}, [summaryDetailQueue, processingSummaryDetailQueue]);
 
-    }
+	// Case Training from Learning Block Queue Processor
+	useEffect(() => {
+		if (caseFromLearningBlockQueue.length > 0 && !processingCaseFromLearningBlockQueue) {
+			processCaseFromLearningBlockQueue();
+		}
+	}, [caseFromLearningBlockQueue, processingCaseFromLearningBlockQueue]);
 
-  }, [categoryFilter, imageFilter, diagramFilter, quizFilter, tag4Filter, chapterFilter, tag1Filter, tag2Filter, tag3Filter, searchText, programFilter, voiceFilter, currentTab]);
 
+	// Cleanup audio when component unmounts
 
-  // Apply filters when tab changes (to ensure fresh data is displayed)
+	useEffect(() => {
 
-  useEffect(() => {
+		return () => {
 
-    if (['home', 'news', 'caseTraining', 'longForm'].includes(currentTab)) {
+			if (audioRef.current) {
 
-      applyFilters();
+				audioRef.current.pause();
 
-    }
+				audioRef.current = null;
 
-  }, [currentTab, allData]);
+			}
 
+			// Stop queue processor
 
+			if (queueProcessorRef.current) {
 
-  // Reset only table column filters when tab changes
+				clearTimeout(queueProcessorRef.current);
 
-  useEffect(() => {
+			}
 
-    if (['home', 'news', 'caseTraining', 'longForm'].includes(currentTab)) {
+		};
 
-      // Force re-render table to reset column filters
+	}, []);
 
-      setTableKey(prev => prev + 1);
 
-    }
+	// Sync uploadedAudioUrl with form field
 
-  }, [currentTab]);
+	useEffect(() => {
 
+		if (modalVisible && form) {
 
+			form.setFieldValue('audioUrl', uploadedAudioUrl);
 
-  // Voice Queue Processor
+		}
 
-  useEffect(() => {
+	}, [uploadedAudioUrl, modalVisible, form]);
 
-    if (voiceQueue.length > 0 && !processingQueue) {
 
-      processVoiceQueue();
+	const loadAllData = async () => {
 
-    }
+		setLoading(true);
 
-  }, [voiceQueue, processingQueue]);
+		try {
 
+			const homeData = await getK9ByType('home');
 
+			const newsData = await getK9ByType('news');
 
-  // Image Queue Processor
+			const caseTrainingData = await getK9ByType('caseTraining');
 
-  useEffect(() => {
+			const longFormData = await getK9ByType('longForm');
 
-    if (imageGenerationQueue.length > 0 && !processingImageQueue) {
+			const libraryData = [];
 
-      processImageQueue();
+			// await getK9ByType('library') ;
 
-    }
+			const storyData = [];
 
-  }, [imageGenerationQueue, processingImageQueue]);
+			// await getK9ByType('story');
 
 
-  // Diagram Queue Processor
-  useEffect(() => {
-    if (diagramGenerationQueue.length > 0 && !processingDiagramQueue) {
-      processDiagramQueue();
-    }
-  }, [diagramGenerationQueue, processingDiagramQueue]);
+			const newAllData = {
 
-  // Summary Detail Queue Processor
-  useEffect(() => {
-    if (summaryDetailQueue.length > 0 && !processingSummaryDetailQueue) {
-      processSummaryDetailQueue();
-    }
-  }, [summaryDetailQueue, processingSummaryDetailQueue]);
+				home: homeData || [],
 
-  // Case Training from Learning Block Queue Processor
-  useEffect(() => {
-    if (caseFromLearningBlockQueue.length > 0 && !processingCaseFromLearningBlockQueue) {
-      processCaseFromLearningBlockQueue();
-    }
-  }, [caseFromLearningBlockQueue, processingCaseFromLearningBlockQueue]);
+				news: newsData || [],
 
+				caseTraining: caseTrainingData || [],
 
-  // Cleanup audio when component unmounts
+				longForm: longFormData || [],
 
-  useEffect(() => {
+				library: libraryData || [],
 
-    return () => {
+				story: storyData || [],
 
-      if (audioRef.current) {
+			};
 
-        audioRef.current.pause();
 
-        audioRef.current = null;
+			setAllData(newAllData);
 
-      }
+			setFilteredData(newAllData); // Reset filtered data when loading new data
 
-      // Stop queue processor
+		} catch (error) {
 
-      if (queueProcessorRef.current) {
+			console.error('Error loading data:', error);
 
-        clearTimeout(queueProcessorRef.current);
+			message.error('Lỗi khi tải dữ liệu: ' + error.message);
 
-      }
+		} finally {
 
-    };
+			setLoading(false);
 
-  }, []);
+		}
 
+	};
 
+	const loadVoiceSettings = async () => {
 
-  // Sync uploadedAudioUrl with form field
+		try {
 
-  useEffect(() => {
+			const settings = await getSettingByType('VOICE_GENERATION_CONFIG');
 
-    if (modalVisible && form) {
+			if (settings?.setting) {
 
-      form.setFieldValue('audioUrl', uploadedAudioUrl);
+				setVoiceSettings(settings.setting);
 
-    }
+			}
 
-  }, [uploadedAudioUrl, modalVisible, form]);
+		} catch (error) {
 
+			console.log('No voice generation settings found or error loading:', error);
 
+		}
 
-  const loadAllData = async () => {
+	};
 
-    setLoading(true);
+	const saveVoiceSettings = async (settings) => {
 
-    try {
+		try {
 
-      const homeData = await getK9ByType('home');
+			await createOrUpdateSetting({
 
-      const newsData = await getK9ByType('news');
+				type: 'VOICE_GENERATION_CONFIG',
 
-      const caseTrainingData = await getK9ByType('caseTraining');
+				setting: settings,
 
-      const longFormData = await getK9ByType('longForm');
+			});
 
-      const libraryData = []
+			setVoiceSettingsVisible(false);
 
-      // await getK9ByType('library') ;
+			message.success('Đã lưu cài đặt voice!');
 
-      const storyData = []
+		} catch (error) {
 
-      // await getK9ByType('story');
+			console.error('Error saving voice settings:', error);
 
+			message.error('Lỗi khi lưu cài đặt voice!');
 
+		}
 
-      const newAllData = {
+	};
 
-        home: homeData || [],
+	const loadBackgroundAudioSettings = async () => {
 
-        news: newsData || [],
+		try {
 
-        caseTraining: caseTrainingData || [],
+			const settings = await getSettingByType('BACKGROUND_AUDIO');
 
-        longForm: longFormData || [],
+			if (settings?.setting) {
 
-        library: libraryData || [],
+				setBgAudioSettings(settings.setting);
 
-        story: storyData || []
+				// Tạo file object cho display nếu có audio URL
 
-      };
+				if (settings.setting.audioUrl) {
 
+					setBgAudioFile({
 
+						uid: '-1',
 
-      setAllData(newAllData);
+						name: 'background-audio',
 
-      setFilteredData(newAllData); // Reset filtered data when loading new data
+						status: 'done',
 
-    } catch (error) {
+						url: settings.setting.audioUrl,
 
-      console.error('Error loading data:', error);
+					});
 
-      message.error('Lỗi khi tải dữ liệu: ' + error.message);
+				}
 
-    } finally {
+			}
 
-      setLoading(false);
+		} catch (error) {
 
-    }
+			console.log('No background audio settings found or error loading:', error);
 
-  };
+		}
 
-  const loadVoiceSettings = async () => {
+	};
 
-    try {
 
-      const settings = await getSettingByType('VOICE_GENERATION_CONFIG');
+	const loadGuidelineSettings = async () => {
 
-      if (settings?.setting) {
+		try {
 
-        setVoiceSettings(settings.setting);
+			const settings = await getSettingByType('GUIDELINE_SETTING');
 
-      }
 
-    } catch (error) {
+			if (settings?.setting) {
 
-      console.log('No voice generation settings found or error loading:', error);
+				setGuidelineSettings(settings.setting);
 
-    }
 
-  };
+				// Create file object for display if there's an image URL
 
-  const saveVoiceSettings = async (settings) => {
+				if (settings.setting.imageUrl) {
 
-    try {
+					setGuidelineImageFile({
 
-      await createOrUpdateSetting({
+						uid: '-1',
 
-        type: 'VOICE_GENERATION_CONFIG',
+						name: 'guideline-image',
 
-        setting: settings
+						status: 'done',
 
-      });
+						url: settings.setting.imageUrl,
 
-      setVoiceSettingsVisible(false);
+					});
 
-      message.success('Đã lưu cài đặt voice!');
+				}
 
-    } catch (error) {
+			} else {
 
-      console.error('Error saving voice settings:', error);
+				console.log('ℹ️ K9Management: No existing guideline settings found');
 
-      message.error('Lỗi khi lưu cài đặt voice!');
+			}
 
-    }
+		} catch (error) {
 
-  };
+			console.log('❌ K9Management: Error loading guideline settings:', error);
 
-  const loadBackgroundAudioSettings = async () => {
+		}
 
-    try {
+	};
 
-      const settings = await getSettingByType('BACKGROUND_AUDIO');
 
-      if (settings?.setting) {
+	const loadImageConfig = async () => {
 
-        setBgAudioSettings(settings.setting);
+		try {
 
-        // Tạo file object cho display nếu có audio URL
+			const settings = await getSettingByType('IMAGE_GENERATION_CONFIG');
 
-        if (settings.setting.audioUrl) {
+			if (settings?.setting) {
 
-          setBgAudioFile({
+				setImageConfig(prev => ({
 
-            uid: '-1',
+					...prev,
 
-            name: 'background-audio',
+					...settings.setting,
 
-            status: 'done',
+				}));
 
-            url: settings.setting.audioUrl,
+			}
 
-          });
+		} catch (error) {
 
-        }
+			console.log('No image generation config found or error loading:', error);
 
-      }
+		}
 
-    } catch (error) {
+	};
 
-      console.log('No background audio settings found or error loading:', error);
 
-    }
+	const loadDiagramConfig = async () => {
+		try {
+			const settings = await getSettingByType('DIAGRAM_GENERATION_CONFIG');
+			if (settings?.setting) {
+				// Load new format với các key riêng biệt
+				const loadedConfig = settings.setting;
+				setDiagramConfig(prev => ({
+					kroki: {
+						...prev.kroki,
+						...(loadedConfig.kroki || {}),
+					},
+					html: {
+						...prev.html,
+						...(loadedConfig.html || {}),
+					},
+					excalidrawReact: {
+						...prev.excalidrawReact,
+						...(loadedConfig.excalidrawReact || {}),
+					},
+				}));
 
-  };
+				// Migration từ format cũ (backward compatibility)
+				if (!loadedConfig.kroki && !loadedConfig.html && !loadedConfig.excalidrawReact) {
+					// Old format - migrate to new format
+					const oldConfig = loadedConfig;
+					setDiagramConfig(prev => ({
+						kroki: {
+							...prev.kroki,
+							diagramType: oldConfig.diagramType || prev.kroki.diagramType,
+							aiModel: oldConfig.aiModel || prev.kroki.aiModel,
+							ai1Model: oldConfig.ai1Model || prev.kroki.ai1Model,
+							ai1Prompt: oldConfig.ai1Prompt || prev.kroki.ai1Prompt,
+							ai2Model: oldConfig.ai2Model || prev.kroki.ai2Model,
+							ai2Prompt: oldConfig.ai2Prompt || prev.kroki.ai2Prompt,
+							ai3Model: oldConfig.ai3Model || prev.kroki.ai3Model,
+							ai3Prompt: oldConfig.ai3Prompt || prev.kroki.ai3Prompt,
+							quantity: oldConfig.quantity || prev.kroki.quantity,
+						},
+						html: {
+							...prev.html,
+							aiModel: oldConfig.aiModel || prev.html.aiModel,
+							ai4Model: oldConfig.ai4Model || prev.html.ai4Model,
+							ai4Prompt: oldConfig.ai4Prompt || prev.html.ai4Prompt,
+						},
+						excalidrawReact: {
+							...prev.excalidrawReact,
+							...(oldConfig.excalidrawReact || {}),
+						},
+					}));
+				}
+			}
+		} catch (error) {
+			console.log('No diagram generation config found or error loading:', error);
+		}
+	};
 
+	// Load Summary Detail Config
+	const loadSummaryDetailConfig = async () => {
+		try {
+			const settings = await getSettingByType('SUMMARY_DETAIL_CONFIG');
+			if (settings?.setting) {
+				setSummaryDetailConfig(settings.setting);
+			}
+		} catch (error) {
+			console.log('No summary detail config found or error loading:', error);
+		}
+	};
 
+	// Save Summary Detail Config
+	const saveSummaryDetailConfig = async () => {
+		try {
+			await createOrUpdateSetting({
+				type: 'SUMMARY_DETAIL_CONFIG',
+				setting: summaryDetailConfig,
+			});
+			message.success('Đã lưu cấu hình tóm tắt detail!');
+		} catch (error) {
+			console.error('Error saving summary detail config:', error);
+			message.error('Lỗi khi lưu cấu hình tóm tắt detail!');
+		}
+	};
 
-  const loadGuidelineSettings = async () => {
 
-    try {
+	const loadCategoriesOptions = async () => {
+		try {
+			// Load categories options
+			const categoriesSettings = await getSettingByType('CATEGORIES_OPTIONS');
+			if (categoriesSettings?.setting) {
+				setCategoriesOptions(categoriesSettings.setting);
+			}
+		} catch (error) {
+			console.log('Error loading categories options:', error);
+		}
+	};
 
-      const settings = await getSettingByType('GUIDELINE_SETTING');
+	const loadTagOptions = async () => {
 
+		try {
 
+			// Load tag1 options
 
-      if (settings?.setting) {
+			const tag1Settings = await getSettingByType('TAG1_OPTIONS');
 
-        setGuidelineSettings(settings.setting);
+			if (tag1Settings?.setting) {
 
+				setTag1Options(tag1Settings.setting);
 
+			} else {
 
-        // Create file object for display if there's an image URL
+				// Default tag1 options if no settings exist
 
-        if (settings.setting.imageUrl) {
+				const defaultTag1Options = [
 
-          setGuidelineImageFile({
+					{ value: 'Business Strategy', label: 'Business Strategy' },
 
-            uid: '-1',
+					{ value: 'Marketing', label: 'Marketing' },
 
-            name: 'guideline-image',
+					{ value: 'Finance', label: 'Finance' },
 
-            status: 'done',
+					{ value: 'Operations', label: 'Operations' },
 
-            url: settings.setting.imageUrl,
+					{ value: 'Technology', label: 'Technology' },
 
-          });
+					{ value: 'Leadership', label: 'Leadership' },
 
-        }
+					{ value: 'Innovation', label: 'Innovation' },
 
-      } else {
+					{ value: 'Customer Experience', label: 'Customer Experience' },
 
-        console.log('ℹ️ K9Management: No existing guideline settings found');
+				];
 
-      }
+				setTag1Options(defaultTag1Options);
 
-    } catch (error) {
+				// Save default options to settings
 
-      console.log('❌ K9Management: Error loading guideline settings:', error);
+				await createOrUpdateSetting({
 
-    }
+					type: 'TAG1_OPTIONS',
 
-  };
+					setting: defaultTag1Options,
 
+				});
 
+			}
 
-  const loadImageConfig = async () => {
 
-    try {
+			// Load tag2 options
 
-      const settings = await getSettingByType('IMAGE_GENERATION_CONFIG');
+			const tag2Settings = await getSettingByType('TAG2_OPTIONS');
 
-      if (settings?.setting) {
+			if (tag2Settings?.setting) {
 
-        setImageConfig(prev => ({
+				setTag2Options(tag2Settings.setting);
 
-          ...prev,
+			} else {
 
-          ...settings.setting
+				// Default tag2 options if no settings exist
 
-        }));
+				const defaultTag2Options = [
 
-      }
+					{ value: 'Beginner', label: 'Beginner' },
 
-    } catch (error) {
+					{ value: 'Intermediate', label: 'Intermediate' },
 
-      console.log('No image generation config found or error loading:', error);
+					{ value: 'Advanced', label: 'Advanced' },
 
-    }
+					{ value: 'Expert', label: 'Expert' },
 
-  };
+					{ value: 'Case Study', label: 'Case Study' },
 
+					{ value: 'Theory', label: 'Theory' },
 
-  const loadDiagramConfig = async () => {
-    try {
-      const settings = await getSettingByType('DIAGRAM_GENERATION_CONFIG');
-      if (settings?.setting) {
-        // Load new format với các key riêng biệt
-        const loadedConfig = settings.setting;
-        setDiagramConfig(prev => ({
-          kroki: {
-            ...prev.kroki,
-            ...(loadedConfig.kroki || {})
-          },
-          html: {
-            ...prev.html,
-            ...(loadedConfig.html || {})
-          },
-          excalidrawReact: {
-            ...prev.excalidrawReact,
-            ...(loadedConfig.excalidrawReact || {})
-          }
-        }));
+					{ value: 'Practice', label: 'Practice' },
 
-        // Migration từ format cũ (backward compatibility)
-        if (!loadedConfig.kroki && !loadedConfig.html && !loadedConfig.excalidrawReact) {
-          // Old format - migrate to new format
-          const oldConfig = loadedConfig;
-          setDiagramConfig(prev => ({
-            kroki: {
-              ...prev.kroki,
-              diagramType: oldConfig.diagramType || prev.kroki.diagramType,
-              aiModel: oldConfig.aiModel || prev.kroki.aiModel,
-              ai1Model: oldConfig.ai1Model || prev.kroki.ai1Model,
-              ai1Prompt: oldConfig.ai1Prompt || prev.kroki.ai1Prompt,
-              ai2Model: oldConfig.ai2Model || prev.kroki.ai2Model,
-              ai2Prompt: oldConfig.ai2Prompt || prev.kroki.ai2Prompt,
-              ai3Model: oldConfig.ai3Model || prev.kroki.ai3Model,
-              ai3Prompt: oldConfig.ai3Prompt || prev.kroki.ai3Prompt,
-              quantity: oldConfig.quantity || prev.kroki.quantity
-            },
-            html: {
-              ...prev.html,
-              aiModel: oldConfig.aiModel || prev.html.aiModel,
-              ai4Model: oldConfig.ai4Model || prev.html.ai4Model,
-              ai4Prompt: oldConfig.ai4Prompt || prev.html.ai4Prompt
-            },
-            excalidrawReact: {
-              ...prev.excalidrawReact,
-              ...(oldConfig.excalidrawReact || {})
-            }
-          }));
-        }
-      }
-    } catch (error) {
-      console.log('No diagram generation config found or error loading:', error);
-    }
-  };
+					{ value: 'Tool', label: 'Tool' },
 
-  // Load Summary Detail Config
-  const loadSummaryDetailConfig = async () => {
-    try {
-      const settings = await getSettingByType('SUMMARY_DETAIL_CONFIG');
-      if (settings?.setting) {
-        setSummaryDetailConfig(settings.setting);
-      }
-    } catch (error) {
-      console.log('No summary detail config found or error loading:', error);
-    }
-  };
+				];
 
-  // Save Summary Detail Config
-  const saveSummaryDetailConfig = async () => {
-    try {
-      await createOrUpdateSetting({
-        type: 'SUMMARY_DETAIL_CONFIG',
-        setting: summaryDetailConfig
-      });
-      message.success('Đã lưu cấu hình tóm tắt detail!');
-    } catch (error) {
-      console.error('Error saving summary detail config:', error);
-      message.error('Lỗi khi lưu cấu hình tóm tắt detail!');
-    }
-  };
+				setTag2Options(defaultTag2Options);
 
+				// Save default options to settings
 
+				await createOrUpdateSetting({
 
+					type: 'TAG2_OPTIONS',
 
-  const loadCategoriesOptions = async () => {
-    try {
-      // Load categories options
-      const categoriesSettings = await getSettingByType('CATEGORIES_OPTIONS');
-      if (categoriesSettings?.setting) {
-        setCategoriesOptions(categoriesSettings.setting);
-      }
-    } catch (error) {
-      console.log('Error loading categories options:', error);
-    }
-  };
+					setting: defaultTag2Options,
 
-  const loadTagOptions = async () => {
+				});
 
-    try {
+			}
 
-      // Load tag1 options
 
-      const tag1Settings = await getSettingByType('TAG1_OPTIONS');
+			// Load tag3 options
 
-      if (tag1Settings?.setting) {
+			const tag3Settings = await getSettingByType('TAG3_OPTIONS');
 
-        setTag1Options(tag1Settings.setting);
+			if (tag3Settings?.setting) {
 
-      } else {
+				setTag3Options(tag3Settings.setting);
 
-        // Default tag1 options if no settings exist
+			} else {
 
-        const defaultTag1Options = [
+				// Default tag3 options if no settings exist
 
-          { value: 'Business Strategy', label: 'Business Strategy' },
+				const defaultTag3Options = [
 
-          { value: 'Marketing', label: 'Marketing' },
+					{ value: 'Industry', label: 'Industry' },
 
-          { value: 'Finance', label: 'Finance' },
+					{ value: 'Startup', label: 'Startup' },
 
-          { value: 'Operations', label: 'Operations' },
+					{ value: 'Enterprise', label: 'Enterprise' },
 
-          { value: 'Technology', label: 'Technology' },
+					{ value: 'SME', label: 'SME' },
 
-          { value: 'Leadership', label: 'Leadership' },
+					{ value: 'Global', label: 'Global' },
 
-          { value: 'Innovation', label: 'Innovation' },
+					{ value: 'Local', label: 'Local' },
 
-          { value: 'Customer Experience', label: 'Customer Experience' }
+					{ value: 'Digital', label: 'Digital' },
 
-        ];
+					{ value: 'Traditional', label: 'Traditional' },
 
-        setTag1Options(defaultTag1Options);
+				];
 
-        // Save default options to settings
+				setTag3Options(defaultTag3Options);
 
-        await createOrUpdateSetting({
+				// Save default options to settings
 
-          type: 'TAG1_OPTIONS',
+				await createOrUpdateSetting({
 
-          setting: defaultTag1Options
+					type: 'TAG3_OPTIONS',
 
-        });
+					setting: defaultTag3Options,
 
-      }
+				});
 
+			}
 
+			// Load courses options
+			const coursesSettings = await getSettingByType('COURSES_OPTIONS');
+			if (coursesSettings?.setting) {
+				setCoursesOptions(coursesSettings.setting);
+			}
 
-      // Load tag2 options
+			const tag4Settings = await getSettingByType('TAG4_OPTIONS');
 
-      const tag2Settings = await getSettingByType('TAG2_OPTIONS');
+			if (tag4Settings?.setting) {
 
-      if (tag2Settings?.setting) {
+				setTag4Options(tag4Settings.setting);
 
-        setTag2Options(tag2Settings.setting);
+				setProgramOptions(tag4Settings.setting); // Cập nhật programOptions
 
-      } else {
+			} else {
 
-        // Default tag2 options if no settings exist
+				// Default tag3 options if no settings exist
 
-        const defaultTag2Options = [
+				const defaultTag4Options = [
 
-          { value: 'Beginner', label: 'Beginner' },
+					{ value: 'Program 1', label: 'Program 1' },
 
-          { value: 'Intermediate', label: 'Intermediate' },
+					{ value: 'Program 2', label: 'Program 2' },
 
-          { value: 'Advanced', label: 'Advanced' },
+					{ value: 'Program 3', label: 'Program 3' },
 
-          { value: 'Expert', label: 'Expert' },
+					{ value: 'Program 4', label: 'Program 4' },
 
-          { value: 'Case Study', label: 'Case Study' },
+					{ value: 'Program 5', label: 'Program 5' },
 
-          { value: 'Theory', label: 'Theory' },
+				];
 
-          { value: 'Practice', label: 'Practice' },
+				setTag4Options(defaultTag4Options);
 
-          { value: 'Tool', label: 'Tool' }
+				setProgramOptions(defaultTag4Options); // Cập nhật programOptions
 
-        ];
+				// Save default options to settings
 
-        setTag2Options(defaultTag2Options);
+				await createOrUpdateSetting({
 
-        // Save default options to settings
+					type: 'TAG4_OPTIONS',
 
-        await createOrUpdateSetting({
+					setting: defaultTag4Options,
 
-          type: 'TAG2_OPTIONS',
+				});
 
-          setting: defaultTag2Options
+			}
 
-        });
+		} catch (error) {
 
-      }
+			console.log('Error loading tag options:', error);
 
+			// Set default options on error
 
+			setTag1Options([
 
-      // Load tag3 options
+				{ value: 'Business Strategy', label: 'Business Strategy' },
 
-      const tag3Settings = await getSettingByType('TAG3_OPTIONS');
+				{ value: 'Marketing', label: 'Marketing' },
 
-      if (tag3Settings?.setting) {
+				{ value: 'Finance', label: 'Finance' },
 
-        setTag3Options(tag3Settings.setting);
+				{ value: 'Operations', label: 'Operations' },
 
-      } else {
+			]);
 
-        // Default tag3 options if no settings exist
+			setTag2Options([
 
-        const defaultTag3Options = [
+				{ value: 'Beginner', label: 'Beginner' },
 
-          { value: 'Industry', label: 'Industry' },
+				{ value: 'Intermediate', label: 'Intermediate' },
 
-          { value: 'Startup', label: 'Startup' },
+				{ value: 'Advanced', label: 'Advanced' },
 
-          { value: 'Enterprise', label: 'Enterprise' },
+				{ value: 'Expert', label: 'Expert' },
 
-          { value: 'SME', label: 'SME' },
+			]);
 
-          { value: 'Global', label: 'Global' },
+			setTag3Options([
 
-          { value: 'Local', label: 'Local' },
+				{ value: 'Industry', label: 'Industry' },
 
-          { value: 'Digital', label: 'Digital' },
+				{ value: 'Startup', label: 'Startup' },
 
-          { value: 'Traditional', label: 'Traditional' }
+				{ value: 'Enterprise', label: 'Enterprise' },
 
-        ];
+				{ value: 'SME', label: 'SME' },
 
-        setTag3Options(defaultTag3Options);
+			]);
 
-        // Save default options to settings
 
-        await createOrUpdateSetting({
+		}
 
-          type: 'TAG3_OPTIONS',
+	};
 
-          setting: defaultTag3Options
 
-        });
+	const saveCategoriesOptions = async (categoriesList) => {
+		try {
+			await createOrUpdateSetting({
+				type: 'CATEGORIES_OPTIONS',
+				setting: categoriesList,
+			});
 
-      }
+			setCategoriesOptions(categoriesList);
+			message.success('Đã lưu cấu hình categories thành công!');
+		} catch (error) {
+			console.error('Error saving categories options:', error);
+			message.error('Lỗi khi lưu cấu hình categories!');
+		}
+	};
 
-      // Load courses options
-      const coursesSettings = await getSettingByType('COURSES_OPTIONS');
-      if (coursesSettings?.setting) {
-        setCoursesOptions(coursesSettings.setting);
-      }
+	const saveTagOptions = async (tag1List, tag2List, tag3List) => {
 
-      const tag4Settings = await getSettingByType('TAG4_OPTIONS');
+		try {
 
-      if (tag4Settings?.setting) {
+			await createOrUpdateSetting({
 
-        setTag4Options(tag4Settings.setting);
+				type: 'TAG1_OPTIONS',
 
-        setProgramOptions(tag4Settings.setting); // Cập nhật programOptions
+				setting: tag1List,
 
-      } else {
+			});
 
-        // Default tag3 options if no settings exist
+			await createOrUpdateSetting({
 
-        const defaultTag4Options = [
+				type: 'TAG2_OPTIONS',
 
-          { value: 'Program 1', label: 'Program 1' },
+				setting: tag2List,
 
-          { value: 'Program 2', label: 'Program 2' },
+			});
 
-          { value: 'Program 3', label: 'Program 3' },
+			await createOrUpdateSetting({
 
-          { value: 'Program 4', label: 'Program 4' },
+				type: 'TAG3_OPTIONS',
 
-          { value: 'Program 5', label: 'Program 5' },
+				setting: tag3List,
 
-        ];
+			});
 
-        setTag4Options(defaultTag4Options);
+			setTag1Options(tag1List);
 
-        setProgramOptions(defaultTag4Options); // Cập nhật programOptions
+			setTag2Options(tag2List);
 
-        // Save default options to settings
+			setTag3Options(tag3List);
 
-        await createOrUpdateSetting({
+			message.success('Đã lưu cấu hình tag thành công!');
 
-          type: 'TAG4_OPTIONS',
+		} catch (error) {
 
-          setting: defaultTag4Options
+			console.error('Error saving tag options:', error);
 
-        });
+			message.error('Lỗi khi lưu cấu hình tag!');
 
-      }
+		}
 
-    } catch (error) {
+	};
 
-      console.log('Error loading tag options:', error);
 
-      // Set default options on error
+	const handleSaveTags = async (tag4List) => {
 
-      setTag1Options([
+		try {
 
-        { value: 'Business Strategy', label: 'Business Strategy' },
+			await createOrUpdateSetting({
 
-        { value: 'Marketing', label: 'Marketing' },
+				type: 'TAG4_OPTIONS',
 
-        { value: 'Finance', label: 'Finance' },
+				setting: tag4List,
 
-        { value: 'Operations', label: 'Operations' }
+			});
 
-      ]);
+			setTag4Options(tag4List);
 
-      setTag2Options([
+			setProgramOptions(tag4List); // Cập nhật programOptions
 
-        { value: 'Beginner', label: 'Beginner' },
+			message.success('Đã lưu cấu hình tag thành công!');
 
-        { value: 'Intermediate', label: 'Intermediate' },
+		} catch (error) {
 
-        { value: 'Advanced', label: 'Advanced' },
+			console.error('Error saving tag options:', error);
 
-        { value: 'Expert', label: 'Expert' }
+			message.error('Lỗi khi lưu cấu hình tag!');
 
-      ]);
+		}
 
-      setTag3Options([
+	};
 
-        { value: 'Industry', label: 'Industry' },
+	const handleSaveCourses = async (coursesList) => {
 
-        { value: 'Startup', label: 'Startup' },
+		try {
 
-        { value: 'Enterprise', label: 'Enterprise' },
+			await createOrUpdateSetting({
 
-        { value: 'SME', label: 'SME' }
+				type: 'COURSES_OPTIONS',
 
-      ]);
+				setting: coursesList,
 
+			});
 
+			setCoursesOptions(coursesList);
 
-    }
+			message.success('Đã lưu cấu hình học phần thành công!');
 
-  };
+		} catch (error) {
 
+			console.error('Error saving courses options:', error);
 
+			message.error('Lỗi khi lưu cấu hình học phần!');
 
-  const saveCategoriesOptions = async (categoriesList) => {
-    try {
-      await createOrUpdateSetting({
-        type: 'CATEGORIES_OPTIONS',
-        setting: categoriesList
-      });
+		}
 
-      setCategoriesOptions(categoriesList);
-      message.success('Đã lưu cấu hình categories thành công!');
-    } catch (error) {
-      console.error('Error saving categories options:', error);
-      message.error('Lỗi khi lưu cấu hình categories!');
-    }
-  };
+	};
 
-  const saveTagOptions = async (tag1List, tag2List, tag3List) => {
 
-    try {
+	const saveImageConfig = async () => {
 
-      await createOrUpdateSetting({
+		try {
 
-        type: 'TAG1_OPTIONS',
+			await createOrUpdateSetting({
 
-        setting: tag1List
+				type: 'IMAGE_GENERATION_CONFIG',
 
-      });
+				setting: imageConfig,
 
-      await createOrUpdateSetting({
+			});
 
-        type: 'TAG2_OPTIONS',
+			setImageConfigModalVisible(false);
 
-        setting: tag2List
+			message.success('Lưu cấu hình tạo ảnh thành công!');
 
-      });
+		} catch (error) {
 
-      await createOrUpdateSetting({
+			console.error('Error saving image config:', error);
 
-        type: 'TAG3_OPTIONS',
+			message.error('Lỗi khi lưu cấu hình tạo ảnh!');
 
-        setting: tag3List
+		}
 
-      });
+	};
 
-      setTag1Options(tag1List);
 
-      setTag2Options(tag2List);
+	const saveDiagramConfig = async () => {
+		try {
+			await createOrUpdateSetting({
+				type: 'DIAGRAM_GENERATION_CONFIG',
+				setting: diagramConfig,
+			});
+			setDiagramConfigModalVisible(false);
+			message.success('Lưu cấu hình tạo diagram thành công!');
+		} catch (error) {
+			console.error('Error saving diagram config:', error);
+			message.error('Lỗi khi lưu cấu hình tạo diagram!');
+		}
+	};
 
-      setTag3Options(tag3List);
 
-      message.success('Đã lưu cấu hình tag thành công!');
+	//Embeding
 
-    } catch (error) {
+	const handleEmbedingAll = async () => {
 
-      console.error('Error saving tag options:', error);
+		console.log('Embeding all for table:', currentTab);
 
-      message.error('Lỗi khi lưu cấu hình tag!');
+		setEmbeddingAllLoading(true);
 
-    }
 
-  };
+		// Filter items that haven't been embedded yet
 
+		let allDataForTab = [];
 
+		if (currentTab === 'report') {
 
-  const handleSaveTags = async (tag4List) => {
+			allDataForTab = aiSummaryData || [];
 
-    try {
+		} else if (currentTab === 'reportDN') {
 
-      await createOrUpdateSetting({
+			allDataForTab = reportDNData || [];
 
-        type: 'TAG4_OPTIONS',
+		} else {
 
-        setting: tag4List
+			allDataForTab = allData[currentTab] || [];
 
-      });
+		}
 
-      setTag4Options(tag4List);
 
-      setProgramOptions(tag4List); // Cập nhật programOptions
+		// Nếu có selectedRowKeys, chỉ xử lý những item được chọn
 
-      message.success('Đã lưu cấu hình tag thành công!');
+		let itemsToProcess = allDataForTab;
 
-    } catch (error) {
+		if (selectedRowKeys.length > 0) {
 
-      console.error('Error saving tag options:', error);
+			itemsToProcess = allDataForTab.filter(item => selectedRowKeys.includes(item.id));
 
-      message.error('Lỗi khi lưu cấu hình tag!');
+		}
 
-    }
 
-  };
+		const unembeddedItems = itemsToProcess.filter(item => item.id && !embeddedItems.has(item.id));
 
-  const handleSaveCourses = async (coursesList) => {
 
-    try {
+		if (unembeddedItems.length === 0) {
 
-      await createOrUpdateSetting({
+			if (selectedRowKeys.length > 0) {
 
-        type: 'COURSES_OPTIONS',
+				message.info(`Tất cả items được chọn trong tab ${currentTab} đã được embedding!`);
 
-        setting: coursesList
+			} else {
 
-      });
+				message.info(`Tất cả items trong tab ${currentTab} đã được embedding!`);
 
-      setCoursesOptions(coursesList);
+			}
 
-      message.success('Đã lưu cấu hình học phần thành công!');
+			return;
 
-    } catch (error) {
+		}
 
-      console.error('Error saving courses options:', error);
 
-      message.error('Lỗi khi lưu cấu hình học phần!');
+		// Set loading state for unembedded items only
 
-    }
+		const unembeddedIds = unembeddedItems.map(item => item.id);
 
-  };
+		setEmbeddingLoadingIds(new Set(unembeddedIds));
 
 
+		try {
 
-  const saveImageConfig = async () => {
+			// Lấy tất cả dữ liệu của currentTab
 
-    try {
+			if (unembeddedItems.length === 0) {
 
-      await createOrUpdateSetting({
+				message.warning(`Không có dữ liệu để embedding cho tab ${currentTab}!`);
 
-        type: 'IMAGE_GENERATION_CONFIG',
+				return;
 
-        setting: imageConfig
+			}
 
-      });
 
-      setImageConfigModalVisible(false);
+			let successCount = 0;
 
-      message.success('Lưu cấu hình tạo ảnh thành công!');
+			let errorCount = 0;
 
-    } catch (error) {
 
-      console.error('Error saving image config:', error);
+			// Xử lý từng item một cách tuần tự để tránh quá tải
 
-      message.error('Lỗi khi lưu cấu hình tạo ảnh!');
+			for (let i = 0; i < unembeddedItems.length; i++) {
 
-    }
+				const item = unembeddedItems[i];
 
-  };
+				if (!item.id) {
 
+					console.warn('Item missing id:', item);
 
+					continue;
 
-  const saveDiagramConfig = async () => {
-    try {
-      await createOrUpdateSetting({
-        type: 'DIAGRAM_GENERATION_CONFIG',
-        setting: diagramConfig
-      });
-      setDiagramConfigModalVisible(false);
-      message.success('Lưu cấu hình tạo diagram thành công!');
-    } catch (error) {
-      console.error('Error saving diagram config:', error);
-      message.error('Lỗi khi lưu cấu hình tạo diagram!');
-    }
-  };
+				}
 
 
-  //Embeding
+				// Update progress
 
-  const handleEmbedingAll = async () => {
+				setEmbeddingProgress({ current: i + 1, total: unembeddedItems.length });
 
-    console.log('Embeding all for table:', currentTab);
 
-    setEmbeddingAllLoading(true);
+				try {
 
+					// Xóa embedding cũ trước khi tạo mới
 
+					try {
 
-    // Filter items that haven't been embedded yet
+						await deleteEmbedingDataBySourceId(item.id, currentTab);
 
-    let allDataForTab = [];
+					} catch (error) {
 
-    if (currentTab === 'report') {
+						console.warn(`Failed to delete old embedding for ${currentTab} ID ${item.id}:`, error);
 
-      allDataForTab = aiSummaryData || [];
+					}
 
-    } else if (currentTab === 'reportDN') {
 
-      allDataForTab = reportDNData || [];
+					// Tạo embedding cho từng item sử dụng createEmbeddingWithAI
 
-    } else {
+					let content = '';
 
-      allDataForTab = allData[currentTab] || [];
+					if (currentTab === 'report' || currentTab === 'reportDN') {
 
-    }
+						// Cho tab report và reportDN, sử dụng summary2 và fileUrls
 
+						let fileContent = '';
 
+						if (item.fileUrls && Array.isArray(item.fileUrls) && item.fileUrls.length > 0) {
 
-    // Nếu có selectedRowKeys, chỉ xử lý những item được chọn
+							fileContent = ` Files: ${item.fileUrls.join(', ')}`;
 
-    let itemsToProcess = allDataForTab;
+						}
 
-    if (selectedRowKeys.length > 0) {
+						content = `${item.summary2 || ''}${fileContent}`.trim();
 
-      itemsToProcess = allDataForTab.filter(item => selectedRowKeys.includes(item.id));
+					} else {
 
-    }
+						// Cho các tab khác, sử dụng detail
 
+						content = `${item.title || ''} ${item.summary || ''} ${item.detail || ''}`.trim();
 
+					}
 
-    const unembeddedItems = itemsToProcess.filter(item => item.id && !embeddedItems.has(item.id));
 
+					if (content) {
 
+						await createEmbeddingWithAI(item.id, content, currentTab);
 
-    if (unembeddedItems.length === 0) {
+						successCount++;
 
-      if (selectedRowKeys.length > 0) {
 
-        message.info(`Tất cả items được chọn trong tab ${currentTab} đã được embedding!`);
+						// Hiển thị tên item phù hợp
 
-      } else {
+						let itemTitle = '';
 
-        message.info(`Tất cả items trong tab ${currentTab} đã được embedding!`);
+						if (currentTab === 'report' || currentTab === 'reportDN') {
 
-      }
+							try {
 
-      return;
+								const info = typeof item.info === 'string' ? JSON.parse(item.info) : item.info;
 
-    }
+								itemTitle = info?.title || `Report ID ${item.id}`;
 
+							} catch {
 
+								itemTitle = `Report ID ${item.id}`;
 
-    // Set loading state for unembedded items only
+							}
 
-    const unembeddedIds = unembeddedItems.map(item => item.id);
+						} else {
 
-    setEmbeddingLoadingIds(new Set(unembeddedIds));
+							itemTitle = item.title || `Item ID ${item.id}`;
 
+						}
 
 
-    try {
+						console.log(`✅ Embedding completed for ${currentTab} ID ${item.id}: ${itemTitle}`);
 
-      // Lấy tất cả dữ liệu của currentTab
+					} else {
 
-      if (unembeddedItems.length === 0) {
+						console.warn(`⚠️ No content for embedding ${currentTab} ID ${item.id}: ${item.title || `Report ID ${item.id}`}`);
 
-        message.warning(`Không có dữ liệu để embedding cho tab ${currentTab}!`);
+					}
 
-        return;
+				} catch (error) {
 
-      }
+					errorCount++;
 
+					console.error(`❌ Failed to embed ${currentTab} ID ${item.id}:`, error);
 
+				}
 
-      let successCount = 0;
+			}
 
-      let errorCount = 0;
 
+			console.log(`📊 Embedding summary: ${successCount} successful, ${errorCount} failed`);
 
 
-      // Xử lý từng item một cách tuần tự để tránh quá tải
+			let successMessage = '';
 
-      for (let i = 0; i < unembeddedItems.length; i++) {
+			if (selectedRowKeys.length > 0) {
 
-        const item = unembeddedItems[i];
+				successMessage = `Embedding cho ${selectedRowKeys.length} items được chọn trong tab ${currentTab} đã hoàn thành! (${successCount}/${unembeddedItems.length} items)`;
 
-        if (!item.id) {
+			} else {
 
-          console.warn('Item missing id:', item);
+				successMessage = `Embedding toàn bộ cho ${currentTab} đã hoàn thành! (${successCount}/${unembeddedItems.length} items)`;
 
-          continue;
+			}
 
-        }
+			message.success(successMessage);
 
 
+			if (errorCount > 0) {
 
-        // Update progress
+				message.warning(`${errorCount} items failed to embed. Check console for details.`);
 
-        setEmbeddingProgress({ current: i + 1, total: unembeddedItems.length });
+			}
 
 
+			// Reload embedded items to update UI
 
-        try {
+			await loadEmbeddedItems();
 
-          // Xóa embedding cũ trước khi tạo mới
+		} catch (error) {
 
-          try {
+			console.error('Embedding error:', error);
 
-            await deleteEmbedingDataBySourceId(item.id, currentTab);
+			message.error('Lỗi khi thực hiện embedding: ' + (error.message || error));
 
-          } catch (error) {
+		} finally {
 
-            console.warn(`Failed to delete old embedding for ${currentTab} ID ${item.id}:`, error);
+			setEmbeddingAllLoading(false);
 
-          }
+			// Clear all loading states
 
+			setEmbeddingLoadingIds(new Set());
 
+			// Reset progress
 
-          // Tạo embedding cho từng item sử dụng createEmbeddingWithAI
+			setEmbeddingProgress({ current: 0, total: 0 });
 
-          let content = '';
+		}
 
-          if (currentTab === 'report' || currentTab === 'reportDN') {
+	};
 
-            // Cho tab report và reportDN, sử dụng summary2 và fileUrls
 
-            let fileContent = '';
+	// Helper function to check if an item is being embedded
 
-            if (item.fileUrls && Array.isArray(item.fileUrls) && item.fileUrls.length > 0) {
+	const isEmbedding = (id) => {
 
-              fileContent = ` Files: ${item.fileUrls.join(', ')}`;
+		return embeddingLoadingIds.has(id);
 
-            }
+	};
 
-            content = `${item.summary2 || ''}${fileContent}`.trim();
 
-          } else {
+	// Helper function to filter out CompanySummary records
 
-            // Cho các tab khác, sử dụng detail
+	const filterCompanySummaryRecords = (data) => {
 
-            content = `${item.title || ''} ${item.summary || ''} ${item.detail || ''}`.trim();
+		return (data || []).filter(item => {
 
-          }
+			if (!item.info) return true;
 
+			try {
 
+				const info = typeof item.info === 'string' ? JSON.parse(item.info) : item.info;
 
-          if (content) {
+				return info.sheetName !== 'CompanySummary';
 
-            await createEmbeddingWithAI(item.id, content, currentTab);
+			} catch (e) {
 
-            successCount++;
+				// Nếu không parse được info, giữ lại bản ghi
 
+				return true;
 
+			}
 
-            // Hiển thị tên item phù hợp
+		});
 
-            let itemTitle = '';
+	};
 
-            if (currentTab === 'report' || currentTab === 'reportDN') {
 
-              try {
+	const handleEmbeding = async (id) => {
 
-                const info = typeof item.info === 'string' ? JSON.parse(item.info) : item.info;
+		console.log('Embeding', id, 'for table:', currentTab);
 
-                itemTitle = info?.title || `Report ID ${item.id}`;
 
-              } catch {
+		// Set loading state for this specific item
 
-                itemTitle = `Report ID ${item.id}`;
+		setEmbeddingLoadingIds(prev => new Set(prev).add(id));
 
-              }
 
-            } else {
+		try {
 
-              itemTitle = item.title || `Item ID ${item.id}`;
+			// Lấy dữ liệu của item
 
-            }
+			let item = null;
 
+			if (currentTab === 'report') {
 
+				item = aiSummaryData?.find(item => item.id === id);
 
-            console.log(`✅ Embedding completed for ${currentTab} ID ${item.id}: ${itemTitle}`);
+			} else if (currentTab === 'reportDN') {
 
-          } else {
+				item = reportDNData?.find(item => item.id === id);
 
-            console.warn(`⚠️ No content for embedding ${currentTab} ID ${item.id}: ${item.title || `Report ID ${item.id}`}`);
+			} else {
 
-          }
+				item = allData[currentTab]?.find(item => item.id === id);
 
-        } catch (error) {
+			}
 
-          errorCount++;
+			if (!item) {
 
-          console.error(`❌ Failed to embed ${currentTab} ID ${item.id}:`, error);
+				message.error('Không tìm thấy dữ liệu!');
 
-        }
+				return;
 
-      }
+			}
 
 
+			if (!item.id) {
 
-      console.log(`📊 Embedding summary: ${successCount} successful, ${errorCount} failed`);
+				message.error('Item không có ID!');
 
+				return;
 
+			}
 
-      let successMessage = '';
 
-      if (selectedRowKeys.length > 0) {
+			// Xóa embedding cũ
 
-        successMessage = `Embedding cho ${selectedRowKeys.length} items được chọn trong tab ${currentTab} đã hoàn thành! (${successCount}/${unembeddedItems.length} items)`;
+			try {
 
-      } else {
+				await deleteEmbedingDataBySourceId(id, currentTab);
 
-        successMessage = `Embedding toàn bộ cho ${currentTab} đã hoàn thành! (${successCount}/${unembeddedItems.length} items)`;
+			} catch (error) {
 
-      }
+				console.warn(`Failed to delete old embedding for ${currentTab} ID ${id}:`, error);
 
-      message.success(successMessage);
+			}
 
+			let response = null;
 
+			// Tạo embedding data mới
 
-      if (errorCount > 0) {
+			let content = '';
 
-        message.warning(`${errorCount} items failed to embed. Check console for details.`);
+			if (currentTab === 'report' || currentTab === 'reportDN') {
 
-      }
+				// Cho tab report, sử dụng summary2 và fileUrls
 
+				let fileContent = '';
 
+				if (item.fileUrls && Array.isArray(item.fileUrls) && item.fileUrls.length > 0) {
 
-      // Reload embedded items to update UI
+					fileContent = ` Files: ${item.fileUrls.join(', ')}`;
 
-      await loadEmbeddedItems();
+				}
 
-    } catch (error) {
+				content = `${item.summary2 || ''}${fileContent}`.trim();
 
-      console.error('Embedding error:', error);
+				response = await createEmbeddingWithAI(id, content, 'report');
 
-      message.error('Lỗi khi thực hiện embedding: ' + (error.message || error));
+			} else {
 
-    } finally {
+				// Cho các tab khác, sử dụng detail
 
-      setEmbeddingAllLoading(false);
+				content = `${item.title || ''} ${item.summary || ''} ${item.detail || ''}`.trim();
 
-      // Clear all loading states
+				response = await createEmbeddingWithAI(id, content, currentTab);
 
-      setEmbeddingLoadingIds(new Set());
+			}
 
-      // Reset progress
 
-      setEmbeddingProgress({ current: 0, total: 0 });
+			if (response) {
 
-    }
 
-  };
+				console.log('Response', response);
 
 
+				// Hiển thị tên item phù hợp
 
-  // Helper function to check if an item is being embedded
+				let itemTitle = '';
 
-  const isEmbedding = (id) => {
+				if (currentTab === 'report' || currentTab === 'reportDN') {
 
-    return embeddingLoadingIds.has(id);
+					try {
 
-  };
+						const info = typeof item.info === 'string' ? JSON.parse(item.info) : item.info;
 
+						itemTitle = info?.title || `Report ID ${id}`;
 
+					} catch {
 
-  // Helper function to filter out CompanySummary records
+						itemTitle = `Report ID ${id}`;
 
-  const filterCompanySummaryRecords = (data) => {
+					}
 
-    return (data || []).filter(item => {
+				} else {
 
-      if (!item.info) return true;
+					itemTitle = item.title || `Item ID ${id}`;
 
-      try {
+				}
 
-        const info = typeof item.info === 'string' ? JSON.parse(item.info) : item.info;
 
-        return info.sheetName !== 'CompanySummary';
+				// Hiển thị thông tin chi tiết về chunks được tạo
 
-      } catch (e) {
+				const chunksCreated = response.data?.chunksCreated || 0;
 
-        // Nếu không parse được info, giữ lại bản ghi
+				const totalTextLength = response.data?.totalTextLength || 0;
 
-        return true;
 
-      }
+				message.success(`Embedding cho ${itemTitle} đã hoàn thành! (${chunksCreated} chunks từ ${totalTextLength} ký tự)`);
 
-    });
 
-  };
+				// Reload embedded items to update UI
 
+				await loadEmbeddedItems();
 
+			} else {
 
-  const handleEmbeding = async (id) => {
+				message.warning('Không có nội dung để embedding!');
 
-    console.log('Embeding', id, 'for table:', currentTab);
+			}
 
+		} catch (error) {
 
+			console.error('Embedding error:', error);
 
-    // Set loading state for this specific item
+			message.error('Lỗi khi thực hiện embedding: ' + (error.message || error));
 
-    setEmbeddingLoadingIds(prev => new Set(prev).add(id));
+		} finally {
 
+			// Clear loading state for this specific item
 
+			setEmbeddingLoadingIds(prev => {
 
-    try {
+				const newSet = new Set(prev);
 
-      // Lấy dữ liệu của item
+				newSet.delete(id);
 
-      let item = null;
+				return newSet;
 
-      if (currentTab === 'report') {
+			});
 
-        item = aiSummaryData?.find(item => item.id === id);
+		}
 
-      } else if (currentTab === 'reportDN') {
+	};
 
-        item = reportDNData?.find(item => item.id === id);
 
-      } else {
+	// Local search function
 
-        item = allData[currentTab]?.find(item => item.id === id);
+	const handleLocalSearch = (searchValue) => {
 
-      }
+		setSearchText(searchValue);
 
-      if (!item) {
+		// Save immediately with the new search value
 
-        message.error('Không tìm thấy dữ liệu!');
+		const currentFilters = {
 
-        return;
+			...filterHistory[currentTab],
 
-      }
+			searchText: searchValue,
 
+		};
 
+		const updatedHistory = {
 
-      if (!item.id) {
+			...filterHistory,
 
-        message.error('Item không có ID!');
+			[currentTab]: currentFilters,
 
-        return;
+		};
 
-      }
+		setFilterHistory(updatedHistory);
 
+		saveFilterHistory(updatedHistory);
 
 
-      // Xóa embedding cũ
+		if (currentTab === 'home' || currentTab === 'news' || currentTab === 'caseTraining' || currentTab === 'longForm') {
 
-      try {
+			// For home, news, caseTraining, and longForm tabs, apply filters which will include search
 
-        await deleteEmbedingDataBySourceId(id, currentTab);
+			applyFilters();
 
-      } catch (error) {
+		} else {
 
-        console.warn(`Failed to delete old embedding for ${currentTab} ID ${id}:`, error);
+			// For other tabs, use the old logic
 
-      }
+			if (!searchValue.trim()) {
 
-      let response = null;
+				setFilteredData(allData);
 
-      // Tạo embedding data mới
+				return;
 
-      let content = '';
+			}
 
-      if (currentTab === 'report' || currentTab === 'reportDN') {
 
-        // Cho tab report, sử dụng summary2 và fileUrls
+			const searchLower = searchValue.toLowerCase();
 
-        let fileContent = '';
+			const filtered = {
 
-        if (item.fileUrls && Array.isArray(item.fileUrls) && item.fileUrls.length > 0) {
+				home: allData.home.filter(item =>
 
-          fileContent = ` Files: ${item.fileUrls.join(', ')}`;
+					item.id?.toString().toLowerCase().includes(searchLower) ||
 
-        }
+					item.cid?.toLowerCase().includes(searchLower) ||
 
-        content = `${item.summary2 || ''}${fileContent}`.trim();
+					item.title?.toLowerCase().includes(searchLower) ||
 
-        response = await createEmbeddingWithAI(id, content, 'report');
+					item.summary?.toLowerCase().includes(searchLower) ||
 
-      } else {
+					item.detail?.toLowerCase().includes(searchLower) ||
 
-        // Cho các tab khác, sử dụng detail
+					item.category?.toLowerCase().includes(searchLower) ||
 
-        content = `${item.title || ''} ${item.summary || ''} ${item.detail || ''}`.trim();
+					item.source?.toLowerCase().includes(searchLower),
+				),
 
-        response = await createEmbeddingWithAI(id, content, currentTab);
+				news: allData.news.filter(item =>
 
-      }
+					item.id?.toString().toLowerCase().includes(searchLower) ||
 
+					item.cid?.toLowerCase().includes(searchLower) ||
 
+					item.title?.toLowerCase().includes(searchLower) ||
 
-      if (response) {
+					item.summary?.toLowerCase().includes(searchLower) ||
 
+					item.detail?.toLowerCase().includes(searchLower) ||
 
+					item.category?.toLowerCase().includes(searchLower) ||
 
+					item.source?.toLowerCase().includes(searchLower),
+				),
 
+				caseTraining: allData.caseTraining.filter(item =>
 
-        console.log('Response', response);
+					item.id?.toString().toLowerCase().includes(searchLower) ||
 
+					item.cid?.toLowerCase().includes(searchLower) ||
 
+					item.title?.toLowerCase().includes(searchLower) ||
 
-        // Hiển thị tên item phù hợp
+					item.summary?.toLowerCase().includes(searchLower) ||
 
-        let itemTitle = '';
+					item.detail?.toLowerCase().includes(searchLower) ||
 
-        if (currentTab === 'report' || currentTab === 'reportDN') {
+					item.category?.toLowerCase().includes(searchLower) ||
 
-          try {
+					item.source?.toLowerCase().includes(searchLower) ||
 
-            const info = typeof item.info === 'string' ? JSON.parse(item.info) : item.info;
+					item.tag1?.toLowerCase().includes(searchLower) ||
 
-            itemTitle = info?.title || `Report ID ${id}`;
+					item.tag2?.toLowerCase().includes(searchLower) ||
 
-          } catch {
+					item.tag3?.toLowerCase().includes(searchLower),
+				),
 
-            itemTitle = `Report ID ${id}`;
+				longForm: allData.longForm.filter(item =>
 
-          }
+					item.id?.toString().toLowerCase().includes(searchLower) ||
 
-        } else {
+					item.cid?.toLowerCase().includes(searchLower) ||
 
-          itemTitle = item.title || `Item ID ${id}`;
+					item.title?.toLowerCase().includes(searchLower) ||
 
-        }
+					item.summary?.toLowerCase().includes(searchLower) ||
 
+					item.detail?.toLowerCase().includes(searchLower) ||
 
+					item.category?.toLowerCase().includes(searchLower) ||
 
-        // Hiển thị thông tin chi tiết về chunks được tạo
+					item.source?.toLowerCase().includes(searchLower),
+				),
 
-        const chunksCreated = response.data?.chunksCreated || 0;
+				library: allData.library.filter(item =>
 
-        const totalTextLength = response.data?.totalTextLength || 0;
+					item.id?.toString().toLowerCase().includes(searchLower) ||
 
+					item.cid?.toLowerCase().includes(searchLower) ||
 
+					item.title?.toLowerCase().includes(searchLower) ||
 
-        message.success(`Embedding cho ${itemTitle} đã hoàn thành! (${chunksCreated} chunks từ ${totalTextLength} ký tự)`);
+					item.summary?.toLowerCase().includes(searchLower) ||
 
+					item.detail?.toLowerCase().includes(searchLower) ||
 
+					item.category?.toLowerCase().includes(searchLower),
+				),
 
-        // Reload embedded items to update UI
+				story: allData.story.filter(item =>
 
-        await loadEmbeddedItems();
+					item.id?.toString().toLowerCase().includes(searchLower) ||
 
-      } else {
+					item.cid?.toLowerCase().includes(searchLower) ||
 
-        message.warning('Không có nội dung để embedding!');
+					item.title?.toLowerCase().includes(searchLower) ||
 
-      }
+					item.summary?.toLowerCase().includes(searchLower) ||
 
-    } catch (error) {
+					item.detail?.toLowerCase().includes(searchLower) ||
 
-      console.error('Embedding error:', error);
+					item.category?.toLowerCase().includes(searchLower) ||
 
-      message.error('Lỗi khi thực hiện embedding: ' + (error.message || error));
+					item.audioText?.toLowerCase().includes(searchLower),
+				),
 
-    } finally {
+			};
 
-      // Clear loading state for this specific item
 
-      setEmbeddingLoadingIds(prev => {
+			setFilteredData(filtered);
 
-        const newSet = new Set(prev);
+		}
 
-        newSet.delete(id);
+	};
 
-        return newSet;
 
-      });
+	// Handle search submission (when user presses Enter or clicks search)
 
-    }
+	const handleSearchSubmit = (searchValue) => {
 
-  };
+		if (searchValue.trim()) {
 
+			addToSearchHistory(searchValue);
 
+		}
 
-  // Local search function
+		handleLocalSearch(searchValue);
 
-  const handleLocalSearch = (searchValue) => {
+	};
 
-    setSearchText(searchValue);
 
-    // Save immediately with the new search value
+	// Filter functions for home, news, caseTraining, and longForm tabs
 
-    const currentFilters = {
+	const applyFilters = () => {
 
-      ...filterHistory[currentTab],
+		if (currentTab !== 'home' && currentTab !== 'news' && currentTab !== 'caseTraining' && currentTab !== 'longForm') {
 
-      searchText: searchValue
+			setFilteredData(allData);
 
-    };
+			return;
 
-    const updatedHistory = {
+		}
 
-      ...filterHistory,
 
-      [currentTab]: currentFilters
+		let filteredData = [];
 
-    };
+		if (currentTab === 'home') {
 
-    setFilterHistory(updatedHistory);
+			filteredData = allData.home || [];
 
-    saveFilterHistory(updatedHistory);
+		} else if (currentTab === 'news') {
 
+			filteredData = allData.news || [];
 
+		} else if (currentTab === 'caseTraining') {
 
-    if (currentTab === 'home' || currentTab === 'news' || currentTab === 'caseTraining' || currentTab === 'longForm') {
+			filteredData = allData.caseTraining || [];
 
-      // For home, news, caseTraining, and longForm tabs, apply filters which will include search
+		} else if (currentTab === 'longForm') {
 
-      applyFilters();
+			filteredData = allData.longForm || [];
 
-    } else {
+		}
 
-      // For other tabs, use the old logic
 
-      if (!searchValue.trim()) {
+		// Apply category filter
 
-        setFilteredData(allData);
+		if (categoryFilter !== 'all') {
 
-        return;
+			if (categoryFilter === '') {
 
-      }
+				// Filter for empty/null categories
 
+				filteredData = filteredData.filter(item => !item.category || item.category == '');
 
+			} else {
 
-      const searchLower = searchValue.toLowerCase();
+				// Filter for specific category
 
-      const filtered = {
+				filteredData = filteredData.filter(item => item.category === categoryFilter);
 
-        home: allData.home.filter(item =>
+			}
 
-            item.id?.toString().toLowerCase().includes(searchLower) ||
+		}
 
-            item.cid?.toLowerCase().includes(searchLower) ||
 
-            item.title?.toLowerCase().includes(searchLower) ||
+		// Apply image filter
 
-            item.summary?.toLowerCase().includes(searchLower) ||
+		if (imageFilter !== 'all') {
 
-            item.detail?.toLowerCase().includes(searchLower) ||
+			if (imageFilter === 'has') {
 
-            item.category?.toLowerCase().includes(searchLower) ||
+				filteredData = filteredData.filter(item => item.avatarUrl);
 
-            item.source?.toLowerCase().includes(searchLower)
+			} else if (imageFilter === 'no') {
 
-        ),
+				filteredData = filteredData.filter(item => !item.avatarUrl);
 
-        news: allData.news.filter(item =>
+			}
 
-            item.id?.toString().toLowerCase().includes(searchLower) ||
+		}
 
-            item.cid?.toLowerCase().includes(searchLower) ||
 
-            item.title?.toLowerCase().includes(searchLower) ||
+		// Apply diagram filter
+		if (diagramFilter !== 'all') {
+			if (diagramFilter === 'not_created') {
+				filteredData = filteredData.filter(item => !item.diagramHtmlCode && !item.diagramExcalidrawJson);
+			} else if (diagramFilter === 'html') {
+				filteredData = filteredData.filter(item => item.diagramHtmlCode && item.diagramHtmlCode.length > 0);
+			} else if (diagramFilter === 'excalidraw') {
+				filteredData = filteredData.filter(item => item.diagramExcalidrawJson && item.diagramExcalidrawJson.length > 0);
+			}
+		}
 
-            item.summary?.toLowerCase().includes(searchLower) ||
 
-            item.detail?.toLowerCase().includes(searchLower) ||
+		// Apply quiz filter
 
-            item.category?.toLowerCase().includes(searchLower) ||
+		if (quizFilter !== 'all') {
 
-            item.source?.toLowerCase().includes(searchLower)
+			if (quizFilter === 'has') {
 
-        ),
+				filteredData = filteredData.filter(item => {
 
-        caseTraining: allData.caseTraining.filter(item =>
+					const questionContent = item.questionContent || item.quizContent || item.quizzContent;
 
-            item.id?.toString().toLowerCase().includes(searchLower) ||
+					return questionContent && (
 
-            item.cid?.toLowerCase().includes(searchLower) ||
+						(questionContent.questionQuiz && questionContent.questionQuiz.length > 0) ||
 
-            item.title?.toLowerCase().includes(searchLower) ||
+						(questionContent.questionEssay && questionContent.questionEssay.length > 0)
 
-            item.summary?.toLowerCase().includes(searchLower) ||
+					);
 
-            item.detail?.toLowerCase().includes(searchLower) ||
+				});
 
-            item.category?.toLowerCase().includes(searchLower) ||
+			} else if (quizFilter === 'no') {
 
-            item.source?.toLowerCase().includes(searchLower) ||
+				filteredData = filteredData.filter(item => {
 
-            item.tag1?.toLowerCase().includes(searchLower) ||
+					const questionContent = item.questionContent || item.quizContent || item.quizzContent;
 
-            item.tag2?.toLowerCase().includes(searchLower) ||
+					return !questionContent || (
 
-            item.tag3?.toLowerCase().includes(searchLower)
+						(!questionContent.questionQuiz || questionContent.questionQuiz.length === 0) &&
 
-        ),
+						(!questionContent.questionEssay || questionContent.questionEssay.length === 0)
 
-        longForm: allData.longForm.filter(item =>
+					);
 
-            item.id?.toString().toLowerCase().includes(searchLower) ||
+				});
 
-            item.cid?.toLowerCase().includes(searchLower) ||
+			}
 
-            item.title?.toLowerCase().includes(searchLower) ||
+		}
 
-            item.summary?.toLowerCase().includes(searchLower) ||
 
-            item.detail?.toLowerCase().includes(searchLower) ||
+		// Apply tag4 filter (Program) for all tabs
 
-            item.category?.toLowerCase().includes(searchLower) ||
+		if (tag4Filter && tag4Filter.length > 0) {
 
-            item.source?.toLowerCase().includes(searchLower)
+			filteredData = filteredData.filter(item => {
 
-        ),
+				const itemTag4Array = Array.isArray(item.tag4) ? item.tag4 : [];
 
-        library: allData.library.filter(item =>
+				// Exact match: item's tag4 array must exactly match the selected filter values
+				return tag4Filter.length === itemTag4Array.length &&
+					tag4Filter.every(program => itemTag4Array.includes(program));
 
-            item.id?.toString().toLowerCase().includes(searchLower) ||
+			});
 
-            item.cid?.toLowerCase().includes(searchLower) ||
+		}
 
-            item.title?.toLowerCase().includes(searchLower) ||
 
-            item.summary?.toLowerCase().includes(searchLower) ||
+		// Apply chapter filter for all tabs (filter by number of programs)
 
-            item.detail?.toLowerCase().includes(searchLower) ||
+		if (chapterFilter !== 'all') {
 
-            item.category?.toLowerCase().includes(searchLower)
+			if (chapterFilter === 'has') {
 
-        ),
+				filteredData = filteredData.filter(item => item.tag4 && Array.isArray(item.tag4) && item.tag4.length > 0);
 
-        story: allData.story.filter(item =>
+			} else if (chapterFilter === 'no') {
 
-            item.id?.toString().toLowerCase().includes(searchLower) ||
+				filteredData = filteredData.filter(item => !item.tag4 || !Array.isArray(item.tag4) || item.tag4.length === 0);
 
-            item.cid?.toLowerCase().includes(searchLower) ||
+			} else if (chapterFilter === '1') {
 
-            item.title?.toLowerCase().includes(searchLower) ||
+				filteredData = filteredData.filter(item => item.tag4 && Array.isArray(item.tag4) && item.tag4.length === 1);
 
-            item.summary?.toLowerCase().includes(searchLower) ||
+			} else if (chapterFilter === '2') {
 
-            item.detail?.toLowerCase().includes(searchLower) ||
+				filteredData = filteredData.filter(item => item.tag4 && Array.isArray(item.tag4) && item.tag4.length === 2);
 
-            item.category?.toLowerCase().includes(searchLower) ||
+			} else if (chapterFilter === '3') {
 
-            item.audioText?.toLowerCase().includes(searchLower)
+				filteredData = filteredData.filter(item => item.tag4 && Array.isArray(item.tag4) && item.tag4.length === 3);
 
-        )
+			} else if (chapterFilter === '4') {
 
-      };
+				filteredData = filteredData.filter(item => item.tag4 && Array.isArray(item.tag4) && item.tag4.length === 4);
 
+			} else if (chapterFilter === '5') {
 
+				filteredData = filteredData.filter(item => item.tag4 && Array.isArray(item.tag4) && item.tag4.length === 5);
 
-      setFilteredData(filtered);
+			} else if (chapterFilter === '6') {
 
-    }
+				filteredData = filteredData.filter(item => item.tag4 && Array.isArray(item.tag4) && item.tag4.length === 6);
 
-  };
+			} else if (chapterFilter === '7') {
 
+				filteredData = filteredData.filter(item => item.tag4 && Array.isArray(item.tag4) && item.tag4.length === 7);
 
+			} else if (chapterFilter === '8') {
 
-  // Handle search submission (when user presses Enter or clicks search)
+				filteredData = filteredData.filter(item => item.tag4 && Array.isArray(item.tag4) && item.tag4.length === 8);
 
-  const handleSearchSubmit = (searchValue) => {
+			} else if (chapterFilter === '9') {
 
-    if (searchValue.trim()) {
+				filteredData = filteredData.filter(item => item.tag4 && Array.isArray(item.tag4) && item.tag4.length === 9);
 
-      addToSearchHistory(searchValue);
+			} else if (chapterFilter === '10+') {
 
-    }
+				filteredData = filteredData.filter(item => item.tag4 && Array.isArray(item.tag4) && item.tag4.length >= 10);
 
-    handleLocalSearch(searchValue);
+			}
 
-  };
+		}
 
 
+		// Apply tag filters only for caseTraining
 
-  // Filter functions for home, news, caseTraining, and longForm tabs
+		if (currentTab === 'caseTraining') {
 
-  const applyFilters = () => {
+			// Apply tag1 filter
 
-    if (currentTab !== 'home' && currentTab !== 'news' && currentTab !== 'caseTraining' && currentTab !== 'longForm') {
+			if (tag1Filter !== 'all') {
 
-      setFilteredData(allData);
+				if (tag1Filter === null) {
 
-      return;
+					// Filter for empty/null tag1
 
-    }
+					filteredData = filteredData.filter(item => !item.tag1 || item.tag1 === '');
 
+				} else {
 
+					// Filter for specific tag1
 
-    let filteredData = [];
+					filteredData = filteredData.filter(item => item.tag1 === tag1Filter);
 
-    if (currentTab === 'home') {
+				}
 
-      filteredData = allData.home || [];
+			}
 
-    } else if (currentTab === 'news') {
 
-      filteredData = allData.news || [];
+			// Apply tag2 filter
 
-    } else if (currentTab === 'caseTraining') {
+			if (tag2Filter !== 'all') {
 
-      filteredData = allData.caseTraining || [];
+				if (tag2Filter === null) {
 
-    } else if (currentTab === 'longForm') {
+					// Filter for empty/null tag2
 
-      filteredData = allData.longForm || [];
+					filteredData = filteredData.filter(item => !item.tag2 || item.tag2 === '');
 
-    }
+				} else {
 
+					// Filter for specific tag2
 
+					filteredData = filteredData.filter(item => item.tag2 === tag2Filter);
 
+				}
 
+			}
 
-    // Apply category filter
 
-    if (categoryFilter !== 'all') {
+			// Apply tag3 filter
 
-      if (categoryFilter === '') {
+			if (tag3Filter !== 'all') {
 
-        // Filter for empty/null categories
+				if (tag3Filter === null) {
 
-        filteredData = filteredData.filter(item => !item.category || item.category == '');
+					// Filter for empty/null tag3
 
-      } else {
+					filteredData = filteredData.filter(item => !item.tag3 || item.tag3 === '');
 
-        // Filter for specific category
+				} else {
 
-        filteredData = filteredData.filter(item => item.category === categoryFilter);
+					// Filter for specific tag3
 
-      }
+					filteredData = filteredData.filter(item => item.tag3 === tag3Filter);
 
-    }
+				}
 
+			}
 
 
-    // Apply image filter
+		}
 
-    if (imageFilter !== 'all') {
 
-      if (imageFilter === 'has') {
+		// Apply program filter
+		if (programFilter && programFilter !== 'all') {
+			filteredData = filteredData.filter(item => item.tag4.includes(programFilter));
+		}
+		// Apply search filter if exists
 
-        filteredData = filteredData.filter(item => item.avatarUrl);
+		if (searchText.trim()) {
 
-      } else if (imageFilter === 'no') {
+			const searchLower = searchText.toLowerCase();
 
-        filteredData = filteredData.filter(item => !item.avatarUrl);
+			filteredData = filteredData.filter(item =>
 
-      }
+				item.id?.toString().toLowerCase().includes(searchLower) ||
 
-    }
+				item.cid?.toLowerCase().includes(searchLower) ||
 
+				item.title?.toLowerCase().includes(searchLower) ||
 
-    // Apply diagram filter
-    if (diagramFilter !== 'all') {
-      if (diagramFilter === 'not_created') {
-        filteredData = filteredData.filter(item => !item.diagramHtmlCode && !item.diagramExcalidrawJson);
-      } else if (diagramFilter === 'html') {
-        filteredData = filteredData.filter(item => item.diagramHtmlCode && item.diagramHtmlCode.length > 0);
-      } else if (diagramFilter === 'excalidraw') {
-        filteredData = filteredData.filter(item => item.diagramExcalidrawJson && item.diagramExcalidrawJson.length > 0);
-      }
-    }
+				item.summary?.toLowerCase().includes(searchLower) ||
 
+				item.detail?.toLowerCase().includes(searchLower) ||
 
-    // Apply quiz filter
+				item.category?.toLowerCase().includes(searchLower) ||
 
-    if (quizFilter !== 'all') {
+				item.source?.toLowerCase().includes(searchLower) ||
 
-      if (quizFilter === 'has') {
+				(currentTab === 'caseTraining' && (
 
-        filteredData = filteredData.filter(item => {
+					item.tag1?.toLowerCase().includes(searchLower) ||
 
-          const questionContent = item.questionContent || item.quizContent || item.quizzContent;
+					item.tag2?.toLowerCase().includes(searchLower) ||
 
-          return questionContent && (
+					item.tag3?.toLowerCase().includes(searchLower)
 
-              (questionContent.questionQuiz && questionContent.questionQuiz.length > 0) ||
+				)),
+			);
 
-              (questionContent.questionEssay && questionContent.questionEssay.length > 0)
+		}
 
-          );
+		// Apply voice filter
+		if (voiceFilter !== 'all') {
+			if (voiceFilter === 'hasVoice') {
+				// Filter for items that have voice
+				filteredData = filteredData.filter(item => {
+					const hasVoice = item.audioUrl && item.audioUrl.trim() !== '';
+					return hasVoice;
+				});
+			} else if (voiceFilter === 'noVoice') {
+				// Filter for items that don't have voice
+				filteredData = filteredData.filter(item => {
+					const hasVoice = !item.audioUrl || item.audioUrl.trim() === '';
+					return hasVoice;
+				});
+			}
+		}
 
-        });
+		setFilteredData({
 
-      } else if (quizFilter === 'no') {
+			...allData,
 
-        filteredData = filteredData.filter(item => {
+			[currentTab]: filteredData,
 
-          const questionContent = item.questionContent || item.quizContent || item.quizzContent;
+		});
 
-          return !questionContent || (
+	};
 
-              (!questionContent.questionQuiz || questionContent.questionQuiz.length === 0) &&
 
-              (!questionContent.questionEssay || questionContent.questionEssay.length === 0)
+	// Generate category filters from actual data for current tab
 
-          );
+	const generateCategoryFilters = (tabData) => {
 
-        });
+		if (!tabData || !Array.isArray(tabData)) return [];
 
-      }
 
-    }
+		// Get all categories including empty/null ones
 
+		const allCategories = tabData.map(item => item.category);
 
+		const categories = [...new Set(allCategories)];
 
-    // Apply tag4 filter (Program) for all tabs
 
-    if (tag4Filter && tag4Filter.length > 0) {
+		return categories.map(category => ({
 
-      filteredData = filteredData.filter(item => {
+			text: category || 'Trống',
 
-        const itemTag4Array = Array.isArray(item.tag4) ? item.tag4 : [];
+			value: category || null,
 
-        // Exact match: item's tag4 array must exactly match the selected filter values
-        return tag4Filter.length === itemTag4Array.length &&
-            tag4Filter.every(program => itemTag4Array.includes(program));
+		}));
 
-      });
+	};
 
-    }
 
+	// Generate tag1 filters from actual data for current tab
 
+	const generateTag1Filters = (tabData) => {
 
-    // Apply chapter filter for all tabs (filter by number of programs)
+		if (!tabData || !Array.isArray(tabData)) return [];
 
-    if (chapterFilter !== 'all') {
 
-      if (chapterFilter === 'has') {
+		// Get all tag1 values including empty/null ones
 
-        filteredData = filteredData.filter(item => item.tag4 && Array.isArray(item.tag4) && item.tag4.length > 0);
+		const allTag1s = tabData.map(item => item.tag1);
 
-      } else if (chapterFilter === 'no') {
+		const tag1s = [...new Set(allTag1s)];
 
-        filteredData = filteredData.filter(item => !item.tag4 || !Array.isArray(item.tag4) || item.tag4.length === 0);
 
-      } else if (chapterFilter === '1') {
+		return tag1s.map(tag1 => ({
 
-        filteredData = filteredData.filter(item => item.tag4 && Array.isArray(item.tag4) && item.tag4.length === 1);
+			text: tag1 || 'Trống',
 
-      } else if (chapterFilter === '2') {
+			value: tag1 || null,
 
-        filteredData = filteredData.filter(item => item.tag4 && Array.isArray(item.tag4) && item.tag4.length === 2);
+		}));
 
-      } else if (chapterFilter === '3') {
+	};
 
-        filteredData = filteredData.filter(item => item.tag4 && Array.isArray(item.tag4) && item.tag4.length === 3);
 
-      } else if (chapterFilter === '4') {
+	// Generate tag2 filters from actual data for current tab
 
-        filteredData = filteredData.filter(item => item.tag4 && Array.isArray(item.tag4) && item.tag4.length === 4);
+	const generateTag2Filters = (tabData) => {
 
-      } else if (chapterFilter === '5') {
+		if (!tabData || !Array.isArray(tabData)) return [];
 
-        filteredData = filteredData.filter(item => item.tag4 && Array.isArray(item.tag4) && item.tag4.length === 5);
 
-      } else if (chapterFilter === '6') {
+		// Get all tag2 values including empty/null ones
 
-        filteredData = filteredData.filter(item => item.tag4 && Array.isArray(item.tag4) && item.tag4.length === 6);
+		const allTag2s = tabData.map(item => item.tag2);
 
-      } else if (chapterFilter === '7') {
+		const tag2s = [...new Set(allTag2s)];
 
-        filteredData = filteredData.filter(item => item.tag4 && Array.isArray(item.tag4) && item.tag4.length === 7);
 
-      } else if (chapterFilter === '8') {
+		return tag2s.map(tag2 => ({
 
-        filteredData = filteredData.filter(item => item.tag4 && Array.isArray(item.tag4) && item.tag4.length === 8);
+			text: tag2 || 'Trống',
 
-      } else if (chapterFilter === '9') {
+			value: tag2 || null,
 
-        filteredData = filteredData.filter(item => item.tag4 && Array.isArray(item.tag4) && item.tag4.length === 9);
+		}));
 
-      } else if (chapterFilter === '10+') {
+	};
 
-        filteredData = filteredData.filter(item => item.tag4 && Array.isArray(item.tag4) && item.tag4.length >= 10);
 
-      }
+	// Generate tag3 filters from actual data for current tab
 
-    }
+	const generateTag3Filters = (tabData) => {
 
+		if (!tabData || !Array.isArray(tabData)) return [];
 
 
-    // Apply tag filters only for caseTraining
+		// Get all tag3 values including empty/null ones
 
-    if (currentTab === 'caseTraining') {
+		const allTag3s = tabData.map(item => item.tag3);
 
-      // Apply tag1 filter
+		const tag3s = [...new Set(allTag3s)];
 
-      if (tag1Filter !== 'all') {
 
-        if (tag1Filter === null) {
+		return tag3s.map(tag3 => ({
 
-          // Filter for empty/null tag1
+			text: tag3 || 'Trống',
 
-          filteredData = filteredData.filter(item => !item.tag1 || item.tag1 === '');
+			value: tag3 || null,
 
-        } else {
+		}));
 
-          // Filter for specific tag1
+	};
 
-          filteredData = filteredData.filter(item => item.tag1 === tag1Filter);
 
-        }
+	// Get current tab's category filters
 
-      }
+	const getCurrentTabCategoryFilters = () => {
 
+		const currentTabData = allData[currentTab] || [];
 
+		return generateCategoryFilters(currentTabData);
 
-      // Apply tag2 filter
+	};
 
-      if (tag2Filter !== 'all') {
 
-        if (tag2Filter === null) {
+	// Get current tab's tag1 filters
 
-          // Filter for empty/null tag2
+	const getCurrentTabTag1Filters = () => {
 
-          filteredData = filteredData.filter(item => !item.tag2 || item.tag2 === '');
+		const currentTabData = allData[currentTab] || [];
 
-        } else {
+		return generateTag1Filters(currentTabData);
 
-          // Filter for specific tag2
+	};
 
-          filteredData = filteredData.filter(item => item.tag2 === tag2Filter);
 
-        }
+	// Get current tab's tag2 filters
 
-      }
+	const getCurrentTabTag2Filters = () => {
 
+		const currentTabData = allData[currentTab] || [];
 
+		return generateTag2Filters(currentTabData);
 
-      // Apply tag3 filter
+	};
 
-      if (tag3Filter !== 'all') {
 
-        if (tag3Filter === null) {
+	// Get current tab's tag3 filters
 
-          // Filter for empty/null tag3
+	const getCurrentTabTag3Filters = () => {
 
-          filteredData = filteredData.filter(item => !item.tag3 || item.tag3 === '');
+		const currentTabData = allData[currentTab] || [];
 
-        } else {
+		return generateTag3Filters(currentTabData);
 
-          // Filter for specific tag3
+	};
 
-          filteredData = filteredData.filter(item => item.tag3 === tag3Filter);
 
-        }
+	// Handle tab change
 
-      }
+	const handleTabChange = (newTab) => {
 
+		// Update current tab
 
-    }
+		setCurrentTab(newTab);
 
+	};
 
 
-    // Apply program filter
-    if (programFilter && programFilter !== 'all') {
-      filteredData = filteredData.filter(item => item.tag4.includes(programFilter));
-    }
-    // Apply search filter if exists
+	// Reset all filters
 
-    if (searchText.trim()) {
+	const resetFilters = () => {
 
-      const searchLower = searchText.toLowerCase();
+		setCategoryFilter('all');
 
-      filteredData = filteredData.filter(item =>
+		setImageFilter('all');
 
-          item.id?.toString().toLowerCase().includes(searchLower) ||
+		setDiagramFilter('all');
+		setQuizFilter('all');
 
-          item.cid?.toLowerCase().includes(searchLower) ||
+		setTag4Filter([]);
 
-          item.title?.toLowerCase().includes(searchLower) ||
+		setChapterFilter('all');
 
-          item.summary?.toLowerCase().includes(searchLower) ||
+		setProgramFilter('all');
 
-          item.detail?.toLowerCase().includes(searchLower) ||
+		if (currentTab === 'caseTraining') {
 
-          item.category?.toLowerCase().includes(searchLower) ||
+			setTag1Filter('all');
 
-          item.source?.toLowerCase().includes(searchLower) ||
+			setTag2Filter('all');
 
-          (currentTab === 'caseTraining' && (
+			setTag3Filter('all');
 
-              item.tag1?.toLowerCase().includes(searchLower) ||
+		}
 
-              item.tag2?.toLowerCase().includes(searchLower) ||
+		setSearchText('');
 
-              item.tag3?.toLowerCase().includes(searchLower)
 
-          ))
+		// Save immediately with reset values
 
-      );
+		const resetFilters = {
 
-    }
+			categoryFilter: 'all',
 
-    // Apply voice filter
-    if (voiceFilter !== 'all') {
-      if (voiceFilter === 'hasVoice') {
-        // Filter for items that have voice
-        filteredData = filteredData.filter(item => {
-          const hasVoice = item.audioUrl && item.audioUrl.trim() !== '';
-          return hasVoice;
-        });
-      } else if (voiceFilter === 'noVoice') {
-        // Filter for items that don't have voice
-        filteredData = filteredData.filter(item => {
-          const hasVoice = !item.audioUrl || item.audioUrl.trim() === '';
-          return hasVoice;
-        });
-      }
-    }
+			imageFilter: 'all',
 
-    setFilteredData({
+			diagramFilter: 'all',
+			quizFilter: 'all',
 
-      ...allData,
+			tag4Filter: [],
 
-      [currentTab]: filteredData
+			chapterFilter: 'all',
 
-    });
+			searchText: '',
 
-  };
+			...(currentTab === 'caseTraining' && {
 
+				tag1Filter: 'all',
 
-  // Generate category filters from actual data for current tab
+				tag2Filter: 'all',
 
-  const generateCategoryFilters = (tabData) => {
+				tag3Filter: 'all',
 
-    if (!tabData || !Array.isArray(tabData)) return [];
+			}),
 
+		};
 
 
-    // Get all categories including empty/null ones
+		const updatedHistory = {
 
-    const allCategories = tabData.map(item => item.category);
+			...filterHistory,
 
-    const categories = [...new Set(allCategories)];
+			[currentTab]: resetFilters,
 
+		};
 
+		setFilterHistory(updatedHistory);
 
-    return categories.map(category => ({
+		saveFilterHistory(updatedHistory);
 
-      text: category || 'Trống',
 
-      value: category || null
+		setFilteredData(allData);
 
-    }));
+	};
 
-  };
 
+	// Clear filter history for current tab
 
+	const clearFilterHistory = () => {
 
-  // Generate tag1 filters from actual data for current tab
+		const updatedHistory = {
 
-  const generateTag1Filters = (tabData) => {
+			...filterHistory,
 
-    if (!tabData || !Array.isArray(tabData)) return [];
+			[currentTab]: {
 
+				categoryFilter: 'all',
 
+				imageFilter: 'all',
 
-    // Get all tag1 values including empty/null ones
+				diagramFilter: 'all',
+				quizFilter: 'all',
 
-    const allTag1s = tabData.map(item => item.tag1);
+				tag4Filter: [],
 
-    const tag1s = [...new Set(allTag1s)];
+				chapterFilter: 'all',
 
+				searchText: '',
 
+				...(currentTab === 'caseTraining' && {
 
-    return tag1s.map(tag1 => ({
+					tag1Filter: 'all',
 
-      text: tag1 || 'Trống',
+					tag2Filter: 'all',
 
-      value: tag1 || null
+					tag3Filter: 'all',
 
-    }));
+				}),
 
-  };
+			},
 
+		};
 
+		setFilterHistory(updatedHistory);
 
-  // Generate tag2 filters from actual data for current tab
+		saveFilterHistory(updatedHistory);
 
-  const generateTag2Filters = (tabData) => {
+	};
 
-    if (!tabData || !Array.isArray(tabData)) return [];
 
+	// Handle bulk update
 
+	const handleBulkUpdate = (fieldToUpdate) => {
 
-    // Get all tag2 values including empty/null ones
+		if (selectedRowKeys.length === 0) {
 
-    const allTag2s = tabData.map(item => item.tag2);
+			message.warning('Vui lòng chọn ít nhất một bản ghi để cập nhật');
 
-    const tag2s = [...new Set(allTag2s)];
+			return;
 
+		}
 
+		setBulkUpdateModalVisible(true);
 
-    return tag2s.map(tag2 => ({
+		setFieldToUpdate(fieldToUpdate);
 
-      text: tag2 || 'Trống',
+	};
 
-      value: tag2 || null
 
-    }));
+	// Handle bulk update success
 
-  };
+	const handleBulkUpdateSuccess = () => {
 
+		// Reload data after successful bulk update
 
+		loadAllData();
 
-  // Generate tag3 filters from actual data for current tab
+		setSelectedRowKeys([]);
 
-  const generateTag3Filters = (tabData) => {
+	};
 
-    if (!tabData || !Array.isArray(tabData)) return [];
+	// Handle bulk toggle hasTitle
 
+	const handleBulkToggleHasTitle = async (toggleTo) => {
 
+		if (selectedRowKeys.length === 0) {
 
-    // Get all tag3 values including empty/null ones
+			message.warning('Vui lòng chọn ít nhất một bản ghi để cập nhật');
 
-    const allTag3s = tabData.map(item => item.tag3);
+			return;
 
-    const tag3s = [...new Set(allTag3s)];
+		}
 
+		try {
 
+			setLoading(true);
 
-    return tag3s.map(tag3 => ({
+			// Call API để cập nhật hasTitle cho tất cả records được chọn
 
-      text: tag3 || 'Trống',
+			const updatePromises = selectedRowKeys.map(id =>
 
-      value: tag3 || null
+				updateK9({ id, hasTitle: toggleTo }),
+			);
 
-    }));
+			await Promise.all(updatePromises);
 
-  };
+			// Cập nhật local state theo đúng pattern
 
+			const updater = (list) => list.map(item =>
 
+				selectedRowKeys.includes(item.id) ? { ...item, hasTitle: toggleTo } : item,
+			);
 
-  // Get current tab's category filters
+			setAllData(prev => ({ ...prev, [currentTab]: updater(prev[currentTab] || []) }));
 
-  const getCurrentTabCategoryFilters = () => {
+			setFilteredData(prev => ({ ...prev, [currentTab]: updater(prev[currentTab] || []) }));
 
-    const currentTabData = allData[currentTab] || [];
+			setData(prev => updater(prev));
 
-    return generateCategoryFilters(currentTabData);
+			message.success(`Đã ${toggleTo ? 'bật' : 'tắt'} trạng thái mục lục cho ${selectedRowKeys.length} bản ghi`);
 
-  };
+			setSelectedRowKeys([]);
 
+		} catch (error) {
 
+			console.error('Error bulk updating hasTitle:', error);
 
-  // Get current tab's tag1 filters
+			message.error('Cập nhật hàng loạt thất bại');
 
-  const getCurrentTabTag1Filters = () => {
+		} finally {
 
-    const currentTabData = allData[currentTab] || [];
+			setLoading(false);
 
-    return generateTag1Filters(currentTabData);
+		}
 
-  };
+	};
 
+	// Handle bulk toggle isPublic using updateK9Bulk API
+	const handleBulkToggleIsPublic = async (toggleTo) => {
+		if (selectedRowKeys.length === 0) {
+			message.warning('Vui lòng chọn ít nhất một bản ghi để cập nhật');
+			return;
+		}
 
+		try {
+			setLoading(true);
 
-  // Get current tab's tag2 filters
+			// Sử dụng updateK9Bulk API thay vì gọi từng updateK9
+			const updateData = {
+				ids: selectedRowKeys,
+				fieldToUpdate: 'isPublic',
+				value: toggleTo,
+			};
 
-  const getCurrentTabTag2Filters = () => {
+			await updateK9Bulk(updateData);
 
-    const currentTabData = allData[currentTab] || [];
+			// Cập nhật local state theo đúng pattern
+			const updater = (list) => list.map(item =>
+				selectedRowKeys.includes(item.id) ? { ...item, isPublic: toggleTo } : item,
+			);
 
-    return generateTag2Filters(currentTabData);
+			setAllData(prev => ({ ...prev, [currentTab]: updater(prev[currentTab] || []) }));
+			setFilteredData(prev => ({ ...prev, [currentTab]: updater(prev[currentTab] || []) }));
+			setData(prev => updater(prev));
 
-  };
+			message.success(`Đã ${toggleTo ? 'bật' : 'tắt'} trạng thái public cho ${selectedRowKeys.length} bản ghi`);
+			setSelectedRowKeys([]);
 
+		} catch (error) {
+			console.error('Error bulk updating isPublic:', error);
+			message.error('Cập nhật hàng loạt thất bại');
+		} finally {
+			setLoading(false);
+		}
+	};
 
+	// Handle bulk toggle allow_retake using updateK9Bulk API
+	const handleBulkToggleAllowRetake = async (toggleTo) => {
+		if (selectedRowKeys.length === 0) {
+			message.warning('Vui lòng chọn ít nhất một bản ghi để cập nhật');
+			return;
+		}
 
-  // Get current tab's tag3 filters
+		try {
+			setLoading(true);
 
-  const getCurrentTabTag3Filters = () => {
+			const updateData = {
+				ids: selectedRowKeys,
+				fieldToUpdate: 'allow_retake',
+				value: toggleTo,
+			};
 
-    const currentTabData = allData[currentTab] || [];
+			await updateK9Bulk(updateData);
 
-    return generateTag3Filters(currentTabData);
+			const updater = (list) => list.map(item =>
+				selectedRowKeys.includes(item.id) ? { ...item, allow_retake: toggleTo } : item,
+			);
 
-  };
+			setAllData(prev => ({ ...prev, [currentTab]: updater(prev[currentTab] || []) }));
+			setFilteredData(prev => ({ ...prev, [currentTab]: updater(prev[currentTab] || []) }));
+			setData(prev => updater(prev));
 
+			message.success(`Đã ${toggleTo ? 'bật' : 'tắt'} allow_retake cho ${selectedRowKeys.length} bản ghi`);
+			setSelectedRowKeys([]);
 
+		} catch (error) {
+			console.error('Error bulk updating allow_retake:', error);
+			message.error('Cập nhật hàng loạt thất bại');
+		} finally {
+			setLoading(false);
+		}
+	};
 
+	// Handle bulk update user classes
+	const handleBulkUpdateUserClasses = async () => {
+		if (selectedRowKeys.length === 0) {
+			message.warning('Vui lòng chọn ít nhất một bản ghi để cập nhật');
+			return;
+		}
 
-  // Handle tab change
+		try {
+			setLoading(true);
 
-  const handleTabChange = (newTab) => {
+			const updateData = {
+				ids: selectedRowKeys,
+				fieldToUpdate: 'allowed_user_class',
+				value: selectedUserClasses,
+			};
 
-    // Update current tab
+			await updateK9Bulk(updateData);
 
-    setCurrentTab(newTab);
+			// Cập nhật local state theo đúng pattern
+			const updater = (list) => list.map(item =>
+				selectedRowKeys.includes(item.id) ? { ...item, allowed_user_class: selectedUserClasses } : item,
+			);
 
-  };
+			setAllData(prev => ({ ...prev, [currentTab]: updater(prev[currentTab] || []) }));
+			setFilteredData(prev => ({ ...prev, [currentTab]: updater(prev[currentTab] || []) }));
+			setData(prev => updater(prev));
 
+			message.success(`Đã cập nhật user classes cho ${selectedRowKeys.length} bản ghi`);
+			setSelectedRowKeys([]);
+			setUserClassModalVisible(false);
+			setSelectedUserClasses([]);
 
+		} catch (error) {
+			console.error('Error bulk updating user classes:', error);
+			message.error('Cập nhật hàng loạt thất bại');
+		} finally {
+			setLoading(false);
+		}
+	};
 
-  // Reset all filters
+	// Handle bulk clear user classes
+	const handleBulkClearUserClasses = async () => {
+		if (selectedRowKeys.length === 0) {
+			message.warning('Vui lòng chọn ít nhất một bản ghi để xóa');
+			return;
+		}
 
-  const resetFilters = () => {
+		try {
+			setLoading(true);
 
-    setCategoryFilter('all');
+			const updateData = {
+				ids: selectedRowKeys,
+				fieldToUpdate: 'allowed_user_class',
+				value: [],
+			};
 
-    setImageFilter('all');
+			await updateK9Bulk(updateData);
 
-    setDiagramFilter('all');
-    setQuizFilter('all');
+			// Cập nhật local state theo đúng pattern
+			const updater = (list) => list.map(item =>
+				selectedRowKeys.includes(item.id) ? { ...item, allowed_user_class: [] } : item,
+			);
 
-    setTag4Filter([]);
+			setAllData(prev => ({ ...prev, [currentTab]: updater(prev[currentTab] || []) }));
+			setFilteredData(prev => ({ ...prev, [currentTab]: updater(prev[currentTab] || []) }));
+			setData(prev => updater(prev));
 
-    setChapterFilter('all');
+			message.success(`Đã xóa user classes cho ${selectedRowKeys.length} bản ghi`);
+			setSelectedRowKeys([]);
 
-    setProgramFilter('all');
+		} catch (error) {
+			console.error('Error bulk clearing user classes:', error);
+			message.error('Xóa hàng loạt thất bại');
+		} finally {
+			setLoading(false);
+		}
+	};
 
-    if (currentTab === 'caseTraining') {
+	// Reset only filter dropdowns (not search)
 
-      setTag1Filter('all');
+	const resetFilterDropdowns = () => {
 
-      setTag2Filter('all');
+		setCategoryFilter('all');
 
-      setTag3Filter('all');
+		setImageFilter('all');
 
-    }
+		setDiagramFilter('all');
+		setQuizFilter('all');
 
-    setSearchText('');
+		setTag4Filter([]);
 
+		if (currentTab === 'caseTraining') {
 
+			setTag1Filter('all');
 
-    // Save immediately with reset values
+			setTag2Filter('all');
 
-    const resetFilters = {
+			setTag3Filter('all');
 
-      categoryFilter: 'all',
+		}
 
-      imageFilter: 'all',
 
-      diagramFilter: 'all',
-      quizFilter: 'all',
+		// Save immediately with reset values (keeping current searchText)
 
-      tag4Filter: [],
+		const currentFilters = filterHistory[currentTab] || {};
 
-      chapterFilter: 'all',
+		const resetFilters = {
 
-      searchText: '',
+			...currentFilters,
 
-      ...(currentTab === 'caseTraining' && {
+			categoryFilter: 'all',
 
-        tag1Filter: 'all',
+			imageFilter: 'all',
 
-        tag2Filter: 'all',
+			diagramFilter: 'all',
+			quizFilter: 'all',
 
-        tag3Filter: 'all'
+			tag4Filter: [],
 
-      })
+			...(currentTab === 'caseTraining' && {
 
-    };
+				tag1Filter: 'all',
 
+				tag2Filter: 'all',
 
+				tag3Filter: 'all',
 
-    const updatedHistory = {
+			}),
 
-      ...filterHistory,
+		};
 
-      [currentTab]: resetFilters
 
-    };
+		const updatedHistory = {
 
-    setFilterHistory(updatedHistory);
+			...filterHistory,
 
-    saveFilterHistory(updatedHistory);
+			[currentTab]: resetFilters,
 
+		};
 
+		setFilterHistory(updatedHistory);
 
-    setFilteredData(allData);
+		saveFilterHistory(updatedHistory);
 
-  };
+	};
 
 
+	const handleSearchK9ByVector = async (e) => {
 
-  // Clear filter history for current tab
+		const query = e.target.value;
 
-  const clearFilterHistory = () => {
+		if (!query.trim()) return;
 
-    const updatedHistory = {
 
-      ...filterHistory,
+		try {
 
-      [currentTab]: {
+			console.log('🔍 Starting vector search for:', query);
 
-        categoryFilter: 'all',
 
-        imageFilter: 'all',
+			// Sử dụng function mới: convert text to vector trước khi search
 
-        diagramFilter: 'all',
-        quizFilter: 'all',
+			// Giảm threshold xuống 0.2 để tìm được nhiều kết quả hơn
 
-        tag4Filter: [],
+			const response = await searchK9ByTextToVector(query, 10, 0.2);
 
-        chapterFilter: 'all',
+			console.log('📊 Vector Search Response:', response);
 
-        searchText: '',
 
-        ...(currentTab === 'caseTraining' && {
+			// Hiển thị thông tin debug chi tiết
 
-          tag1Filter: 'all',
+			if (response.data) {
 
-          tag2Filter: 'all',
+				console.log(`📈 Total records processed: ${response.data.totalProcessed}`);
 
-          tag3Filter: 'all'
+				console.log(`🎯 Results found: ${response.data.totalFound}`);
 
-        })
 
-      }
+				// Hiển thị top similarities
 
-    };
+				if (response.data.topSimilarities) {
 
-    setFilterHistory(updatedHistory);
+					console.log('🏆 Top 5 similarity scores:');
 
-    saveFilterHistory(updatedHistory);
+					response.data.topSimilarities.forEach((item, index) => {
 
-  };
+						console.log(`   ${index + 1}. K9 ID: ${item.id}, Title: "${item.title}", Similarity: ${(item.similarity * 100).toFixed(2)}%`);
 
+					});
 
+				}
 
-  // Handle bulk update
 
-  const handleBulkUpdate = (fieldToUpdate) => {
+				// Hiển thị kết quả cuối cùng
 
-    if (selectedRowKeys.length === 0) {
+				if (response.data.results && response.data.results.length > 0) {
 
-      message.warning('Vui lòng chọn ít nhất một bản ghi để cập nhật');
+					console.log('✅ Final results:');
 
-      return;
+					response.data.results.forEach((result, index) => {
 
-    }
+						console.log(`   ${index + 1}. K9 ID: ${result.id}, Title: "${result.title}", Similarity: ${(result.similarity * 100).toFixed(2)}%`);
 
-    setBulkUpdateModalVisible(true);
+						console.log(`      Type: ${result.type}, Category: ${result.category}`);
 
-    setFieldToUpdate(fieldToUpdate);
+						console.log(`      Detail preview: ${result.detail?.substring(0, 100)}...`);
 
-  };
+					});
 
+				} else {
 
+					console.log('❌ No results found with current threshold');
 
-  // Handle bulk update success
+					console.log('💡 Try lowering the threshold or check if embeddings exist');
 
-  const handleBulkUpdateSuccess = () => {
+				}
 
-    // Reload data after successful bulk update
+			}
 
-    loadAllData();
+		} catch (error) {
 
-    setSelectedRowKeys([]);
+			console.error('❌ Vector search error:', error);
 
-  };
+			console.error('Error details:', error.response?.data || error.message);
 
-  // Handle bulk toggle hasTitle
+		}
 
-  const handleBulkToggleHasTitle = async (toggleTo) => {
+	};
 
-    if (selectedRowKeys.length === 0) {
 
-      message.warning('Vui lòng chọn ít nhất một bản ghi để cập nhật');
+	const handleBackgroundAudioUpload = async (file) => {
 
-      return;
+		if (!file) {
 
-    }
+			setBgAudioFile(null);
 
-    try {
+			setBgAudioSettings(prev => ({ ...prev, audioUrl: '' }));
 
-      setLoading(true);
+			return;
 
-      // Call API để cập nhật hasTitle cho tất cả records được chọn
+		}
 
-      const updatePromises = selectedRowKeys.map(id =>
 
-          updateK9({ id, hasTitle: toggleTo })
+		if (file.url || file.status === 'done') {
 
-      );
+			setBgAudioFile(file);
 
-      await Promise.all(updatePromises);
+			setBgAudioSettings(prev => ({ ...prev, audioUrl: file.url || '' }));
 
-      // Cập nhật local state theo đúng pattern
+			return;
 
-      const updater = (list) => list.map(item =>
+		}
 
-          selectedRowKeys.includes(item.id) ? { ...item, hasTitle: toggleTo } : item
 
-      );
+		if (!file.originFileObj) {
 
-      setAllData(prev => ({ ...prev, [currentTab]: updater(prev[currentTab] || []) }));
+			console.warn('No originFileObj found for background audio file');
 
-      setFilteredData(prev => ({ ...prev, [currentTab]: updater(prev[currentTab] || []) }));
+			return;
 
-      setData(prev => updater(prev));
+		}
 
-      message.success(`Đã ${toggleTo ? 'bật' : 'tắt'} trạng thái mục lục cho ${selectedRowKeys.length} bản ghi`);
 
-      setSelectedRowKeys([]);
+		setBgAudioUploading(true);
 
-    } catch (error) {
 
-      console.error('Error bulk updating hasTitle:', error);
+		try {
 
-      message.error('Cập nhật hàng loạt thất bại');
+			const response = await uploadFiles([file.originFileObj]);
 
-    } finally {
+			const url = response.files?.[0]?.fileUrl || response.files?.[0]?.url || '';
 
-      setLoading(false);
 
-    }
+			const updatedFile = {
 
-  };
+				...file,
 
-  // Handle bulk toggle isPublic using updateK9Bulk API
-  const handleBulkToggleIsPublic = async (toggleTo) => {
-    if (selectedRowKeys.length === 0) {
-      message.warning('Vui lòng chọn ít nhất một bản ghi để cập nhật');
-      return;
-    }
+				status: 'done',
 
-    try {
-      setLoading(true);
+				url: url,
 
-      // Sử dụng updateK9Bulk API thay vì gọi từng updateK9
-      const updateData = {
-        ids: selectedRowKeys,
-        fieldToUpdate: 'isPublic',
-        value: toggleTo
-      };
+			};
 
-      await updateK9Bulk(updateData);
 
-      // Cập nhật local state theo đúng pattern
-      const updater = (list) => list.map(item =>
-          selectedRowKeys.includes(item.id) ? { ...item, isPublic: toggleTo } : item
-      );
+			setBgAudioFile(updatedFile);
 
-      setAllData(prev => ({ ...prev, [currentTab]: updater(prev[currentTab] || []) }));
-      setFilteredData(prev => ({ ...prev, [currentTab]: updater(prev[currentTab] || []) }));
-      setData(prev => updater(prev));
+			setBgAudioSettings(prev => ({ ...prev, audioUrl: url }));
 
-      message.success(`Đã ${toggleTo ? 'bật' : 'tắt'} trạng thái public cho ${selectedRowKeys.length} bản ghi`);
-      setSelectedRowKeys([]);
 
-    } catch (error) {
-      console.error('Error bulk updating isPublic:', error);
-      message.error('Cập nhật hàng loạt thất bại');
-    } finally {
-      setLoading(false);
-    }
-  };
+			message.success('Upload nhạc nền thành công!');
 
-  // Handle bulk toggle allow_retake using updateK9Bulk API
-  const handleBulkToggleAllowRetake = async (toggleTo) => {
-    if (selectedRowKeys.length === 0) {
-      message.warning('Vui lòng chọn ít nhất một bản ghi để cập nhật');
-      return;
-    }
+		} catch (error) {
 
-    try {
-      setLoading(true);
+			console.error('Error uploading background audio:', error);
 
-      const updateData = {
-        ids: selectedRowKeys,
-        fieldToUpdate: 'allow_retake',
-        value: toggleTo
-      };
+			message.error('Upload nhạc nền thất bại!');
 
-      await updateK9Bulk(updateData);
+			setBgAudioFile(null);
 
-      const updater = (list) => list.map(item =>
-          selectedRowKeys.includes(item.id) ? { ...item, allow_retake: toggleTo } : item
-      );
+			setBgAudioSettings(prev => ({ ...prev, audioUrl: '' }));
 
-      setAllData(prev => ({ ...prev, [currentTab]: updater(prev[currentTab] || []) }));
-      setFilteredData(prev => ({ ...prev, [currentTab]: updater(prev[currentTab] || []) }));
-      setData(prev => updater(prev));
+		} finally {
 
-      message.success(`Đã ${toggleTo ? 'bật' : 'tắt'} allow_retake cho ${selectedRowKeys.length} bản ghi`);
-      setSelectedRowKeys([]);
+			setBgAudioUploading(false);
 
-    } catch (error) {
-      console.error('Error bulk updating allow_retake:', error);
-      message.error('Cập nhật hàng loạt thất bại');
-    } finally {
-      setLoading(false);
-    }
-  };
+		}
 
-  // Handle bulk update user classes
-  const handleBulkUpdateUserClasses = async () => {
-    if (selectedRowKeys.length === 0) {
-      message.warning('Vui lòng chọn ít nhất một bản ghi để cập nhật');
-      return;
-    }
+	};
 
-    try {
-      setLoading(true);
 
-      const updateData = {
-        ids: selectedRowKeys,
-        fieldToUpdate: 'allowed_user_class',
-        value: selectedUserClasses
-      };
+	const saveBgAudioSettings = async () => {
 
-      await updateK9Bulk(updateData);
+		try {
 
-      // Cập nhật local state theo đúng pattern
-      const updater = (list) => list.map(item =>
-          selectedRowKeys.includes(item.id) ? { ...item, allowed_user_class: selectedUserClasses } : item
-      );
+			await createOrUpdateSetting({
 
-      setAllData(prev => ({ ...prev, [currentTab]: updater(prev[currentTab] || []) }));
-      setFilteredData(prev => ({ ...prev, [currentTab]: updater(prev[currentTab] || []) }));
-      setData(prev => updater(prev));
+				type: 'BACKGROUND_AUDIO',
 
-      message.success(`Đã cập nhật user classes cho ${selectedRowKeys.length} bản ghi`);
-      setSelectedRowKeys([]);
-      setUserClassModalVisible(false);
-      setSelectedUserClasses([]);
+				setting: bgAudioSettings,
 
-    } catch (error) {
-      console.error('Error bulk updating user classes:', error);
-      message.error('Cập nhật hàng loạt thất bại');
-    } finally {
-      setLoading(false);
-    }
-  };
+			});
 
-  // Handle bulk clear user classes
-  const handleBulkClearUserClasses = async () => {
-    if (selectedRowKeys.length === 0) {
-      message.warning('Vui lòng chọn ít nhất một bản ghi để xóa');
-      return;
-    }
 
-    try {
-      setLoading(true);
+			setBgAudioSettingsVisible(false);
 
-      const updateData = {
-        ids: selectedRowKeys,
-        fieldToUpdate: 'allowed_user_class',
-        value: []
-      };
+			message.success('Lưu cài đặt nhạc nền thành công!');
 
-      await updateK9Bulk(updateData);
+		} catch (error) {
 
-      // Cập nhật local state theo đúng pattern
-      const updater = (list) => list.map(item =>
-          selectedRowKeys.includes(item.id) ? { ...item, allowed_user_class: [] } : item
-      );
+			console.error('Error saving background audio settings:', error);
 
-      setAllData(prev => ({ ...prev, [currentTab]: updater(prev[currentTab] || []) }));
-      setFilteredData(prev => ({ ...prev, [currentTab]: updater(prev[currentTab] || []) }));
-      setData(prev => updater(prev));
+			message.error('Lưu cài đặt thất bại!');
 
-      message.success(`Đã xóa user classes cho ${selectedRowKeys.length} bản ghi`);
-      setSelectedRowKeys([]);
+		}
 
-    } catch (error) {
-      console.error('Error bulk clearing user classes:', error);
-      message.error('Xóa hàng loạt thất bại');
-    } finally {
-      setLoading(false);
-    }
-  };
+	};
 
-  // Reset only filter dropdowns (not search)
 
-  const resetFilterDropdowns = () => {
+	// Guideline settings functions
 
-    setCategoryFilter('all');
+	const handleGuidelineImageUpload = async (file) => {
 
-    setImageFilter('all');
+		console.log('🔧 K9Management: handleGuidelineImageUpload called with file:', file);
 
-    setDiagramFilter('all');
-    setQuizFilter('all');
 
-    setTag4Filter([]);
+		if (!file) {
 
-    if (currentTab === 'caseTraining') {
+			console.log('🗑️ K9Management: Clearing guideline image');
 
-      setTag1Filter('all');
+			setGuidelineImageFile(null);
 
-      setTag2Filter('all');
+			setGuidelineSettings(prev => ({ ...prev, imageUrl: '' }));
 
-      setTag3Filter('all');
+			return;
 
-    }
+		}
 
 
+		if (file.url || file.status === 'done') {
 
-    // Save immediately with reset values (keeping current searchText)
+			console.log('✅ K9Management: Using existing file URL:', file.url);
 
-    const currentFilters = filterHistory[currentTab] || {};
+			setGuidelineImageFile(file);
 
-    const resetFilters = {
+			setGuidelineSettings(prev => ({ ...prev, imageUrl: file.url || '' }));
 
-      ...currentFilters,
+			return;
 
-      categoryFilter: 'all',
+		}
 
-      imageFilter: 'all',
 
-      diagramFilter: 'all',
-      quizFilter: 'all',
+		if (!file.originFileObj) {
 
-      tag4Filter: [],
+			console.warn('❌ K9Management: No originFileObj found for guideline image file');
 
-      ...(currentTab === 'caseTraining' && {
+			return;
 
-        tag1Filter: 'all',
+		}
 
-        tag2Filter: 'all',
 
-        tag3Filter: 'all'
+		console.log('📤 K9Management: Starting guideline image upload');
 
-      })
+		setGuidelineImageUploading(true);
 
-    };
 
+		try {
 
+			const response = await uploadFiles([file.originFileObj]);
 
-    const updatedHistory = {
+			console.log('📤 K9Management: Upload response:', response);
 
-      ...filterHistory,
 
-      [currentTab]: resetFilters
+			const url = response.files?.[0]?.fileUrl || response.files?.[0]?.url || '';
 
-    };
+			console.log('🔗 K9Management: Extracted URL:', url);
 
-    setFilterHistory(updatedHistory);
 
-    saveFilterHistory(updatedHistory);
+			const updatedFile = {
 
-  };
+				...file,
 
+				status: 'done',
 
+				url: url,
 
-  const handleSearchK9ByVector = async (e) => {
+			};
 
-    const query = e.target.value;
 
-    if (!query.trim()) return;
+			setGuidelineImageFile(updatedFile);
 
+			setGuidelineSettings(prev => ({ ...prev, imageUrl: url }));
 
 
-    try {
+			message.success('Upload hình ảnh guideline thành công!');
 
-      console.log('🔍 Starting vector search for:', query);
+		} catch (error) {
 
+			console.error('❌ K9Management: Error uploading guideline image:', error);
 
+			message.error('Upload hình ảnh guideline thất bại!');
 
-      // Sử dụng function mới: convert text to vector trước khi search
+			setGuidelineImageFile(null);
 
-      // Giảm threshold xuống 0.2 để tìm được nhiều kết quả hơn
+			setGuidelineSettings(prev => ({ ...prev, imageUrl: '' }));
 
-      const response = await searchK9ByTextToVector(query, 10, 0.2);
+		} finally {
 
-      console.log('📊 Vector Search Response:', response);
+			setGuidelineImageUploading(false);
 
+		}
 
+	};
 
-      // Hiển thị thông tin debug chi tiết
 
-      if (response.data) {
+	const saveGuidelineSettings = async (settings) => {
 
-        console.log(`📈 Total records processed: ${response.data.totalProcessed}`);
+		console.log('🔧 K9Management: saveGuidelineSettings called with settings:', settings);
 
-        console.log(`🎯 Results found: ${response.data.totalFound}`);
 
+		try {
 
+			const settingData = {
 
-        // Hiển thị top similarities
+				type: 'GUIDELINE_SETTING',
 
-        if (response.data.topSimilarities) {
+				setting: {
 
-          console.log('🏆 Top 5 similarity scores:');
+					imageUrl: settings.imageUrl,
 
-          response.data.topSimilarities.forEach((item, index) => {
+					markdownText: settings.markdownText,
 
-            console.log(`   ${index + 1}. K9 ID: ${item.id}, Title: "${item.title}", Similarity: ${(item.similarity * 100).toFixed(2)}%`);
+				},
 
-          });
+			};
 
-        }
 
+			console.log('💾 K9Management: Saving to database:', settingData);
 
+			await createOrUpdateSetting(settingData);
 
-        // Hiển thị kết quả cuối cùng
 
-        if (response.data.results && response.data.results.length > 0) {
+			console.log('✅ K9Management: Settings saved successfully');
 
-          console.log('✅ Final results:');
+			setGuidelineSettings(settings);
 
-          response.data.results.forEach((result, index) => {
+			setGuidelineSettingsVisible(false);
 
-            console.log(`   ${index + 1}. K9 ID: ${result.id}, Title: "${result.title}", Similarity: ${(result.similarity * 100).toFixed(2)}%`);
 
-            console.log(`      Type: ${result.type}, Category: ${result.category}`);
+			message.success('Lưu cài đặt guideline thành công!');
 
-            console.log(`      Detail preview: ${result.detail?.substring(0, 100)}...`);
+		} catch (error) {
 
-          });
+			console.error('❌ K9Management: Error saving guideline settings:', error);
 
-        } else {
+			message.error('Lưu cài đặt guideline thất bại!');
 
-          console.log('❌ No results found with current threshold');
+			throw error;
 
-          console.log('💡 Try lowering the threshold or check if embeddings exist');
+		}
 
-        }
+	};
 
-      }
 
-    } catch (error) {
+	const handleBackToK9 = () => {
 
-      console.error('❌ Vector search error:', error);
+		navigate('/home');
 
-      console.error('Error details:', error.response?.data || error.message);
+	};
 
-    }
 
-  };
+	// Helper function to replace variables in template
 
+	const replaceTemplateVariables = (template, variables) => {
 
+		let result = template;
 
-  const handleBackgroundAudioUpload = async (file) => {
+		Object.keys(variables).forEach(key => {
 
-    if (!file) {
+			const regex = new RegExp(`\\$\\{${key}\\}`, 'g');
 
-      setBgAudioFile(null);
+			result = result.replace(regex, variables[key]);
 
-      setBgAudioSettings(prev => ({ ...prev, audioUrl: '' }));
+		});
 
-      return;
+		return result;
 
-    }
+	};
 
+	// Image Generation Functions
 
+	const handleCreateImage = async (record) => {
 
-    if (file.url || file.status === 'done') {
+		if (!record.summary) {
 
-      setBgAudioFile(file);
+			message.warning('Không có tóm tắt để tạo ảnh!');
 
-      setBgAudioSettings(prev => ({ ...prev, audioUrl: file.url || '' }));
+			return;
 
-      return;
+		}
 
-    }
 
+		// Check if already has avatarUrl
 
+		if (record.avatarUrl) {
 
-    if (!file.originFileObj) {
+			message.info('News này đã có ảnh!');
 
-      console.warn('No originFileObj found for background audio file');
+			return;
 
-      return;
+		}
 
-    }
 
+		// Check if already in queue
 
+		const existingTask = imageGenerationQueue.find(task => task.recordId === record.id);
 
-    setBgAudioUploading(true);
+		if (existingTask) {
 
+			message.warning(`"${record.title}" đã có trong hàng đợi tạo ảnh!`);
 
+			return;
 
-    try {
+		}
 
-      const response = await uploadFiles([file.originFileObj]);
 
-      const url = response.files?.[0]?.fileUrl || response.files?.[0]?.url || '';
+		// Check if currently processing
 
+		if (currentImageProcessing && currentImageProcessing.recordId === record.id) {
 
+			message.warning(`"${record.title}" đang được tạo ảnh!`);
 
-      const updatedFile = {
+			return;
 
-        ...file,
+		}
 
-        status: 'done',
 
-        url: url
+		// Add to queue
 
-      };
+		addImageToQueue(record.id, record.title);
 
+	};
 
 
-      setBgAudioFile(updatedFile);
+	// Diagram Preview Functions
+	const handleDiagramPreview = (record) => {
+		if (record.diagramUrl && record.diagramUrl.length > 0) {
+			// Kroki mode - show images
+			setSelectedDiagramData({
+				type: 'kroki',
+				title: record.title,
+				data: record.diagramUrl,
+				note: record.diagramNote,
+				recordId: record.id, // Thêm recordId để save
+			});
+		} else if (record.diagramHtmlCode && record.diagramHtmlCode.length > 0) {
+			// HTML mode - show HTML code
+			setSelectedDiagramData({
+				type: 'html',
+				title: record.title,
+				data: record.diagramHtmlCode,
+				note: record.diagramNote,
+				recordId: record.id, // Thêm recordId để save
+			});
+		} else if (record.diagramExcalidrawJson && record.diagramExcalidrawJson.length > 0) {
+			// Excalidraw React mode - show Excalidraw JSON
+			setSelectedDiagramData({
+				type: 'excalidraw-react',
+				title: record.title,
+				data: record.diagramExcalidrawJson,
+				note: record.diagramExcalidrawNote || record.diagramNote,
+				imageUrls: record.diagramExcalidrawImageUrls || null, // Thêm imageUrls nếu có
+				recordId: record.id, // Thêm recordId để save
+			});
+		} else {
+			message.info('Record này chưa có diagram để xem');
+			return;
+		}
+		setDiagramPreviewModalVisible(true);
+	};
 
-      setBgAudioSettings(prev => ({ ...prev, audioUrl: url }));
+	// Convert Excalidraw JSON to Image and upload
+	const convertExcalidrawToImage = async (jsonStringArray) => {
+		if (!jsonStringArray || !Array.isArray(jsonStringArray) || jsonStringArray.length === 0) {
+			return [];
+		}
 
+		try {
+			// Load Excalidraw export functions
+			const excalidrawModule = await import('@excalidraw/excalidraw');
+			const { exportToCanvas, exportToSvg } = excalidrawModule;
 
+			if (!exportToCanvas && !exportToSvg) {
+				console.warn('Excalidraw export functions not available');
+				return [];
+			}
 
-      message.success('Upload nhạc nền thành công!');
+			const imageUrls = [];
 
-    } catch (error) {
+			for (const jsonString of jsonStringArray) {
+				try {
+					const excalidrawData = JSON.parse(jsonString);
+					const elements = excalidrawData.elements || [];
+					const appState = excalidrawData.appState || { viewBackgroundColor: '#ffffff' };
 
-      console.error('Error uploading background audio:', error);
+					if (!elements || elements.length === 0) {
+						continue;
+					}
 
-      message.error('Upload nhạc nền thất bại!');
+					// Try to export to Canvas first (better for image conversion)
+					let canvas = null;
+					if (exportToCanvas) {
+						let canvasResult = exportToCanvas({
+							elements,
+							appState,
+							files: excalidrawData.files || {},
+						});
 
-      setBgAudioFile(null);
+						if (canvasResult instanceof Promise) {
+							canvasResult = await canvasResult;
+						}
 
-      setBgAudioSettings(prev => ({ ...prev, audioUrl: '' }));
+						if (canvasResult instanceof HTMLCanvasElement) {
+							canvas = canvasResult;
+						}
+					}
 
-    } finally {
+					// Fallback to SVG if canvas not available
+					if (!canvas && exportToSvg) {
+						let svgResult = exportToSvg({
+							elements,
+							appState,
+							files: excalidrawData.files || {},
+						});
 
-      setBgAudioUploading(false);
+						if (svgResult instanceof Promise) {
+							svgResult = await svgResult;
+						}
 
-    }
+						if (svgResult instanceof SVGElement) {
+							// Convert SVG to Canvas
+							const svgString = new XMLSerializer().serializeToString(svgResult);
+							const img = new Image();
+							const svgBlob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
+							const url = URL.createObjectURL(svgBlob);
 
-  };
+							canvas = await new Promise((resolve, reject) => {
+								img.onload = () => {
+									const canvas = document.createElement('canvas');
+									canvas.width = img.width || 800;
+									canvas.height = img.height || 600;
+									const ctx = canvas.getContext('2d');
+									ctx.drawImage(img, 0, 0);
+									URL.revokeObjectURL(url);
+									resolve(canvas);
+								};
+								img.onerror = reject;
+								img.src = url;
+							});
+						}
+					}
 
+					if (!canvas) {
+						console.warn('Could not convert Excalidraw to canvas');
+						continue;
+					}
 
+					// Convert Canvas to Blob (PNG)
+					const blob = await new Promise((resolve) => {
+						canvas.toBlob((blob) => {
+							resolve(blob);
+						}, 'image/png', 1.0);
+					});
 
-  const saveBgAudioSettings = async () => {
+					if (!blob) {
+						continue;
+					}
 
-    try {
+					// Convert Blob to File
+					const file = new File([blob], `excalidraw-${Date.now()}.png`, { type: 'image/png' });
 
-      await createOrUpdateSetting({
+					// Upload to server
+					const response = await uploadFiles([file]);
+					const url = response.files?.[0]?.fileUrl || response.files?.[0]?.url || '';
 
-        type: 'BACKGROUND_AUDIO',
+					if (url) {
+						imageUrls.push(url);
+					}
+				} catch (error) {
+					console.error('Error converting Excalidraw to image:', error);
+				}
+			}
 
-        setting: bgAudioSettings
+			return imageUrls;
+		} catch (error) {
+			console.error('Error in convertExcalidrawToImage:', error);
+			return [];
+		}
+	};
 
-      });
+	const handleDiagramSave = async (updatedData) => {
+		try {
+			const updateData = {};
 
+			if (updatedData.type === 'kroki') {
+				updateData.diagramUrl = updatedData.data;
+				updateData.diagramNote = updatedData.note;
+			} else if (updatedData.type === 'html') {
+				updateData.diagramHtmlCode = updatedData.data;
+				updateData.diagramNote = updatedData.note;
+			} else if (updatedData.type === 'excalidraw-react') {
+				updateData.diagramExcalidrawJson = updatedData.data;
+				updateData.diagramExcalidrawNote = updatedData.note;
 
+				// Convert Excalidraw JSON to images and upload
+				if (updatedData.data && Array.isArray(updatedData.data) && updatedData.data.length > 0) {
+					message.loading('Đang tạo ảnh từ Excalidraw...', 0);
+					try {
+						const imageUrls = await convertExcalidrawToImage(updatedData.data);
+						if (imageUrls.length > 0) {
+							updateData.diagramExcalidrawImageUrls = imageUrls;
+							message.destroy();
+							message.success(`Đã tạo và upload ${imageUrls.length} ảnh từ Excalidraw!`);
+						} else {
+							message.destroy();
+							message.warning('Không thể tạo ảnh từ Excalidraw');
+						}
+					} catch (error) {
+						message.destroy();
+						console.error('Error converting Excalidraw to images:', error);
+						message.warning('Có lỗi khi tạo ảnh từ Excalidraw, nhưng đã lưu JSON');
+					}
+				}
+			}
 
-      setBgAudioSettingsVisible(false);
+			await updateK9({ id: updatedData.recordId, ...updateData });
 
-      message.success('Lưu cài đặt nhạc nền thành công!');
+			// Update local state instead of reloading all data
+			const updater = (list) => list.map(item =>
+				item.id === updatedData.recordId
+					? { ...item, ...updateData }
+					: item,
+			);
 
-    } catch (error) {
+			// Update allData
+			setAllData(prev => ({
+				...prev,
+				[currentTab]: updater(prev[currentTab] || []),
+			}));
 
-      console.error('Error saving background audio settings:', error);
+			// Update filteredData
+			setFilteredData(prev => ({
+				...prev,
+				[currentTab]: updater(prev[currentTab] || []),
+			}));
 
-      message.error('Lưu cài đặt thất bại!');
+			// Update current data
+			setData(prev => updater(prev));
 
-    }
+			message.success('Đã lưu thay đổi diagram!');
+		} catch (error) {
+			console.error('Error saving diagram:', error);
+			message.error('Có lỗi khi lưu diagram!');
+		}
+	};
 
-  };
+	const handleStopDiagramGeneration = () => {
+		shouldStopRef.current = true;
+		message.info('Đang dừng quá trình tạo diagram...');
+	};
 
+	// Simple wrapper to check stop flag before AI calls
+	const callAIWithStopCheck = async (aiFunction, ...args) => {
+		if (shouldStopRef.current) {
+			throw new Error('User requested stop');
+		}
+		return await aiFunction(...args);
+	};
 
+	// Create Summary Detail from Detail - Queue version
+	const handleCreateSummaryDetail = async (record) => {
+		if (!record.detail) {
+			message.warning('Không có nội dung detail để tóm tắt!');
+			return;
+		}
 
-  // Guideline settings functions
+		if (record.summaryDetail) {
+			message.info('Record này đã có summaryDetail!');
+			return;
+		}
 
-  const handleGuidelineImageUpload = async (file) => {
+		if (!summaryDetailConfig.aiModel || !summaryDetailConfig.aiPrompt) {
+			message.warning('Vui lòng cấu hình prompt tóm tắt detail trước!');
+			setSummaryDetailConfigModalVisible(true);
+			return;
+		}
 
-    console.log('🔧 K9Management: handleGuidelineImageUpload called with file:', file);
+		// Check if already in queue or processing
+		const existingTask = summaryDetailQueue.find(task => task.recordId === record.id);
+		const isProcessing = currentSummaryDetailProcessing && currentSummaryDetailProcessing.recordId === record.id;
 
+		if (existingTask || isProcessing) {
+			message.warning('Record này đang trong hàng đợi hoặc đang được xử lý!');
+			return;
+		}
 
+		addSummaryDetailToQueue(record.id, record.title);
+	};
 
-    if (!file) {
+	// Diagram Generation Functions
+	const handleCreateDiagram = async (record, mode = 'kroki') => {
+		if (mode === 'excalidraw-react' && !record.summaryDetail) {
+			message.warning('Không có nội dung để tạo diagram!');
+			return;
+		}
+		if (mode === 'html' && !record.detail) {
+			message.warning('Không có nội dung detail để tạo diagram!');
+			return;
+		}
 
-      console.log('🗑️ K9Management: Clearing guideline image');
+		// Check if already has diagram data of same type (HTML and Excalidraw can coexist)
+		const hasExistingHtmlCode = record.diagramHtmlCode && record.diagramHtmlCode.length > 0;
+		const hasExistingExcalidrawJson = record.diagramExcalidrawJson && record.diagramExcalidrawJson.length > 0;
 
-      setGuidelineImageFile(null);
+		if (mode === 'html' && hasExistingHtmlCode) {
+			message.warning('Record này đã có HTML code diagram. Vui lòng xóa diagram HTML cũ trước khi tạo mới.');
+			return;
+		}
 
-      setGuidelineSettings(prev => ({ ...prev, imageUrl: '' }));
+		if (mode === 'excalidraw-react' && hasExistingExcalidrawJson) {
+			message.warning('Record này đã có Excalidraw diagram. Vui lòng xóa diagram Excalidraw cũ trước khi tạo mới.');
+			return;
+		}
 
-      return;
+		// Check if already in queue or processing
+		if (diagramGenerationQueue.find(task => task.recordId === record.id) ||
+			(currentDiagramProcessing && currentDiagramProcessing.recordId === record.id)) {
+			const modeText = mode === 'html' ? 'HTML code' : mode === 'excalidraw-react' ? 'Excalidraw React' : 'diagram';
+			message.warning(`"${record.title}" đang được tạo ${modeText}!`);
+			return;
+		}
 
-    }
+		// For html and excalidraw-react modes, show prompt selection modal
+		if (mode === 'html' || mode === 'excalidraw-react') {
+			setPendingDiagramMode(mode);
+			setPendingDiagramRecords([record]);
+			setSelectDiagramPromptModalVisible(true);
+		} else {
+			// For kroki mode, use old config (not implemented prompt selection yet)
+			addDiagramToQueue(record.id, record.title, mode);
+		}
+	};
 
+	const handleSingleDiagramPromptSelected = (prompt) => {
+		setSelectDiagramPromptModalVisible(false);
+		const record = pendingDiagramRecords[0];
+		const mode = pendingDiagramMode;
+		if (record) {
+			addDiagramToQueue(record.id, record.title, mode, prompt);
+		}
+		setPendingDiagramMode(null);
+		setPendingDiagramRecords([]);
+	};
 
+	// Sau khi chọn prompt để tạo Case Training từ Learning Block
+	const handleCaseFromLearningPromptSelected = (prompt) => {
+		setSelectCaseFromLearningPromptModalVisible(false);
 
-    if (file.url || file.status === 'done') {
+		const items = pendingCaseFromLearningRecords || [];
+		if (!items.length) {
+			return;
+		}
 
-      console.log('✅ K9Management: Using existing file URL:', file.url);
+		const quantity = prompt?.quantity && prompt.quantity > 0 ? prompt.quantity : 1;
+		let addedCount = 0;
 
-      setGuidelineImageFile(file);
+		items.forEach(item => {
+			addCaseFromLearningBlockToQueue(item.id, item.title, prompt, quantity);
+			addedCount++;
+		});
 
-      setGuidelineSettings(prev => ({ ...prev, imageUrl: file.url || '' }));
+		setPendingCaseFromLearningRecords([]);
+		setSelectedRowKeys([]);
 
-      return;
+		if (addedCount > 0) {
+			message.success(`🧩 Đã thêm ${addedCount} Learning Block vào hàng đợi tạo Case Training (${quantity} case mỗi block)!`);
+		}
+	};
 
-    }
 
+	const addImageToQueue = (recordId, title) => {
 
+		const task = {
 
-    if (!file.originFileObj) {
+			id: `image_${recordId}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
 
-      console.warn('❌ K9Management: No originFileObj found for guideline image file');
+			recordId,
 
-      return;
+			title: title.length > 50 ? title.substring(0, 50) + '...' : title,
 
-    }
+			createdAt: new Date().toISOString(),
 
+		};
 
 
-    console.log('📤 K9Management: Starting guideline image upload');
+		setImageGenerationQueue(prev => [...prev, task]);
 
-    setGuidelineImageUploading(true);
+		message.success(`📝 Đã thêm "${task.title}" vào hàng đợi tạo ảnh!`);
 
 
+		return task;
 
-    try {
+	};
 
-      const response = await uploadFiles([file.originFileObj]);
 
-      console.log('📤 K9Management: Upload response:', response);
+	const addDiagramToQueue = (recordId, title, mode = 'kroki', promptConfig = null) => {
+		const task = {
+			id: `diagram_${recordId}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+			recordId,
+			title: title.length > 50 ? title.substring(0, 50) + '...' : title,
+			mode: mode, // Add mode to task
+			promptConfig: promptConfig, // Store prompt configuration
+			createdAt: new Date().toISOString(),
+		};
 
+		setDiagramGenerationQueue(prev => [...prev, task]);
+		message.success(`📊 Đã thêm "${task.title}" vào hàng đợi tạo ${mode === 'html' ? 'HTML code' : 'diagram'}!`);
 
+		return task;
+	};
 
-      const url = response.files?.[0]?.fileUrl || response.files?.[0]?.url || '';
+	const addSummaryDetailToQueue = (recordId, title) => {
+		const task = {
+			id: `summary_${recordId}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+			recordId,
+			title: title.length > 50 ? title.substring(0, 50) + '...' : title,
+			createdAt: new Date().toISOString(),
+		};
 
-      console.log('🔗 K9Management: Extracted URL:', url);
+		setSummaryDetailQueue(prev => [...prev, task]);
+		message.success(`📝 Đã thêm "${task.title}" vào hàng đợi tạo summaryDetail!`);
 
+		return task;
+	};
 
+	// Thêm vào queue tạo Case Training từ Learning Block
+	const addCaseFromLearningBlockToQueue = (recordId, title, promptConfig, quantity = 1) => {
+		const task = {
+			id: `case_from_lb_${recordId}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+			recordId,
+			title: title.length > 50 ? title.substring(0, 50) + '...' : title,
+			promptConfig,
+			quantity,
+			createdAt: new Date().toISOString(),
+		};
 
-      const updatedFile = {
+		setCaseFromLearningBlockQueue(prev => [...prev, task]);
+		message.success(`🧩 Đã thêm "${task.title}" vào hàng đợi tạo Case Training (${quantity} case)!`);
 
-        ...file,
+		return task;
+	};
 
-        status: 'done',
 
-        url: url
+	const processImageQueue = async () => {
 
-      };
+		if (imageGenerationQueue.length === 0 || processingImageQueue) {
 
+			return;
 
+		}
 
-      setGuidelineImageFile(updatedFile);
 
-      setGuidelineSettings(prev => ({ ...prev, imageUrl: url }));
+		setProcessingImageQueue(true);
 
 
+		const queue = [...imageGenerationQueue];
 
-      message.success('Upload hình ảnh guideline thành công!');
 
-    } catch (error) {
+		for (let i = 0; i < queue.length; i++) {
 
-      console.error('❌ K9Management: Error uploading guideline image:', error);
+			const task = queue[i];
 
-      message.error('Upload hình ảnh guideline thất bại!');
+			setCurrentImageProcessing(task);
 
-      setGuidelineImageFile(null);
 
-      setGuidelineSettings(prev => ({ ...prev, imageUrl: '' }));
+			// Remove from queue immediately
 
-    } finally {
+			setImageGenerationQueue(prev => prev.filter(item => item.id !== task.id));
 
-      setGuidelineImageUploading(false);
 
-    }
+			try {
 
-  };
+				// Get the current record
 
+				const currentRecord = await getK9ById(task.recordId);
 
+				console.log('currentRecord', currentRecord);
 
-  const saveGuidelineSettings = async (settings) => {
+				if (!currentRecord) {
 
-    console.log('🔧 K9Management: saveGuidelineSettings called with settings:', settings);
+					console.error(`Record ${task.recordId} not found`);
 
+					continue;
 
+				}
 
-    try {
 
-      const settingData = {
+				// Step 1: Create English description
 
-        type: 'GUIDELINE_SETTING',
+				console.log(`Creating English description for "${currentRecord.title}"`);
 
-        setting: {
 
-          imageUrl: settings.imageUrl,
-
-          markdownText: settings.markdownText
-
-        }
-
-      };
-
-
-
-      console.log('💾 K9Management: Saving to database:', settingData);
-
-      await createOrUpdateSetting(settingData);
-
-
-
-      console.log('✅ K9Management: Settings saved successfully');
-
-      setGuidelineSettings(settings);
-
-      setGuidelineSettingsVisible(false);
-
-
-
-      message.success('Lưu cài đặt guideline thành công!');
-
-    } catch (error) {
-
-      console.error('❌ K9Management: Error saving guideline settings:', error);
-
-      message.error('Lưu cài đặt guideline thất bại!');
-
-      throw error;
-
-    }
-
-  };
-
-
-
-  const handleBackToK9 = () => {
-
-    navigate('/home');
-
-  };
-
-
-
-  // Helper function to replace variables in template
-
-  const replaceTemplateVariables = (template, variables) => {
-
-    let result = template;
-
-    Object.keys(variables).forEach(key => {
-
-      const regex = new RegExp(`\\$\\{${key}\\}`, 'g');
-
-      result = result.replace(regex, variables[key]);
-
-    });
-
-    return result;
-
-  };
-
-  // Image Generation Functions
-
-  const handleCreateImage = async (record) => {
-
-    if (!record.summary) {
-
-      message.warning('Không có tóm tắt để tạo ảnh!');
-
-      return;
-
-    }
-
-
-
-    // Check if already has avatarUrl
-
-    if (record.avatarUrl) {
-
-      message.info('News này đã có ảnh!');
-
-      return;
-
-    }
-
-
-
-    // Check if already in queue
-
-    const existingTask = imageGenerationQueue.find(task => task.recordId === record.id);
-
-    if (existingTask) {
-
-      message.warning(`"${record.title}" đã có trong hàng đợi tạo ảnh!`);
-
-      return;
-
-    }
-
-
-
-    // Check if currently processing
-
-    if (currentImageProcessing && currentImageProcessing.recordId === record.id) {
-
-      message.warning(`"${record.title}" đang được tạo ảnh!`);
-
-      return;
-
-    }
-
-
-
-    // Add to queue
-
-    addImageToQueue(record.id, record.title);
-
-  };
-
-
-  // Diagram Preview Functions
-  const handleDiagramPreview = (record) => {
-    if (record.diagramUrl && record.diagramUrl.length > 0) {
-      // Kroki mode - show images
-      setSelectedDiagramData({
-        type: 'kroki',
-        title: record.title,
-        data: record.diagramUrl,
-        note: record.diagramNote,
-        recordId: record.id // Thêm recordId để save
-      });
-    } else if (record.diagramHtmlCode && record.diagramHtmlCode.length > 0) {
-      // HTML mode - show HTML code
-      setSelectedDiagramData({
-        type: 'html',
-        title: record.title,
-        data: record.diagramHtmlCode,
-        note: record.diagramNote,
-        recordId: record.id // Thêm recordId để save
-      });
-    } else if (record.diagramExcalidrawJson && record.diagramExcalidrawJson.length > 0) {
-      // Excalidraw React mode - show Excalidraw JSON
-      setSelectedDiagramData({
-        type: 'excalidraw-react',
-        title: record.title,
-        data: record.diagramExcalidrawJson,
-        note: record.diagramExcalidrawNote || record.diagramNote,
-        imageUrls: record.diagramExcalidrawImageUrls || null, // Thêm imageUrls nếu có
-        recordId: record.id // Thêm recordId để save
-      });
-    } else {
-      message.info('Record này chưa có diagram để xem');
-      return;
-    }
-    setDiagramPreviewModalVisible(true);
-  };
-
-  // Convert Excalidraw JSON to Image and upload
-  const convertExcalidrawToImage = async (jsonStringArray) => {
-    if (!jsonStringArray || !Array.isArray(jsonStringArray) || jsonStringArray.length === 0) {
-      return [];
-    }
-
-    try {
-      // Load Excalidraw export functions
-      const excalidrawModule = await import('@excalidraw/excalidraw');
-      const { exportToCanvas, exportToSvg } = excalidrawModule;
-
-      if (!exportToCanvas && !exportToSvg) {
-        console.warn('Excalidraw export functions not available');
-        return [];
-      }
-
-      const imageUrls = [];
-
-      for (const jsonString of jsonStringArray) {
-        try {
-          const excalidrawData = JSON.parse(jsonString);
-          const elements = excalidrawData.elements || [];
-          const appState = excalidrawData.appState || { viewBackgroundColor: '#ffffff' };
-
-          if (!elements || elements.length === 0) {
-            continue;
-          }
-
-          // Try to export to Canvas first (better for image conversion)
-          let canvas = null;
-          if (exportToCanvas) {
-            let canvasResult = exportToCanvas({
-              elements,
-              appState,
-              files: excalidrawData.files || {}
-            });
-
-            if (canvasResult instanceof Promise) {
-              canvasResult = await canvasResult;
-            }
-
-            if (canvasResult instanceof HTMLCanvasElement) {
-              canvas = canvasResult;
-            }
-          }
-
-          // Fallback to SVG if canvas not available
-          if (!canvas && exportToSvg) {
-            let svgResult = exportToSvg({
-              elements,
-              appState,
-              files: excalidrawData.files || {}
-            });
-
-            if (svgResult instanceof Promise) {
-              svgResult = await svgResult;
-            }
-
-            if (svgResult instanceof SVGElement) {
-              // Convert SVG to Canvas
-              const svgString = new XMLSerializer().serializeToString(svgResult);
-              const img = new Image();
-              const svgBlob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
-              const url = URL.createObjectURL(svgBlob);
-
-              canvas = await new Promise((resolve, reject) => {
-                img.onload = () => {
-                  const canvas = document.createElement('canvas');
-                  canvas.width = img.width || 800;
-                  canvas.height = img.height || 600;
-                  const ctx = canvas.getContext('2d');
-                  ctx.drawImage(img, 0, 0);
-                  URL.revokeObjectURL(url);
-                  resolve(canvas);
-                };
-                img.onerror = reject;
-                img.src = url;
-              });
-            }
-          }
-
-          if (!canvas) {
-            console.warn('Could not convert Excalidraw to canvas');
-            continue;
-          }
-
-          // Convert Canvas to Blob (PNG)
-          const blob = await new Promise((resolve) => {
-            canvas.toBlob((blob) => {
-              resolve(blob);
-            }, 'image/png', 1.0);
-          });
-
-          if (!blob) {
-            continue;
-          }
-
-          // Convert Blob to File
-          const file = new File([blob], `excalidraw-${Date.now()}.png`, { type: 'image/png' });
-
-          // Upload to server
-          const response = await uploadFiles([file]);
-          const url = response.files?.[0]?.fileUrl || response.files?.[0]?.url || '';
-
-          if (url) {
-            imageUrls.push(url);
-          }
-        } catch (error) {
-          console.error('Error converting Excalidraw to image:', error);
-        }
-      }
-
-      return imageUrls;
-    } catch (error) {
-      console.error('Error in convertExcalidrawToImage:', error);
-      return [];
-    }
-  };
-
-  const handleDiagramSave = async (updatedData) => {
-    try {
-      const updateData = {};
-
-      if (updatedData.type === 'kroki') {
-        updateData.diagramUrl = updatedData.data;
-        updateData.diagramNote = updatedData.note;
-      } else if (updatedData.type === 'html') {
-        updateData.diagramHtmlCode = updatedData.data;
-        updateData.diagramNote = updatedData.note;
-      } else if (updatedData.type === 'excalidraw-react') {
-        updateData.diagramExcalidrawJson = updatedData.data;
-        updateData.diagramExcalidrawNote = updatedData.note;
-
-        // Convert Excalidraw JSON to images and upload
-        if (updatedData.data && Array.isArray(updatedData.data) && updatedData.data.length > 0) {
-          message.loading('Đang tạo ảnh từ Excalidraw...', 0);
-          try {
-            const imageUrls = await convertExcalidrawToImage(updatedData.data);
-            if (imageUrls.length > 0) {
-              updateData.diagramExcalidrawImageUrls = imageUrls;
-              message.destroy();
-              message.success(`Đã tạo và upload ${imageUrls.length} ảnh từ Excalidraw!`);
-            } else {
-              message.destroy();
-              message.warning('Không thể tạo ảnh từ Excalidraw');
-            }
-          } catch (error) {
-            message.destroy();
-            console.error('Error converting Excalidraw to images:', error);
-            message.warning('Có lỗi khi tạo ảnh từ Excalidraw, nhưng đã lưu JSON');
-          }
-        }
-      }
-
-      await updateK9({ id: updatedData.recordId, ...updateData });
-
-      // Update local state instead of reloading all data
-      const updater = (list) => list.map(item =>
-          item.id === updatedData.recordId
-              ? { ...item, ...updateData }
-              : item
-      );
-
-      // Update allData
-      setAllData(prev => ({
-        ...prev,
-        [currentTab]: updater(prev[currentTab] || [])
-      }));
-
-      // Update filteredData
-      setFilteredData(prev => ({
-        ...prev,
-        [currentTab]: updater(prev[currentTab] || [])
-      }));
-
-      // Update current data
-      setData(prev => updater(prev));
-
-      message.success('Đã lưu thay đổi diagram!');
-    } catch (error) {
-      console.error('Error saving diagram:', error);
-      message.error('Có lỗi khi lưu diagram!');
-    }
-  };
-
-  const handleStopDiagramGeneration = () => {
-    shouldStopRef.current = true;
-    message.info('Đang dừng quá trình tạo diagram...');
-  };
-
-  // Simple wrapper to check stop flag before AI calls
-  const callAIWithStopCheck = async (aiFunction, ...args) => {
-    if (shouldStopRef.current) {
-      throw new Error('User requested stop');
-    }
-    return await aiFunction(...args);
-  };
-
-  // Create Summary Detail from Detail - Queue version
-  const handleCreateSummaryDetail = async (record) => {
-    if (!record.detail) {
-      message.warning('Không có nội dung detail để tóm tắt!');
-      return;
-    }
-
-    if (record.summaryDetail) {
-      message.info('Record này đã có summaryDetail!');
-      return;
-    }
-
-    if (!summaryDetailConfig.aiModel || !summaryDetailConfig.aiPrompt) {
-      message.warning('Vui lòng cấu hình prompt tóm tắt detail trước!');
-      setSummaryDetailConfigModalVisible(true);
-      return;
-    }
-
-    // Check if already in queue or processing
-    const existingTask = summaryDetailQueue.find(task => task.recordId === record.id);
-    const isProcessing = currentSummaryDetailProcessing && currentSummaryDetailProcessing.recordId === record.id;
-
-    if (existingTask || isProcessing) {
-      message.warning('Record này đang trong hàng đợi hoặc đang được xử lý!');
-      return;
-    }
-
-    addSummaryDetailToQueue(record.id, record.title);
-  };
-
-  // Diagram Generation Functions
-  const handleCreateDiagram = async (record, mode = 'kroki') => {
-    if (mode === 'excalidraw-react' && !record.summaryDetail) {
-      message.warning('Không có nội dung để tạo diagram!');
-      return;
-    }
-    if (mode === 'html' && !record.detail) {
-      message.warning('Không có nội dung detail để tạo diagram!');
-      return;
-    }
-
-    // Check if already has diagram data of same type (HTML and Excalidraw can coexist)
-    const hasExistingHtmlCode = record.diagramHtmlCode && record.diagramHtmlCode.length > 0;
-    const hasExistingExcalidrawJson = record.diagramExcalidrawJson && record.diagramExcalidrawJson.length > 0;
-
-    if (mode === 'html' && hasExistingHtmlCode) {
-      message.warning('Record này đã có HTML code diagram. Vui lòng xóa diagram HTML cũ trước khi tạo mới.');
-      return;
-    }
-
-    if (mode === 'excalidraw-react' && hasExistingExcalidrawJson) {
-      message.warning('Record này đã có Excalidraw diagram. Vui lòng xóa diagram Excalidraw cũ trước khi tạo mới.');
-      return;
-    }
-
-    // Check if already in queue or processing
-    if (diagramGenerationQueue.find(task => task.recordId === record.id) ||
-        (currentDiagramProcessing && currentDiagramProcessing.recordId === record.id)) {
-      const modeText = mode === 'html' ? 'HTML code' : mode === 'excalidraw-react' ? 'Excalidraw React' : 'diagram';
-      message.warning(`"${record.title}" đang được tạo ${modeText}!`);
-      return;
-    }
-
-    // For html and excalidraw-react modes, show prompt selection modal
-    if (mode === 'html' || mode === 'excalidraw-react') {
-      setPendingDiagramMode(mode);
-      setPendingDiagramRecords([record]);
-      setSelectDiagramPromptModalVisible(true);
-    } else {
-      // For kroki mode, use old config (not implemented prompt selection yet)
-      addDiagramToQueue(record.id, record.title, mode);
-    }
-  };
-
-  const handleSingleDiagramPromptSelected = (prompt) => {
-    setSelectDiagramPromptModalVisible(false);
-    const record = pendingDiagramRecords[0];
-    const mode = pendingDiagramMode;
-    if (record) {
-      addDiagramToQueue(record.id, record.title, mode, prompt);
-    }
-    setPendingDiagramMode(null);
-    setPendingDiagramRecords([]);
-  };
-
-  // Sau khi chọn prompt để tạo Case Training từ Learning Block
-  const handleCaseFromLearningPromptSelected = (prompt) => {
-    setSelectCaseFromLearningPromptModalVisible(false);
-
-    const items = pendingCaseFromLearningRecords || [];
-    if (!items.length) {
-      return;
-    }
-
-    const quantity = prompt?.quantity && prompt.quantity > 0 ? prompt.quantity : 1;
-    let addedCount = 0;
-
-    items.forEach(item => {
-      addCaseFromLearningBlockToQueue(item.id, item.title, prompt, quantity);
-      addedCount++;
-    });
-
-    setPendingCaseFromLearningRecords([]);
-    setSelectedRowKeys([]);
-
-    if (addedCount > 0) {
-      message.success(`🧩 Đã thêm ${addedCount} Learning Block vào hàng đợi tạo Case Training (${quantity} case mỗi block)!`);
-    }
-  };
-
-
-  const addImageToQueue = (recordId, title) => {
-
-    const task = {
-
-      id: `image_${recordId}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-
-      recordId,
-
-      title: title.length > 50 ? title.substring(0, 50) + '...' : title,
-
-      createdAt: new Date().toISOString()
-
-    };
-
-
-
-    setImageGenerationQueue(prev => [...prev, task]);
-
-    message.success(`📝 Đã thêm "${task.title}" vào hàng đợi tạo ảnh!`);
-
-
-
-    return task;
-
-  };
-
-
-  const addDiagramToQueue = (recordId, title, mode = 'kroki', promptConfig = null) => {
-    const task = {
-      id: `diagram_${recordId}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      recordId,
-      title: title.length > 50 ? title.substring(0, 50) + '...' : title,
-      mode: mode, // Add mode to task
-      promptConfig: promptConfig, // Store prompt configuration
-      createdAt: new Date().toISOString()
-    };
-
-    setDiagramGenerationQueue(prev => [...prev, task]);
-    message.success(`📊 Đã thêm "${task.title}" vào hàng đợi tạo ${mode === 'html' ? 'HTML code' : 'diagram'}!`);
-
-    return task;
-  };
-
-  const addSummaryDetailToQueue = (recordId, title) => {
-    const task = {
-      id: `summary_${recordId}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      recordId,
-      title: title.length > 50 ? title.substring(0, 50) + '...' : title,
-      createdAt: new Date().toISOString()
-    };
-
-    setSummaryDetailQueue(prev => [...prev, task]);
-    message.success(`📝 Đã thêm "${task.title}" vào hàng đợi tạo summaryDetail!`);
-
-    return task;
-  };
-
-  // Thêm vào queue tạo Case Training từ Learning Block
-  const addCaseFromLearningBlockToQueue = (recordId, title, promptConfig, quantity = 1) => {
-    const task = {
-      id: `case_from_lb_${recordId}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      recordId,
-      title: title.length > 50 ? title.substring(0, 50) + '...' : title,
-      promptConfig,
-      quantity,
-      createdAt: new Date().toISOString()
-    };
-
-    setCaseFromLearningBlockQueue(prev => [...prev, task]);
-    message.success(`🧩 Đã thêm "${task.title}" vào hàng đợi tạo Case Training (${quantity} case)!`);
-
-    return task;
-  };
-
-
-  const processImageQueue = async () => {
-
-    if (imageGenerationQueue.length === 0 || processingImageQueue) {
-
-      return;
-
-    }
-
-
-
-    setProcessingImageQueue(true);
-
-
-
-    const queue = [...imageGenerationQueue];
-
-
-
-    for (let i = 0; i < queue.length; i++) {
-
-      const task = queue[i];
-
-      setCurrentImageProcessing(task);
-
-
-
-      // Remove from queue immediately
-
-      setImageGenerationQueue(prev => prev.filter(item => item.id !== task.id));
-
-
-
-      try {
-
-        // Get the current record
-
-        const currentRecord = await getK9ById(task.recordId);
-
-        console.log('currentRecord', currentRecord);
-
-        if (!currentRecord) {
-
-          console.error(`Record ${task.recordId} not found`);
-
-          continue;
-
-        }
-
-
-
-        // Step 1: Create English description
-
-        console.log(`Creating English description for "${currentRecord.title}"`);
-
-
-
-        const englishPrompt = `${currentRecord.title}: ${currentRecord.summary}\n\n` + `\n\n⚠️ CRITICAL FORMAT REQUIREMENT - MUST BE FOLLOWED EXACTLY:
+				const englishPrompt = `${currentRecord.title}: ${currentRecord.summary}\n\n` + `\n\n⚠️ CRITICAL FORMAT REQUIREMENT - MUST BE FOLLOWED EXACTLY:
 
 You MUST return ONLY the numbered description in the exact format. Do NOT include any headers, explanations, or additional content. Failure to follow this format will cause system parsing errors and break the image generation process.
 
@@ -4978,5444 +4781,5317 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
 ⚠️ WARNING: Any deviation from the numbered format will result in parsing failure and system errors. Your response must start immediately with "1." and contain only the numbered description.`;
 
 
+				const englishResponse = await aiGen(
+					englishPrompt,
 
-        const englishResponse = await aiGen(
+					imageConfig.descriptionSystemMessage,
 
-            englishPrompt,
+					imageConfig.descriptionModel,
 
-            imageConfig.descriptionSystemMessage,
+					'text',
+				);
 
-            imageConfig.descriptionModel,
 
-            'text'
+				const englishResult = englishResponse.result || englishResponse.answer || englishResponse.content || englishResponse;
 
-        );
+				console.log('English description result:', englishResult);
 
 
+				// Parse English description
 
-        const englishResult = englishResponse.result || englishResponse.answer || englishResponse.content || englishResponse;
+				const englishLines = englishResult.split('\n');
 
-        console.log('English description result:', englishResult);
+				let englishDescription = '';
 
 
+				// Find the line starting with "1."
 
-        // Parse English description
+				const startLineIndex = englishLines.findIndex(l => l.trim().startsWith('1.'));
 
-        const englishLines = englishResult.split('\n');
+				if (startLineIndex !== -1) {
 
-        let englishDescription = '';
+					// Find end line index (next numbered item or end of text)
 
+					let endLineIndex = englishLines.findIndex(l => l.trim().startsWith('2.'));
 
+					if (endLineIndex === -1) {
 
-        // Find the line starting with "1."
+						endLineIndex = englishLines.length;
 
-        const startLineIndex = englishLines.findIndex(l => l.trim().startsWith('1.'));
+					}
 
-        if (startLineIndex !== -1) {
 
-          // Find end line index (next numbered item or end of text)
+					// Extract all lines for this description
 
-          let endLineIndex = englishLines.findIndex(l => l.trim().startsWith('2.'));
+					const descriptionLines = englishLines.slice(startLineIndex, endLineIndex);
 
-          if (endLineIndex === -1) {
 
-            endLineIndex = englishLines.length;
+					// Clean and join lines
 
-          }
+					englishDescription = descriptionLines
 
+						.map(line => line.trim())
 
+						.filter(line => line.length > 0)
 
-          // Extract all lines for this description
+						.join(' ')
 
-          const descriptionLines = englishLines.slice(startLineIndex, endLineIndex);
+						.replace(/^\d+\.\s*/, '')
 
+						.trim();
 
+				} else {
 
-          // Clean and join lines
+					// Fallback: use the entire result if parsing fails
 
-          englishDescription = descriptionLines
+					englishDescription = englishResult;
 
-              .map(line => line.trim())
+				}
 
-              .filter(line => line.length > 0)
 
-              .join(' ')
+				if (!englishDescription) {
 
-              .replace(/^\d+\.\s*/, '')
+					throw new Error('Failed to parse English description');
 
-              .trim();
+				}
 
-        } else {
 
-          // Fallback: use the entire result if parsing fails
+				const finalPrompt = englishDescription;
 
-          englishDescription = englishResult;
+				// Step 2: Generate image using AI4
 
-        }
+				console.log(`Generating image for "${currentRecord.title}" using finalPrompt: ${finalPrompt}`);
 
 
+				const imageResponse = await aiGen2(
+					finalPrompt,
 
-        if (!englishDescription) {
+					imageConfig.imageSystemMessage || '',
 
-          throw new Error('Failed to parse English description');
+					imageConfig.imageModel,
 
-        }
+					'img',
+				);
 
 
+				const imageResult = imageResponse.result || imageResponse.answer || imageResponse.content || imageResponse;
 
-        const finalPrompt = englishDescription;
 
-        // Step 2: Generate image using AI4
+				if (imageResult && imageResult.image_url) {
 
-        console.log(`Generating image for "${currentRecord.title}" using finalPrompt: ${finalPrompt}`);
+					// Update the record with the generated image URL
 
+					const updatedRecord = {
 
+						...currentRecord,
 
-        const imageResponse = await aiGen2(
+						avatarUrl: imageResult.image_url,
 
-            finalPrompt,
+					};
 
-            imageConfig.imageSystemMessage || '',
 
-            imageConfig.imageModel,
+					await updateK9(updatedRecord);
 
-            'img'
+					// Update local state instead of reloading all data
+					const updater = (list) => list.map(item => item.id === task.recordId ? updatedRecord : item);
+					setAllData(prev => ({ ...prev, [currentTab]: updater(prev[currentTab] || []) }));
+					setFilteredData(prev => ({ ...prev, [currentTab]: updater(prev[currentTab] || []) }));
+					setData(prev => updater(prev));
+					setTableKey(prev => prev + 1);
 
-        );
+					message.success(`✅ Tạo ảnh thành công cho "${task.title}"!`);
 
+				} else {
 
+					throw new Error('No image URL received from AI');
 
-        const imageResult = imageResponse.result || imageResponse.answer || imageResponse.content || imageResponse;
+				}
 
 
+			} catch (error) {
 
-        if (imageResult && imageResult.image_url) {
+				console.error(`Error generating image for task ${task.id}:`, error);
 
-          // Update the record with the generated image URL
+				message.error(`❌ Lỗi khi tạo ảnh cho "${task.title}": ${error.message}`);
 
-          const updatedRecord = {
+			}
 
-            ...currentRecord,
 
-            avatarUrl: imageResult.image_url
+			// Delay between tasks
 
-          };
+			if (i < queue.length - 1) {
 
+				await new Promise(resolve => setTimeout(resolve, 1000));
 
+			}
 
-          await updateK9(updatedRecord);
+		}
 
-          // Update local state instead of reloading all data
-          const updater = (list) => list.map(item => item.id === task.recordId ? updatedRecord : item);
-          setAllData(prev => ({ ...prev, [currentTab]: updater(prev[currentTab] || []) }));
-          setFilteredData(prev => ({ ...prev, [currentTab]: updater(prev[currentTab] || []) }));
-          setData(prev => updater(prev));
-          setTableKey(prev => prev + 1);
 
-          message.success(`✅ Tạo ảnh thành công cho "${task.title}"!`);
+		setCurrentImageProcessing(null);
 
-        } else {
+		setProcessingImageQueue(false);
 
-          throw new Error('No image URL received from AI');
+	};
 
-        }
 
+	const processDiagramQueue = async () => {
+		if (diagramGenerationQueue.length === 0 || processingDiagramQueue) {
+			return;
+		}
 
+		setProcessingDiagramQueue(true);
 
-      } catch (error) {
+		// Initialize tracking stats
+		const queue = [...diagramGenerationQueue];
+		const totalTasks = queue.length;
+		const taskType = queue[0]?.mode || 'kroki'; // Get type from first task
 
-        console.error(`Error generating image for task ${task.id}:`, error);
+		setDiagramGenerationStats({
+			total: totalTasks,
+			success: 0,
+			failed: 0,
+			type: taskType,
+		});
+		setDiagramGenerationResults([]);
 
-        message.error(`❌ Lỗi khi tạo ảnh cho "${task.title}": ${error.message}`);
+		for (let i = 0; i < queue.length; i++) {
+			// Check if user wants to stop
+			if (shouldStopRef.current) {
+				message.info('Đã dừng quá trình tạo diagram');
+				setProcessingDiagramQueue(false);
+				setCurrentDiagramProcessing(null);
+				setDiagramGenerationQueue([]);
 
-      }
 
+				break;
+			}
 
+			const task = queue[i];
+			setCurrentDiagramProcessing(task);
 
-      // Delay between tasks
+			// Remove from queue immediately
+			setDiagramGenerationQueue(prev => prev.filter(item => item.id !== task.id));
 
-      if (i < queue.length - 1) {
+			try {
+				// Get the current record
+				const currentRecord = await getK9ById(task.recordId);
+				console.log('currentRecord for diagram', currentRecord);
 
-        await new Promise(resolve => setTimeout(resolve, 1000));
+				if (!currentRecord) {
+					message.error(`Không tìm thấy record với ID: ${task.recordId}`);
+					continue;
+				}
 
-      }
+				// Check if record has detail content
+				if (!currentRecord.detail || currentRecord.detail.trim() === '') {
+					message.error(`Record "${task.title}" không có nội dung detail để tạo diagram`);
+					continue;
+				}
 
-    }
+				// For excalidraw-react mode, use summaryDetail if available, otherwise use detail
+				// (No auto-creation of summaryDetail - user must create it manually first)
 
+				// Check if diagram configuration is properly loaded
+				const diagramMode = task.mode || 'kroki'; // Get mode from task
+				const promptConfig = task.promptConfig; // Get prompt config from task
 
+				// Validate prompt config based on mode
+				if (diagramMode === 'excalidraw-react') {
+					if (!promptConfig || !promptConfig.aiModel || !promptConfig.aiPrompt) {
+						message.error(`Cấu hình Excalidraw React chưa được thiết lập đầy đủ. Vui lòng chọn cài đặt prompt trước khi tạo diagram.`);
+						continue;
+					}
+				} else if (diagramMode === 'html') {
+					if (!promptConfig || !promptConfig.ai4Model || !promptConfig.ai4Prompt) {
+						message.error(`Cấu hình HTML chưa được thiết lập đầy đủ. Vui lòng chọn cài đặt prompt trước khi tạo HTML code.`);
+						continue;
+					}
+				} else {
+					// Kroki mode - still use diagramConfig for now
+					if (!diagramConfig.kroki?.diagramType || !diagramConfig.kroki?.aiModel ||
+						!diagramConfig.kroki?.ai1Model || !diagramConfig.kroki?.ai1Prompt ||
+						!diagramConfig.kroki?.ai2Model || !diagramConfig.kroki?.ai2Prompt ||
+						!diagramConfig.kroki?.ai3Model || !diagramConfig.kroki?.ai3Prompt) {
+						message.error(`Cấu hình diagram chưa được thiết lập đầy đủ. Vui lòng cấu hình AI1, AI2, AI3 và diagram type trước khi tạo diagram.`);
+						continue;
+					}
+				}
+
+				// Get quantity from prompt config or diagram config
+				const quantity = diagramMode === 'excalidraw-react'
+					? (promptConfig?.quantity || 1)
+					: diagramMode === 'kroki'
+						? (diagramConfig.kroki?.quantity || 1)
+						: 1;
+				const modeText = diagramMode === 'html' ? 'HTML code' : diagramMode === 'excalidraw-react' ? 'Excalidraw React diagram' : 'diagram';
+				message.info(`🔄 Đang tạo ${quantity} ${modeText} cho: ${task.title}${diagramMode === 'kroki' ? ` - Loại: ${diagramConfig.kroki?.diagramType}` : ''}`);
+
+				// Arrays to store multiple diagram results
+				const allDiagramResults = [];
+				const allDiagramNotes = [];
+				let allDiagramImageUrls = []; // Initialize for Excalidraw image URLs
+
+				try {
+					if (diagramMode === 'html') {
+						// Check stop flag before starting HTML mode
+						if (shouldStopRef.current) {
+							message.info('Đã dừng quá trình tạo diagram');
+							break;
+						}
+
+						// HTML Mode: Single AI step
+						for (let j = 0; j < quantity; j++) {
+							// Check stop flag before each iteration
+							if (shouldStopRef.current) {
+								message.info('Đã dừng quá trình tạo diagram');
+								break;
+							}
+
+							message.info(`🔄 Đang tạo HTML code ${j + 1}/${quantity} cho: ${task.title}`);
+
+							// AI4: Tạo HTML code từ nội dung
+							message.info(`🤖 AI4: Tạo HTML code ${j + 1}/${quantity} (Cài đặt: ${promptConfig?.name || 'N/A'})`);
+							const aiResult = await callAIWithStopCheck(
+								aiGen,
+								currentRecord.detail, // Use record detail as prompt
+								promptConfig.ai4Prompt, // Use ai4Prompt from selected prompt
+								promptConfig.ai4Model, // Use ai4Model from selected prompt
+							);
+
+							console.log(`AI4 Result (HTML Code ${j + 1}):`, aiResult);
+
+							// Validate AI result
+							if (!aiResult.result || aiResult.result.trim() === '') {
+								throw new Error(`AI4 không tạo được HTML code cho diagram ${j + 1}`);
+							}
+
+							// Store HTML code directly
+							allDiagramResults.push(aiResult.result);
+
+							// Add delay between generations
+							if (j < quantity - 1) {
+								await new Promise(resolve => setTimeout(resolve, 2000));
+							}
+						}
+					} else if (diagramMode === 'excalidraw-react') {
+						// Check stop flag before starting Excalidraw React mode
+						if (shouldStopRef.current) {
+							message.info('Đã dừng quá trình tạo diagram');
+							break;
+						}
+
+						// Excalidraw React Mode: Generate Excalidraw JSON
+						for (let j = 0; j < quantity; j++) {
+							// Check stop flag before each iteration
+							if (shouldStopRef.current) {
+								message.info('Đã dừng quá trình tạo diagram');
+								break;
+							}
+
+							message.info(`🔄 Đang tạo Excalidraw React diagram ${j + 1}/${quantity} cho: ${task.title}`);
+
+							// AI: Tạo Excalidraw JSON
+							// Use summaryDetail if available, otherwise use detail
+							const contentForDiagram = currentRecord.summaryDetail || currentRecord.detail;
+							if (!contentForDiagram || contentForDiagram.trim() === '') {
+								throw new Error('Không có summaryDetail hoặc detail để tạo diagram');
+							}
+
+							const contentSource = currentRecord.summaryDetail ? 'summaryDetail' : 'detail';
+							message.info(`🤖 AI: Tạo Excalidraw JSON ${j + 1}/${quantity} (từ ${contentSource}, Cài đặt: ${promptConfig?.name || 'N/A'})`);
+
+							// Tạo prompt với tất cả thông tin (giống AISummaryDetailGeneration)
+							const promptData = {
+								ID: currentRecord.id || '',
+								CID: currentRecord.cid || '',
+								Title: currentRecord.title || '',
+								Summary: currentRecord.summary || '',
+								Details: currentRecord.detail || '',
+								SummaryDetail: currentRecord.summaryDetail || '',
+							};
+
+							// Chuyển thành JSON string để gửi cho AI
+							const prompt = JSON.stringify(promptData, null, 2);
+
+							const aiResult = await callAIWithStopCheck(
+								aiGen,
+								prompt,
+								promptConfig.aiPrompt,  // System message from selected prompt
+								promptConfig.aiModel,   // Model from selected prompt
+							);
+
+							console.log(`AI Result (Excalidraw JSON ${j + 1}):`, aiResult);
+
+							// Validate and parse JSON
+							let excalidrawJson;
+							try {
+								// Try to parse as JSON directly
+								excalidrawJson = JSON.parse(aiResult.result);
+							} catch (parseError) {
+								// Try to extract JSON from markdown code block
+								excalidrawJson = extractJsonFromMarkdown(aiResult.result);
+								if (!excalidrawJson) {
+									throw new Error(`AI không tạo được Excalidraw JSON hợp lệ. Lỗi parse: ${parseError.message}`);
+								}
+							}
+
+							// Validate Excalidraw JSON structure
+							if (!validateExcalidrawJson(excalidrawJson)) {
+								throw new Error(`Excalidraw JSON không hợp lệ cho diagram ${j + 1}`);
+							}
+
+							// Normalize JSON to standard format
+							const normalizedJson = normalizeExcalidrawJson(excalidrawJson);
+
+							// AI: Tạo ghi chú
+							// Use summaryDetail if available, otherwise use detail
+							const contentForNote = currentRecord.summaryDetail || currentRecord.detail;
+							const noteSource = currentRecord.summaryDetail ? 'summaryDetail' : 'detail';
+							message.info(`📝 AI: Tạo ghi chú ${j + 1}/${quantity} (từ ${noteSource})`);
+
+							// Use note prompt from selected config if available, otherwise use aiModel
+							const notePrompt = promptConfig?.notePrompt || 'Tạo ghi chú ngắn gọn (1-2 câu) mô tả diagram này dựa trên nội dung bài viết.';
+							const noteModel = promptConfig?.noteModel || promptConfig?.aiModel;
+
+							if (noteModel) {
+								const noteResult = await callAIWithStopCheck(
+									aiGen,
+									contentForNote,
+									notePrompt,
+									noteModel,
+								);
+
+								console.log(`Note Result (Diagram Note ${j + 1}):`, noteResult);
+
+								// Store results
+								allDiagramResults.push(JSON.stringify(normalizedJson));
+								allDiagramNotes.push(noteResult.result || `Diagram ${j + 1} từ: ${task.title}`);
+							} else {
+								// Store results without note
+								allDiagramResults.push(JSON.stringify(normalizedJson));
+								allDiagramNotes.push(`Diagram ${j + 1} từ: ${task.title}`);
+							}
+
+							// Add delay between generations
+							if (j < quantity - 1) {
+								await new Promise(resolve => setTimeout(resolve, 2000));
+							}
+						}
+					} else {
+						// Check stop flag before starting Kroki mode
+						if (shouldStopRef.current) {
+							message.info('Đã dừng quá trình tạo diagram');
+							break;
+						}
+
+						// Kroki Mode: 3 AI steps
+						// AI1: Phân tích nội dung và tạo yêu cầu diagram
+						message.info(`🤖 AI1: Phân tích nội dung cho: ${task.title}`);
+						const ai1Result = await callAIWithStopCheck(
+							aiGen,
+							`Nội dung cần phân tích: ${currentRecord.detail}\n\nLoại diagram cần tạo: ${diagramConfig.kroki.diagramType}`, // Include diagram type in prompt
+							diagramConfig.kroki.ai1Prompt, // Use ai1Prompt as systemMessage
+							diagramConfig.kroki.ai1Model, // Use ai1Model
+						);
+
+						const prompts = {
+							excalidraw: `Hãy xuất JSON hợp lệ cho Excalidraw dựa trên phân tích:\n${ai1Result.result}`,
+							c4: `Tạo yêu cầu chi tiết để AI2 tạo PlantUML C4 diagram:\n${ai1Result.result}`,
+							plantuml: `Tạo yêu cầu chi tiết để AI2 tạo PlantUML UML diagram:\n${ai1Result.result}`,
+							blockdiag: `Tạo yêu cầu chi tiết để AI2 tạo BlockDiag diagram:\n${ai1Result.result}`,
+						};
+
+						const promptAI1Format = prompts[diagramConfig?.diagramType.toLowerCase()] || prompts.excalidraw;
+						console.log('AI1 Result Format:', promptAI1Format);
+
+						// Validate AI1 result
+						if (!ai1Result.result || ai1Result.result.trim() === '') {
+							throw new Error('AI1 không tạo được yêu cầu diagram');
+						}
+
+						// Generate multiple diagrams based on quantity
+						for (let j = 0; j < quantity; j++) {
+							// Check stop flag before each iteration
+							if (shouldStopRef.current) {
+								message.info('Đã dừng quá trình tạo diagram');
+								break;
+							}
+
+							message.info(`🔄 Đang tạo diagram ${j + 1}/${quantity} cho: ${task.title}`);
+
+							// AI2: Tạo diagram code từ kết quả AI1 (để gửi cho Kroki API)
+							message.info(`🤖 AI2: Tạo diagram code ${j + 1}/${quantity}`);
+							const ai2Result = await callAIWithStopCheck(
+								aiGen,
+								promptAI1Format, // Use AI1 output as prompt
+								diagramConfig.kroki.ai2Prompt, // Use ai2Prompt as systemMessage
+								diagramConfig.kroki.ai2Model, // Use ai2Model
+							);
+
+							console.log(`AI2 Result (Diagram Code ${j + 1}):`, ai2Result);
+
+							// Validate AI2 result
+							if (!ai2Result.result || ai2Result.result.trim() === '') {
+								throw new Error(`AI2 không tạo được diagram code cho diagram ${j + 1}`);
+							}
+
+							// Tạo diagram từ code của AI2 (backend mới sẽ gửi trực tiếp cho Kroki)
+							message.info(`🎨 Tạo diagram ${j + 1}/${quantity} từ diagram code`);
+							const diagramResult = await callAIWithStopCheck(
+								aiGenImageDiagram,
+								ai2Result.result, // Use AI2 diagram code as request
+								diagramConfig.kroki.diagramType, // Use configured diagram type
+								diagramConfig.kroki.aiModel, // Use configured model
+							);
+
+							console.log(`Diagram Generation Result ${j + 1}:`, diagramResult);
+
+							// Validate diagram result
+							if (!diagramResult.success || !diagramResult.data?.diagram_url) {
+								throw new Error(`Tạo diagram ${j + 1} thất bại: ${diagramResult.error || 'Không có URL diagram'}`);
+							}
+
+							// AI3: Tạo ghi chú diagram từ nội dung gốc
+							message.info(`🤖 AI3: Tạo ghi chú diagram ${j + 1}/${quantity}`);
+							const ai3Result = await callAIWithStopCheck(
+								aiGen,
+								currentRecord.detail, // Use record detail as prompt
+								diagramConfig.kroki.ai3Prompt, // Use ai3Prompt as systemMessage
+								diagramConfig.kroki.ai3Model, // Use ai3Model
+							);
+
+							console.log(`AI3 Result (Diagram Note ${j + 1}):`, ai3Result);
+
+							// Store results
+							allDiagramResults.push(diagramResult.data.diagram_url);
+							if (ai3Result.result) {
+								allDiagramNotes.push(ai3Result.result);
+							} else {
+								// Fallback note if AI3 fails
+								allDiagramNotes.push(`Diagram được tạo từ: ${task.title}`);
+							}
+
+							// Add delay between diagram generations
+							if (j < quantity - 1) {
+								await new Promise(resolve => setTimeout(resolve, 2000));
+							}
+						}
+					}
+
+				} catch (error) {
+					console.error('Diagram Generation Error:', error);
+
+					// Check if user requested stop
+					if (error.message === 'User requested stop') {
+						message.info('Đã dừng quá trình tạo diagram');
+						break; // Exit the quantity loop
+					}
+
+					// Enhanced error handling with specific error types
+					let errorMessage = 'Tạo diagram gặp lỗi';
+
+					if (error.message.includes('AI1 không tạo được yêu cầu diagram')) {
+						errorMessage = 'AI1 không thể tạo yêu cầu diagram. Vui lòng kiểm tra prompt và model.';
+					} else if (error.message.includes('AI2 không tạo được diagram code')) {
+						errorMessage = 'AI2 không thể tạo diagram code. Vui lòng kiểm tra prompt và model.';
+					} else if (error.message.includes('Tạo diagram') && error.message.includes('thất bại')) {
+						errorMessage = `Backend tạo diagram thất bại: ${error.message}`;
+					} else if (error.message.includes('Network Error') || error.message.includes('timeout')) {
+						errorMessage = 'Lỗi kết nối mạng hoặc timeout. Vui lòng thử lại.';
+					} else if (error.message.includes('API')) {
+						errorMessage = `Lỗi API: ${error.message}`;
+					} else {
+						errorMessage = `${errorMessage}: ${error.message}`;
+					}
+
+					throw new Error(errorMessage);
+				}
+
+				console.log('All Diagram Results:', allDiagramResults);
+				console.log('All Diagram Notes:', allDiagramNotes);
+
+				try {
+					// Check if record already has diagram data of same type (HTML and Excalidraw can coexist)
+					const hasExistingHtmlCode = currentRecord.diagramHtmlCode && currentRecord.diagramHtmlCode.length > 0;
+					const hasExistingExcalidrawJson = currentRecord.diagramExcalidrawJson && currentRecord.diagramExcalidrawJson.length > 0;
+
+					if (diagramMode === 'html' && hasExistingHtmlCode) {
+						message.warning(`⚠️ Record "${task.title}" đã có HTML code diagram. Vui lòng xóa diagram HTML cũ trước khi tạo mới.`);
+						continue;
+					}
+
+					if (diagramMode === 'excalidraw-react' && hasExistingExcalidrawJson) {
+						message.warning(`⚠️ Record "${task.title}" đã có Excalidraw diagram. Vui lòng xóa diagram Excalidraw cũ trước khi tạo mới.`);
+						continue;
+					}
+
+					const updateData = {
+						id: task.recordId,
+					};
+
+					// Only update fields for the current mode, don't overwrite other diagram types
+					if (diagramMode === 'html') {
+						updateData.diagramHtmlCode = allDiagramResults;
+						updateData.diagramNote = allDiagramNotes;
+					} else if (diagramMode === 'excalidraw-react') {
+						updateData.diagramExcalidrawJson = allDiagramResults;
+						updateData.diagramExcalidrawNote = allDiagramNotes;
+						updateData.diagramExcalidrawImageUrls = allDiagramImageUrls;
+					}
+
+					updateData.timeCreateDiagram = createTimestamp();
+
+					// Convert Excalidraw JSON to images and upload if Excalidraw mode
+					if (diagramMode === 'excalidraw-react' && allDiagramResults && Array.isArray(allDiagramResults) && allDiagramResults.length > 0) {
+						try {
+							const imageUrls = await convertExcalidrawToImage(allDiagramResults);
+							if (imageUrls.length > 0) {
+								allDiagramImageUrls = imageUrls; // Update the variable
+								updateData.diagramExcalidrawImageUrls = imageUrls;
+							}
+						} catch (error) {
+							console.error('Error converting Excalidraw to images:', error);
+							// Continue even if image conversion fails
+						}
+					}
+
+					await updateK9(updateData);
+
+					// Update local data
+					const updater = (list) => list.map(item =>
+						item.id === task.recordId
+							? {
+								...item,
+								...(diagramMode === 'html' ? {
+									diagramHtmlCode: allDiagramResults,
+									diagramNote: allDiagramNotes,
+								} : {}),
+								...(diagramMode === 'excalidraw-react' ? {
+									diagramExcalidrawJson: allDiagramResults,
+									diagramExcalidrawNote: allDiagramNotes,
+									diagramExcalidrawImageUrls: allDiagramImageUrls,
+								} : {}),
+							}
+							: item,
+					);
+
+					if (currentTab === 'report') {
+						setAiSummaryData(prev => updater(prev));
+					} else if (currentTab === 'reportDN') {
+						setReportDNData(prev => updater(prev));
+					} else {
+						setAllData(prev => ({ ...prev, [currentTab]: updater(prev[currentTab] || []) }));
+						setFilteredData(prev => ({ ...prev, [currentTab]: updater(prev[currentTab] || []) }));
+						setData(prev => updater(prev));
+					}
+
+				} catch (error) {
+					console.error('Error updating database:', error);
+
+					// Enhanced error handling for database update
+					let dbErrorMessage = `❌ Lỗi khi cập nhật database cho: ${task.title}`;
+
+					if (error.message.includes('Network Error') || error.message.includes('timeout')) {
+						dbErrorMessage = `❌ Lỗi kết nối database cho: ${task.title}. Vui lòng kiểm tra kết nối.`;
+					} else if (error.message.includes('404') || error.message.includes('Not Found')) {
+						dbErrorMessage = `❌ Không tìm thấy record trong database: ${task.title}. Record có thể đã bị xóa.`;
+					} else if (error.message.includes('500') || error.message.includes('Internal Server Error')) {
+						dbErrorMessage = `❌ Lỗi server database cho: ${task.title}. Vui lòng thử lại sau.`;
+					} else if (error.message.includes('validation') || error.message.includes('invalid')) {
+						dbErrorMessage = `❌ Dữ liệu không hợp lệ cho: ${task.title}. Vui lòng kiểm tra format dữ liệu.`;
+					}
+
+					message.error(dbErrorMessage);
+				}
+
+				message.success(`✅ Hoàn thành tạo ${allDiagramResults.length} ${diagramMode === 'html' ? 'HTML code' : 'diagram'} cho: ${task.title}`);
+
+				// Update tracking stats - success
+				setDiagramGenerationStats(prev => ({
+					...prev,
+					success: prev.success + 1,
+				}));
+
+				setDiagramGenerationResults(prev => [...prev, {
+					id: task.id,
+					title: task.title,
+					status: 'success',
+					count: allDiagramResults.length,
+					type: diagramMode,
+				}]);
+
+				// Add delay between tasks
+				if (i < queue.length - 1) {
+					await new Promise(resolve => setTimeout(resolve, 1000));
+				}
+			} catch (error) {
+				console.error('Error processing diagram task:', error);
+
+				// Enhanced error handling for different error scenarios
+				let errorMessage = `❌ Lỗi khi tạo diagram cho: ${task.title}`;
+
+				if (error.message.includes('AI1 không thể tạo yêu cầu diagram')) {
+					errorMessage = `❌ AI1 không thể phân tích nội dung cho: ${task.title}. Vui lòng kiểm tra cấu hình AI1.`;
+				} else if (error.message.includes('AI2 không thể tạo diagram code')) {
+					errorMessage = `❌ AI2 không thể tạo diagram code cho: ${task.title}. Vui lòng kiểm tra cấu hình AI2.`;
+				} else if (error.message.includes('AI4 không tạo được HTML code')) {
+					errorMessage = `❌ AI4 không thể tạo HTML code cho: ${task.title}. Vui lòng kiểm tra cấu hình AI4.`;
+				} else if (error.message.includes('Backend tạo diagram thất bại')) {
+					errorMessage = `❌ Backend không thể tạo diagram cho: ${task.title}. Có thể do lỗi Kroki API hoặc format code không đúng.`;
+				} else if (error.message.includes('Lỗi kết nối mạng')) {
+					errorMessage = `❌ Lỗi kết nối mạng khi tạo ${diagramMode === 'html' ? 'HTML code' : 'diagram'} cho: ${task.title}. Vui lòng kiểm tra kết nối.`;
+				} else if (error.message.includes('Lỗi API')) {
+					errorMessage = `❌ Lỗi API khi tạo ${diagramMode === 'html' ? 'HTML code' : 'diagram'} cho: ${task.title}. Vui lòng thử lại sau.`;
+				} else if (error.message.includes('timeout')) {
+					errorMessage = `❌ Timeout khi tạo ${diagramMode === 'html' ? 'HTML code' : 'diagram'} cho: ${task.title}. Quá trình mất quá nhiều thời gian.`;
+				} else if (error.message.includes('Không có nội dung detail')) {
+					errorMessage = `❌ Record "${task.title}" không có nội dung detail để tạo ${diagramMode === 'html' ? 'HTML code' : 'diagram'}.`;
+				} else if (error.message.includes('Cấu hình diagram chưa được thiết lập')) {
+					errorMessage = `❌ Cấu hình diagram chưa đầy đủ cho: ${task.title}. Vui lòng cấu hình lại.`;
+				}
+
+				message.error(errorMessage);
+
+				// Update tracking stats - failed
+				setDiagramGenerationStats(prev => ({
+					...prev,
+					failed: prev.failed + 1,
+				}));
+				setDiagramGenerationResults(prev => [...prev, {
+					id: task.id,
+					title: task.title,
+					status: 'failed',
+					error: error.message,
+					type: task.mode || 'kroki',
+				}]);
+
+				// Add delay before next task even on error
+				if (i < queue.length - 1) {
+					await new Promise(resolve => setTimeout(resolve, 1000));
+				}
+			}
+		}
+
+		setCurrentDiagramProcessing(null);
+		setProcessingDiagramQueue(false);
+	};
+
+	const processSummaryDetailQueue = async () => {
+		if (summaryDetailQueue.length === 0 || processingSummaryDetailQueue) {
+			return;
+		}
+
+		setProcessingSummaryDetailQueue(true);
+
+		const queue = [...summaryDetailQueue];
+
+		for (let i = 0; i < queue.length; i++) {
+			const task = queue[i];
+			setCurrentSummaryDetailProcessing(task);
+
+			// Remove from queue immediately
+			setSummaryDetailQueue(prev => prev.filter(item => item.id !== task.id));
+
+			try {
+				// Get the current record
+				const currentRecord = await getK9ById(task.recordId);
+
+				if (!currentRecord) {
+					console.error(`Record ${task.recordId} not found`);
+					continue;
+				}
+
+				if (!currentRecord.detail) {
+					message.warning(`"${task.title}" không có detail để tóm tắt!`);
+					continue;
+				}
+
+				if (currentRecord.summaryDetail) {
+					message.info(`"${task.title}" đã có summaryDetail!`);
+					continue;
+				}
+
+				console.log(`Creating summaryDetail for "${currentRecord.title}"`);
+
+				const summaryResult = await aiGen(
+					currentRecord.detail,
+					summaryDetailConfig.aiPrompt,
+					summaryDetailConfig.aiModel,
+				);
+
+				if (summaryResult && summaryResult.result) {
+					const updatedRecord = {
+						...currentRecord,
+						summaryDetail: summaryResult.result,
+					};
+
+					await updateK9(updatedRecord);
+
+					// Update local state
+					const updater = (list) => list.map(item => item.id === task.recordId ? updatedRecord : item);
+					setAllData(prev => ({ ...prev, [currentTab]: updater(prev[currentTab] || []) }));
+					setFilteredData(prev => ({ ...prev, [currentTab]: updater(prev[currentTab] || []) }));
+					setData(prev => updater(prev));
+					setTableKey(prev => prev + 1);
+
+					message.success(`✅ Tạo summaryDetail thành công cho "${task.title}"!`);
+				} else {
+					message.error(`❌ Không thể tạo summaryDetail cho "${task.title}"!`);
+				}
+			} catch (error) {
+				console.error(`Error processing summaryDetail for ${task.title}:`, error);
+				message.error(`❌ Lỗi khi tạo summaryDetail cho "${task.title}": ${error.message}`);
+			} finally {
+				setCurrentSummaryDetailProcessing(null);
+			}
+
+			// Delay between requests to avoid rate limiting
+			if (i < queue.length - 1) {
+				await new Promise(resolve => setTimeout(resolve, 1000));
+			}
+		}
+
+		setProcessingSummaryDetailQueue(false);
+	};
+
+	// Xử lý queue tạo Case Training từ Learning Block
+	const processCaseFromLearningBlockQueue = async () => {
+		if (caseFromLearningBlockQueue.length === 0 || processingCaseFromLearningBlockQueue) {
+			return;
+		}
+
+		setProcessingCaseFromLearningBlockQueue(true);
+
+		const queue = [...caseFromLearningBlockQueue];
+
+		// Khởi tạo thống kê & mở modal tiến trình
+		// Tính tổng số case dự kiến = tổng quantity của tất cả các task
+		const totalCases = queue.reduce((sum, task) => {
+			const quantity = task.quantity && task.quantity > 0 ? task.quantity : 1;
+			return sum + quantity;
+		}, 0);
+
+		setCaseFromLearningStats({
+			total: totalCases,
+			success: 0,
+			failed: 0,
+		});
+		setCaseFromLearningResults([]);
+		setCaseFromLearningProgressModalVisible(true);
+
+		for (let i = 0; i < queue.length; i++) {
+			const task = queue[i];
+			setCurrentCaseFromLearningBlockProcessing(task);
+
+			// Bỏ khỏi queue ngay khi bắt đầu xử lý
+			setCaseFromLearningBlockQueue(prev => prev.filter(item => item.id !== task.id));
+
+			try {
+				const currentRecord = await getK9ById(task.recordId);
+				if (!currentRecord) {
+					message.error(`Không tìm thấy Learning Block với ID: ${task.recordId}`);
+					continue;
+				}
+
+				const promptConfig = task.promptConfig;
+				if (!promptConfig || !promptConfig.aiPrompt || !promptConfig.aiModel) {
+					message.error('Cấu hình Prompt tạo Case Training từ Learning Block chưa đầy đủ (thiếu model hoặc prompt)!');
+					continue;
+				}
+
+				const countQuiz = Number(promptConfig.countQuiz) || 0;
+				const countEssay = Number(promptConfig.countEssay) || 0;
+
+				const quantity = task.quantity && task.quantity > 0 ? task.quantity : 1;
+
+				for (let j = 0; j < quantity; j++) {
+					message.info(`🤖 Đang tạo Case Training ${j + 1}/${quantity} từ Learning Block: ${task.title} (Cài đặt: ${promptConfig.name || 'N/A'})`);
+
+					const promptData = {
+						ID: currentRecord.id || '',
+						CID: currentRecord.cid || '',
+						Title: currentRecord.title || '',
+						Summary: currentRecord.summary || '',
+						Detail: currentRecord.detail || '',
+						Tag4: currentRecord.tag4 || [],
+						Category: currentRecord.category || '',
+						Source: currentRecord.source || '',
+					};
+
+					const userContent = JSON.stringify(promptData, null, 2);
+
+					// Ghép thêm yêu cầu số lượng câu hỏi vào system prompt (nếu có cấu hình)
+					let systemMessage = promptConfig.aiPrompt;
+					const extraConstraints = [];
+					if (countQuiz > 0) {
+						extraConstraints.push(`Mỗi case phải có CHÍNH XÁC ${countQuiz} câu hỏi trắc nghiệm trong field questionContent.questionQuiz.`);
+					} else {
+						extraConstraints.push(`Mỗi case sẽ không cần tạo câu hỏi trắc nghiệm trong field questionContent.questionQuiz.`);
+					}
+					if (countEssay > 0) {
+						extraConstraints.push(`Mỗi case phải có CHÍNH XÁC ${countEssay} câu hỏi tự luận trong field questionContent.questionEssay.`);
+					} else {
+						extraConstraints.push(`Mỗi case sẽ không cần tạo câu hỏi tự luận trong field questionContent.questionEssay.`);
+					}
+					if (extraConstraints.length > 0) {
+						systemMessage = `${systemMessage}\n\nYÊU CẦU SỐ LƯỢNG CÂU HỎI (RẤT QUAN TRỌNG):\n- ${extraConstraints.join('\n- ')}`;
+					}
+
+					const aiResponse = await callAIWithStopCheck(
+						aiGen,
+						userContent,
+						systemMessage,
+						promptConfig.aiModel,
+					);
+
+					const rawResult = aiResponse?.result || aiResponse?.answer || aiResponse?.content || aiResponse;
+
+					let generatedCases = [];
+					try {
+						const parsed = JSON.parse(rawResult);
+						if (Array.isArray(parsed)) {
+							generatedCases = parsed;
+						} else if (parsed) {
+							generatedCases = [parsed];
+						}
+					} catch (e) {
+						message.error(`AI không trả về JSON hợp lệ khi tạo Case Training cho "${task.title}": ${e.message}`);
+						// Ghi nhận thất bại ở mức Learning Block
+						setCaseFromLearningStats(prev => ({
+							...prev,
+							failed: prev.failed + 1,
+						}));
+						setCaseFromLearningResults(prev => [
+							...prev,
+							{
+								id: `lb_${task.recordId}_${j}`,
+								recordId: task.recordId,
+								title: task.title,
+								status: 'failed',
+								error: e.message || 'JSON parse error',
+							},
+						]);
+						continue;
+					}
+
+					for (const caseItem of generatedCases) {
+						const payload = {
+							type: 'caseTraining',
+							title: caseItem.title || currentRecord.title || 'Case Training mới',
+							summary: caseItem.summary || currentRecord.summary || '',
+							detail: caseItem.detail || currentRecord.detail || '',
+							source: caseItem.source || currentRecord.source || '',
+
+							tag4: caseItem.tag4 || currentRecord.tag4 || null,
+							cid: caseItem.cid || currentRecord.cid || null,
+							questionContent: caseItem.questionContent || null,
+							status: caseItem.status || 'published',
+						};
+
+						console.log('payload', payload);
+
+						try {
+							const created = await createK9(payload);
+							const createdRecord = created?.data || created;
+
+							// Cập nhật vào allData/filteredData cho caseTraining
+							setAllData(prev => ({
+								...prev,
+								caseTraining: [createdRecord, ...(prev.caseTraining || [])],
+							}));
+							setFilteredData(prev => ({
+								...prev,
+								caseTraining: [createdRecord, ...(prev.caseTraining || [])],
+							}));
+
+							// Cập nhật thống kê & log
+							setCaseFromLearningStats(prev => ({
+								...prev,
+								success: prev.success + 1,
+							}));
+							setCaseFromLearningResults(prev => [
+								{
+									id: createdRecord.id,
+									recordId: createdRecord.id,
+									title: createdRecord.title,
+									status: 'success',
+									error: null,
+								},
+								...prev,
+
+							]);
+
+							message.success(`✅ Đã tạo Case Training mới (ID: ${createdRecord.id}) từ "${task.title}"`);
+						} catch (e) {
+							console.error('Error creating Case Training from Learning Block:', e);
+							message.error(`Lỗi tạo Case Training từ "${task.title}": ${e.message}`);
+
+							setCaseFromLearningStats(prev => ({
+								...prev,
+								failed: prev.failed + 1,
+							}));
+							setCaseFromLearningResults(prev => [
+								...prev,
+								{
+									id: `fail_${task.recordId}_${Date.now()}`,
+									recordId: task.recordId,
+									title: task.title,
+									status: 'failed',
+									error: e.message || 'Error creating record',
+								},
+							]);
+						}
+					}
+				}
+			} catch (error) {
+				console.error('Error in Case-from-LearningBlock queue:', error);
+				message.error(`Lỗi khi xử lý hàng đợi tạo Case Training: ${error.message}`);
+			} finally {
+				setCurrentCaseFromLearningBlockProcessing(null);
+			}
+
+			// Delay giữa các task để tránh rate limit
+			if (i < queue.length - 1) {
+				await new Promise(resolve => setTimeout(resolve, 1000));
+			}
+		}
+
+		setProcessingCaseFromLearningBlockQueue(false);
+	};
+
+
+	// AI Summary handler
+
+	const handleShowAISummary = async () => {
+
+		setAiSummaryLoading(true);
+
+		setAiSummaryModalVisible(true);
+
+		try {
+
+			const data = await getAllAISummaries();
+
+			// Lọc bỏ những bản ghi có info.sheetName = 'CompanySummary'
+
+			const filteredData = filterCompanySummaryRecords(data);
+
+			setAiSummaryData(filteredData);
+
+		} catch (error) {
+
+			console.error('Lỗi khi lấy danh sách AI summaries:', error);
+
+			message.error('Lỗi khi tải dữ liệu AI Summary: ' + error.message);
+
+		} finally {
+
+			setAiSummaryLoading(false);
+
+		}
+
+	};
+
+
+	const handleEditAISummary = (record) => {
+
+		setSelectedAISummary(record);
+
+		// Parse the info field to get title and URLReport
+
+		let title = '';
+
+		let urlReport = '';
+
+		if (record.info) {
+
+			try {
+
+				const parsed = typeof record.info === 'string' ? JSON.parse(record.info) : record.info;
+
+				title = parsed.title || '';
+
+				urlReport = parsed.URLReport || '';
+
+			} catch (e) {
+
+				console.error('Error parsing info field:', e);
+
+			}
+
+		}
+
+
+		// Parse tables field
+
+		let tablesData = [];
+
+		if (record.tables) {
+
+			try {
+
+				tablesData = typeof record.tables === 'string' ? JSON.parse(record.tables) : record.tables;
+
+				if (!Array.isArray(tablesData)) {
+
+					tablesData = [];
+
+				}
+
+			} catch (e) {
+
+				console.error('Error parsing tables field:', e);
+
+				tablesData = [];
+
+			}
+
+		}
+
+		setTables(tablesData);
+
+
+		// Load existing files for AI Summary
+
+		if (record.fileUrls && Array.isArray(record.fileUrls)) {
+
+			setUploadedFileUrls(record.fileUrls);
+
+			// Create file list for display
+
+			const fileList = record.fileUrls.map((url, index) => {
+
+				const fileName = url.split('/').pop() || `file-${index + 1}`;
+
+				return {
+
+					uid: `-${index}`,
+
+					name: fileName,
+
+					status: 'done',
+
+					url: url,
+
+				};
+
+			});
 
-    setCurrentImageProcessing(null);
+			setSelectedFiles(fileList);
 
-    setProcessingImageQueue(false);
+		} else {
 
-  };
+			setUploadedFileUrls([]);
 
+			setSelectedFiles([]);
 
-  const processDiagramQueue = async () => {
-    if (diagramGenerationQueue.length === 0 || processingDiagramQueue) {
-      return;
-    }
+		}
 
-    setProcessingDiagramQueue(true);
 
-    // Initialize tracking stats
-    const queue = [...diagramGenerationQueue];
-    const totalTasks = queue.length;
-    const taskType = queue[0]?.mode || 'kroki'; // Get type from first task
+		aiSummaryEditForm.setFieldsValue({
 
-    setDiagramGenerationStats({
-      total: totalTasks,
-      success: 0,
-      failed: 0,
-      type: taskType
-    });
-    setDiagramGenerationResults([]);
+			title: title,
 
-    for (let i = 0; i < queue.length; i++) {
-      // Check if user wants to stop
-      if (shouldStopRef.current) {
-        message.info('Đã dừng quá trình tạo diagram');
-        setProcessingDiagramQueue(false);
-        setCurrentDiagramProcessing(null);
-        setDiagramGenerationQueue([]);
+			urlReport: urlReport,
 
+			summary1: record.summary1 || '',
 
-        break;
-      }
+			summary2: record.summary2 || '',
 
-      const task = queue[i];
-      setCurrentDiagramProcessing(task);
+			category: record.category || 'Doanh nghiệp',
 
-      // Remove from queue immediately
-      setDiagramGenerationQueue(prev => prev.filter(item => item.id !== task.id));
+			status: record.status || 'draft',
 
-      try {
-        // Get the current record
-        const currentRecord = await getK9ById(task.recordId);
-        console.log('currentRecord for diagram', currentRecord);
+		});
 
-        if (!currentRecord) {
-          message.error(`Không tìm thấy record với ID: ${task.recordId}`);
-          continue;
-        }
+		setAISummaryEditModalVisible(true);
 
-        // Check if record has detail content
-        if (!currentRecord.detail || currentRecord.detail.trim() === '') {
-          message.error(`Record "${task.title}" không có nội dung detail để tạo diagram`);
-          continue;
-        }
+	};
 
-        // For excalidraw-react mode, use summaryDetail if available, otherwise use detail
-        // (No auto-creation of summaryDetail - user must create it manually first)
 
-        // Check if diagram configuration is properly loaded
-        const diagramMode = task.mode || 'kroki'; // Get mode from task
-        const promptConfig = task.promptConfig; // Get prompt config from task
+	const handleUpdateAISummary = async () => {
 
-        // Validate prompt config based on mode
-        if (diagramMode === 'excalidraw-react') {
-          if (!promptConfig || !promptConfig.aiModel || !promptConfig.aiPrompt) {
-            message.error(`Cấu hình Excalidraw React chưa được thiết lập đầy đủ. Vui lòng chọn cài đặt prompt trước khi tạo diagram.`);
-            continue;
-          }
-        } else if (diagramMode === 'html') {
-          if (!promptConfig || !promptConfig.ai4Model || !promptConfig.ai4Prompt) {
-            message.error(`Cấu hình HTML chưa được thiết lập đầy đủ. Vui lòng chọn cài đặt prompt trước khi tạo HTML code.`);
-            continue;
-          }
-        } else {
-          // Kroki mode - still use diagramConfig for now
-          if (!diagramConfig.kroki?.diagramType || !diagramConfig.kroki?.aiModel ||
-              !diagramConfig.kroki?.ai1Model || !diagramConfig.kroki?.ai1Prompt ||
-              !diagramConfig.kroki?.ai2Model || !diagramConfig.kroki?.ai2Prompt ||
-              !diagramConfig.kroki?.ai3Model || !diagramConfig.kroki?.ai3Prompt) {
-            message.error(`Cấu hình diagram chưa được thiết lập đầy đủ. Vui lòng cấu hình AI1, AI2, AI3 và diagram type trước khi tạo diagram.`);
-            continue;
-          }
-        }
+		try {
 
-        // Get quantity from prompt config or diagram config
-        const quantity = diagramMode === 'excalidraw-react'
-            ? (promptConfig?.quantity || 1)
-            : diagramMode === 'kroki'
-                ? (diagramConfig.kroki?.quantity || 1)
-                : 1;
-        const modeText = diagramMode === 'html' ? 'HTML code' : diagramMode === 'excalidraw-react' ? 'Excalidraw React diagram' : 'diagram';
-        message.info(`🔄 Đang tạo ${quantity} ${modeText} cho: ${task.title}${diagramMode === 'kroki' ? ` - Loại: ${diagramConfig.kroki?.diagramType}` : ''}`);
+			const values = await aiSummaryEditForm.validateFields();
 
-        // Arrays to store multiple diagram results
-        const allDiagramResults = [];
-        const allDiagramNotes = [];
-        let allDiagramImageUrls = []; // Initialize for Excalidraw image URLs
 
-        try {
-          if (diagramMode === 'html') {
-            // Check stop flag before starting HTML mode
-            if (shouldStopRef.current) {
-              message.info('Đã dừng quá trình tạo diagram');
-              break;
-            }
+			// Get the existing info structure
 
-            // HTML Mode: Single AI step
-            for (let j = 0; j < quantity; j++) {
-              // Check stop flag before each iteration
-              if (shouldStopRef.current) {
-                message.info('Đã dừng quá trình tạo diagram');
-                break;
-              }
+			let existingInfo = {};
 
-              message.info(`🔄 Đang tạo HTML code ${j + 1}/${quantity} cho: ${task.title}`);
+			if (selectedAISummary.info) {
 
-              // AI4: Tạo HTML code từ nội dung
-              message.info(`🤖 AI4: Tạo HTML code ${j + 1}/${quantity} (Cài đặt: ${promptConfig?.name || 'N/A'})`);
-              const aiResult = await callAIWithStopCheck(
-                  aiGen,
-                  currentRecord.detail, // Use record detail as prompt
-                  promptConfig.ai4Prompt, // Use ai4Prompt from selected prompt
-                  promptConfig.ai4Model // Use ai4Model from selected prompt
-              );
+				try {
 
-              console.log(`AI4 Result (HTML Code ${j + 1}):`, aiResult);
+					existingInfo = typeof selectedAISummary.info === 'string'
 
-              // Validate AI result
-              if (!aiResult.result || aiResult.result.trim() === '') {
-                throw new Error(`AI4 không tạo được HTML code cho diagram ${j + 1}`);
-              }
+						? JSON.parse(selectedAISummary.info)
 
-              // Store HTML code directly
-              allDiagramResults.push(aiResult.result);
+						: selectedAISummary.info;
 
-              // Add delay between generations
-              if (j < quantity - 1) {
-                await new Promise(resolve => setTimeout(resolve, 2000));
-              }
-            }
-          } else if (diagramMode === 'excalidraw-react') {
-            // Check stop flag before starting Excalidraw React mode
-            if (shouldStopRef.current) {
-              message.info('Đã dừng quá trình tạo diagram');
-              break;
-            }
+				} catch (e) {
 
-            // Excalidraw React Mode: Generate Excalidraw JSON
-            for (let j = 0; j < quantity; j++) {
-              // Check stop flag before each iteration
-              if (shouldStopRef.current) {
-                message.info('Đã dừng quá trình tạo diagram');
-                break;
-              }
+					console.error('Error parsing existing info:', e);
 
-              message.info(`🔄 Đang tạo Excalidraw React diagram ${j + 1}/${quantity} cho: ${task.title}`);
+					existingInfo = {};
 
-              // AI: Tạo Excalidraw JSON
-              // Use summaryDetail if available, otherwise use detail
-              const contentForDiagram = currentRecord.summaryDetail || currentRecord.detail;
-              if (!contentForDiagram || contentForDiagram.trim() === '') {
-                throw new Error('Không có summaryDetail hoặc detail để tạo diagram');
-              }
+				}
 
-              const contentSource = currentRecord.summaryDetail ? 'summaryDetail' : 'detail';
-              message.info(`🤖 AI: Tạo Excalidraw JSON ${j + 1}/${quantity} (từ ${contentSource}, Cài đặt: ${promptConfig?.name || 'N/A'})`);
-
-              // Tạo prompt với tất cả thông tin (giống AISummaryDetailGeneration)
-              const promptData = {
-                ID: currentRecord.id || '',
-                CID: currentRecord.cid || '',
-                Title: currentRecord.title || '',
-                Summary: currentRecord.summary || '',
-                Details: currentRecord.detail || '',
-                SummaryDetail: currentRecord.summaryDetail || ''
-              };
+			}
 
-              // Chuyển thành JSON string để gửi cho AI
-              const prompt = JSON.stringify(promptData, null, 2);
-
-              const aiResult = await callAIWithStopCheck(
-                  aiGen,
-                  prompt,
-                  promptConfig.aiPrompt,  // System message from selected prompt
-                  promptConfig.aiModel   // Model from selected prompt
-              );
-
-              console.log(`AI Result (Excalidraw JSON ${j + 1}):`, aiResult);
-
-              // Validate and parse JSON
-              let excalidrawJson;
-              try {
-                // Try to parse as JSON directly
-                excalidrawJson = JSON.parse(aiResult.result);
-              } catch (parseError) {
-                // Try to extract JSON from markdown code block
-                excalidrawJson = extractJsonFromMarkdown(aiResult.result);
-                if (!excalidrawJson) {
-                  throw new Error(`AI không tạo được Excalidraw JSON hợp lệ. Lỗi parse: ${parseError.message}`);
-                }
-              }
-
-              // Validate Excalidraw JSON structure
-              if (!validateExcalidrawJson(excalidrawJson)) {
-                throw new Error(`Excalidraw JSON không hợp lệ cho diagram ${j + 1}`);
-              }
-
-              // Normalize JSON to standard format
-              const normalizedJson = normalizeExcalidrawJson(excalidrawJson);
-
-              // AI: Tạo ghi chú
-              // Use summaryDetail if available, otherwise use detail
-              const contentForNote = currentRecord.summaryDetail || currentRecord.detail;
-              const noteSource = currentRecord.summaryDetail ? 'summaryDetail' : 'detail';
-              message.info(`📝 AI: Tạo ghi chú ${j + 1}/${quantity} (từ ${noteSource})`);
-
-              // Use note prompt from selected config if available, otherwise use aiModel
-              const notePrompt = promptConfig?.notePrompt || 'Tạo ghi chú ngắn gọn (1-2 câu) mô tả diagram này dựa trên nội dung bài viết.';
-              const noteModel = promptConfig?.noteModel || promptConfig?.aiModel;
-
-              if (noteModel) {
-                const noteResult = await callAIWithStopCheck(
-                    aiGen,
-                    contentForNote,
-                    notePrompt,
-                    noteModel
-                );
-
-                console.log(`Note Result (Diagram Note ${j + 1}):`, noteResult);
-
-                // Store results
-                allDiagramResults.push(JSON.stringify(normalizedJson));
-                allDiagramNotes.push(noteResult.result || `Diagram ${j + 1} từ: ${task.title}`);
-              } else {
-                // Store results without note
-                allDiagramResults.push(JSON.stringify(normalizedJson));
-                allDiagramNotes.push(`Diagram ${j + 1} từ: ${task.title}`);
-              }
-
-              // Add delay between generations
-              if (j < quantity - 1) {
-                await new Promise(resolve => setTimeout(resolve, 2000));
-              }
-            }
-          } else {
-            // Check stop flag before starting Kroki mode
-            if (shouldStopRef.current) {
-              message.info('Đã dừng quá trình tạo diagram');
-              break;
-            }
-
-            // Kroki Mode: 3 AI steps
-            // AI1: Phân tích nội dung và tạo yêu cầu diagram
-            message.info(`🤖 AI1: Phân tích nội dung cho: ${task.title}`);
-            const ai1Result = await callAIWithStopCheck(
-                aiGen,
-                `Nội dung cần phân tích: ${currentRecord.detail}\n\nLoại diagram cần tạo: ${diagramConfig.kroki.diagramType}`, // Include diagram type in prompt
-                diagramConfig.kroki.ai1Prompt, // Use ai1Prompt as systemMessage
-                diagramConfig.kroki.ai1Model // Use ai1Model
-            );
-
-            const prompts = {
-              excalidraw: `Hãy xuất JSON hợp lệ cho Excalidraw dựa trên phân tích:\n${ai1Result.result}`,
-              c4: `Tạo yêu cầu chi tiết để AI2 tạo PlantUML C4 diagram:\n${ai1Result.result}`,
-              plantuml: `Tạo yêu cầu chi tiết để AI2 tạo PlantUML UML diagram:\n${ai1Result.result}`,
-              blockdiag: `Tạo yêu cầu chi tiết để AI2 tạo BlockDiag diagram:\n${ai1Result.result}`
-            };
-
-            const promptAI1Format = prompts[diagramConfig?.diagramType.toLowerCase()] || prompts.excalidraw;
-            console.log('AI1 Result Format:', promptAI1Format);
-
-            // Validate AI1 result
-            if (!ai1Result.result || ai1Result.result.trim() === '') {
-              throw new Error('AI1 không tạo được yêu cầu diagram');
-            }
-
-            // Generate multiple diagrams based on quantity
-            for (let j = 0; j < quantity; j++) {
-              // Check stop flag before each iteration
-              if (shouldStopRef.current) {
-                message.info('Đã dừng quá trình tạo diagram');
-                break;
-              }
-
-              message.info(`🔄 Đang tạo diagram ${j + 1}/${quantity} cho: ${task.title}`);
-
-              // AI2: Tạo diagram code từ kết quả AI1 (để gửi cho Kroki API)
-              message.info(`🤖 AI2: Tạo diagram code ${j + 1}/${quantity}`);
-              const ai2Result = await callAIWithStopCheck(
-                  aiGen,
-                  promptAI1Format, // Use AI1 output as prompt
-                  diagramConfig.kroki.ai2Prompt, // Use ai2Prompt as systemMessage
-                  diagramConfig.kroki.ai2Model // Use ai2Model
-              );
-
-              console.log(`AI2 Result (Diagram Code ${j + 1}):`, ai2Result);
-
-              // Validate AI2 result
-              if (!ai2Result.result || ai2Result.result.trim() === '') {
-                throw new Error(`AI2 không tạo được diagram code cho diagram ${j + 1}`);
-              }
-
-              // Tạo diagram từ code của AI2 (backend mới sẽ gửi trực tiếp cho Kroki)
-              message.info(`🎨 Tạo diagram ${j + 1}/${quantity} từ diagram code`);
-              const diagramResult = await callAIWithStopCheck(
-                  aiGenImageDiagram,
-                  ai2Result.result, // Use AI2 diagram code as request
-                  diagramConfig.kroki.diagramType, // Use configured diagram type
-                  diagramConfig.kroki.aiModel // Use configured model
-              );
-
-              console.log(`Diagram Generation Result ${j + 1}:`, diagramResult);
-
-              // Validate diagram result
-              if (!diagramResult.success || !diagramResult.data?.diagram_url) {
-                throw new Error(`Tạo diagram ${j + 1} thất bại: ${diagramResult.error || 'Không có URL diagram'}`);
-              }
-
-              // AI3: Tạo ghi chú diagram từ nội dung gốc
-              message.info(`🤖 AI3: Tạo ghi chú diagram ${j + 1}/${quantity}`);
-              const ai3Result = await callAIWithStopCheck(
-                  aiGen,
-                  currentRecord.detail, // Use record detail as prompt
-                  diagramConfig.kroki.ai3Prompt, // Use ai3Prompt as systemMessage
-                  diagramConfig.kroki.ai3Model // Use ai3Model
-              );
-
-              console.log(`AI3 Result (Diagram Note ${j + 1}):`, ai3Result);
-
-              // Store results
-              allDiagramResults.push(diagramResult.data.diagram_url);
-              if (ai3Result.result) {
-                allDiagramNotes.push(ai3Result.result);
-              } else {
-                // Fallback note if AI3 fails
-                allDiagramNotes.push(`Diagram được tạo từ: ${task.title}`);
-              }
-
-              // Add delay between diagram generations
-              if (j < quantity - 1) {
-                await new Promise(resolve => setTimeout(resolve, 2000));
-              }
-            }
-          }
-
-        } catch (error) {
-          console.error('Diagram Generation Error:', error);
-
-          // Check if user requested stop
-          if (error.message === 'User requested stop') {
-            message.info('Đã dừng quá trình tạo diagram');
-            break; // Exit the quantity loop
-          }
-
-          // Enhanced error handling with specific error types
-          let errorMessage = 'Tạo diagram gặp lỗi';
-
-          if (error.message.includes('AI1 không tạo được yêu cầu diagram')) {
-            errorMessage = 'AI1 không thể tạo yêu cầu diagram. Vui lòng kiểm tra prompt và model.';
-          } else if (error.message.includes('AI2 không tạo được diagram code')) {
-            errorMessage = 'AI2 không thể tạo diagram code. Vui lòng kiểm tra prompt và model.';
-          } else if (error.message.includes('Tạo diagram') && error.message.includes('thất bại')) {
-            errorMessage = `Backend tạo diagram thất bại: ${error.message}`;
-          } else if (error.message.includes('Network Error') || error.message.includes('timeout')) {
-            errorMessage = 'Lỗi kết nối mạng hoặc timeout. Vui lòng thử lại.';
-          } else if (error.message.includes('API')) {
-            errorMessage = `Lỗi API: ${error.message}`;
-          } else {
-            errorMessage = `${errorMessage}: ${error.message}`;
-          }
-
-          throw new Error(errorMessage);
-        }
-
-        console.log('All Diagram Results:', allDiagramResults);
-        console.log('All Diagram Notes:', allDiagramNotes);
-
-        try {
-          // Check if record already has diagram data of same type (HTML and Excalidraw can coexist)
-          const hasExistingHtmlCode = currentRecord.diagramHtmlCode && currentRecord.diagramHtmlCode.length > 0;
-          const hasExistingExcalidrawJson = currentRecord.diagramExcalidrawJson && currentRecord.diagramExcalidrawJson.length > 0;
-
-          if (diagramMode === 'html' && hasExistingHtmlCode) {
-            message.warning(`⚠️ Record "${task.title}" đã có HTML code diagram. Vui lòng xóa diagram HTML cũ trước khi tạo mới.`);
-            continue;
-          }
-
-          if (diagramMode === 'excalidraw-react' && hasExistingExcalidrawJson) {
-            message.warning(`⚠️ Record "${task.title}" đã có Excalidraw diagram. Vui lòng xóa diagram Excalidraw cũ trước khi tạo mới.`);
-            continue;
-          }
-
-          const updateData = {
-            id: task.recordId
-          };
-
-          // Only update fields for the current mode, don't overwrite other diagram types
-          if (diagramMode === 'html') {
-            updateData.diagramHtmlCode = allDiagramResults;
-            updateData.diagramNote = allDiagramNotes;
-          } else if (diagramMode === 'excalidraw-react') {
-            updateData.diagramExcalidrawJson = allDiagramResults;
-            updateData.diagramExcalidrawNote = allDiagramNotes;
-            updateData.diagramExcalidrawImageUrls = allDiagramImageUrls;
-          }
-
-          updateData.timeCreateDiagram = createTimestamp();
-
-          // Convert Excalidraw JSON to images and upload if Excalidraw mode
-          if (diagramMode === 'excalidraw-react' && allDiagramResults && Array.isArray(allDiagramResults) && allDiagramResults.length > 0) {
-            try {
-              const imageUrls = await convertExcalidrawToImage(allDiagramResults);
-              if (imageUrls.length > 0) {
-                allDiagramImageUrls = imageUrls; // Update the variable
-                updateData.diagramExcalidrawImageUrls = imageUrls;
-              }
-            } catch (error) {
-              console.error('Error converting Excalidraw to images:', error);
-              // Continue even if image conversion fails
-            }
-          }
-
-          await updateK9(updateData);
-
-          // Update local data
-          const updater = (list) => list.map(item =>
-              item.id === task.recordId
-                  ? {
-                    ...item,
-                    ...(diagramMode === 'html' ? {
-                      diagramHtmlCode: allDiagramResults,
-                      diagramNote: allDiagramNotes
-                    } : {}),
-                    ...(diagramMode === 'excalidraw-react' ? {
-                      diagramExcalidrawJson: allDiagramResults,
-                      diagramExcalidrawNote: allDiagramNotes,
-                      diagramExcalidrawImageUrls: allDiagramImageUrls
-                    } : {})
-                  }
-                  : item
-          );
-
-          if (currentTab === 'report') {
-            setAiSummaryData(prev => updater(prev));
-          } else if (currentTab === 'reportDN') {
-            setReportDNData(prev => updater(prev));
-          } else {
-            setAllData(prev => ({ ...prev, [currentTab]: updater(prev[currentTab] || []) }));
-            setFilteredData(prev => ({ ...prev, [currentTab]: updater(prev[currentTab] || []) }));
-            setData(prev => updater(prev));
-          }
-
-        } catch (error) {
-          console.error('Error updating database:', error);
-
-          // Enhanced error handling for database update
-          let dbErrorMessage = `❌ Lỗi khi cập nhật database cho: ${task.title}`;
-
-          if (error.message.includes('Network Error') || error.message.includes('timeout')) {
-            dbErrorMessage = `❌ Lỗi kết nối database cho: ${task.title}. Vui lòng kiểm tra kết nối.`;
-          } else if (error.message.includes('404') || error.message.includes('Not Found')) {
-            dbErrorMessage = `❌ Không tìm thấy record trong database: ${task.title}. Record có thể đã bị xóa.`;
-          } else if (error.message.includes('500') || error.message.includes('Internal Server Error')) {
-            dbErrorMessage = `❌ Lỗi server database cho: ${task.title}. Vui lòng thử lại sau.`;
-          } else if (error.message.includes('validation') || error.message.includes('invalid')) {
-            dbErrorMessage = `❌ Dữ liệu không hợp lệ cho: ${task.title}. Vui lòng kiểm tra format dữ liệu.`;
-          }
-
-          message.error(dbErrorMessage);
-        }
-
-        message.success(`✅ Hoàn thành tạo ${allDiagramResults.length} ${diagramMode === 'html' ? 'HTML code' : 'diagram'} cho: ${task.title}`);
-
-        // Update tracking stats - success
-        setDiagramGenerationStats(prev => ({
-          ...prev,
-          success: prev.success + 1
-        }));
-
-        setDiagramGenerationResults(prev => [...prev, {
-          id: task.id,
-          title: task.title,
-          status: 'success',
-          count: allDiagramResults.length,
-          type: diagramMode
-        }]);
-
-        // Add delay between tasks
-        if (i < queue.length - 1) {
-          await new Promise(resolve => setTimeout(resolve, 1000));
-        }
-      } catch (error) {
-        console.error('Error processing diagram task:', error);
-
-        // Enhanced error handling for different error scenarios
-        let errorMessage = `❌ Lỗi khi tạo diagram cho: ${task.title}`;
-
-        if (error.message.includes('AI1 không thể tạo yêu cầu diagram')) {
-          errorMessage = `❌ AI1 không thể phân tích nội dung cho: ${task.title}. Vui lòng kiểm tra cấu hình AI1.`;
-        } else if (error.message.includes('AI2 không thể tạo diagram code')) {
-          errorMessage = `❌ AI2 không thể tạo diagram code cho: ${task.title}. Vui lòng kiểm tra cấu hình AI2.`;
-        } else if (error.message.includes('AI4 không tạo được HTML code')) {
-          errorMessage = `❌ AI4 không thể tạo HTML code cho: ${task.title}. Vui lòng kiểm tra cấu hình AI4.`;
-        } else if (error.message.includes('Backend tạo diagram thất bại')) {
-          errorMessage = `❌ Backend không thể tạo diagram cho: ${task.title}. Có thể do lỗi Kroki API hoặc format code không đúng.`;
-        } else if (error.message.includes('Lỗi kết nối mạng')) {
-          errorMessage = `❌ Lỗi kết nối mạng khi tạo ${diagramMode === 'html' ? 'HTML code' : 'diagram'} cho: ${task.title}. Vui lòng kiểm tra kết nối.`;
-        } else if (error.message.includes('Lỗi API')) {
-          errorMessage = `❌ Lỗi API khi tạo ${diagramMode === 'html' ? 'HTML code' : 'diagram'} cho: ${task.title}. Vui lòng thử lại sau.`;
-        } else if (error.message.includes('timeout')) {
-          errorMessage = `❌ Timeout khi tạo ${diagramMode === 'html' ? 'HTML code' : 'diagram'} cho: ${task.title}. Quá trình mất quá nhiều thời gian.`;
-        } else if (error.message.includes('Không có nội dung detail')) {
-          errorMessage = `❌ Record "${task.title}" không có nội dung detail để tạo ${diagramMode === 'html' ? 'HTML code' : 'diagram'}.`;
-        } else if (error.message.includes('Cấu hình diagram chưa được thiết lập')) {
-          errorMessage = `❌ Cấu hình diagram chưa đầy đủ cho: ${task.title}. Vui lòng cấu hình lại.`;
-        }
-
-        message.error(errorMessage);
-
-        // Update tracking stats - failed
-        setDiagramGenerationStats(prev => ({
-          ...prev,
-          failed: prev.failed + 1
-        }));
-        setDiagramGenerationResults(prev => [...prev, {
-          id: task.id,
-          title: task.title,
-          status: 'failed',
-          error: error.message,
-          type: task.mode || 'kroki'
-        }]);
-
-        // Add delay before next task even on error
-        if (i < queue.length - 1) {
-          await new Promise(resolve => setTimeout(resolve, 1000));
-        }
-      }
-    }
-
-    setCurrentDiagramProcessing(null);
-    setProcessingDiagramQueue(false);
-  };
-
-  const processSummaryDetailQueue = async () => {
-    if (summaryDetailQueue.length === 0 || processingSummaryDetailQueue) {
-      return;
-    }
-
-    setProcessingSummaryDetailQueue(true);
-
-    const queue = [...summaryDetailQueue];
-
-    for (let i = 0; i < queue.length; i++) {
-      const task = queue[i];
-      setCurrentSummaryDetailProcessing(task);
-
-      // Remove from queue immediately
-      setSummaryDetailQueue(prev => prev.filter(item => item.id !== task.id));
-
-      try {
-        // Get the current record
-        const currentRecord = await getK9ById(task.recordId);
-
-        if (!currentRecord) {
-          console.error(`Record ${task.recordId} not found`);
-          continue;
-        }
-
-        if (!currentRecord.detail) {
-          message.warning(`"${task.title}" không có detail để tóm tắt!`);
-          continue;
-        }
-
-        if (currentRecord.summaryDetail) {
-          message.info(`"${task.title}" đã có summaryDetail!`);
-          continue;
-        }
-
-        console.log(`Creating summaryDetail for "${currentRecord.title}"`);
-
-        const summaryResult = await aiGen(
-            currentRecord.detail,
-            summaryDetailConfig.aiPrompt,
-            summaryDetailConfig.aiModel
-        );
-
-        if (summaryResult && summaryResult.result) {
-          const updatedRecord = {
-            ...currentRecord,
-            summaryDetail: summaryResult.result
-          };
-
-          await updateK9(updatedRecord);
-
-          // Update local state
-          const updater = (list) => list.map(item => item.id === task.recordId ? updatedRecord : item);
-          setAllData(prev => ({ ...prev, [currentTab]: updater(prev[currentTab] || []) }));
-          setFilteredData(prev => ({ ...prev, [currentTab]: updater(prev[currentTab] || []) }));
-          setData(prev => updater(prev));
-          setTableKey(prev => prev + 1);
-
-          message.success(`✅ Tạo summaryDetail thành công cho "${task.title}"!`);
-        } else {
-          message.error(`❌ Không thể tạo summaryDetail cho "${task.title}"!`);
-        }
-      } catch (error) {
-        console.error(`Error processing summaryDetail for ${task.title}:`, error);
-        message.error(`❌ Lỗi khi tạo summaryDetail cho "${task.title}": ${error.message}`);
-      } finally {
-        setCurrentSummaryDetailProcessing(null);
-      }
-
-      // Delay between requests to avoid rate limiting
-      if (i < queue.length - 1) {
-        await new Promise(resolve => setTimeout(resolve, 1000));
-      }
-    }
-
-    setProcessingSummaryDetailQueue(false);
-  };
-
-  // Xử lý queue tạo Case Training từ Learning Block
-  const processCaseFromLearningBlockQueue = async () => {
-    if (caseFromLearningBlockQueue.length === 0 || processingCaseFromLearningBlockQueue) {
-      return;
-    }
-
-    setProcessingCaseFromLearningBlockQueue(true);
-
-    const queue = [...caseFromLearningBlockQueue];
-
-    // Khởi tạo thống kê & mở modal tiến trình
-    // Tính tổng số case dự kiến = tổng quantity của tất cả các task
-    const totalCases = queue.reduce((sum, task) => {
-      const quantity = task.quantity && task.quantity > 0 ? task.quantity : 1;
-      return sum + quantity;
-    }, 0);
-
-    setCaseFromLearningStats({
-      total: totalCases,
-      success: 0,
-      failed: 0
-    });
-    setCaseFromLearningResults([]);
-    setCaseFromLearningProgressModalVisible(true);
-
-    for (let i = 0; i < queue.length; i++) {
-      const task = queue[i];
-      setCurrentCaseFromLearningBlockProcessing(task);
-
-      // Bỏ khỏi queue ngay khi bắt đầu xử lý
-      setCaseFromLearningBlockQueue(prev => prev.filter(item => item.id !== task.id));
-
-      try {
-        const currentRecord = await getK9ById(task.recordId);
-        if (!currentRecord) {
-          message.error(`Không tìm thấy Learning Block với ID: ${task.recordId}`);
-          continue;
-        }
-
-        const promptConfig = task.promptConfig;
-        if (!promptConfig || !promptConfig.aiPrompt || !promptConfig.aiModel) {
-          message.error('Cấu hình Prompt tạo Case Training từ Learning Block chưa đầy đủ (thiếu model hoặc prompt)!');
-          continue;
-        }
-
-        const countQuiz = Number(promptConfig.countQuiz) || 0;
-        const countEssay = Number(promptConfig.countEssay) || 0;
-
-        const quantity = task.quantity && task.quantity > 0 ? task.quantity : 1;
-
-        for (let j = 0; j < quantity; j++) {
-          message.info(`🤖 Đang tạo Case Training ${j + 1}/${quantity} từ Learning Block: ${task.title} (Cài đặt: ${promptConfig.name || 'N/A'})`);
-
-          const promptData = {
-            ID: currentRecord.id || '',
-            CID: currentRecord.cid || '',
-            Title: currentRecord.title || '',
-            Summary: currentRecord.summary || '',
-            Detail: currentRecord.detail || '',
-            Tag4: currentRecord.tag4 || [],
-            Category: currentRecord.category || '',
-            Source: currentRecord.source || ''
-          };
-
-          const userContent = JSON.stringify(promptData, null, 2);
-
-          // Ghép thêm yêu cầu số lượng câu hỏi vào system prompt (nếu có cấu hình)
-          let systemMessage = promptConfig.aiPrompt;
-          const extraConstraints = [];
-          if (countQuiz > 0) {
-            extraConstraints.push(`Mỗi case phải có CHÍNH XÁC ${countQuiz} câu hỏi trắc nghiệm trong field questionContent.questionQuiz.`);
-          } else {
-            extraConstraints.push(`Mỗi case sẽ không cần tạo câu hỏi trắc nghiệm trong field questionContent.questionQuiz.`);
-          }
-          if (countEssay > 0) {
-            extraConstraints.push(`Mỗi case phải có CHÍNH XÁC ${countEssay} câu hỏi tự luận trong field questionContent.questionEssay.`);
-          } else {
-            extraConstraints.push(`Mỗi case sẽ không cần tạo câu hỏi tự luận trong field questionContent.questionEssay.`);
-          }
-          if (extraConstraints.length > 0) {
-            systemMessage = `${systemMessage}\n\nYÊU CẦU SỐ LƯỢNG CÂU HỎI (RẤT QUAN TRỌNG):\n- ${extraConstraints.join('\n- ')}`;
-          }
-
-          const aiResponse = await callAIWithStopCheck(
-              aiGen,
-              userContent,
-              systemMessage,
-              promptConfig.aiModel
-          );
-
-          const rawResult = aiResponse?.result || aiResponse?.answer || aiResponse?.content || aiResponse;
-
-          let generatedCases = [];
-          try {
-            const parsed = JSON.parse(rawResult);
-            if (Array.isArray(parsed)) {
-              generatedCases = parsed;
-            } else if (parsed) {
-              generatedCases = [parsed];
-            }
-          } catch (e) {
-            message.error(`AI không trả về JSON hợp lệ khi tạo Case Training cho "${task.title}": ${e.message}`);
-            // Ghi nhận thất bại ở mức Learning Block
-            setCaseFromLearningStats(prev => ({
-              ...prev,
-              failed: prev.failed + 1
-            }));
-            setCaseFromLearningResults(prev => [
-              ...prev,
-              {
-                id: `lb_${task.recordId}_${j}`,
-                recordId: task.recordId,
-                title: task.title,
-                status: 'failed',
-                error: e.message || 'JSON parse error'
-              }
-            ]);
-            continue;
-          }
-
-          for (const caseItem of generatedCases) {
-            const payload = {
-              type: 'caseTraining',
-              title: caseItem.title || currentRecord.title || 'Case Training mới',
-              summary: caseItem.summary || currentRecord.summary || '',
-              detail: caseItem.detail || currentRecord.detail || '',
-              source: caseItem.source || currentRecord.source || '',
-
-              tag4: caseItem.tag4 || currentRecord.tag4 || null,
-              cid: caseItem.cid || currentRecord.cid || null,
-              questionContent: caseItem.questionContent || null,
-              status: caseItem.status || 'published'
-            };
-
-            console.log('payload', payload);
-
-            try {
-              const created = await createK9(payload);
-              const createdRecord = created?.data || created;
-
-              // Cập nhật vào allData/filteredData cho caseTraining
-              setAllData(prev => ({
-                ...prev,
-                caseTraining: [createdRecord , ...(prev.caseTraining || []) ]
-              }));
-              setFilteredData(prev => ({
-                ...prev,
-                caseTraining: [createdRecord , ...(prev.caseTraining || []) ]
-              }));
-
-              // Cập nhật thống kê & log
-              setCaseFromLearningStats(prev => ({
-                ...prev,
-                success: prev.success + 1
-              }));
-              setCaseFromLearningResults(prev => [
-                {
-                  id: createdRecord.id,
-                  recordId: createdRecord.id,
-                  title: createdRecord.title,
-                  status: 'success',
-                  error: null
-                },
-                ...prev,
-
-              ]);
-
-              message.success(`✅ Đã tạo Case Training mới (ID: ${createdRecord.id}) từ "${task.title}"`);
-            } catch (e) {
-              console.error('Error creating Case Training from Learning Block:', e);
-              message.error(`Lỗi tạo Case Training từ "${task.title}": ${e.message}`);
-
-              setCaseFromLearningStats(prev => ({
-                ...prev,
-                failed: prev.failed + 1
-              }));
-              setCaseFromLearningResults(prev => [
-                ...prev,
-                {
-                  id: `fail_${task.recordId}_${Date.now()}`,
-                  recordId: task.recordId,
-                  title: task.title,
-                  status: 'failed',
-                  error: e.message || 'Error creating record'
-                }
-              ]);
-            }
-          }
-        }
-      } catch (error) {
-        console.error('Error in Case-from-LearningBlock queue:', error);
-        message.error(`Lỗi khi xử lý hàng đợi tạo Case Training: ${error.message}`);
-      } finally {
-        setCurrentCaseFromLearningBlockProcessing(null);
-      }
-
-      // Delay giữa các task để tránh rate limit
-      if (i < queue.length - 1) {
-        await new Promise(resolve => setTimeout(resolve, 1000));
-      }
-    }
-
-    setProcessingCaseFromLearningBlockQueue(false);
-  };
-
-
-  // AI Summary handler
-
-  const handleShowAISummary = async () => {
-
-    setAiSummaryLoading(true);
-
-    setAiSummaryModalVisible(true);
-
-    try {
-
-      const data = await getAllAISummaries();
-
-      // Lọc bỏ những bản ghi có info.sheetName = 'CompanySummary'
-
-      const filteredData = filterCompanySummaryRecords(data);
-
-      setAiSummaryData(filteredData);
-
-    } catch (error) {
-
-      console.error('Lỗi khi lấy danh sách AI summaries:', error);
-
-      message.error('Lỗi khi tải dữ liệu AI Summary: ' + error.message);
-
-    } finally {
-
-      setAiSummaryLoading(false);
-
-    }
-
-  };
-
-
-
-  const handleEditAISummary = (record) => {
-
-    setSelectedAISummary(record);
-
-    // Parse the info field to get title and URLReport
-
-    let title = '';
-
-    let urlReport = '';
-
-    if (record.info) {
-
-      try {
-
-        const parsed = typeof record.info === 'string' ? JSON.parse(record.info) : record.info;
-
-        title = parsed.title || '';
-
-        urlReport = parsed.URLReport || '';
-
-      } catch (e) {
-
-        console.error('Error parsing info field:', e);
-
-      }
-
-    }
-
-
-
-    // Parse tables field
-
-    let tablesData = [];
-
-    if (record.tables) {
-
-      try {
-
-        tablesData = typeof record.tables === 'string' ? JSON.parse(record.tables) : record.tables;
 
-        if (!Array.isArray(tablesData)) {
+			// Merge existing info with updated fields
 
-          tablesData = [];
+			const updatedInfo = {
 
-        }
+				...existingInfo,
 
-      } catch (e) {
+				title: values.title,
 
-        console.error('Error parsing tables field:', e);
+				URLReport: values.urlReport,
 
-        tablesData = [];
+			};
 
-      }
 
-    }
+			const updateData = {
 
-    setTables(tablesData);
+				info: updatedInfo,
 
+				summary1: values.summary1,
 
+				summary2: values.summary2,
 
-    // Load existing files for AI Summary
+				category: values.category,
 
-    if (record.fileUrls && Array.isArray(record.fileUrls)) {
+				status: values.status,
 
-      setUploadedFileUrls(record.fileUrls);
+				tables: tables, // Add tables data
 
-      // Create file list for display
+				fileUrls: uploadedFileUrls.length > 0 ? uploadedFileUrls : undefined, // Add fileUrls
 
-      const fileList = record.fileUrls.map((url, index) => {
+			};
 
-        const fileName = url.split('/').pop() || `file-${index + 1}`;
 
-        return {
+			await updateAISummary(selectedAISummary.id, updateData);
 
-          uid: `-${index}`,
+			const tableCount = tables.length;
 
-          name: fileName,
+			message.success(`Cập nhật AI Summary thành công! (${tableCount} bảng thông số)`);
 
-          status: 'done',
 
-          url: url,
+			// Refresh the data
 
-        };
+			const data = await getAllAISummaries();
 
-      });
+			// Lọc bỏ những bản ghi có info.sheetName = 'CompanySummary'
 
-      setSelectedFiles(fileList);
+			const filteredData = filterCompanySummaryRecords(data);
 
-    } else {
+			setAiSummaryData(filteredData);
 
-      setUploadedFileUrls([]);
 
-      setSelectedFiles([]);
+			setAISummaryEditModalVisible(false);
 
-    }
+			setSelectedAISummary(null);
 
+			aiSummaryEditForm.resetFields();
 
+			setTables([]); // Reset tables state
 
-    aiSummaryEditForm.setFieldsValue({
+			setUploadedFileUrls([]); // Reset file URLs
 
-      title: title,
+			setSelectedFiles([]); // Reset selected files
 
-      urlReport: urlReport,
+		} catch (error) {
 
-      summary1: record.summary1 || '',
+			console.error('Lỗi khi cập nhật AI Summary:', error);
 
-      summary2: record.summary2 || '',
+			message.error('Lỗi khi cập nhật AI Summary: ' + error.message);
 
-      category: record.category || 'Doanh nghiệp',
+		}
 
-      status: record.status || 'draft'
+	};
 
-    });
 
-    setAISummaryEditModalVisible(true);
+	const handleDeleteAISummary = async (id) => {
 
-  };
+		try {
 
+			await deleteAISummary(id);
 
+			message.success('Xóa AI Summary thành công!');
 
-  const handleUpdateAISummary = async () => {
 
-    try {
+			// Refresh the data
 
-      const values = await aiSummaryEditForm.validateFields();
+			const data = await getAllAISummaries();
 
+			// Lọc bỏ những bản ghi có info.sheetName = 'CompanySummary'
 
+			const filteredData = filterCompanySummaryRecords(data);
 
-      // Get the existing info structure
+			setAiSummaryData(filteredData);
 
-      let existingInfo = {};
+		} catch (error) {
 
-      if (selectedAISummary.info) {
+			console.error('Lỗi khi xóa AI Summary:', error);
 
-        try {
+			message.error('Lỗi khi xóa AI Summary: ' + error.message);
 
-          existingInfo = typeof selectedAISummary.info === 'string'
+		}
 
-              ? JSON.parse(selectedAISummary.info)
+	};
 
-              : selectedAISummary.info;
 
-        } catch (e) {
+	// Table management functions
 
-          console.error('Error parsing existing info:', e);
+	const handleAddTable = () => {
 
-          existingInfo = {};
+		const newTable = {
 
-        }
+			id: null, // Will be set when saved
 
-      }
+			name: '',
 
+			type: 'quarterly', // quarterly, monthly, yearly
 
+			data: {},
 
-      // Merge existing info with updated fields
+		};
 
-      const updatedInfo = {
+		setEditingTable(newTable);
 
-        ...existingInfo,
+		setTableModalVisible(true);
 
-        title: values.title,
+	};
 
-        URLReport: values.urlReport
 
-      };
+	const handleEditTable = (table) => {
 
+		setEditingTable({ ...table });
 
+		setTableModalVisible(true);
 
-      const updateData = {
+	};
 
-        info: updatedInfo,
 
-        summary1: values.summary1,
+	const handleDeleteTable = (tableId) => {
 
-        summary2: values.summary2,
+		Modal.confirm({
 
-        category: values.category,
+			title: 'Xác nhận xóa bảng',
 
-        status: values.status,
+			content: 'Bạn có chắc chắn muốn xóa bảng này? Hành động này không thể hoàn tác.',
 
-        tables: tables, // Add tables data
+			okText: 'Xóa',
 
-        fileUrls: uploadedFileUrls.length > 0 ? uploadedFileUrls : undefined // Add fileUrls
+			okType: 'danger',
 
-      };
+			cancelText: 'Hủy',
 
+			onOk: () => {
 
+				setTables(prev => prev.filter(table => table.id !== tableId));
 
-      await updateAISummary(selectedAISummary.id, updateData);
+				message.success('Xóa bảng thành công!');
 
-      const tableCount = tables.length;
+			},
 
-      message.success(`Cập nhật AI Summary thành công! (${tableCount} bảng thông số)`);
+		});
 
+	};
 
 
-      // Refresh the data
+	const handleSaveTable = (tableData) => {
 
-      const data = await getAllAISummaries();
+		if (editingTable.id) {
 
-      // Lọc bỏ những bản ghi có info.sheetName = 'CompanySummary'
+			// Update existing table
 
-      const filteredData = filterCompanySummaryRecords(data);
+			setTables(prev => prev.map(table =>
 
-      setAiSummaryData(filteredData);
+				table.id === editingTable.id ? { ...tableData, id: editingTable.id } : table,
+			));
 
+			message.success('Cập nhật bảng thành công!');
 
+		} else {
 
-      setAISummaryEditModalVisible(false);
+			// Add new table
 
-      setSelectedAISummary(null);
+			setTables(prev => [...prev, { ...tableData, id: Date.now() + Math.random() }]);
 
-      aiSummaryEditForm.resetFields();
+			message.success('Thêm bảng thành công!');
 
-      setTables([]); // Reset tables state
+		}
 
-      setUploadedFileUrls([]); // Reset file URLs
+		setTableModalVisible(false);
 
-      setSelectedFiles([]); // Reset selected files
+		setEditingTable(null);
 
-    } catch (error) {
+	};
 
-      console.error('Lỗi khi cập nhật AI Summary:', error);
 
-      message.error('Lỗi khi cập nhật AI Summary: ' + error.message);
+	const generateTableDataStructure = (type) => {
 
-    }
+		switch (type) {
 
-  };
+			case 'quarterly':
 
+				return {
 
+					'Q1': '',
 
-  const handleDeleteAISummary = async (id) => {
+					'Q2': '',
 
-    try {
+					'Q3': '',
 
-      await deleteAISummary(id);
+					'Q4': '',
 
-      message.success('Xóa AI Summary thành công!');
+				};
 
+			case 'monthly':
 
+				return {
 
-      // Refresh the data
+					'Tháng 1': '', 'Tháng 2': '', 'Tháng 3': '', 'Tháng 4': '',
 
-      const data = await getAllAISummaries();
+					'Tháng 5': '', 'Tháng 6': '', 'Tháng 7': '', 'Tháng 8': '',
 
-      // Lọc bỏ những bản ghi có info.sheetName = 'CompanySummary'
+					'Tháng 9': '', 'Tháng 10': '', 'Tháng 11': '', 'Tháng 12': '',
 
-      const filteredData = filterCompanySummaryRecords(data);
+				};
 
-      setAiSummaryData(filteredData);
+			case 'yearly':
 
-    } catch (error) {
+				const currentYear = new Date().getFullYear();
 
-      console.error('Lỗi khi xóa AI Summary:', error);
+				return {
 
-      message.error('Lỗi khi xóa AI Summary: ' + error.message);
+					[`Năm ${currentYear - 2}`]: '',
 
-    }
+					[`Năm ${currentYear - 1}`]: '',
 
-  };
+					[`Năm ${currentYear}`]: '',
 
+				};
 
+			default:
 
-  // Table management functions
+				return {};
 
-  const handleAddTable = () => {
+		}
 
-    const newTable = {
+	};
 
-      id: null, // Will be set when saved
 
-      name: '',
+	const getAISummaryColumns = () => {
 
-      type: 'quarterly', // quarterly, monthly, yearly
+		const columns = [
 
-      data: {}
+			{
 
-    };
+				title: 'ID',
 
-    setEditingTable(newTable);
+				dataIndex: 'id',
 
-    setTableModalVisible(true);
+				key: 'id',
 
-  };
+				width: 80,
 
+				sorter: (a, b) => a.id - b.id,
 
+			},
 
-  const handleEditTable = (table) => {
+			{
 
-    setEditingTable({ ...table });
+				title: 'Title',
 
-    setTableModalVisible(true);
+				dataIndex: 'info',
 
-  };
+				key: 'title',
 
+				width: 200,
 
+				ellipsis: {
 
-  const handleDeleteTable = (tableId) => {
+					showTitle: false,
 
-    Modal.confirm({
+				},
 
-      title: 'Xác nhận xóa bảng',
+				render: (info) => {
 
-      content: 'Bạn có chắc chắn muốn xóa bảng này? Hành động này không thể hoàn tác.',
+					if (!info) return '-';
 
-      okText: 'Xóa',
+					try {
 
-      okType: 'danger',
+						const parsed = typeof info === 'string' ? JSON.parse(info) : info;
 
-      cancelText: 'Hủy',
+						return (
 
-      onOk: () => {
+							<Tooltip placement='topLeft' title={parsed.title || '-'}>
 
-        setTables(prev => prev.filter(table => table.id !== tableId));
+								<span className={styles.titleCell}>{parsed.title || '-'}</span>
 
-        message.success('Xóa bảng thành công!');
+							</Tooltip>
 
-      }
+						);
 
-    });
+					} catch (e) {
 
-  };
+						return '-';
 
+					}
 
+				},
 
-  const handleSaveTable = (tableData) => {
+			},
 
-    if (editingTable.id) {
+			{
 
-      // Update existing table
+				title: 'URLReport',
 
-      setTables(prev => prev.map(table =>
+				dataIndex: 'info',
 
-          table.id === editingTable.id ? { ...tableData, id: editingTable.id } : table
+				key: 'URLReport',
 
-      ));
+				width: 220,
 
-      message.success('Cập nhật bảng thành công!');
+				ellipsis: {
 
-    } else {
+					showTitle: false,
 
-      // Add new table
+				},
 
-      setTables(prev => [...prev, { ...tableData, id: Date.now() + Math.random() }]);
+				render: (info) => {
 
-      message.success('Thêm bảng thành công!');
+					if (!info) return '-';
 
-    }
+					try {
 
-    setTableModalVisible(false);
+						const parsed = typeof info === 'string' ? JSON.parse(info) : info;
 
-    setEditingTable(null);
+						if (parsed.URLReport) {
 
-  };
+							return (
 
+								<Tooltip placement='topLeft' title={parsed.URLReport}>
 
+									<a href={parsed.URLReport} target='_blank' rel='noopener noreferrer'
+									   className={styles.urlCell}>
 
-  const generateTableDataStructure = (type) => {
+										{parsed.URLReport}
 
-    switch (type) {
+									</a>
 
-      case 'quarterly':
+								</Tooltip>
 
-        return {
+							);
 
-          'Q1': '',
+						}
 
-          'Q2': '',
+						return '-';
 
-          'Q3': '',
+					} catch (e) {
 
-          'Q4': ''
+						return '-';
 
-        };
+					}
 
-      case 'monthly':
+				},
 
-        return {
+			},
 
-          'Tháng 1': '', 'Tháng 2': '', 'Tháng 3': '', 'Tháng 4': '',
+			// {
 
-          'Tháng 5': '', 'Tháng 6': '', 'Tháng 7': '', 'Tháng 8': '',
+			//   title: 'Summary',
 
-          'Tháng 9': '', 'Tháng 10': '', 'Tháng 11': '', 'Tháng 12': ''
+			//   dataIndex: 'summary1',
 
-        };
+			//   key: 'summary1',
 
-      case 'yearly':
+			//   width: 300,
 
-        const currentYear = new Date().getFullYear();
+			//   ellipsis: {
 
-        return {
+			//     showTitle: false,
 
-          [`Năm ${currentYear - 2}`]: '',
+			//   },
 
-          [`Năm ${currentYear - 1}`]: '',
+			//   render: (text) => {
 
-          [`Năm ${currentYear}`]: ''
+			//     if (!text) return '-';
 
-        };
+			//     try {
 
-      default:
+			//       const parsed = typeof text === 'string' ? JSON.parse(text) : text;
 
-        return {};
+			//       const displayText = typeof parsed === 'object' ? JSON.stringify(parsed) : String(parsed);
 
-    }
+			//       return (
 
-  };
+			//         <Tooltip placement="topLeft" title={displayText}>
 
+			//           <span className={styles.summaryCell}>{displayText.substring(0, 100) + '...'}</span>
 
+			//         </Tooltip>
 
-  const getAISummaryColumns = () => {
+			//       );
 
-    const columns = [
+			//     } catch (e) {
 
-      {
+			//       return (
 
-        title: 'ID',
+			//         <Tooltip placement="topLeft" title={String(text)}>
 
-        dataIndex: 'id',
+			//           <span className={styles.summaryCell}>{String(text).substring(0, 100) + '...'}</span>
 
-        key: 'id',
+			//         </Tooltip>
 
-        width: 80,
+			//       );
 
-        sorter: (a, b) => a.id - b.id
+			//     }
 
-      },
+			//   },
 
-      {
+			// },
 
-        title: 'Title',
+			// {
 
-        dataIndex: 'info',
+			//   title: 'Detail',
 
-        key: 'title',
+			//   dataIndex: 'summary2',
 
-        width: 200,
+			//   key: 'summary2',
 
-        ellipsis: {
+			//   width: 300,
 
-          showTitle: false,
+			//   ellipsis: {
 
-        },
+			//     showTitle: false,
 
-        render: (info) => {
+			//   },
 
-          if (!info) return '-';
+			//   render: (text) => {
 
-          try {
+			//     if (!text) return '-';
 
-            const parsed = typeof info === 'string' ? JSON.parse(info) : info;
+			//     try {
 
-            return (
+			//       const parsed = typeof text === 'string' ? JSON.parse(text) : text;
 
-                <Tooltip placement="topLeft" title={parsed.title || '-'}>
+			//       const displayText = typeof parsed === 'object' ? JSON.stringify(parsed) : String(parsed);
 
-                  <span className={styles.titleCell}>{parsed.title || '-'}</span>
+			//       return (
 
-                </Tooltip>
+			//         <Tooltip placement="topLeft" title={displayText}>
 
-            );
+			//           <span className={styles.detailCell}>{displayText.substring(0, 100) + '...'}</span>
 
-          } catch (e) {
+			//         </Tooltip>
 
-            return '-';
+			//       );
 
-          }
+			//     } catch (e) {
 
-        },
+			//       return (
 
-      },
+			//         <Tooltip placement="topLeft" title={String(text)}>
 
-      {
+			//           <span className={styles.detailCell}>{String(text).substring(0, 100) + '...'}</span>
 
-        title: 'URLReport',
+			//         </Tooltip>
 
-        dataIndex: 'info',
+			//       );
 
-        key: 'URLReport',
+			//     }
 
-        width: 220,
+			//   },
 
-        ellipsis: {
+			// },
 
-          showTitle: false,
+			{
 
-        },
+				title: 'Danh mục',
 
-        render: (info) => {
+				dataIndex: 'category',
 
-          if (!info) return '-';
+				key: 'category',
 
-          try {
+				width: 120,
 
-            const parsed = typeof info === 'string' ? JSON.parse(info) : info;
+				render: (category) => {
 
-            if (parsed.URLReport) {
+					const categoryMap = {
 
-              return (
+						// 'Doanh nghiệp': { color: 'blue', text: 'Doanh nghiệp' },
 
-                  <Tooltip placement="topLeft" title={parsed.URLReport}>
+						'Ngành': { color: 'green', text: 'Ngành' },
 
-                    <a href={parsed.URLReport} target="_blank" rel="noopener noreferrer" className={styles.urlCell}>
+						'Vĩ mô': { color: 'orange', text: 'Vĩ mô' },
 
-                      {parsed.URLReport}
+					};
 
-                    </a>
+					const cat = categoryMap[category] || { color: 'default', text: category || '-' };
 
-                  </Tooltip>
+					return <Tag color={cat.color}>{cat.text}</Tag>;
 
-              );
+				},
 
-            }
+				filters: [
 
-            return '-';
+					// { text: 'Doanh nghiệp', value: 'Doanh nghiệp' },
 
-          } catch (e) {
+					{ text: 'Ngành', value: 'Ngành' },
 
-            return '-';
+					{ text: 'Vĩ mô', value: 'Vĩ mô' },
 
-          }
+				],
 
-        },
+				onFilter: (value, record) => {
 
-      },
+					if (value === '') {
 
-      // {
+						return !record.category || record.category === '';
 
-      //   title: 'Summary',
+					}
 
-      //   dataIndex: 'summary1',
+					return record.category === value;
 
-      //   key: 'summary1',
+				},
 
-      //   width: 300,
+			},
 
-      //   ellipsis: {
+			{
 
-      //     showTitle: false,
+				title: 'Trạng thái',
 
-      //   },
+				dataIndex: 'status',
 
-      //   render: (text) => {
+				key: 'status',
 
-      //     if (!text) return '-';
+				width: 120,
 
-      //     try {
+				render: (status) => {
 
-      //       const parsed = typeof text === 'string' ? JSON.parse(text) : text;
+					const statusMap = {
 
-      //       const displayText = typeof parsed === 'object' ? JSON.stringify(parsed) : String(parsed);
+						'draft': { color: 'default', text: 'Nháp' },
 
-      //       return (
+						'published': { color: 'success', text: 'Đã xuất bản' },
 
-      //         <Tooltip placement="topLeft" title={displayText}>
+						'archived': { color: 'warning', text: 'Lưu trữ' },
 
-      //           <span className={styles.summaryCell}>{displayText.substring(0, 100) + '...'}</span>
+					};
 
-      //         </Tooltip>
+					const stat = statusMap[status] || { color: 'default', text: status || '-' };
 
-      //       );
+					return <Badge status={stat.color} text={stat.text} />;
 
-      //     } catch (e) {
+				},
 
-      //       return (
+				filters: [
 
-      //         <Tooltip placement="topLeft" title={String(text)}>
+					{ text: 'Nháp', value: 'draft' },
 
-      //           <span className={styles.summaryCell}>{String(text).substring(0, 100) + '...'}</span>
+					{ text: 'Đã xuất bản', value: 'published' },
 
-      //         </Tooltip>
+					{ text: 'Lưu trữ', value: 'archived' },
 
-      //       );
+				],
 
-      //     }
+				onFilter: (value, record) => record.status === value,
 
-      //   },
+			},
 
-      // },
+			{
 
-      // {
+				title: 'Created At',
 
-      //   title: 'Detail',
+				dataIndex: 'created_at',
 
-      //   dataIndex: 'summary2',
+				key: 'created_at',
 
-      //   key: 'summary2',
+				width: 150,
 
-      //   width: 300,
+				render: (text) => {
 
-      //   ellipsis: {
+					if (!text) return '-';
 
-      //     showTitle: false,
+					const date = new Date(text);
 
-      //   },
+					if (isNaN(date.getTime())) return '-';
 
-      //   render: (text) => {
 
-      //     if (!text) return '-';
+					const day = String(date.getDate()).padStart(2, '0');
 
-      //     try {
+					const month = String(date.getMonth() + 1).padStart(2, '0');
 
-      //       const parsed = typeof text === 'string' ? JSON.parse(text) : text;
+					const year = date.getFullYear();
 
-      //       const displayText = typeof parsed === 'object' ? JSON.stringify(parsed) : String(parsed);
+					const hours = String(date.getHours()).padStart(2, '0');
 
-      //       return (
+					const minutes = String(date.getMinutes()).padStart(2, '0');
 
-      //         <Tooltip placement="topLeft" title={displayText}>
 
-      //           <span className={styles.detailCell}>{displayText.substring(0, 100) + '...'}</span>
+					return `${day}/${month}/${year} ${hours}:${minutes}`;
 
-      //         </Tooltip>
+				},
 
-      //       );
+				sorter: (a, b) => new Date(a.created_at) - new Date(b.created_at),
 
-      //     } catch (e) {
+			},
 
-      //       return (
+			{
 
-      //         <Tooltip placement="topLeft" title={String(text)}>
+				title: 'Bảng thông số',
 
-      //           <span className={styles.detailCell}>{String(text).substring(0, 100) + '...'}</span>
+				dataIndex: 'tables',
 
-      //         </Tooltip>
+				key: 'tables',
 
-      //       );
+				width: 120,
 
-      //     }
+				render: (tables) => {
 
-      //   },
+					if (!tables) return <Tag color='default'>0 bảng</Tag>;
 
-      // },
+					try {
 
-      {
+						const tableData = typeof tables === 'string' ? JSON.parse(tables) : tables;
 
-        title: 'Danh mục',
+						const count = Array.isArray(tableData) ? tableData.length : 0;
 
-        dataIndex: 'category',
+						return (
 
-        key: 'category',
+							<Tag color={count > 0 ? 'blue' : 'default'}>
 
-        width: 120,
+								📊 {count} bảng
 
-        render: (category) => {
+							</Tag>
 
-          const categoryMap = {
+						);
 
-            // 'Doanh nghiệp': { color: 'blue', text: 'Doanh nghiệp' },
+					} catch (e) {
 
-            'Ngành': { color: 'green', text: 'Ngành' },
+						return <Tag color='default'>0 bảng</Tag>;
 
-            'Vĩ mô': { color: 'orange', text: 'Vĩ mô' }
+					}
 
-          };
+				},
 
-          const cat = categoryMap[category] || { color: 'default', text: category || '-' };
+			},
 
-          return <Tag color={cat.color}>{cat.text}</Tag>;
+			{
 
-        },
+				title: 'File đính kèm',
 
-        filters: [
+				dataIndex: 'fileUrls',
 
-          // { text: 'Doanh nghiệp', value: 'Doanh nghiệp' },
+				key: 'fileUrls',
 
-          { text: 'Ngành', value: 'Ngành' },
+				width: 120,
 
-          { text: 'Vĩ mô', value: 'Vĩ mô' }
+				render: (fileUrls) => {
 
-        ],
+					if (!fileUrls || !Array.isArray(fileUrls) || fileUrls.length === 0) {
 
-        onFilter: (value, record) => {
+						return <Tag color='default'>Không có</Tag>;
 
-          if (value === '') {
+					}
 
-            return !record.category || record.category === '';
+					return (
 
-          }
+						<Tag color='green'>
 
-          return record.category === value;
+							📎 {fileUrls.length} file
 
-        }
+						</Tag>
 
-      },
+					);
 
-      {
+				},
 
-        title: 'Trạng thái',
+			},
 
-        dataIndex: 'status',
+		];
 
-        key: 'status',
+		// Add actions column at the end
 
-        width: 120,
+		columns.push({
 
-        render: (status) => {
+			title: 'Hành động',
 
-          const statusMap = {
+			key: 'actions',
 
-            'draft': { color: 'default', text: 'Nháp' },
+			width: 200,
 
-            'published': { color: 'success', text: 'Đã xuất bản' },
+			fixed: 'right',
 
-            'archived': { color: 'warning', text: 'Lưu trữ' }
+			render: (_, record) => (
 
-          };
+				<Space size='small'>
 
-          const stat = statusMap[status] || { color: 'default', text: status || '-' };
+					{/* Embedding button - show different buttons based on embedding status */}
 
-          return <Badge status={stat.color} text={stat.text} />;
+					{embeddedItems.has(record.id) ? (
 
-        },
+						// Item đã được embedding - hiển thị nút "Embed lại" với màu khác
 
-        filters: [
+						<Tooltip title='Embed lại'>
 
-          { text: 'Nháp', value: 'draft' },
+							<Button
 
-          { text: 'Đã xuất bản', value: 'published' },
+								type='link'
 
-          { text: 'Lưu trữ', value: 'archived' }
+								onClick={(e) => {
 
-        ],
+									e.stopPropagation();
 
-        onFilter: (value, record) => record.status === value
+									handleEmbeding(record.id);
 
-      },
+								}}
 
-      {
+								size='small'
 
-        title: 'Created At',
+								loading={isEmbedding(record.id)}
 
-        dataIndex: 'created_at',
+								disabled={isEmbedding(record.id)}
 
-        key: 'created_at',
+								icon={isEmbedding(record.id) ? <LoadingOutlined /> : <ReloadOutlined />}
 
-        width: 150,
+								style={{ color: '#1890ff' }} // Màu xanh cho nút embed lại
 
-        render: (text) => {
+							>
 
-          if (!text) return '-';
+								{isEmbedding(record.id) ? 'Đang Embedding...' : 'Embed lại'}
 
-          const date = new Date(text);
+							</Button>
 
-          if (isNaN(date.getTime())) return '-';
+						</Tooltip>
 
+					) : (
 
+						// Item chưa được embedding - hiển thị nút "Embedding" bình thường
 
-          const day = String(date.getDate()).padStart(2, '0');
+						<Tooltip title='Embedding'>
 
-          const month = String(date.getMonth() + 1).padStart(2, '0');
+							<Button
 
-          const year = date.getFullYear();
+								type='link'
 
-          const hours = String(date.getHours()).padStart(2, '0');
+								onClick={(e) => {
 
-          const minutes = String(date.getMinutes()).padStart(2, '0');
+									e.stopPropagation();
 
+									handleEmbeding(record.id);
 
+								}}
 
-          return `${day}/${month}/${year} ${hours}:${minutes}`;
+								size='small'
 
-        },
+								loading={isEmbedding(record.id)}
 
-        sorter: (a, b) => new Date(a.created_at) - new Date(b.created_at)
+								disabled={isEmbedding(record.id)}
 
-      },
+								icon={isEmbedding(record.id) ? <LoadingOutlined /> : null}
 
-      {
+							>
 
-        title: 'Bảng thông số',
+								{isEmbedding(record.id) ? 'Đang Embedding...' : 'Embedding'}
 
-        dataIndex: 'tables',
+							</Button>
 
-        key: 'tables',
+						</Tooltip>
 
-        width: 120,
+					)}
 
-        render: (tables) => {
+					<Tooltip title='Xem chi tiết'>
 
-          if (!tables) return <Tag color="default">0 bảng</Tag>;
+						<Button
 
-          try {
+							type='link'
 
-            const tableData = typeof tables === 'string' ? JSON.parse(tables) : tables;
+							icon={<EyeOutlined />}
 
-            const count = Array.isArray(tableData) ? tableData.length : 0;
+							onClick={e => {
 
-            return (
+								e.stopPropagation();
 
-                <Tag color={count > 0 ? 'blue' : 'default'}>
+								setSelectedAISummary(record);
 
-                  📊 {count} bảng
+								setAISummaryDetailModalVisible(true);
 
-                </Tag>
+							}}
 
-            );
+							size='small'
 
-          } catch (e) {
+						/>
 
-            return <Tag color="default">0 bảng</Tag>;
+					</Tooltip>
 
-          }
+					<Tooltip title='Chỉnh sửa'>
 
-        }
+						<Button
 
-      },
+							type='link'
 
-      {
+							icon={<EditOutlined />}
 
-        title: 'File đính kèm',
+							onClick={e => {
 
-        dataIndex: 'fileUrls',
+								e.stopPropagation();
 
-        key: 'fileUrls',
+								handleEditAISummary(record);
 
-        width: 120,
+							}}
 
-        render: (fileUrls) => {
+							size='small'
 
-          if (!fileUrls || !Array.isArray(fileUrls) || fileUrls.length === 0) {
+						/>
 
-            return <Tag color="default">Không có</Tag>;
+					</Tooltip>
 
-          }
+					<Popconfirm
 
-          return (
+						title='Bạn có chắc chắn muốn xóa AI Summary này?'
 
-              <Tag color="green">
+						onConfirm={() => handleDeleteAISummary(record.id)}
 
-                📎 {fileUrls.length} file
+						okText='Có'
 
-              </Tag>
+						cancelText='Không'
 
-          );
+					>
 
-        }
+						<Tooltip title='Xóa'>
 
-      }
+							<Button
 
-    ];
+								type='link'
 
-    // Add actions column at the end
+								icon={<DeleteOutlined />}
 
-    columns.push({
+								size='small'
 
-      title: 'Hành động',
+								danger
 
-      key: 'actions',
+							/>
 
-      width: 200,
+						</Tooltip>
 
-      fixed: 'right',
+					</Popconfirm>
 
-      render: (_, record) => (
+				</Space>
 
-          <Space size="small">
+			),
 
-            {/* Embedding button - show different buttons based on embedding status */}
+		});
 
-            {embeddedItems.has(record.id) ? (
+		return columns;
 
-                // Item đã được embedding - hiển thị nút "Embed lại" với màu khác
+	};
 
-                <Tooltip title="Embed lại">
+	const getColumns = () => {
 
-                  <Button
+		const baseColumns = [
 
-                      type="link"
+			{
 
-                      onClick={(e) => {
+				title: '#',
 
-                        e.stopPropagation();
+				dataIndex: 'id',
 
-                        handleEmbeding(record.id);
+				key: 'id',
 
-                      }}
+				width: 100,
 
-                      size="small"
+				fixed: 'left',
 
-                      loading={isEmbedding(record.id)}
+				sorter: (a, b) => a.id - b.id,
 
-                      disabled={isEmbedding(record.id)}
+			},
+			{
 
-                      icon={isEmbedding(record.id) ? <LoadingOutlined /> : <ReloadOutlined />}
+				title: 'CID',
 
-                      style={{ color: '#1890ff' }} // Màu xanh cho nút embed lại
+				dataIndex: 'cid',
 
-                  >
+				key: 'cid',
 
-                    {isEmbedding(record.id) ? 'Đang Embedding...' : 'Embed lại'}
+				width: 120,
 
-                  </Button>
+				fixed: 'left',
 
-                </Tooltip>
+				render: (cid) => cid || '-',
 
-            ) : (
+			},
+			{
 
-                // Item chưa được embedding - hiển thị nút "Embedding" bình thường
+				title: 'Số bài',
 
-                <Tooltip title="Embedding">
+				dataIndex: 'lessonNumber',
 
-                  <Button
+				key: 'lessonNumber',
 
-                      type="link"
+				width: 100,
 
-                      onClick={(e) => {
+				fixed: 'left',
 
-                        e.stopPropagation();
+				render: (lessonNumber) => lessonNumber || '-',
 
-                        handleEmbeding(record.id);
+			},
+			{
+				title: 'Public',
+				fixed: 'left',
+				dataIndex: 'isPublic',
+				key: 'isPublic',
+				width: 120,
+				render: (isPublic, record) => (
+					<Switch
+						checked={isPublic}
+						onChange={async (checked) => {
+							try {
+								// Call API để cập nhật isPublic
+								await updateK9({ id: record.id, isPublic: checked });
 
-                      }}
+								// Cập nhật local state theo đúng pattern
+								const updater = (list) => list.map(item =>
+									item.id === record.id ? { ...item, isPublic: checked } : item,
+								);
 
-                      size="small"
+								setAllData(prev => ({ ...prev, [currentTab]: updater(prev[currentTab] || []) }));
+								setFilteredData(prev => ({ ...prev, [currentTab]: updater(prev[currentTab] || []) }));
+								setData(prev => updater(prev));
 
-                      loading={isEmbedding(record.id)}
+								message.success(`Đã ${checked ? 'bật' : 'tắt'} trạng thái public`);
+							} catch (error) {
+								console.error('Error updating isPublic:', error);
+								message.error('Cập nhật thất bại');
+							}
+						}}
+						checkedChildren='Công khai'
+						unCheckedChildren='Riêng tư'
+					/>
+				),
+				filters: [
+					{ text: 'Công khai', value: true },
+					{ text: 'Riêng tư', value: false },
+				],
+				onFilter: (value, record) => Boolean(record.isPublic) === value,
+			},
+			{
+				title: 'Cho phép làm lại',
+				dataIndex: 'allow_retake',
+				key: 'allow_retake',
+				width: 150,
+				render: (allowRetake, record) => (
+					<Switch
+						checked={Boolean(allowRetake)}
+						onChange={async (checked) => {
+							try {
+								await updateK9({ id: record.id, allow_retake: checked });
+								const updater = (list) => list.map(item =>
+									item.id === record.id ? { ...item, allow_retake: checked } : item,
+								);
+								setAllData(prev => ({ ...prev, [currentTab]: updater(prev[currentTab] || []) }));
+								setFilteredData(prev => ({ ...prev, [currentTab]: updater(prev[currentTab] || []) }));
+								setData(prev => updater(prev));
+								message.success(`Đã ${checked ? 'bật' : 'tắt'} cho phép làm lại`);
+							} catch (error) {
+								console.error('Error updating allow_retake:', error);
+								message.error('Cập nhật thất bại');
+							}
+						}}
+						checkedChildren='Cho phép'
+						unCheckedChildren='Khoá'
+					/>
+				),
+				filters: [
+					{ text: 'Cho phép', value: true },
+					{ text: 'Khoá', value: false },
+				],
+				onFilter: (value, record) => Boolean(record.allow_retake) === value,
+			},
 
-                      disabled={isEmbedding(record.id)}
+			{
 
-                      icon={isEmbedding(record.id) ? <LoadingOutlined /> : null}
+				title: 'Tiêu đề',
 
-                  >
+				dataIndex: 'title',
 
-                    {isEmbedding(record.id) ? 'Đang Embedding...' : 'Embedding'}
+				key: 'title',
 
-                  </Button>
+				width: 200,
 
-                </Tooltip>
+				fixed: 'left',
 
-            )}
+				sorter: (a, b) => {
 
-            <Tooltip title="Xem chi tiết">
+					const titleA = (a.title || '').toLowerCase();
 
-              <Button
+					const titleB = (b.title || '').toLowerCase();
 
-                  type="link"
+					return titleA.localeCompare(titleB);
 
-                  icon={<EyeOutlined />}
+				},
 
-                  onClick={e => {
+				ellipsis: {
 
-                    e.stopPropagation();
+					showTitle: false,
 
-                    setSelectedAISummary(record);
+				},
 
-                    setAISummaryDetailModalVisible(true);
+				render: (title) => (
 
-                  }}
+					<Tooltip placement='topLeft' title={title}>
 
-                  size="small"
+						<span className={styles.titleCell}>{title}</span>
 
-              />
+					</Tooltip>
 
-            </Tooltip>
+				),
 
-            <Tooltip title="Chỉnh sửa">
+			},
+			{
 
-              <Button
+				title: 'Trạng thái mục lục',
 
-                  type="link"
+				dataIndex: 'hasTitle',
 
-                  icon={<EditOutlined />}
+				key: 'hasTitle',
 
-                  onClick={e => {
 
-                    e.stopPropagation();
+				width: 120,
 
-                    handleEditAISummary(record);
+				render: (hasTitle, record) => (
 
-                  }}
+					<Switch
 
-                  size="small"
+						checked={hasTitle}
 
-              />
+						onChange={async (checked) => {
 
-            </Tooltip>
+							try {
 
-            <Popconfirm
+								// Call API để cập nhật hasTitle
 
-                title="Bạn có chắc chắn muốn xóa AI Summary này?"
+								await updateK9({ id: record.id, hasTitle: checked });
 
-                onConfirm={() => handleDeleteAISummary(record.id)}
 
-                okText="Có"
+								// Cập nhật local state theo đúng pattern
 
-                cancelText="Không"
+								const updater = (list) => list.map(item =>
 
-            >
+									item.id === record.id ? { ...item, hasTitle: checked } : item,
+								);
 
-              <Tooltip title="Xóa">
+								setAllData(prev => ({ ...prev, [currentTab]: updater(prev[currentTab] || []) }));
 
-                <Button
+								setFilteredData(prev => ({ ...prev, [currentTab]: updater(prev[currentTab] || []) }));
 
-                    type="link"
+								setData(prev => updater(prev));
 
-                    icon={<DeleteOutlined />}
 
-                    size="small"
+								message.success(`Đã ${checked ? 'bật' : 'tắt'} trạng thái mục lục`);
 
-                    danger
+							} catch (error) {
 
-                />
+								console.error('Error updating hasTitle:', error);
 
-              </Tooltip>
+								message.error('Cập nhật thất bại');
 
-            </Popconfirm>
+							}
 
-          </Space>
+						}}
 
-      )
+						checkedChildren='Bật'
 
-    });
+						unCheckedChildren='Tắt'
 
-    return columns;
+					/>
 
-  };
+				),
 
-  const getColumns = () => {
 
-    const baseColumns = [
+			},
+			{
 
-      {
+				title: 'Improve',
 
-        title: '#',
+				dataIndex: 'isImprove',
 
-        dataIndex: 'id',
+				key: 'isImprove',
 
-        key: 'id',
 
-        width: 100,
+				width: 100,
 
-        fixed: 'left',
+				render: (isImprove) => (
 
-        sorter: (a, b) => a.id - b.id
+					<Tag color={isImprove ? 'blue' : 'default'}>
 
-      },
-      {
+						{isImprove ? 'Đã Improve' : 'Chưa'}
 
-        title: 'CID',
+					</Tag>
 
-        dataIndex: 'cid',
+				),
 
-        key: 'cid',
+				filters: [
 
-        width: 120,
+					{ text: 'Đã Improve', value: true },
 
-        fixed: 'left',
+					{ text: 'Chưa', value: false },
 
-        render: (cid) => cid || '-'
+				],
 
-      },
-      {
+				onFilter: (value, record) => Boolean(record.isImprove) === value,
 
-        title: 'Số bài',
+			},
 
-        dataIndex: 'lessonNumber',
+			{
 
-        key: 'lessonNumber',
+				title: 'Thời gian Improve',
 
-        width: 100,
+				dataIndex: 'improveTime',
 
-        fixed: 'left',
+				key: 'improveTime',
 
-        render: (lessonNumber) => lessonNumber || '-',
 
-      },
-      {
-        title: 'Public',
-        fixed: 'left',
-        dataIndex: 'isPublic',
-        key: 'isPublic',
-        width: 120,
-        render: (isPublic, record) => (
-            <Switch
-                checked={isPublic}
-                onChange={async (checked) => {
-                  try {
-                    // Call API để cập nhật isPublic
-                    await updateK9({ id: record.id, isPublic: checked });
+				width: 150,
 
-                    // Cập nhật local state theo đúng pattern
-                    const updater = (list) => list.map(item =>
-                        item.id === record.id ? { ...item, isPublic: checked } : item
-                    );
+				render: (improveTime) => (
 
-                    setAllData(prev => ({ ...prev, [currentTab]: updater(prev[currentTab] || []) }));
-                    setFilteredData(prev => ({ ...prev, [currentTab]: updater(prev[currentTab] || []) }));
-                    setData(prev => updater(prev));
+					<Tag color={improveTime ? 'blue' : 'default'}>
 
-                    message.success(`Đã ${checked ? 'bật' : 'tắt'} trạng thái public`);
-                  } catch (error) {
-                    console.error('Error updating isPublic:', error);
-                    message.error('Cập nhật thất bại');
-                  }
-                }}
-                checkedChildren="Công khai"
-                unCheckedChildren="Riêng tư"
-            />
-        ),
-        filters: [
-          { text: 'Công khai', value: true },
-          { text: 'Riêng tư', value: false },
-        ],
-        onFilter: (value, record) => Boolean(record.isPublic) === value,
-      },
-      {
-        title: 'Cho phép làm lại',
-        dataIndex: 'allow_retake',
-        key: 'allow_retake',
-        width: 150,
-        render: (allowRetake, record) => (
-            <Switch
-                checked={Boolean(allowRetake)}
-                onChange={async (checked) => {
-                  try {
-                    await updateK9({ id: record.id, allow_retake: checked });
-                    const updater = (list) => list.map(item =>
-                        item.id === record.id ? { ...item, allow_retake: checked } : item
-                    );
-                    setAllData(prev => ({ ...prev, [currentTab]: updater(prev[currentTab] || []) }));
-                    setFilteredData(prev => ({ ...prev, [currentTab]: updater(prev[currentTab] || []) }));
-                    setData(prev => updater(prev));
-                    message.success(`Đã ${checked ? 'bật' : 'tắt'} cho phép làm lại`);
-                  } catch (error) {
-                    console.error('Error updating allow_retake:', error);
-                    message.error('Cập nhật thất bại');
-                  }
-                }}
-                checkedChildren="Cho phép"
-                unCheckedChildren="Khoá"
-            />
-        ),
-        filters: [
-          { text: 'Cho phép', value: true },
-          { text: 'Khoá', value: false },
-        ],
-        onFilter: (value, record) => Boolean(record.allow_retake) === value,
-      },
+						{formatDateToDDMMYYYY(improveTime)}
 
-      {
+					</Tag>
 
-        title: 'Tiêu đề',
+				),
 
-        dataIndex: 'title',
+			},
 
-        key: 'title',
+			{
 
-        width: 200,
+				title: 'Model Improve',
 
-        fixed: 'left',
+				dataIndex: 'modelImprove',
 
-        sorter: (a, b) => {
+				key: 'modelImprove',
 
-          const titleA = (a.title || '').toLowerCase();
 
-          const titleB = (b.title || '').toLowerCase();
+				width: 250,
 
-          return titleA.localeCompare(titleB);
+				render: (modelImprove) => (
 
-        },
+					<Tag color={modelImprove ? 'blue' : 'default'}>
 
-        ellipsis: {
+						{modelImprove}
 
-          showTitle: false,
+					</Tag>
 
-        },
+				),
 
-        render: (title) => (
+			},
+			{
+				title: 'Số ký tự Detail',
+				dataIndex: 'detail',
+				key: 'detailCharCount',
+				width: 120,
+				render: (detail) => {
+					const charCount = detail ? detail.length : 0;
+					return (
+						<Tag color={charCount > 0 ? 'blue' : 'default'}>
+							{charCount.toLocaleString()}
+						</Tag>
+					);
+				},
+				sorter: (a, b) => {
+					const countA = a.detail ? a.detail.length : 0;
+					const countB = b.detail ? b.detail.length : 0;
+					return countA - countB;
+				},
+			},
+			// {
+			//   title: 'User Class Allowed',
+			//   dataIndex: 'allowed_user_class',
+			//   key: 'allowed_user_class',
+			//   width: 200,
+			//   render: (allowedClasses) => {
+			//     if (!allowedClasses || allowedClasses.length === 0) {
+			//       return <Tag>Chưa gắn</Tag>;
+			//     }
 
-            <Tooltip placement="topLeft" title={title}>
+			//     // Find user class names from userClasses array
+			//     const classNames = allowedClasses
+			//       .map(id => {
+			//         const userClass = userClasses.find(c => c.id === id);
+			//         return userClass?.name || `Class #${id}`;
+			//       })
+			//       .join(', ');
 
-              <span className={styles.titleCell}>{title}</span>
+			//     return (
+			//       <Tooltip title={classNames}>
+			//         <span> {classNames}</span>
+			//       </Tooltip>
+			//     );
+			//   },
+			// },
 
-            </Tooltip>
 
-        )
+			{
 
-      },
-      {
+				title: 'Tóm tắt',
 
-        title: 'Trạng thái mục lục',
+				dataIndex: 'summary',
 
-        dataIndex: 'hasTitle',
+				key: 'summary',
 
-        key: 'hasTitle',
+				width: 200,
 
+				ellipsis: {
 
-        width: 120,
+					showTitle: false,
 
-        render: (hasTitle, record) => (
+				},
 
-            <Switch
+				render: (summary) => (
 
-                checked={hasTitle}
+					<Tooltip placement='topLeft' title={summary}>
 
-                onChange={async (checked) => {
+						<span className={styles.summaryCell}>{summary}</span>
 
-                  try {
+					</Tooltip>
 
-                    // Call API để cập nhật hasTitle
+				),
 
-                    await updateK9({ id: record.id, hasTitle: checked });
+			},
 
 
+			// {
 
-                    // Cập nhật local state theo đúng pattern
+			//   title: 'Chi tiết',
 
-                    const updater = (list) => list.map(item =>
+			//   dataIndex: 'detail',
 
-                        item.id === record.id ? { ...item, hasTitle: checked } : item
+			//   key: 'detail',
 
-                    );
+			//   width: 300,
 
-                    setAllData(prev => ({ ...prev, [currentTab]: updater(prev[currentTab] || []) }));
+			//   ellipsis: {
 
-                    setFilteredData(prev => ({ ...prev, [currentTab]: updater(prev[currentTab] || []) }));
+			//     showTitle: false,
 
-                    setData(prev => updater(prev));
+			//   },
 
+			//   render: (detail) => (
 
+			//     <Tooltip placement="topLeft" title={detail}>
 
-                    message.success(`Đã ${checked ? 'bật' : 'tắt'} trạng thái mục lục`);
+			//       <span className={styles.detailCell}>{detail}</span>
 
-                  } catch (error) {
+			//     </Tooltip>
 
-                    console.error('Error updating hasTitle:', error);
+			//   )
 
-                    message.error('Cập nhật thất bại');
+			// },
 
-                  }
+			...(currentTab == 'home' || currentTab == 'news' || currentTab == 'longForm' ?
 
-                }}
+				[
 
-                checkedChildren="Bật"
+					{
 
-                unCheckedChildren="Tắt"
 
-            />
+						title: 'Danh mục',
 
-        ),
+						dataIndex: 'category',
 
+						key: 'category',
 
-      },
-      {
+						width: 150,
 
-        title: 'Improve',
+						render: (category) => {
 
-        dataIndex: 'isImprove',
+							const categoryMap = {
 
-        key: 'isImprove',
+								'Case study': { color: 'blue', text: 'Case study' },
 
+								'Kinh tế - tài chính': { color: 'green', text: 'Kinh tế - tài chính' },
 
-        width: 100,
+								'Thế giới': { color: 'default', text: 'Thế giới' },
 
-        render: (isImprove) => (
+								'Công nghệ': { color: 'cyan', text: 'Công nghệ' },
 
-            <Tag color={isImprove ? 'blue' : 'default'}>
+								'Đổi mới sáng tạo': { color: 'volcano', text: 'Đổi mới sáng tạo' },
 
-              {isImprove ? 'Đã Improve' : 'Chưa'}
+								'Khác': { color: 'orange', text: 'Khác' },
 
-            </Tag>
+								'Lý thuyết (Theory)': { color: 'purple', text: 'Lý thuyết (Theory)' },
 
-        ),
+								'Khái niệm (Concept)': { color: 'magenta', text: 'Khái niệm (Concept)' },
 
-        filters: [
+								'Nguyên tắc kinh doanh (Principle)': {
+									color: 'geekblue',
+									text: 'Nguyên tắc kinh doanh (Principle)',
+								},
 
-          { text: 'Đã Improve', value: true },
+								'Khung phân tích (Framework)': { color: 'gold', text: 'Khung phân tích (Framework)' },
 
-          { text: 'Chưa', value: false },
+								'Mô hình (Business model)': { color: 'lime', text: 'Mô hình (Business model)' },
 
-        ],
+								'Phương pháp luận (Methodology)': {
+									color: 'processing',
+									text: 'Phương pháp luận (Methodology)',
+								},
 
-        onFilter: (value, record) => Boolean(record.isImprove) === value,
+								'Công cụ & kỹ thuật (Tools & Technique)': {
+									color: 'red',
+									text: 'Công cụ & kỹ thuật (Tools & Technique)',
+								},
 
-      },
+								'Các báo cáo ngành - vĩ mô': { color: 'green', text: 'Các báo cáo ngành - vĩ mô' },
 
-      {
+								'Best Practices': { color: 'blue', text: 'Best Practices' },
 
-        title: 'Thời gian Improve',
+								'Case Studies': { color: 'cyan', text: 'Case Studies' },
 
-        dataIndex: 'improveTime',
+								'Tài nguyên khác': { color: 'default', text: 'Tài nguyên khác' },
 
-        key: 'improveTime',
+								'Ý tưởng khởi nghiệp': { color: 'red', text: 'Ý tưởng khởi nghiệp' },
 
+								'Tips khởi nghiệp': { color: 'green', text: 'Tips khởi nghiệp' },
 
-        width: 150,
+								'Sáng tạo khác': { color: 'blue', text: 'Sáng tạo khác' },
 
-        render: (improveTime) => (
+							};
 
-            <Tag color={improveTime ? 'blue' : 'default'}>
+							const cat = categoryMap[category] || { color: 'default', text: category };
 
-              {formatDateToDDMMYYYY(improveTime)}
+							return (<div>{cat.text}</div>
 
-            </Tag>
+							);
 
-        ),
+						},
 
-      },
+						filters: getCurrentTabCategoryFilters(),
 
-      {
+						//  [
 
-        title: 'Model Improve',
+						//   { text: 'Case study', value: 'Case study' },
 
-        dataIndex: 'modelImprove',
+						//   { text: 'Kinh tế - tài chính', value: 'Kinh tế - tài chính' },
 
-        key: 'modelImprove',
+						//   { text: 'Thế giới', value: 'Thế giới' },
 
+						//   { text: 'Công nghệ', value: 'Công nghệ' },
 
-        width: 250,
+						//   { text: 'Đổi mới sáng tạo', value: 'Đổi mới sáng tạo' },
 
-        render: (modelImprove) => (
+						//   { text: 'Khác', value: 'Khác' },
 
-            <Tag color={modelImprove ? 'blue' : 'default'}>
+						//   { text: 'Lý thuyết (Theory)', value: 'Lý thuyết (Theory)' },
 
-              {modelImprove}
+						//   { text: 'Khái niệm (Concept)', value: 'Khái niệm (Concept)' },
 
-            </Tag>
+						//   { text: 'Nguyên tắc kinh doanh (Principle)', value: 'Nguyên tắc kinh doanh (Principle)' },
 
-        ),
+						//   { text: 'Khung phân tích (Framework)', value: 'Khung phân tích (Framework)' },
 
-      },
-      {
-        title: 'Số ký tự Detail',
-        dataIndex: 'detail',
-        key: 'detailCharCount',
-        width: 120,
-        render: (detail) => {
-          const charCount = detail ? detail.length : 0;
-          return (
-              <Tag color={charCount > 0 ? 'blue' : 'default'}>
-                {charCount.toLocaleString()}
-              </Tag>
-          );
-        },
-        sorter: (a, b) => {
-          const countA = a.detail ? a.detail.length : 0;
-          const countB = b.detail ? b.detail.length : 0;
-          return countA - countB;
-        }
-      },
-      // {
-      //   title: 'User Class Allowed',
-      //   dataIndex: 'allowed_user_class',
-      //   key: 'allowed_user_class',
-      //   width: 200,
-      //   render: (allowedClasses) => {
-      //     if (!allowedClasses || allowedClasses.length === 0) {
-      //       return <Tag>Chưa gắn</Tag>;
-      //     }
+						//   { text: 'Mô hình (Business model)', value: 'Mô hình (Business model)' },
 
-      //     // Find user class names from userClasses array
-      //     const classNames = allowedClasses
-      //       .map(id => {
-      //         const userClass = userClasses.find(c => c.id === id);
-      //         return userClass?.name || `Class #${id}`;
-      //       })
-      //       .join(', ');
+						//   { text: 'Phương pháp luận (Methodology)', value: 'Phương pháp luận (Methodology)' },
 
-      //     return (
-      //       <Tooltip title={classNames}>
-      //         <span> {classNames}</span>
-      //       </Tooltip>
-      //     );
-      //   },
-      // },
+						//   { text: 'Công cụ & kỹ thuật (Tools & Technique)', value: 'Công cụ & kỹ thuật (Tools & Technique)' },
 
+						//   { text: 'Các báo cáo ngành - vĩ mô', value: 'Các báo cáo ngành - vĩ mô' },
 
+						//   { text: 'Best Practices', value: 'Best Practices' },
 
+						//   { text: 'Case Studies', value: 'Case Studies' },
 
-      {
+						//   { text: 'Tài nguyên khác', value: 'Tài nguyên khác' },
 
-        title: 'Tóm tắt',
+						//   { text: 'Ý tưởng khởi nghiệp', value: 'Ý tưởng khởi nghiệp' },
 
-        dataIndex: 'summary',
+						//   { text: 'Tips khởi nghiệp', value: 'Tips khởi nghiệp' },
 
-        key: 'summary',
+						//   { text: 'Sáng tạo khác', value: 'Sáng tạo khác' }
 
-        width: 200,
+						// ],
 
-        ellipsis: {
+						onFilter: (value, record) => record.category === value,
 
-          showTitle: false,
+					},
 
-        },
+				] : []),
 
-        render: (summary) => (
+			{
 
-            <Tooltip placement="topLeft" title={summary}>
+				title: 'Trạng thái',
 
-              <span className={styles.summaryCell}>{summary}</span>
+				dataIndex: 'status',
 
-            </Tooltip>
+				key: 'status',
 
-        )
+				width: 120,
 
-      },
+				render: (status) => {
 
+					const statusMap = {
 
+						published: { color: 'success', text: 'Đã xuất bản' },
 
+						draft: { color: 'default', text: 'Nháp' },
 
-      // {
+						archived: { color: 'warning', text: 'Lưu trữ' },
 
-      //   title: 'Chi tiết',
+					};
 
-      //   dataIndex: 'detail',
+					const stat = statusMap[status] || { color: 'default', text: status };
 
-      //   key: 'detail',
+					return <Badge status={stat.color} text={stat.text} />;
 
-      //   width: 300,
+				},
 
-      //   ellipsis: {
+				filters: [
 
-      //     showTitle: false,
+					{ text: 'Đã xuất bản', value: 'published' },
 
-      //   },
+					{ text: 'Nháp', value: 'draft' },
 
-      //   render: (detail) => (
+					{ text: 'Lưu trữ', value: 'archived' },
 
-      //     <Tooltip placement="topLeft" title={detail}>
+				],
 
-      //       <span className={styles.detailCell}>{detail}</span>
+				onFilter: (value, record) => record.status === value,
 
-      //     </Tooltip>
+			},
 
-      //   )
+		];
 
-      // },
 
-      ...(currentTab == 'home' || currentTab == 'news' || currentTab == 'longForm' ?
+		// Add specific columns based on content type
 
-          [
+		if (currentTab === 'home' || currentTab === 'news' || currentTab === 'caseTraining' || currentTab === 'longForm') {
 
-            {
+			baseColumns.splice(5, 0,
 
+				{
 
+					title: 'Program',
 
-              title: 'Danh mục',
+					dataIndex: 'tag4',
 
-              dataIndex: 'category',
+					key: 'tag4',
 
-              key: 'category',
+					width: 550,
 
-              width: 150,
+					render: (tag4) => {
 
-              render: (category) => {
+						if (!Array.isArray(tag4)) return null;
 
-                const categoryMap = {
+						return (
 
-                  'Case study': { color: 'blue', text: 'Case study' },
+							<>
 
-                  'Kinh tế - tài chính': { color: 'green', text: 'Kinh tế - tài chính' },
+								{
 
-                  'Thế giới': { color: 'default', text: 'Thế giới' },
+									tag4.map((val) => {
 
-                  'Công nghệ': { color: 'cyan', text: 'Công nghệ' },
+										const option = tag4Options.find((opt) => opt.value === val);
 
-                  'Đổi mới sáng tạo': { color: 'volcano', text: 'Đổi mới sáng tạo' },
+										return (
 
-                  'Khác': { color: 'orange', text: 'Khác' },
+											<span className={styles.summaryCell}>{option?.label} , </span>
 
-                  'Lý thuyết (Theory)': { color: 'purple', text: 'Lý thuyết (Theory)' },
+										);
 
-                  'Khái niệm (Concept)': { color: 'magenta', text: 'Khái niệm (Concept)' },
+									})}
 
-                  'Nguyên tắc kinh doanh (Principle)': { color: 'geekblue', text: 'Nguyên tắc kinh doanh (Principle)' },
+							</>
 
-                  'Khung phân tích (Framework)': { color: 'gold', text: 'Khung phân tích (Framework)' },
+						);
 
-                  'Mô hình (Business model)': { color: 'lime', text: 'Mô hình (Business model)' },
+					},
 
-                  'Phương pháp luận (Methodology)': { color: 'processing', text: 'Phương pháp luận (Methodology)' },
+				},
 
-                  'Công cụ & kỹ thuật (Tools & Technique)': { color: 'red', text: 'Công cụ & kỹ thuật (Tools & Technique)' },
+				// {
 
-                  'Các báo cáo ngành - vĩ mô': { color: 'green', text: 'Các báo cáo ngành - vĩ mô' },
+				//   title: 'Sentiment',
 
-                  'Best Practices': { color: 'blue', text: 'Best Practices' },
+				//   dataIndex: 'sentiment',
 
-                  'Case Studies': { color: 'cyan', text: 'Case Studies' },
+				//   key: 'sentiment',
 
-                  'Tài nguyên khác': { color: 'default', text: 'Tài nguyên khác' },
+				//   width: 120,
 
-                  'Ý tưởng khởi nghiệp': { color: 'red', text: 'Ý tưởng khởi nghiệp' },
+				//   filters: [
 
-                  'Tips khởi nghiệp': { color: 'green', text: 'Tips khởi nghiệp' },
+				//     { text: 'Tích cực', value: 'positive' },
 
-                  'Sáng tạo khác': { color: 'blue', text: 'Sáng tạo khác' }
+				//     { text: 'Tiêu cực', value: 'negative' },
 
-                };
+				//     { text: 'Trung tính', value: 'neutral' }
 
-                const cat = categoryMap[category] || { color: 'default', text: category };
+				//   ],
 
-                return (<div>{cat.text}</div>
+				//   onFilter: (value, record) => record.sentiment === value
 
-                );
+				// },
 
-              },
+				// {
 
-              filters: getCurrentTabCategoryFilters(),
+				//   title: 'Độ phức tạp',
 
-              //  [
+				//   dataIndex: 'impact',
 
-              //   { text: 'Case study', value: 'Case study' },
+				//   key: 'impact',
 
-              //   { text: 'Kinh tế - tài chính', value: 'Kinh tế - tài chính' },
+				//   width: 150,
 
-              //   { text: 'Thế giới', value: 'Thế giới' },
+				//   filters: [
 
-              //   { text: 'Công nghệ', value: 'Công nghệ' },
+				//     { text: 'Quan trọng', value: 'important' },
 
-              //   { text: 'Đổi mới sáng tạo', value: 'Đổi mới sáng tạo' },
+				//     { text: 'Bình thường', value: 'normal' },
 
-              //   { text: 'Khác', value: 'Khác' },
+				//     { text: 'Bỏ qua', value: 'skip' }
 
-              //   { text: 'Lý thuyết (Theory)', value: 'Lý thuyết (Theory)' },
+				//   ],
 
-              //   { text: 'Khái niệm (Concept)', value: 'Khái niệm (Concept)' },
+				//   render: (impact) => {
 
-              //   { text: 'Nguyên tắc kinh doanh (Principle)', value: 'Nguyên tắc kinh doanh (Principle)' },
+				//     const impactMap = {
 
-              //   { text: 'Khung phân tích (Framework)', value: 'Khung phân tích (Framework)' },
+				//       important: { color: 'red', text: 'Quan trọng' },
 
-              //   { text: 'Mô hình (Business model)', value: 'Mô hình (Business model)' },
+				//       normal: { color: 'default', text: 'Bình thường' },
 
-              //   { text: 'Phương pháp luận (Methodology)', value: 'Phương pháp luận (Methodology)' },
+				//       skip: { color: 'orange', text: 'Bỏ qua' }
 
-              //   { text: 'Công cụ & kỹ thuật (Tools & Technique)', value: 'Công cụ & kỹ thuật (Tools & Technique)' },
+				//     };
 
-              //   { text: 'Các báo cáo ngành - vĩ mô', value: 'Các báo cáo ngành - vĩ mô' },
+				//     const imp = impactMap[impact] || { color: 'default', text: impact };
 
-              //   { text: 'Best Practices', value: 'Best Practices' },
+				//     return <Tag color={imp.color}>{imp.text}</Tag>;
 
-              //   { text: 'Case Studies', value: 'Case Studies' },
+				//   },
 
-              //   { text: 'Tài nguyên khác', value: 'Tài nguyên khác' },
+				//   onFilter: (value, record) => record.impact === value
 
-              //   { text: 'Ý tưởng khởi nghiệp', value: 'Ý tưởng khởi nghiệp' },
+				// },
 
-              //   { text: 'Tips khởi nghiệp', value: 'Tips khởi nghiệp' },
 
-              //   { text: 'Sáng tạo khác', value: 'Sáng tạo khác' }
+				{
 
-              // ],
+					title: 'Nguồn',
 
-              onFilter: (value, record) => record.category === value
+					dataIndex: 'source',
 
-            }
+					key: 'source',
 
-          ] : []),
+					width: 120,
 
-      {
+					ellipsis: {
 
-        title: 'Trạng thái',
+						showTitle: false,
 
-        dataIndex: 'status',
+					},
 
-        key: 'status',
+					render: (source) => (
 
-        width: 120,
+						<Tooltip placement='topLeft' title={source}>
 
-        render: (status) => {
+							<span className={styles.sourceCell}>{source}</span>
 
-          const statusMap = {
+						</Tooltip>
 
-            published: { color: 'success', text: 'Đã xuất bản' },
+					),
 
-            draft: { color: 'default', text: 'Nháp' },
+				},
 
-            archived: { color: 'warning', text: 'Lưu trữ' }
+				...(currentTab === 'caseTraining' ? [
 
-          };
+					{
 
-          const stat = statusMap[status] || { color: 'default', text: status };
+						title: 'Categories',
 
-          return <Badge status={stat.color} text={stat.text} />;
+						dataIndex: 'tag1',
 
-        },
+						key: 'tag1',
 
-        filters: [
+						width: 120,
 
-          { text: 'Đã xuất bản', value: 'published' },
+						render: (tag1) => {
 
-          { text: 'Nháp', value: 'draft' },
+							if (!tag1) return '';
 
-          { text: 'Lưu trữ', value: 'archived' }
+							return <div>{tag1}</div>;
 
-        ],
+						},
 
-        onFilter: (value, record) => record.status === value
+						filters: getCurrentTabTag1Filters(),
 
-      }
+						onFilter: (value, record) => {
 
-    ];
+							if (value === null) {
 
+								return !record.tag1 || record.tag1 === '';
 
+							}
 
-    // Add specific columns based on content type
+							return record.tag1 === value;
 
-    if (currentTab === 'home' || currentTab === 'news' || currentTab === 'caseTraining' || currentTab === 'longForm') {
+						},
 
-      baseColumns.splice(5, 0,
+					},
 
-          {
+					{
 
-            title: 'Program',
+						title: 'Levels',
 
-            dataIndex: 'tag4',
+						dataIndex: 'tag2',
 
-            key: 'tag4',
+						key: 'tag2',
 
-            width: 550,
+						width: 120,
 
-            render: (tag4) => {
+						render: (tag2) => {
 
-              if (!Array.isArray(tag4)) return null;
+							if (!tag2) return '';
 
-              return (
+							return <div>{tag2}</div>;
 
-                  <>
+						},
 
-                    {
+						filters: getCurrentTabTag2Filters(),
 
-                      tag4.map((val) => {
+						onFilter: (value, record) => {
 
-                        const option = tag4Options.find((opt) => opt.value === val);
+							if (value === null) {
 
-                        return (
+								return !record.tag2 || record.tag2 === '';
 
-                            <span className={styles.summaryCell}>{option?.label} , </span>
+							}
 
-                        );
+							return record.tag2 === value;
 
-                      })}
+						},
 
-                  </>
+					},
 
-              );
+					{
 
-            },
+						title: 'Series',
 
-          },
+						dataIndex: 'tag3',
 
-          // {
+						key: 'tag3',
 
-          //   title: 'Sentiment',
+						width: 120,
 
-          //   dataIndex: 'sentiment',
+						render: (tag3) => {
 
-          //   key: 'sentiment',
+							if (!tag3) return '';
 
-          //   width: 120,
+							return <div>{tag3}</div>;
 
-          //   filters: [
+						},
 
-          //     { text: 'Tích cực', value: 'positive' },
+						filters: getCurrentTabTag3Filters(),
 
-          //     { text: 'Tiêu cực', value: 'negative' },
+						onFilter: (value, record) => {
 
-          //     { text: 'Trung tính', value: 'neutral' }
+							if (value === null) {
 
-          //   ],
+								return !record.tag3 || record.tag3 === '';
 
-          //   onFilter: (value, record) => record.sentiment === value
+							}
 
-          // },
+							return record.tag3 === value;
 
-          // {
+						},
 
-          //   title: 'Độ phức tạp',
+					},
 
-          //   dataIndex: 'impact',
+				] : []),
 
-          //   key: 'impact',
 
-          //   width: 150,
+				{
 
-          //   filters: [
+					title: 'Thời gian',
 
-          //     { text: 'Quan trọng', value: 'important' },
+					dataIndex: 'createdAt',
 
-          //     { text: 'Bình thường', value: 'normal' },
+					key: 'createdAt',
 
-          //     { text: 'Bỏ qua', value: 'skip' }
+					width: 140,
 
-          //   ],
+					render: (createdAt) => {
 
-          //   render: (impact) => {
+						if (!createdAt) return '-';
 
-          //     const impactMap = {
+						const date = new Date(createdAt);
 
-          //       important: { color: 'red', text: 'Quan trọng' },
+						if (isNaN(date.getTime())) return '-';
 
-          //       normal: { color: 'default', text: 'Bình thường' },
 
-          //       skip: { color: 'orange', text: 'Bỏ qua' }
+						const day = String(date.getDate()).padStart(2, '0');
 
-          //     };
+						const month = String(date.getMonth() + 1).padStart(2, '0');
 
-          //     const imp = impactMap[impact] || { color: 'default', text: impact };
+						const year = date.getFullYear();
 
-          //     return <Tag color={imp.color}>{imp.text}</Tag>;
+						const hours = String(date.getHours()).padStart(2, '0');
 
-          //   },
+						const minutes = String(date.getMinutes()).padStart(2, '0');
 
-          //   onFilter: (value, record) => record.impact === value
 
-          // },
+						return `${day}/${month}/${year} ${hours}:${minutes}`;
 
+					},
 
+					sorter: (a, b) => new Date(a.createdAt) - new Date(b.createdAt),
 
-          {
+				},
 
-            title: 'Nguồn',
+				{
 
-            dataIndex: 'source',
+					title: 'Avatar',
 
-            key: 'source',
+					key: 'avatar',
 
-            width: 120,
+					width: 80,
 
-            ellipsis: {
+					render: (_, record) => {
 
-              showTitle: false,
+						if (record.avatarUrl) {
 
-            },
+							return (
 
-            render: (source) => (
+								<Image
 
-                <Tooltip placement="topLeft" title={source}>
+									width={40}
 
-                  <span className={styles.sourceCell}>{source}</span>
+									height={40}
 
-                </Tooltip>
+									src={record.avatarUrl}
 
-            )
+									style={{ objectFit: 'cover', borderRadius: '4px' }}
 
-          },
+									placeholder={
 
-          ...(currentTab === 'caseTraining' ? [
+										<div style={{
 
-            {
+											width: 40,
 
-              title: 'Categories',
+											height: 40,
 
-              dataIndex: 'tag1',
+											display: 'flex',
 
-              key: 'tag1',
+											alignItems: 'center',
 
-              width: 120,
+											justifyContent: 'center',
 
-              render: (tag1) => {
+											backgroundColor: '#f0f0f0',
 
-                if (!tag1) return '';
+											borderRadius: '4px',
 
-                return <div>{tag1}</div>;
+										}}>
 
-              },
+											<PictureOutlined style={{ fontSize: '16px', color: '#999' }} />
 
-              filters: getCurrentTabTag1Filters(),
+										</div>
 
-              onFilter: (value, record) => {
+									}
 
-                if (value === null) {
+								/>
 
-                  return !record.tag1 || record.tag1 === '';
+							);
 
-                }
+						}
 
-                return record.tag1 === value;
+						return (
 
-              }
+							<div style={{
 
-            },
+								width: 40,
 
-            {
+								height: 40,
 
-              title: 'Levels',
+								display: 'flex',
 
-              dataIndex: 'tag2',
+								alignItems: 'center',
 
-              key: 'tag2',
+								justifyContent: 'center',
 
-              width: 120,
+								backgroundColor: '#f0f0f0',
 
-              render: (tag2) => {
+								borderRadius: '4px',
 
-                if (!tag2) return '';
+							}}>
 
-                return <div>{tag2}</div>;
+								<PictureOutlined style={{ fontSize: '16px', color: '#999' }} />
 
-              },
+							</div>
 
-              filters: getCurrentTabTag2Filters(),
+						);
 
-              onFilter: (value, record) => {
+					},
 
-                if (value === null) {
+				},
 
-                  return !record.tag2 || record.tag2 === '';
+				{
+					title: <span style={{ color: 'green', fontWeight: 'bold' }}>Diagram HTML</span>,
+					key: 'diagramHtml',
+					width: 90,
+					render: (_, record) => {
+						// Hiển thị icon HTML nếu có diagramHtmlCode
+						if (record.diagramHtmlCode && record.diagramHtmlCode.length > 0) {
+							return (
+								<div
+									onClick={() => handleDiagramPreview(record)}
+									style={{
+										width: 40,
+										height: 40,
+										display: 'flex',
+										alignItems: 'center',
+										justifyContent: 'center',
+										backgroundColor: '#f6ffed',
+										borderRadius: '4px',
+										border: '1px solid #b7eb8f',
+										cursor: 'pointer',
+									}}
+									title='Diagram HTML'
+								>
+									<FileTextOutlined style={{ fontSize: '16px', color: '#52c41a' }} />
+								</div>
+							);
+						}
 
-                }
+						// Hiển thị icon trống nếu không có
+						return (
+							<div style={{
+								width: 40,
+								height: 40,
+								display: 'flex',
+								alignItems: 'center',
+								justifyContent: 'center',
+								backgroundColor: '#f0f0f0',
+								borderRadius: '4px',
+							}}
+								 title='Chưa tạo diagram HTML'
+							>
+								<FileTextOutlined style={{ fontSize: '16px', color: '#999' }} />
+							</div>
+						);
+					},
+				},
+				{
+					title: <span style={{ color: '#722ed1', fontWeight: 'bold' }}>Diagram Excalidraw</span>,
+					key: 'diagramExcalidraw',
+					width: 90,
+					render: (_, record) => {
+						// Hiển thị icon Excalidraw React nếu có diagramExcalidrawJson
+						if (record.diagramExcalidrawJson && record.diagramExcalidrawJson.length > 0) {
+							return (
+								<div
+									onClick={() => handleDiagramPreview(record)}
+									style={{
+										width: 40,
+										height: 40,
+										display: 'flex',
+										alignItems: 'center',
+										justifyContent: 'center',
+										backgroundColor: '#f9f0ff',
+										borderRadius: '4px',
+										border: '1px solid #d3adf7',
+										cursor: 'pointer',
+									}}
+									title='Diagram Excalidraw React'
+								>
+									<PictureOutlined style={{ fontSize: '16px', color: '#722ed1' }} />
+								</div>
+							);
+						}
+						return (
+							<div style={{
+								width: 40,
+								height: 40,
+								display: 'flex',
+								alignItems: 'center',
+								justifyContent: 'center',
+								backgroundColor: '#f0f0f0',
+								borderRadius: '4px',
+							}}
+								 title='Chưa tạo diagram Excalidraw'
+							>
+								<PictureOutlined style={{ fontSize: '16px', color: '#999' }} />
+							</div>
+						);
+					},
+				},
+				{
+					title: <span style={{ color: '#1890ff', fontWeight: 'bold' }}>Summary Detail</span>,
+					key: 'summaryDetail',
+					width: 200,
+					render: (_, record) => {
+						if (record.summaryDetail) {
+							return (
+								<Tooltip title={record.summaryDetail}>
+									<div style={{
+										maxWidth: '200px',
+										overflow: 'hidden',
+										textOverflow: 'ellipsis',
+										whiteSpace: 'nowrap',
+										fontSize: '12px',
+										color: '#1890ff',
+									}}>
+										{record.summaryDetail.substring(0, 50)}...
+									</div>
+								</Tooltip>
+							);
+						}
+						return (
+							<span style={{ color: '#999', fontSize: '12px' }}>Chưa có</span>
+						);
+					},
+				},
 
-                return record.tag2 === value;
+				{
 
-              }
+					title: 'Media',
 
-            },
+					key: 'media',
 
-            {
+					width: 120,
 
-              title: 'Series',
+					render: (_, record) => {
 
-              dataIndex: 'tag3',
+						const imageCount = record.imgUrls && Array.isArray(record.imgUrls) ? record.imgUrls.length : 0;
 
-              key: 'tag3',
+						const hasVideo = !!record.videoUrl;
 
-              width: 120,
+						const fileCount = record.fileUrls && Array.isArray(record.fileUrls) ? record.fileUrls.length : 0;
 
-              render: (tag3) => {
 
-                if (!tag3) return '';
+						return (
 
-                return <div>{tag3}</div>;
+							<Space size='small' wrap>
 
-              },
+								{imageCount > 0 && (
 
-              filters: getCurrentTabTag3Filters(),
+									<Tag color='blue' style={{ margin: 0 }}>
 
-              onFilter: (value, record) => {
+										🖼️ {imageCount}
 
-                if (value === null) {
+									</Tag>
 
-                  return !record.tag3 || record.tag3 === '';
+								)}
 
-                }
+								{hasVideo && (
 
-                return record.tag3 === value;
+									<Tag color='purple' style={{ margin: 0 }}>
 
-              }
+										🎥 1
 
-            }
+									</Tag>
 
-          ] : []),
+								)}
 
+								{fileCount > 0 && (
 
+									<Tag color='green' style={{ margin: 0 }}>
 
-          {
+										📎 {fileCount}
 
-            title: 'Thời gian',
+									</Tag>
 
-            dataIndex: 'createdAt',
+								)}
 
-            key: 'createdAt',
+								{imageCount === 0 && !hasVideo && fileCount === 0 && (
 
-            width: 140,
+									<Tag color='default' style={{ margin: 0 }}>
 
-            render: (createdAt) => {
+										Không có
 
-              if (!createdAt) return '-';
+									</Tag>
 
-              const date = new Date(createdAt);
+								)}
 
-              if (isNaN(date.getTime())) return '-';
+							</Space>
 
+						);
 
+					},
 
-              const day = String(date.getDate()).padStart(2, '0');
+				},
 
-              const month = String(date.getMonth() + 1).padStart(2, '0');
+				{
 
-              const year = date.getFullYear();
+					title: 'Quiz Content',
 
-              const hours = String(date.getHours()).padStart(2, '0');
+					key: 'quizContent',
 
-              const minutes = String(date.getMinutes()).padStart(2, '0');
+					width: 120,
 
+					render: (_, record) => {
 
+						const questionContent = record.questionContent || record.quizContent || record.quizzContent;
 
-              return `${day}/${month}/${year} ${hours}:${minutes}`;
+						const hasQuiz = questionContent && (
 
-            },
+							(questionContent.questionQuiz && questionContent.questionQuiz.length > 0) ||
 
-            sorter: (a, b) => new Date(a.createdAt) - new Date(b.createdAt)
+							(questionContent.questionEssay && questionContent.questionEssay.length > 0)
 
-          },
+						);
 
-          {
 
-            title: 'Avatar',
+						return (
 
-            key: 'avatar',
+							<Space size='small' wrap>
 
-            width: 80,
+								{hasQuiz ? (
 
-            render: (_, record) => {
+									<Button
 
-              if (record.avatarUrl) {
+										type='link'
 
-                return (
+										icon={<QuestionCircleOutlined />}
 
-                    <Image
+										onClick={() => handleViewQuestionContent(record)}
 
-                        width={40}
+										size='small'
 
-                        height={40}
+										style={{ color: '#1890ff' }}
 
-                        src={record.avatarUrl}
+									>
 
-                        style={{ objectFit: 'cover', borderRadius: '4px' }}
+										Xem Quiz
 
-                        placeholder={
+									</Button>
 
-                          <div style={{
+								) : (
 
-                            width: 40,
+									<Tag color='default' style={{ margin: 0 }}>
 
-                            height: 40,
+										Không có
 
-                            display: 'flex',
+									</Tag>
 
-                            alignItems: 'center',
+								)}
 
-                            justifyContent: 'center',
+							</Space>
 
-                            backgroundColor: '#f0f0f0',
+						);
 
-                            borderRadius: '4px'
+					},
 
-                          }}>
+				},
+			);
 
-                            <PictureOutlined style={{ fontSize: '16px', color: '#999' }} />
+		} else if (currentTab === 'library') {
 
-                          </div>
+			baseColumns.splice(5, 0,
 
-                        }
+				// {
 
-                    />
+				//   title: 'Số trang',
 
-                );
+				//   dataIndex: 'pages',
 
-              }
+				//   key: 'pages',
 
-              return (
+				//   width: 100
 
-                  <div style={{
+				// },
 
-                    width: 40,
+				{
 
-                    height: 40,
+					title: 'Media',
 
-                    display: 'flex',
+					key: 'media',
 
-                    alignItems: 'center',
+					width: 120,
 
-                    justifyContent: 'center',
+					render: (_, record) => {
 
-                    backgroundColor: '#f0f0f0',
+						const imageCount = record.imgUrls && Array.isArray(record.imgUrls) ? record.imgUrls.length : 0;
 
-                    borderRadius: '4px'
+						const hasVideo = !!record.videoUrl;
 
-                  }}>
 
-                    <PictureOutlined style={{ fontSize: '16px', color: '#999' }} />
+						return (
 
-                  </div>
+							<Space size='small' wrap>
 
-              );
+								{imageCount > 0 && (
 
-            }
+									<Tag color='blue' style={{ margin: 0 }}>
 
-          },
+										🖼️ {imageCount}
 
-          {
-            title: <span style={{ color: 'green', fontWeight: 'bold' }}>Diagram HTML</span>,
-            key: 'diagramHtml',
-            width: 90,
-            render: (_, record) => {
-              // Hiển thị icon HTML nếu có diagramHtmlCode
-              if (record.diagramHtmlCode && record.diagramHtmlCode.length > 0) {
-                return (
-                    <div
-                        onClick={() => handleDiagramPreview(record)}
-                        style={{
-                          width: 40,
-                          height: 40,
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          backgroundColor: '#f6ffed',
-                          borderRadius: '4px',
-                          border: '1px solid #b7eb8f',
-                          cursor: 'pointer'
-                        }}
-                        title="Diagram HTML"
-                    >
-                      <FileTextOutlined style={{ fontSize: '16px', color: '#52c41a' }} />
-                    </div>
-                );
-              }
+									</Tag>
 
-              // Hiển thị icon trống nếu không có
-              return (
-                  <div style={{
-                    width: 40,
-                    height: 40,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    backgroundColor: '#f0f0f0',
-                    borderRadius: '4px'
-                  }}
-                       title="Chưa tạo diagram HTML"
-                  >
-                    <FileTextOutlined style={{ fontSize: '16px', color: '#999' }} />
-                  </div>
-              );
-            }
-          },
-          {
-            title: <span style={{ color: '#722ed1', fontWeight: 'bold' }}>Diagram Excalidraw</span>,
-            key: 'diagramExcalidraw',
-            width: 90,
-            render: (_, record) => {
-              // Hiển thị icon Excalidraw React nếu có diagramExcalidrawJson
-              if (record.diagramExcalidrawJson && record.diagramExcalidrawJson.length > 0) {
-                return (
-                    <div
-                        onClick={() => handleDiagramPreview(record)}
-                        style={{
-                          width: 40,
-                          height: 40,
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          backgroundColor: '#f9f0ff',
-                          borderRadius: '4px',
-                          border: '1px solid #d3adf7',
-                          cursor: 'pointer'
-                        }}
-                        title="Diagram Excalidraw React"
-                    >
-                      <PictureOutlined style={{ fontSize: '16px', color: '#722ed1' }} />
-                    </div>
-                );
-              }
-              return (
-                  <div style={{
-                    width: 40,
-                    height: 40,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    backgroundColor: '#f0f0f0',
-                    borderRadius: '4px'
-                  }}
-                       title="Chưa tạo diagram Excalidraw"
-                  >
-                    <PictureOutlined style={{ fontSize: '16px', color: '#999' }} />
-                  </div>
-              );
-            }
-          },
-          {
-            title: <span style={{ color: '#1890ff', fontWeight: 'bold' }}>Summary Detail</span>,
-            key: 'summaryDetail',
-            width: 200,
-            render: (_, record) => {
-              if (record.summaryDetail) {
-                return (
-                    <Tooltip title={record.summaryDetail}>
-                      <div style={{
-                        maxWidth: '200px',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        whiteSpace: 'nowrap',
-                        fontSize: '12px',
-                        color: '#1890ff'
-                      }}>
-                        {record.summaryDetail.substring(0, 50)}...
-                      </div>
-                    </Tooltip>
-                );
-              }
-              return (
-                  <span style={{ color: '#999', fontSize: '12px' }}>Chưa có</span>
-              );
-            }
-          },
+								)}
 
-          {
+								{hasVideo && (
 
-            title: 'Media',
+									<Tag color='purple' style={{ margin: 0 }}>
 
-            key: 'media',
+										🎥 1
 
-            width: 120,
+									</Tag>
 
-            render: (_, record) => {
+								)}
 
-              const imageCount = record.imgUrls && Array.isArray(record.imgUrls) ? record.imgUrls.length : 0;
+								{imageCount === 0 && !hasVideo && (
 
-              const hasVideo = !!record.videoUrl;
+									<Tag color='default' style={{ margin: 0 }}>
 
-              const fileCount = record.fileUrls && Array.isArray(record.fileUrls) ? record.fileUrls.length : 0;
+										Không có
 
+									</Tag>
 
+								)}
 
-              return (
+							</Space>
 
-                  <Space size="small" wrap>
+						);
 
-                    {imageCount > 0 && (
+					},
 
-                        <Tag color="blue" style={{ margin: 0 }}>
+				},
+			);
 
-                          🖼️ {imageCount}
+		} else if (currentTab === 'story') {
 
-                        </Tag>
+			baseColumns.splice(5, 0,
 
-                    )}
+				{
 
-                    {hasVideo && (
+					title: 'Thời lượng',
 
-                        <Tag color="purple" style={{ margin: 0 }}>
+					dataIndex: 'duration',
 
-                          🎥 1
+					key: 'duration',
 
-                        </Tag>
+					width: 100,
 
-                    )}
+				},
 
-                    {fileCount > 0 && (
+				{
 
-                        <Tag color="green" style={{ margin: 0 }}>
+					title: 'Loại',
 
-                          📎 {fileCount}
+					dataIndex: 'storyType',
 
-                        </Tag>
+					key: 'storyType',
 
-                    )}
+					width: 100,
 
-                    {imageCount === 0 && !hasVideo && fileCount === 0 && (
+				},
+			);
 
-                        <Tag color="default" style={{ margin: 0 }}>
+		}
 
-                          Không có
 
-                        </Tag>
+		// Add actions column
 
-                    )}
+		baseColumns.push({
 
-                  </Space>
+			title: 'Hành động',
 
-              );
+			key: 'actions',
 
-            }
+			width: currentTab === 'story' ? 150 : 350,
+			fixed: 'right',
 
-          },
+			render: (_, record) => (
 
-          {
+				<Space size='small'>
 
-            title: 'Quiz Content',
+					<Tooltip title='Xem chi tiết'>
 
-            key: 'quizContent',
+						<Button
 
-            width: 120,
+							type='link'
 
-            render: (_, record) => {
+							icon={<EyeOutlined />}
 
-              const questionContent = record.questionContent || record.quizContent || record.quizzContent;
+							onClick={() => handleView(record)}
 
-              const hasQuiz = questionContent && (
+							size='small'
 
-                  (questionContent.questionQuiz && questionContent.questionQuiz.length > 0) ||
+						/>
 
-                  (questionContent.questionEssay && questionContent.questionEssay.length > 0)
+					</Tooltip>
 
-              );
+					<Tooltip title='Chỉnh sửa'>
 
+						<Button
 
+							type='link'
 
-              return (
+							icon={<EditOutlined />}
 
-                  <Space size="small" wrap>
+							onClick={() => handleEdit(record)}
 
-                    {hasQuiz ? (
+							size='small'
 
-                        <Button
+						/>
 
-                            type="link"
+					</Tooltip>
 
-                            icon={<QuestionCircleOutlined />}
+					{currentTab === 'story' && (
 
-                            onClick={() => handleViewQuestionContent(record)}
+						<Tooltip title={
 
-                            size="small"
+							record.audioUrl ? `Đã có voice${record.audioText ? ' (có nội dung text)' : ''}` :
 
-                            style={{ color: '#1890ff' }}
+								!record.audioText ? 'Cần có nội dung audioText để tạo voice' :
 
-                        >
+									voiceQueue.find(task => task.recordId === record.id) ? 'Đang trong hàng đợi' :
 
-                          Xem Quiz
+										currentProcessing && currentProcessing.recordId === record.id ? 'Đang tạo voice' :
 
-                        </Button>
+											'Tạo voice'
 
-                    ) : (
+						}>
 
-                        <Tag color="default" style={{ margin: 0 }}>
+							<Button
 
-                          Không có
+								type='link'
 
-                        </Tag>
+								icon={
 
-                    )}
+									(voiceQueue.find(task => task.recordId === record.id) ||
 
-                  </Space>
+										(currentProcessing && currentProcessing.recordId === record.id)) ?
 
-              );
+										<LoadingOutlined /> : <SoundOutlined />
 
-            }
+								}
 
-          }
+								onClick={() => handleCreateVoice(record)}
 
-      );
+								size='small'
 
-    } else if (currentTab === 'library') {
+								loading={
 
-      baseColumns.splice(5, 0,
+									!!record.audioText &&
 
-          // {
+									!!(voiceQueue.find(task => task.recordId === record.id) ||
 
-          //   title: 'Số trang',
+										(currentProcessing && currentProcessing.recordId === record.id))
 
-          //   dataIndex: 'pages',
+								}
 
-          //   key: 'pages',
+								disabled={
 
-          //   width: 100
+									!record.audioText ||
 
-          // },
+									!!(voiceQueue.find(task => task.recordId === record.id) ||
 
-          {
+										(currentProcessing && currentProcessing.recordId === record.id))
 
-            title: 'Media',
+								}
 
-            key: 'media',
+								style={{
 
-            width: 120,
+									color: !record.audioText ? '#d9d9d9' :
 
-            render: (_, record) => {
+										record.audioUrl ? '#52c41a' :
 
-              const imageCount = record.imgUrls && Array.isArray(record.imgUrls) ? record.imgUrls.length : 0;
+											voiceQueue.find(task => task.recordId === record.id) ? '#faad14' :
 
-              const hasVideo = !!record.videoUrl;
+												currentProcessing && currentProcessing.recordId === record.id ? '#1890ff' :
 
+													'#262626',
 
+								}}
 
-              return (
+							/>
 
-                  <Space size="small" wrap>
+						</Tooltip>
 
-                    {imageCount > 0 && (
+					)}
 
-                        <Tag color="blue" style={{ margin: 0 }}>
+					{/* Create voice from detail - for all tabs */}
 
-                          🖼️ {imageCount}
 
-                        </Tag>
+					<Tooltip title={
 
-                    )}
+						record.audioUrl ? `Đã có voice${record.detail ? ' (có nội dung detail)' : ''}` :
 
-                    {hasVideo && (
+							!record.detail ? 'Cần có nội dung detail để tạo voice' :
 
-                        <Tag color="purple" style={{ margin: 0 }}>
+								voiceQueue.find(task => task.recordId === record.id) ? 'Đang trong hàng đợi' :
 
-                          🎥 1
+									currentProcessing && currentProcessing.recordId === record.id ? 'Đang tạo voice' :
 
-                        </Tag>
+										'Tạo voice từ detail'
 
-                    )}
+					}>
 
-                    {imageCount === 0 && !hasVideo && (
+						<Button
 
-                        <Tag color="default" style={{ margin: 0 }}>
+							type='link'
 
-                          Không có
+							icon={
 
-                        </Tag>
+								(voiceQueue.find(task => task.recordId === record.id) ||
 
-                    )}
+									(currentProcessing && currentProcessing.recordId === record.id)) ?
 
-                  </Space>
+									<LoadingOutlined /> : <SoundOutlined />
 
-              );
+							}
 
-            }
+							onClick={() => handleCreateVoiceFromDetail(record)}
 
-          },
+							size='small'
 
-      );
+							loading={
 
-    } else if (currentTab === 'story') {
+								!!record.detail &&
 
-      baseColumns.splice(5, 0,
+								!!(voiceQueue.find(task => task.recordId === record.id) ||
 
-          {
+									(currentProcessing && currentProcessing.recordId === record.id))
 
-            title: 'Thời lượng',
+							}
 
-            dataIndex: 'duration',
+							disabled={
 
-            key: 'duration',
+								!record.detail ||
 
-            width: 100
+								!!(voiceQueue.find(task => task.recordId === record.id) ||
 
-          },
+									(currentProcessing && currentProcessing.recordId === record.id))
 
-          {
+							}
 
-            title: 'Loại',
+							style={{
 
-            dataIndex: 'storyType',
+								color: !record.detail ? '#d9d9d9' :
 
-            key: 'storyType',
+									record.audioUrl ? '#52c41a' :
 
-            width: 100
+										voiceQueue.find(task => task.recordId === record.id) ? '#faad14' :
 
-          }
+											currentProcessing && currentProcessing.recordId === record.id ? '#1890ff' :
 
-      );
+												'#262626',
 
-    }
+							}}
 
+						/>
 
+					</Tooltip>
 
-    // Add actions column
 
-    baseColumns.push({
+					{/* Embedding button - show different buttons based on embedding status */}
 
-      title: 'Hành động',
+					{(currentTab === 'news' || currentTab === 'caseTraining' || currentTab === 'report') && (
 
-      key: 'actions',
+						embeddedItems.has(record.id) ? (
 
-      width: currentTab === 'story' ? 150 : 350,
-      fixed: 'right',
+							// Item đã được embedding - hiển thị nút "Embed lại" với màu khác
 
-      render: (_, record) => (
+							<Tooltip title='Embed lại'>
 
-          <Space size="small">
+								<Button
 
-            <Tooltip title="Xem chi tiết">
+									type='link'
 
-              <Button
+									onClick={() => handleEmbeding(record.id)}
 
-                  type="link"
+									size='small'
 
-                  icon={<EyeOutlined />}
+									loading={isEmbedding(record.id)}
 
-                  onClick={() => handleView(record)}
+									disabled={isEmbedding(record.id)}
 
-                  size="small"
+									icon={isEmbedding(record.id) ? <LoadingOutlined /> : <ReloadOutlined />}
 
-              />
+									style={{ color: '#1890ff' }} // Màu xanh cho nút embed lại
 
-            </Tooltip>
+								>
 
-            <Tooltip title="Chỉnh sửa">
+									{isEmbedding(record.id) ? 'Đang Embedding...' : 'Embed lại'}
 
-              <Button
+								</Button>
 
-                  type="link"
+							</Tooltip>
 
-                  icon={<EditOutlined />}
+						) : (
 
-                  onClick={() => handleEdit(record)}
+							// Item chưa được embedding - hiển thị nút "Embedding" bình thường
 
-                  size="small"
+							<Tooltip title='Embedding'>
 
-              />
+								<Button
 
-            </Tooltip>
+									type='link'
 
-            {currentTab === 'story' && (
+									onClick={() => handleEmbeding(record.id)}
 
-                <Tooltip title={
+									size='small'
 
-                  record.audioUrl ? `Đã có voice${record.audioText ? ' (có nội dung text)' : ''}` :
+									loading={isEmbedding(record.id)}
 
-                      !record.audioText ? "Cần có nội dung audioText để tạo voice" :
+									disabled={isEmbedding(record.id)}
 
-                          voiceQueue.find(task => task.recordId === record.id) ? "Đang trong hàng đợi" :
+									icon={isEmbedding(record.id) ? <LoadingOutlined /> : null}
 
-                              currentProcessing && currentProcessing.recordId === record.id ? "Đang tạo voice" :
+								>
 
-                                  "Tạo voice"
+									{isEmbedding(record.id) ? 'Đang Embedding...' : 'Embedding'}
 
-                }>
+								</Button>
 
-                  <Button
+							</Tooltip>
 
-                      type="link"
+						)
 
-                      icon={
+					)}
 
-                        (voiceQueue.find(task => task.recordId === record.id) ||
+					{(currentTab === 'home' || currentTab === 'news' || currentTab === 'caseTraining' || currentTab === 'longForm') && (
 
-                            (currentProcessing && currentProcessing.recordId === record.id)) ?
+						<>
 
-                            <LoadingOutlined /> : <SoundOutlined />
+							<Tooltip title={
 
-                      }
+								record.avatarUrl ? 'Đã có ảnh' :
 
-                      onClick={() => handleCreateVoice(record)}
+									imageGenerationQueue.find(task => task.recordId === record.id) ? 'Đang trong hàng đợi' :
 
-                      size="small"
+										currentImageProcessing && currentImageProcessing.recordId === record.id ? 'Đang tạo ảnh' :
 
-                      loading={
+											'Tạo ảnh'
 
-                          !!record.audioText &&
+							}>
 
-                          !!(voiceQueue.find(task => task.recordId === record.id) ||
+								<Button
 
-                              (currentProcessing && currentProcessing.recordId === record.id))
+									type='link'
 
-                      }
+									icon={
 
-                      disabled={
+										(imageGenerationQueue.find(task => task.recordId === record.id) ||
 
-                          !record.audioText ||
+											(currentImageProcessing && currentImageProcessing.recordId === record.id)) ?
 
-                          !!(voiceQueue.find(task => task.recordId === record.id) ||
+											<LoadingOutlined /> : <PictureOutlined />
 
-                              (currentProcessing && currentProcessing.recordId === record.id))
+									}
 
-                      }
+									onClick={() => handleCreateImage(record)}
 
-                      style={{
+									size='small'
 
-                        color: !record.audioText ? '#d9d9d9' :
+									loading={
 
-                            record.audioUrl ? '#52c41a' :
+										!!(imageGenerationQueue.find(task => task.recordId === record.id) ||
 
-                                voiceQueue.find(task => task.recordId === record.id) ? '#faad14' :
+											(currentImageProcessing && currentImageProcessing.recordId === record.id))
 
-                                    currentProcessing && currentProcessing.recordId === record.id ? '#1890ff' :
+									}
 
-                                        '#262626'
+									disabled={
 
-                      }}
+										!!record.avatarUrl ||
 
-                  />
+										!!(imageGenerationQueue.find(task => task.recordId === record.id) ||
 
-                </Tooltip>
+											(currentImageProcessing && currentImageProcessing.recordId === record.id))
 
-            )}
+									}
 
-            {/* Create voice from detail - for all tabs */}
+									style={{
 
+										color: record.avatarUrl ? '#52c41a' :
 
-            <Tooltip title={
+											imageGenerationQueue.find(task => task.recordId === record.id) ? '#faad14' :
 
-              record.audioUrl ? `Đã có voice${record.detail ? ' (có nội dung detail)' : ''}` :
+												currentImageProcessing && currentImageProcessing.recordId === record.id ? '#1890ff' :
 
-                  !record.detail ? "Cần có nội dung detail để tạo voice" :
+													'#262626',
 
-                      voiceQueue.find(task => task.recordId === record.id) ? "Đang trong hàng đợi" :
+									}}
 
-                          currentProcessing && currentProcessing.recordId === record.id ? "Đang tạo voice" :
+								/>
 
-                              "Tạo voice từ detail"
+							</Tooltip>
 
-            }>
 
-              <Button
+							{/* Diagram Generation Button */}
+							<Tooltip title={
+								diagramGenerationQueue.find(task => task.recordId === record.id) ? 'Đang trong hàng đợi' :
+									currentDiagramProcessing && currentDiagramProcessing.recordId === record.id ? 'Đang tạo diagram' :
+										'Tạo diagram'
+							}>
+								<Dropdown
+									menu={{
+										items: [
+											{
+												key: 'html',
+												label: '💻 Tạo HTML code',
+												icon: <FileTextOutlined />,
+												onClick: () => handleCreateDiagram(record, 'html'),
+											},
+											{
+												key: 'excalidraw-react',
+												label: '🎨 Tạo Excalidraw React',
+												icon: <PictureOutlined />,
+												onClick: () => handleCreateDiagram(record, 'excalidraw-react'),
+											},
+										],
+									}}
 
-                  type="link"
+									trigger={['click']}
+								>
+									<Button
+										type='link'
+										icon={
+											(diagramGenerationQueue.find(task => task.recordId === record.id) ||
+												(currentDiagramProcessing && currentDiagramProcessing.recordId === record.id)) ?
+												<LoadingOutlined /> : <NodeIndexOutlined />
+										}
+										size='small'
+										loading={
+											!!(diagramGenerationQueue.find(task => task.recordId === record.id) ||
+												(currentDiagramProcessing && currentDiagramProcessing.recordId === record.id))
+										}
 
-                  icon={
 
-                    (voiceQueue.find(task => task.recordId === record.id) ||
+									/>
+								</Dropdown>
+							</Tooltip>
 
-                        (currentProcessing && currentProcessing.recordId === record.id)) ?
+							{/* Create Summary Detail Button */}
+							<Tooltip title={
+								record.summaryDetail ? 'Đã có summaryDetail' :
+									summaryDetailQueue.find(task => task.recordId === record.id) ? 'Đang trong hàng đợi' :
+										currentSummaryDetailProcessing && currentSummaryDetailProcessing.recordId === record.id ? 'Đang tạo summaryDetail' :
+											'Tạo summaryDetail'
+							}>
+								<Button
+									type='link'
+									icon={
+										(summaryDetailQueue.find(task => task.recordId === record.id) ||
+											(currentSummaryDetailProcessing && currentSummaryDetailProcessing.recordId === record.id)) ?
+											<LoadingOutlined /> : <ThunderboltOutlined />
+									}
+									size='small'
+									onClick={() => handleCreateSummaryDetail(record)}
+									loading={
+										!!(summaryDetailQueue.find(task => task.recordId === record.id) ||
+											(currentSummaryDetailProcessing && currentSummaryDetailProcessing.recordId === record.id))
+									}
+									disabled={
+										!!record.summaryDetail ||
+										!!(summaryDetailQueue.find(task => task.recordId === record.id) ||
+											(currentSummaryDetailProcessing && currentSummaryDetailProcessing.recordId === record.id))
+									}
+									style={{
+										color: record.summaryDetail ? '#52c41a' :
+											summaryDetailQueue.find(task => task.recordId === record.id) ? '#faad14' :
+												currentSummaryDetailProcessing && currentSummaryDetailProcessing.recordId === record.id ? '#1890ff' :
+													'#1890ff',
+									}}
+								/>
+							</Tooltip>
 
-                        <LoadingOutlined /> : <SoundOutlined />
+						</>
 
-                  }
 
-                  onClick={() => handleCreateVoiceFromDetail(record)}
+					)}
 
-                  size="small"
+					<Tooltip title='Xóa'>
 
-                  loading={
+						<Popconfirm
 
-                      !!record.detail &&
+							title='Bạn có chắc chắn muốn xóa?'
 
-                      !!(voiceQueue.find(task => task.recordId === record.id) ||
+							onConfirm={() => handleDelete(record.id)}
 
-                          (currentProcessing && currentProcessing.recordId === record.id))
+							okText='Có'
 
-                  }
+							cancelText='Không'
 
-                  disabled={
+						>
 
-                      !record.detail ||
+							<Button
 
-                      !!(voiceQueue.find(task => task.recordId === record.id) ||
+								type='link'
 
-                          (currentProcessing && currentProcessing.recordId === record.id))
+								danger
 
-                  }
+								icon={<DeleteOutlined />}
 
-                  style={{
+								size='small'
 
-                    color: !record.detail ? '#d9d9d9' :
+							/>
 
-                        record.audioUrl ? '#52c41a' :
+						</Popconfirm>
 
-                            voiceQueue.find(task => task.recordId === record.id) ? '#faad14' :
+					</Tooltip>
 
-                                currentProcessing && currentProcessing.recordId === record.id ? '#1890ff' :
+				</Space>
 
-                                    '#262626'
+			),
 
-                  }}
+		});
 
-              />
 
-            </Tooltip>
+		return baseColumns;
 
+	};
 
-            {/* Embedding button - show different buttons based on embedding status */}
 
-            {(currentTab === 'news' || currentTab === 'caseTraining' || currentTab === 'report') && (
+	// Reset upload states
 
-                embeddedItems.has(record.id) ? (
+	const resetUploadStates = () => {
 
-                    // Item đã được embedding - hiển thị nút "Embed lại" với màu khác
+		setSelectedImages([]);
 
-                    <Tooltip title="Embed lại">
+		setSelectedVideo(null);
 
-                      <Button
+		setSelectedFiles([]);
 
-                          type="link"
+		setSelectedAudio(null);
 
-                          onClick={() => handleEmbeding(record.id)}
+		setUploadedImageUrls([]);
 
-                          size="small"
+		setUploadedVideoUrl('');
 
-                          loading={isEmbedding(record.id)}
+		setUploadedFileUrls([]);
 
-                          disabled={isEmbedding(record.id)}
+		setUploadedAudioUrl('');
 
-                          icon={isEmbedding(record.id) ? <LoadingOutlined /> : <ReloadOutlined />}
+		setUploadingImages(false);
 
-                          style={{ color: '#1890ff' }} // Màu xanh cho nút embed lại
+		setUploadingVideo(false);
 
-                      >
+		setUploadingFiles(false);
 
-                        {isEmbedding(record.id) ? 'Đang Embedding...' : 'Embed lại'}
+		setUploadingAudio(false);
 
-                      </Button>
+		setUploadProgress({ images: 0, video: 0, files: 0, audio: 0 });
 
-                    </Tooltip>
+		setCustomVoiceText('');
 
-                ) : (
 
-                    // Item chưa được embedding - hiển thị nút "Embedding" bình thường
+		// Reset avatar and diagram states
+		setSelectedAvatar(null);
+		setSelectedDiagram(null);
+		setUploadedAvatarUrl('');
+		setUploadedDiagramUrl('');
+		setUploadingAvatar(false);
+		setUploadingDiagram(false);
+	};
 
-                    <Tooltip title="Embedding">
 
-                      <Button
+	// Handle image upload
 
-                          type="link"
+	const handleImageUpload = async (fileList) => {
 
-                          onClick={() => handleEmbeding(record.id)}
+		// Nếu fileList rỗng, reset tất cả
 
-                          size="small"
+		if (fileList.length === 0) {
 
-                          loading={isEmbedding(record.id)}
+			setSelectedImages([]);
 
-                          disabled={isEmbedding(record.id)}
+			setUploadedImageUrls([]);
 
-                          icon={isEmbedding(record.id) ? <LoadingOutlined /> : null}
+			return;
 
-                      >
+		}
 
-                        {isEmbedding(record.id) ? 'Đang Embedding...' : 'Embedding'}
 
-                      </Button>
+		// Phân loại files: đã upload (có url) và chưa upload (cần upload)
 
-                    </Tooltip>
+		const existingFiles = fileList.filter(file => file.url || file.status === 'done');
 
-                )
+		const newFiles = fileList.filter(file => !file.url && file.status !== 'done' && file.originFileObj);
 
-            )}
 
-            {(currentTab === 'home' || currentTab === 'news' || currentTab === 'caseTraining' || currentTab === 'longForm') && (
+		// Cập nhật selectedImages trước
 
-                <>
+		setSelectedImages(fileList);
 
-                  <Tooltip title={
 
-                    record.avatarUrl ? 'Đã có ảnh' :
+		// Nếu không có file mới cần upload, chỉ cập nhật URLs từ existing files
 
-                        imageGenerationQueue.find(task => task.recordId === record.id) ? 'Đang trong hàng đợi' :
+		if (newFiles.length === 0) {
 
-                            currentImageProcessing && currentImageProcessing.recordId === record.id ? 'Đang tạo ảnh' :
+			const existingUrls = existingFiles.map(file => file.url).filter(Boolean);
 
-                                'Tạo ảnh'
+			setUploadedImageUrls(existingUrls);
 
-                  }>
+			return;
 
-                    <Button
+		}
 
-                        type="link"
 
-                        icon={
+		// Upload các file mới
 
-                          (imageGenerationQueue.find(task => task.recordId === record.id) ||
+		setUploadingImages(true);
 
-                              (currentImageProcessing && currentImageProcessing.recordId === record.id)) ?
+		setUploadProgress(prev => ({ ...prev, images: 0 }));
 
-                              <LoadingOutlined /> : <PictureOutlined />
 
-                        }
+		try {
 
-                        onClick={() => handleCreateImage(record)}
+			const filesToUpload = newFiles.map(file => file.originFileObj);
 
-                        size="small"
+			const response = await uploadFiles(filesToUpload);
 
-                        loading={
 
-                          !!(imageGenerationQueue.find(task => task.recordId === record.id) ||
+			const newUrls = response.files?.map(file => file.fileUrl || file.url) || [];
 
-                              (currentImageProcessing && currentImageProcessing.recordId === record.id))
+			const existingUrls = existingFiles.map(file => file.url).filter(Boolean);
 
-                        }
 
-                        disabled={
+			// Combine existing URLs với URLs mới
 
-                            !!record.avatarUrl ||
+			const allUrls = [...existingUrls, ...newUrls];
 
-                            !!(imageGenerationQueue.find(task => task.recordId === record.id) ||
+			setUploadedImageUrls(allUrls);
 
-                                (currentImageProcessing && currentImageProcessing.recordId === record.id))
 
-                        }
+			// Update fileList để mark các file mới là 'done' và thêm URL
 
-                        style={{
+			const updatedFileList = fileList.map(file => {
 
-                          color: record.avatarUrl ? '#52c41a' :
+				if (newFiles.includes(file)) {
 
-                              imageGenerationQueue.find(task => task.recordId === record.id) ? '#faad14' :
+					const newUrlIndex = newFiles.indexOf(file);
 
-                                  currentImageProcessing && currentImageProcessing.recordId === record.id ? '#1890ff' :
+					return {
 
-                                      '#262626'
+						...file,
 
-                        }}
+						status: 'done',
 
-                    />
+						url: newUrls[newUrlIndex],
 
-                  </Tooltip>
+					};
 
+				}
 
+				return file;
 
-                  {/* Diagram Generation Button */}
-                  <Tooltip title={
-                    diagramGenerationQueue.find(task => task.recordId === record.id) ? 'Đang trong hàng đợi' :
-                        currentDiagramProcessing && currentDiagramProcessing.recordId === record.id ? 'Đang tạo diagram' :
-                            'Tạo diagram'
-                  }>
-                    <Dropdown
-                        menu={{
-                          items: [
-                            {
-                              key: 'html',
-                              label: '💻 Tạo HTML code',
-                              icon: <FileTextOutlined />,
-                              onClick: () => handleCreateDiagram(record, 'html')
-                            },
-                            {
-                              key: 'excalidraw-react',
-                              label: '🎨 Tạo Excalidraw React',
-                              icon: <PictureOutlined />,
-                              onClick: () => handleCreateDiagram(record, 'excalidraw-react')
-                            }
-                          ]
-                        }}
+			});
 
-                        trigger={['click']}
-                    >
-                      <Button
-                          type="link"
-                          icon={
-                            (diagramGenerationQueue.find(task => task.recordId === record.id) ||
-                                (currentDiagramProcessing && currentDiagramProcessing.recordId === record.id)) ?
-                                <LoadingOutlined /> : <NodeIndexOutlined />
-                          }
-                          size="small"
-                          loading={
-                            !!(diagramGenerationQueue.find(task => task.recordId === record.id) ||
-                                (currentDiagramProcessing && currentDiagramProcessing.recordId === record.id))
-                          }
 
+			setSelectedImages(updatedFileList);
 
-                      />
-                    </Dropdown>
-                  </Tooltip>
 
-                  {/* Create Summary Detail Button */}
-                  <Tooltip title={
-                    record.summaryDetail ? 'Đã có summaryDetail' :
-                        summaryDetailQueue.find(task => task.recordId === record.id) ? 'Đang trong hàng đợi' :
-                            currentSummaryDetailProcessing && currentSummaryDetailProcessing.recordId === record.id ? 'Đang tạo summaryDetail' :
-                                'Tạo summaryDetail'
-                  }>
-                    <Button
-                        type="link"
-                        icon={
-                          (summaryDetailQueue.find(task => task.recordId === record.id) ||
-                              (currentSummaryDetailProcessing && currentSummaryDetailProcessing.recordId === record.id)) ?
-                              <LoadingOutlined /> : <ThunderboltOutlined />
-                        }
-                        size="small"
-                        onClick={() => handleCreateSummaryDetail(record)}
-                        loading={
-                          !!(summaryDetailQueue.find(task => task.recordId === record.id) ||
-                              (currentSummaryDetailProcessing && currentSummaryDetailProcessing.recordId === record.id))
-                        }
-                        disabled={
-                            !!record.summaryDetail ||
-                            !!(summaryDetailQueue.find(task => task.recordId === record.id) ||
-                                (currentSummaryDetailProcessing && currentSummaryDetailProcessing.recordId === record.id))
-                        }
-                        style={{
-                          color: record.summaryDetail ? '#52c41a' :
-                              summaryDetailQueue.find(task => task.recordId === record.id) ? '#faad14' :
-                                  currentSummaryDetailProcessing && currentSummaryDetailProcessing.recordId === record.id ? '#1890ff' :
-                                      '#1890ff'
-                        }}
-                    />
-                  </Tooltip>
+			message.success(`Upload thành công ${newUrls.length} ảnh mới!`);
 
-                </>
+		} catch (error) {
 
+			console.error('Error uploading images:', error);
 
+			message.error('Upload ảnh thất bại!');
 
-            )}
 
-            <Tooltip title="Xóa">
+			// Rollback: chỉ giữ lại existing files
 
-              <Popconfirm
+			const existingUrls = existingFiles.map(file => file.url).filter(Boolean);
 
-                  title="Bạn có chắc chắn muốn xóa?"
+			setUploadedImageUrls(existingUrls);
 
-                  onConfirm={() => handleDelete(record.id)}
+			setSelectedImages(existingFiles);
 
-                  okText="Có"
+		} finally {
 
-                  cancelText="Không"
+			setUploadingImages(false);
 
-              >
+			setUploadProgress(prev => ({ ...prev, images: 100 }));
 
-                <Button
+		}
 
-                    type="link"
+	};
 
-                    danger
 
-                    icon={<DeleteOutlined />}
+	// Handle avatar upload (single file)
+	const handleAvatarUpload = async (file) => {
+		if (!file) {
+			setSelectedAvatar(null);
+			setUploadedAvatarUrl('');
+			return;
+		}
 
-                    size="small"
+		setUploadingAvatar(true);
 
-                />
+		try {
+			const response = await uploadFiles([file.originFileObj]);
+			const url = response.files?.[0]?.fileUrl || response.files?.[0]?.url || '';
 
-              </Popconfirm>
+			const updatedFile = {
+				...file,
+				status: 'done',
+				url: url,
+			};
 
-            </Tooltip>
+			setSelectedAvatar(updatedFile);
+			setUploadedAvatarUrl(url);
 
-          </Space>
+			message.success('Upload avatar thành công!');
+		} catch (error) {
+			console.error('Error uploading avatar:', error);
+			message.error('Upload avatar thất bại!');
+			setSelectedAvatar(null);
+			setUploadedAvatarUrl('');
+		} finally {
+			setUploadingAvatar(false);
+		}
+	};
 
-      )
+	// Handle diagram upload (single file)
+	const handleDiagramUpload = async (file) => {
+		if (!file) {
+			setSelectedDiagram(null);
+			setUploadedDiagramUrl('');
+			return;
+		}
 
-    });
+		setUploadingDiagram(true);
 
+		try {
+			const response = await uploadFiles([file.originFileObj]);
+			const url = response.files?.[0]?.fileUrl || response.files?.[0]?.url || '';
 
+			const updatedFile = {
+				...file,
+				status: 'done',
+				url: url,
+			};
 
-    return baseColumns;
+			setSelectedDiagram(updatedFile);
+			setUploadedDiagramUrl(url);
 
-  };
+			message.success('Upload diagram thành công!');
+		} catch (error) {
+			console.error('Error uploading diagram:', error);
+			message.error('Upload diagram thất bại!');
+			setSelectedDiagram(null);
+			setUploadedDiagramUrl('');
+		} finally {
+			setUploadingDiagram(false);
+		}
+	};
 
 
+	// Handle video upload
 
-  // Reset upload states
+	const handleVideoUpload = async (file) => {
 
-  const resetUploadStates = () => {
+		// Nếu file bị xóa hoặc không có
 
-    setSelectedImages([]);
+		if (!file) {
 
-    setSelectedVideo(null);
+			setSelectedVideo(null);
 
-    setSelectedFiles([]);
+			setUploadedVideoUrl('');
 
-    setSelectedAudio(null);
+			return;
 
-    setUploadedImageUrls([]);
+		}
 
-    setUploadedVideoUrl('');
 
-    setUploadedFileUrls([]);
+		// Nếu file đã có URL (đã upload trước đó), chỉ cập nhật state
 
-    setUploadedAudioUrl('');
+		if (file.url || file.status === 'done') {
 
-    setUploadingImages(false);
+			setSelectedVideo(file);
 
-    setUploadingVideo(false);
+			setUploadedVideoUrl(file.url || '');
 
-    setUploadingFiles(false);
+			return;
 
-    setUploadingAudio(false);
+		}
 
-    setUploadProgress({ images: 0, video: 0, files: 0, audio: 0 });
 
-    setCustomVoiceText('');
+		// Nếu không có originFileObj, không làm gì
 
+		if (!file.originFileObj) {
 
-    // Reset avatar and diagram states
-    setSelectedAvatar(null);
-    setSelectedDiagram(null);
-    setUploadedAvatarUrl('');
-    setUploadedDiagramUrl('');
-    setUploadingAvatar(false);
-    setUploadingDiagram(false);
-  };
+			console.warn('No originFileObj found for video file');
 
+			return;
 
+		}
 
-  // Handle image upload
 
-  const handleImageUpload = async (fileList) => {
+		// Upload file mới
 
-    // Nếu fileList rỗng, reset tất cả
+		setUploadingVideo(true);
 
-    if (fileList.length === 0) {
+		setUploadProgress(prev => ({ ...prev, video: 0 }));
 
-      setSelectedImages([]);
 
-      setUploadedImageUrls([]);
+		try {
 
-      return;
+			const response = await uploadFiles([file.originFileObj]);
 
-    }
+			const url = response.files?.[0]?.fileUrl || response.files?.[0]?.url || '';
 
 
+			const updatedFile = {
 
-    // Phân loại files: đã upload (có url) và chưa upload (cần upload)
+				...file,
 
-    const existingFiles = fileList.filter(file => file.url || file.status === 'done');
+				status: 'done',
 
-    const newFiles = fileList.filter(file => !file.url && file.status !== 'done' && file.originFileObj);
+				url: url,
 
+			};
 
 
-    // Cập nhật selectedImages trước
+			setUploadedVideoUrl(url);
 
-    setSelectedImages(fileList);
+			setSelectedVideo(updatedFile);
 
 
+			message.success('Upload video thành công!');
 
-    // Nếu không có file mới cần upload, chỉ cập nhật URLs từ existing files
+		} catch (error) {
 
-    if (newFiles.length === 0) {
+			console.error('Error uploading video:', error);
 
-      const existingUrls = existingFiles.map(file => file.url).filter(Boolean);
+			message.error('Upload video thất bại!');
 
-      setUploadedImageUrls(existingUrls);
+			setSelectedVideo(null);
 
-      return;
+			setUploadedVideoUrl('');
 
-    }
+		} finally {
 
+			setUploadingVideo(false);
 
+			setUploadProgress(prev => ({ ...prev, video: 100 }));
 
-    // Upload các file mới
+		}
 
-    setUploadingImages(true);
+	};
 
-    setUploadProgress(prev => ({ ...prev, images: 0 }));
 
+	// Handle file upload
 
+	const handleFileUpload = async (fileList) => {
 
-    try {
+		// Nếu fileList rỗng, reset tất cả
 
-      const filesToUpload = newFiles.map(file => file.originFileObj);
+		if (fileList.length === 0) {
 
-      const response = await uploadFiles(filesToUpload);
+			setSelectedFiles([]);
 
+			setUploadedFileUrls([]);
 
+			return;
 
-      const newUrls = response.files?.map(file => file.fileUrl || file.url) || [];
+		}
 
-      const existingUrls = existingFiles.map(file => file.url).filter(Boolean);
 
+		// Phân loại files: đã upload (có url) và chưa upload (cần upload)
 
+		const existingFiles = fileList.filter(file => file.url || file.status === 'done');
 
-      // Combine existing URLs với URLs mới
+		const newFiles = fileList.filter(file => !file.url && file.status !== 'done' && file.originFileObj);
 
-      const allUrls = [...existingUrls, ...newUrls];
 
-      setUploadedImageUrls(allUrls);
+		// Cập nhật selectedFiles trước
 
+		setSelectedFiles(fileList);
 
 
-      // Update fileList để mark các file mới là 'done' và thêm URL
+		// Nếu không có file mới cần upload, chỉ cập nhật URLs từ existing files
 
-      const updatedFileList = fileList.map(file => {
+		if (newFiles.length === 0) {
 
-        if (newFiles.includes(file)) {
+			const existingUrls = existingFiles.map(file => file.url).filter(Boolean);
 
-          const newUrlIndex = newFiles.indexOf(file);
+			setUploadedFileUrls(existingUrls);
 
-          return {
+			return;
 
-            ...file,
+		}
 
-            status: 'done',
 
-            url: newUrls[newUrlIndex]
+		// Upload các file mới
 
-          };
+		setUploadingFiles(true);
 
-        }
+		setUploadProgress(prev => ({ ...prev, files: 0 }));
 
-        return file;
 
-      });
+		try {
 
+			const filesToUpload = newFiles.map(file => file.originFileObj);
 
+			const response = await uploadFiles(filesToUpload);
 
-      setSelectedImages(updatedFileList);
 
+			const newUrls = response.files?.map(file => file.fileUrl || file.url) || [];
 
+			const existingUrls = existingFiles.map(file => file.url).filter(Boolean);
 
-      message.success(`Upload thành công ${newUrls.length} ảnh mới!`);
 
-    } catch (error) {
+			// Combine existing URLs với URLs mới
 
-      console.error('Error uploading images:', error);
+			const allUrls = [...existingUrls, ...newUrls];
 
-      message.error('Upload ảnh thất bại!');
+			setUploadedFileUrls(allUrls);
 
 
+			// Update fileList để mark các file mới là 'done' và thêm URL
 
-      // Rollback: chỉ giữ lại existing files
+			const updatedFileList = fileList.map(file => {
 
-      const existingUrls = existingFiles.map(file => file.url).filter(Boolean);
+				if (newFiles.includes(file)) {
 
-      setUploadedImageUrls(existingUrls);
+					const newUrlIndex = newFiles.indexOf(file);
 
-      setSelectedImages(existingFiles);
+					return {
 
-    } finally {
+						...file,
 
-      setUploadingImages(false);
+						status: 'done',
 
-      setUploadProgress(prev => ({ ...prev, images: 100 }));
+						url: newUrls[newUrlIndex],
 
-    }
+					};
 
-  };
+				}
 
+				return file;
 
-  // Handle avatar upload (single file)
-  const handleAvatarUpload = async (file) => {
-    if (!file) {
-      setSelectedAvatar(null);
-      setUploadedAvatarUrl('');
-      return;
-    }
+			});
 
-    setUploadingAvatar(true);
 
-    try {
-      const response = await uploadFiles([file.originFileObj]);
-      const url = response.files?.[0]?.fileUrl || response.files?.[0]?.url || '';
+			setSelectedFiles(updatedFileList);
 
-      const updatedFile = {
-        ...file,
-        status: 'done',
-        url: url
-      };
 
-      setSelectedAvatar(updatedFile);
-      setUploadedAvatarUrl(url);
+			message.success(`Upload thành công ${newUrls.length} file mới!`);
 
-      message.success('Upload avatar thành công!');
-    } catch (error) {
-      console.error('Error uploading avatar:', error);
-      message.error('Upload avatar thất bại!');
-      setSelectedAvatar(null);
-      setUploadedAvatarUrl('');
-    } finally {
-      setUploadingAvatar(false);
-    }
-  };
+		} catch (error) {
 
-  // Handle diagram upload (single file)
-  const handleDiagramUpload = async (file) => {
-    if (!file) {
-      setSelectedDiagram(null);
-      setUploadedDiagramUrl('');
-      return;
-    }
+			console.error('Error uploading files:', error);
 
-    setUploadingDiagram(true);
+			message.error('Upload file thất bại!');
 
-    try {
-      const response = await uploadFiles([file.originFileObj]);
-      const url = response.files?.[0]?.fileUrl || response.files?.[0]?.url || '';
 
-      const updatedFile = {
-        ...file,
-        status: 'done',
-        url: url
-      };
+			// Rollback: chỉ giữ lại existing files
 
-      setSelectedDiagram(updatedFile);
-      setUploadedDiagramUrl(url);
+			const existingUrls = existingFiles.map(file => file.url).filter(Boolean);
 
-      message.success('Upload diagram thành công!');
-    } catch (error) {
-      console.error('Error uploading diagram:', error);
-      message.error('Upload diagram thất bại!');
-      setSelectedDiagram(null);
-      setUploadedDiagramUrl('');
-    } finally {
-      setUploadingDiagram(false);
-    }
-  };
+			setUploadedFileUrls(existingUrls);
 
+			setSelectedFiles(existingFiles);
 
-  // Handle video upload
+		} finally {
 
-  const handleVideoUpload = async (file) => {
+			setUploadingFiles(false);
 
-    // Nếu file bị xóa hoặc không có
+			setUploadProgress(prev => ({ ...prev, files: 100 }));
 
-    if (!file) {
+		}
 
-      setSelectedVideo(null);
+	};
 
-      setUploadedVideoUrl('');
 
-      return;
+	// Handle audio upload
 
-    }
+	const handleAudioUpload = async (file) => {
 
+		// Nếu file bị xóa hoặc không có
 
+		if (!file) {
 
-    // Nếu file đã có URL (đã upload trước đó), chỉ cập nhật state
+			setSelectedAudio(null);
 
-    if (file.url || file.status === 'done') {
+			setUploadedAudioUrl('');
 
-      setSelectedVideo(file);
+			return;
 
-      setUploadedVideoUrl(file.url || '');
+		}
 
-      return;
 
-    }
+		// Nếu file đã có URL (đã upload trước đó), chỉ cập nhật state
 
+		if (file.url || file.status === 'done') {
 
+			setSelectedAudio(file);
 
-    // Nếu không có originFileObj, không làm gì
+			setUploadedAudioUrl(file.url || '');
 
-    if (!file.originFileObj) {
+			return;
 
-      console.warn('No originFileObj found for video file');
+		}
 
-      return;
 
-    }
+		// Nếu không có originFileObj, không làm gì
 
+		if (!file.originFileObj) {
 
+			console.warn('No originFileObj found for audio file');
 
-    // Upload file mới
+			return;
 
-    setUploadingVideo(true);
+		}
 
-    setUploadProgress(prev => ({ ...prev, video: 0 }));
 
+		// Upload file mới
 
+		setUploadingAudio(true);
 
-    try {
+		setUploadProgress(prev => ({ ...prev, audio: 0 }));
 
-      const response = await uploadFiles([file.originFileObj]);
 
-      const url = response.files?.[0]?.fileUrl || response.files?.[0]?.url || '';
+		try {
 
+			const response = await uploadFiles([file.originFileObj]);
 
+			const url = response.files?.[0]?.fileUrl || response.files?.[0]?.url || '';
 
-      const updatedFile = {
 
-        ...file,
+			const updatedFile = {
 
-        status: 'done',
+				...file,
 
-        url: url
+				status: 'done',
 
-      };
+				url: url,
 
+			};
 
 
-      setUploadedVideoUrl(url);
+			setUploadedAudioUrl(url);
 
-      setSelectedVideo(updatedFile);
+			setSelectedAudio(updatedFile);
 
 
+			message.success('Upload audio thành công!');
 
-      message.success('Upload video thành công!');
+		} catch (error) {
 
-    } catch (error) {
+			console.error('Error uploading audio:', error);
 
-      console.error('Error uploading video:', error);
+			message.error('Upload audio thất bại!');
 
-      message.error('Upload video thất bại!');
+			setSelectedAudio(null);
 
-      setSelectedVideo(null);
+			setUploadedAudioUrl('');
 
-      setUploadedVideoUrl('');
+		} finally {
 
-    } finally {
+			setUploadingAudio(false);
 
-      setUploadingVideo(false);
+			setUploadProgress(prev => ({ ...prev, audio: 100 }));
 
-      setUploadProgress(prev => ({ ...prev, video: 100 }));
+		}
 
-    }
+	};
 
-  };
 
+	// Handle bulk import from Excel
 
+	const handleBulkImport = () => {
+		console.log('🔄 Opening import modal...');
+		setImportModalVisible(true);
+		setImportPreviewData(null);
+		console.log('✅ Import modal should be visible now');
+	};
 
-  // Handle file upload
+	const handleImportExcel = async (file) => {
 
-  const handleFileUpload = async (fileList) => {
+		if (!file) return;
 
-    // Nếu fileList rỗng, reset tất cả
 
-    if (fileList.length === 0) {
+		// Validate file type
 
-      setSelectedFiles([]);
+		const allowedTypes = [
 
-      setUploadedFileUrls([]);
+			'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // .xlsx
 
-      return;
+			'application/vnd.ms-excel', // .xls
 
-    }
+			'application/vnd.ms-excel.sheet.macroEnabled.12', // .xlsm
 
+		];
 
 
-    // Phân loại files: đã upload (có url) và chưa upload (cần upload)
+		if (!allowedTypes.includes(file.type)) {
 
-    const existingFiles = fileList.filter(file => file.url || file.status === 'done');
+			message.error('Vui lòng chọn file Excel (.xlsx, .xls, .xlsm)!');
 
-    const newFiles = fileList.filter(file => !file.url && file.status !== 'done' && file.originFileObj);
+			return;
 
+		}
 
 
-    // Cập nhật selectedFiles trước
+		setUploadingImport(true);
 
-    setSelectedFiles(fileList);
 
+		try {
 
+			const reader = new FileReader();
 
-    // Nếu không có file mới cần upload, chỉ cập nhật URLs từ existing files
+			reader.onload = (e) => {
 
-    if (newFiles.length === 0) {
+				try {
 
-      const existingUrls = existingFiles.map(file => file.url).filter(Boolean);
+					const data = new Uint8Array(e.target.result);
 
-      setUploadedFileUrls(existingUrls);
+					const workbook = XLSX.read(data, { type: 'array' });
 
-      return;
 
-    }
+					// Lấy sheet đầu tiên
 
+					const firstSheetName = workbook.SheetNames[0];
 
+					const worksheet = workbook.Sheets[firstSheetName];
 
-    // Upload các file mới
 
-    setUploadingFiles(true);
+					// Convert to JSON với header row
 
-    setUploadProgress(prev => ({ ...prev, files: 0 }));
+					const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
 
 
+					if (jsonData.length < 2) {
 
-    try {
+						message.error('File Excel phải có ít nhất 1 dòng header và 1 dòng dữ liệu!');
 
-      const filesToUpload = newFiles.map(file => file.originFileObj);
+						return;
 
-      const response = await uploadFiles(filesToUpload);
+					}
 
 
+					// Parse data theo format
 
-      const newUrls = response.files?.map(file => file.fileUrl || file.url) || [];
+					const headers = jsonData[0];
 
-      const existingUrls = existingFiles.map(file => file.url).filter(Boolean);
+					const rows = jsonData.slice(1);
 
 
+					const parsedRecords = rows.map((row, index) => {
 
-      // Combine existing URLs với URLs mới
+						const record = {};
 
-      const allUrls = [...existingUrls, ...newUrls];
+						headers.forEach((header, colIndex) => {
 
-      setUploadedFileUrls(allUrls);
+							if (header && row[colIndex] !== undefined) {
 
+								record[header.toLowerCase().trim()] = row[colIndex];
 
+							}
 
-      // Update fileList để mark các file mới là 'done' và thêm URL
+						});
 
-      const updatedFileList = fileList.map(file => {
+						record._rowIndex = index + 2; // +2 vì bắt đầu từ row 2 trong Excel
 
-        if (newFiles.includes(file)) {
+						return record;
 
-          const newUrlIndex = newFiles.indexOf(file);
+					}).filter(record => record.title); // Chỉ lấy records có title
 
-          return {
 
-            ...file,
+					console.log('📊 Excel Import Debug:', {
+						headers,
+						parsedRecords: parsedRecords.slice(0, 3), // Log first 3 records
+						totalRows: rows.length,
+						validRows: parsedRecords.length,
+					});
 
-            status: 'done',
+					setImportPreviewData({
 
-            url: newUrls[newUrlIndex]
+						headers,
 
-          };
+						records: parsedRecords,
 
-        }
+						totalRows: rows.length,
 
-        return file;
+						validRows: parsedRecords.length,
 
-      });
+					});
 
+					console.log('✅ Import data set to state:', importPreviewData);
 
+					message.success(`Đã đọc ${parsedRecords.length}/${rows.length} bản ghi hợp lệ từ Excel!`);
 
-      setSelectedFiles(updatedFileList);
+				} catch (parseError) {
 
+					console.error('Error parsing Excel file:', parseError);
 
+					message.error('Không thể đọc file Excel! Vui lòng kiểm tra format file.');
 
-      message.success(`Upload thành công ${newUrls.length} file mới!`);
+				}
 
-    } catch (error) {
+			};
 
-      console.error('Error uploading files:', error);
 
-      message.error('Upload file thất bại!');
+			reader.readAsArrayBuffer(file);
 
+		} catch (error) {
 
+			console.error('Error reading Excel file:', error);
 
-      // Rollback: chỉ giữ lại existing files
+			message.error('Có lỗi khi đọc file Excel!');
 
-      const existingUrls = existingFiles.map(file => file.url).filter(Boolean);
+		} finally {
 
-      setUploadedFileUrls(existingUrls);
+			setUploadingImport(false);
 
-      setSelectedFiles(existingFiles);
+		}
 
-    } finally {
+	};
 
-      setUploadingFiles(false);
 
-      setUploadProgress(prev => ({ ...prev, files: 100 }));
+	const handleConfirmImport = async () => {
 
-    }
+		if (!importPreviewData || !importPreviewData.records.length) {
 
-  };
+			message.error('Không có dữ liệu để import!');
 
+			return;
 
+		}
 
-  // Handle audio upload
 
-  const handleAudioUpload = async (file) => {
+		setUploadingImport(true);
 
-    // Nếu file bị xóa hoặc không có
+		let successCount = 0;
 
-    if (!file) {
+		let errorCount = 0;
 
-      setSelectedAudio(null);
 
-      setUploadedAudioUrl('');
+		try {
 
-      return;
+			for (const record of importPreviewData.records) {
 
-    }
+				try {
 
+					const newRecord = {
 
+						tag4: record.tag4 || null,
 
-    // Nếu file đã có URL (đã upload trước đó), chỉ cập nhật state
+						title: record.title || '',
 
-    if (file.url || file.status === 'done') {
+						summary: record.summary || record.description || '',
 
-      setSelectedAudio(file);
+						detail: record.detail || record.content || record.summary || '',
 
-      setUploadedAudioUrl(file.url || '');
+						category: record.category || null,
 
-      return;
+						type: currentTab, // Sử dụng tab hiện tại
 
-    }
+						status: record.status || 'published',
 
+						cid: record.cid || null,
 
+						// Specific fields based on type
 
-    // Nếu không có originFileObj, không làm gì
+						...(currentTab === 'news' && {
 
-    if (!file.originFileObj) {
+							source: record.source || '',
 
-      console.warn('No originFileObj found for audio file');
+							sentiment: record.sentiment || null,
 
-      return;
+							impact: record.impact || 'normal',
 
-    }
+						}),
 
+						...(currentTab === 'longForm' && {
 
+							source: record.source || '',
 
-    // Upload file mới
+							sentiment: record.sentiment || null,
 
-    setUploadingAudio(true);
+							impact: record.impact || 'normal',
 
-    setUploadProgress(prev => ({ ...prev, audio: 0 }));
+						}),
 
+						...(currentTab === 'home' && {
 
+							source: record.source || '',
 
-    try {
+							sentiment: record.sentiment || null,
 
-      const response = await uploadFiles([file.originFileObj]);
+							impact: record.impact || 'normal',
 
-      const url = response.files?.[0]?.fileUrl || response.files?.[0]?.url || '';
+							priority: record.priority || 'medium',
 
+							featured: record.featured || false,
 
+							homeCategory: record.homeCategory || 'latest',
 
-      const updatedFile = {
+							displayOrder: record.displayOrder || 1,
 
-        ...file,
+						}),
 
-        status: 'done',
+						...(currentTab === 'caseTraining' && {
 
-        url: url
+							source: record.source || '',
 
-      };
+							sentiment: record.sentiment || null,
 
+							impact: record.impact || 'normal',
 
+							tag1: record.tag1 || null,
 
-      setUploadedAudioUrl(url);
+							tag2: record.tag2 || null,
 
-      setSelectedAudio(updatedFile);
+							tag3: record.tag3 || null,
 
+							difficultyLevel: record.difficultyLevel || null,
 
+							estimatedTime: record.estimatedTime || null,
 
-      message.success('Upload audio thành công!');
+							learningObjectives: record.learningObjectives || null,
 
-    } catch (error) {
+							keywords: record.keywords || null,
 
-      console.error('Error uploading audio:', error);
+						}),
 
-      message.error('Upload audio thất bại!');
+						...(currentTab === 'library' && {
 
-      setSelectedAudio(null);
+							pages: record.pages || null,
 
-      setUploadedAudioUrl('');
+						}),
 
-    } finally {
+						...(currentTab === 'story' && {
 
-      setUploadingAudio(false);
+							duration: record.duration || '',
 
-      setUploadProgress(prev => ({ ...prev, audio: 100 }));
+							storyType: record.storytype || record.type || 'Podcast',
 
-    }
+						}),
 
-  };
+					};
 
 
+					await createK9(newRecord);
 
-  // Handle bulk import from Excel
+					successCount++;
 
-  const handleBulkImport = () => {
-    console.log('🔄 Opening import modal...');
-    setImportModalVisible(true);
-    setImportPreviewData(null);
-    console.log('✅ Import modal should be visible now');
-  };
+				} catch (error) {
 
-  const handleImportExcel = async (file) => {
+					console.error(`Error creating record at row ${record._rowIndex}:`, error);
 
-    if (!file) return;
+					errorCount++;
 
+				}
 
+			}
 
-    // Validate file type
 
-    const allowedTypes = [
+			// Update local state instead of reloading all data
+			if (successCount > 0) {
+				const updater = (list) => [...(list || []), ...successfulRecords];
+				setAllData(prev => ({ ...prev, [currentTab]: updater(prev[currentTab] || []) }));
+				setFilteredData(prev => ({ ...prev, [currentTab]: updater(prev[currentTab] || []) }));
+				setData(prev => updater(prev));
+				setTableKey(prev => prev + 1);
 
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // .xlsx
+				message.success(`Import thành công ${successCount} bản ghi${errorCount > 0 ? `, ${errorCount} bản ghi thất bại` : ''}!`);
 
-      'application/vnd.ms-excel', // .xls
+				setImportModalVisible(false);
 
-      'application/vnd.ms-excel.sheet.macroEnabled.12' // .xlsm
+				setImportPreviewData(null);
 
-    ];
+			} else {
 
+				message.error('Không thể import bản ghi nào!');
 
+			}
 
-    if (!allowedTypes.includes(file.type)) {
 
-      message.error('Vui lòng chọn file Excel (.xlsx, .xls, .xlsm)!');
+		} catch (error) {
 
-      return;
+			console.error('Error in bulk import:', error);
 
-    }
+			message.error('Có lỗi khi import dữ liệu!');
 
+		} finally {
 
+			setUploadingImport(false);
 
-    setUploadingImport(true);
+		}
 
+	};
 
 
-    try {
+	// Generate and download Excel template
 
-      const reader = new FileReader();
+	const handleDownloadTemplate = () => {
 
-      reader.onload = (e) => {
+		let headers = [];
 
-        try {
+		let sampleData = [];
 
-          const data = new Uint8Array(e.target.result);
+		let fileName = '';
 
-          const workbook = XLSX.read(data, { type: 'array' });
 
+		if (currentTab === 'news') {
 
+			headers = ['Title', 'CID', 'Summary', 'Detail', 'Category', 'Source', 'Sentiment', 'Impact', 'Tag4'];
 
-          // Lấy sheet đầu tiên
+			sampleData = [
 
-          const firstSheetName = workbook.SheetNames[0];
+				[
 
-          const worksheet = workbook.Sheets[firstSheetName];
+					'Tin tức về xu hướng công nghệ mới',
 
+					'CID001',
 
+					'Tổng hợp những tin tức mới nhất về xu hướng công nghệ đang phát triển.',
 
-          // Convert to JSON với header row
+					'Bài viết này cung cấp cái nhìn tổng quan về các xu hướng công nghệ mới nhất và tác động của chúng đến doanh nghiệp.',
 
-          const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+					'Techtok',
 
+					'https://example.com/tech-news',
 
+					'positive',
 
-          if (jsonData.length < 2) {
+					'normal',
 
-            message.error('File Excel phải có ít nhất 1 dòng header và 1 dòng dữ liệu!');
+					'Program 1, Program 2',
 
-            return;
+				],
 
-          }
+				[
 
+					'Phân tích thị trường tài chính tuần này',
 
+					'CID002',
 
-          // Parse data theo format
+					'Đánh giá tình hình thị trường tài chính và dự báo xu hướng trong tuần tới.',
 
-          const headers = jsonData[0];
+					'Báo cáo chi tiết về diễn biến thị trường tài chính, các yếu tố tác động và dự báo cho tuần tiếp theo.',
 
-          const rows = jsonData.slice(1);
+					'Kinh tế vỉa hè',
 
+					'https://example.com/finance-analysis',
 
+					'neutral',
 
-          const parsedRecords = rows.map((row, index) => {
+					'important',
 
-            const record = {};
+					'Program 2, Program 3',
 
-            headers.forEach((header, colIndex) => {
+				],
 
-              if (header && row[colIndex] !== undefined) {
+			];
 
-                record[header.toLowerCase().trim()] = row[colIndex];
+		} else if (currentTab === 'longForm') {
 
-              }
+			headers = ['Title', 'CID', 'Summary', 'Detail', 'Category', 'Source', 'Sentiment', 'Impact', 'Tag4'];
 
-            });
+			sampleData = [
 
-            record._rowIndex = index + 2; // +2 vì bắt đầu từ row 2 trong Excel
+				[
 
-            return record;
+					'Lý thuyết về quản lý chiến lược doanh nghiệp',
 
-          }).filter(record => record.title); // Chỉ lấy records có title
+					'CID001',
 
+					'Hướng dẫn chi tiết về các lý thuyết cơ bản trong quản lý chiến lược doanh nghiệp.',
 
+					'Tài liệu này trình bày các lý thuyết nền tảng về chiến lược doanh nghiệp, từ việc phân tích môi trường, xác định mục tiêu đến việc triển khai và đánh giá kết quả.',
 
-          console.log('📊 Excel Import Debug:', {
-            headers,
-            parsedRecords: parsedRecords.slice(0, 3), // Log first 3 records
-            totalRows: rows.length,
-            validRows: parsedRecords.length
-          });
+					'Lý thuyết (Theory)',
 
-          setImportPreviewData({
+					'https://example.com/framework',
 
-            headers,
+					'positive',
 
-            records: parsedRecords,
+					'important',
 
-            totalRows: rows.length,
+					'Program 1, Program 2',
 
-            validRows: parsedRecords.length
+				],
 
-          });
+				[
 
-          console.log('✅ Import data set to state:', importPreviewData);
+					'Khái niệm về Business Model Canvas',
 
-          message.success(`Đã đọc ${parsedRecords.length}/${rows.length} bản ghi hợp lệ từ Excel!`);
+					'CID002',
 
-        } catch (parseError) {
+					'Giới thiệu về khái niệm và cách sử dụng Business Model Canvas trong kinh doanh.',
 
-          console.error('Error parsing Excel file:', parseError);
+					'Tài liệu này giải thích chi tiết về khái niệm Business Model Canvas và cách áp dụng vào thực tế kinh doanh.',
 
-          message.error('Không thể đọc file Excel! Vui lòng kiểm tra format file.');
+					'Khái niệm (Concept)',
 
-        }
+					'https://example.com/process',
 
-      };
+					'positive',
 
+					'normal',
 
+					'Program 1, Program 2',
 
-      reader.readAsArrayBuffer(file);
+				],
 
-    } catch (error) {
+			];
 
-      console.error('Error reading Excel file:', error);
+			fileName = 'LongForm_Template.xlsx';
 
-      message.error('Có lỗi khi đọc file Excel!');
+		} else if (currentTab === 'home') {
 
-    } finally {
+			headers = ['Title', 'CID', 'Summary', 'Detail', 'Category', 'Source', 'Sentiment', 'Impact', 'Tag4', 'Priority', 'Featured', 'HomeCategory', 'DisplayOrder'];
 
-      setUploadingImport(false);
+			sampleData = [
 
-    }
+				[
 
-  };
+					'Bài viết nổi bật về quản lý doanh nghiệp',
 
+					'CID003',
 
+					'Tổng hợp những kiến thức quan trọng về quản lý doanh nghiệp hiện đại.',
 
-  const handleConfirmImport = async () => {
+					'Tài liệu này trình bày các phương pháp và chiến lược quản lý doanh nghiệp hiệu quả trong thời đại số.',
 
-    if (!importPreviewData || !importPreviewData.records.length) {
+					'Tư duy & Kỹ năng',
 
-      message.error('Không có dữ liệu để import!');
+					'https://example.com/management',
 
-      return;
+					'positive',
 
-    }
+					'important',
 
+					'Program 1, Program 2',
 
+					'high',
 
-    setUploadingImport(true);
+					'true',
 
-    let successCount = 0;
+					'featured',
 
-    let errorCount = 0;
+					'1',
 
+				],
 
+				[
 
-    try {
+					'Hướng dẫn khởi nghiệp cho người mới bắt đầu',
 
-      for (const record of importPreviewData.records) {
+					'CID004',
 
-        try {
+					'Những bước cơ bản để bắt đầu hành trình khởi nghiệp thành công.',
 
-          const newRecord = {
+					'Tài liệu hướng dẫn chi tiết từ việc lên ý tưởng đến việc triển khai và phát triển doanh nghiệp.',
 
-            tag4: record.tag4 || null,
+					'Mô hình & Công cụ ứng dụng',
 
-            title: record.title || '',
+					'https://example.com/startup',
 
-            summary: record.summary || record.description || '',
+					'positive',
 
-            detail: record.detail || record.content || record.summary || '',
+					'normal',
 
-            category: record.category || null,
+					'Program 1, Program 2',
 
-            type: currentTab, // Sử dụng tab hiện tại
+					'medium',
 
-            status: record.status || 'published',
+					'false',
 
-            cid: record.cid || null,
+					'recommended',
 
-            // Specific fields based on type
+					'2',
 
-            ...(currentTab === 'news' && {
+				],
 
-              source: record.source || '',
+			];
 
-              sentiment: record.sentiment || null,
+			fileName = 'Home_Template.xlsx';
 
-              impact: record.impact || 'normal'
+		} else if (currentTab === 'caseTraining') {
 
-            }),
+			headers = ['Title', 'CID', 'Summary', 'Detail', 'Source', 'Impact', 'Tag1', 'Tag2', 'Tag3', 'Tag4', 'DifficultyLevel', 'EstimatedTime', 'LearningObjectives', 'Keywords'];
 
-            ...(currentTab === 'longForm' && {
+			sampleData = [
 
-              source: record.source || '',
+				[
 
-              sentiment: record.sentiment || null,
+					'Lý thuyết về quản lý chiến lược doanh nghiệp',
 
-              impact: record.impact || 'normal'
+					'CID004',
 
-            }),
+					'Hướng dẫn chi tiết về các lý thuyết cơ bản trong quản lý chiến lược doanh nghiệp.',
 
-            ...(currentTab === 'home' && {
+					'Tài liệu này trình bày các lý thuyết nền tảng về chiến lược doanh nghiệp, từ việc phân tích môi trường, xác định mục tiêu đến việc triển khai và đánh giá kết quả.',
 
-              source: record.source || '',
+					'https://example.com/theory',
 
-              sentiment: record.sentiment || null,
+					'important',
 
-              impact: record.impact || 'normal',
+					'Business Strategy',
 
-              priority: record.priority || 'medium',
+					'Advanced',
 
-              featured: record.featured || false,
+					'Enterprise',
 
-              homeCategory: record.homeCategory || 'latest',
+					'Program 1, Program 2',
 
-              displayOrder: record.displayOrder || 1
+					'intermediate',
 
-            }),
+					'45 phút',
 
-            ...(currentTab === 'caseTraining' && {
+					'Hiểu được các khái niệm cơ bản về quản lý chiến lược',
 
-              source: record.source || '',
+					'Business Strategy, Management, Leadership',
 
-              sentiment: record.sentiment || null,
+				],
 
-              impact: record.impact || 'normal',
+				[
 
-              tag1: record.tag1 || null,
+					'Khái niệm về Business Model Canvas',
 
-              tag2: record.tag2 || null,
+					'CID005',
 
-              tag3: record.tag3 || null,
+					'Giới thiệu về khái niệm và cách sử dụng Business Model Canvas trong kinh doanh.',
 
-              difficultyLevel: record.difficultyLevel || null,
+					'Tài liệu này giải thích chi tiết về khái niệm Business Model Canvas và cách áp dụng vào thực tế kinh doanh.',
 
-              estimatedTime: record.estimatedTime || null,
+					'https://example.com/concept',
 
-              learningObjectives: record.learningObjectives || null,
+					'normal',
 
-              keywords: record.keywords || null
+					'Business Strategy',
 
-            }),
+					'Intermediate',
 
-            ...(currentTab === 'library' && {
+					'SME',
 
-              pages: record.pages || null
+					'Program 1, Program 2',
 
-            }),
+					'beginner',
 
-            ...(currentTab === 'story' && {
+					'30 phút',
 
-              duration: record.duration || '',
+					'Nắm vững khái niệm Business Model Canvas',
 
-              storyType: record.storytype || record.type || 'Podcast'
+					'Business Model, Strategy, Innovation',
 
-            })
+				],
 
-          };
+				[
 
+					'Best Practices trong quản lý nhân sự',
+					'CID006',
 
+					'Những kinh nghiệm thực tế và bài học thành công trong quản lý nhân sự.',
 
-          await createK9(newRecord);
+					'Tài liệu này tổng hợp những best practice từ các công ty hàng đầu về cách tuyển dụng, đào tạo và phát triển nhân sự.',
 
-          successCount++;
+					'https://example.com/best-practice',
 
-        } catch (error) {
+					'important',
 
-          console.error(`Error creating record at row ${record._rowIndex}:`, error);
+					'Leadership',
 
-          errorCount++;
+					'Expert',
 
-        }
+					'Global',
 
-      }
+					'Program 1, Program 2',
 
+					'advanced',
 
+					'1 giờ',
 
-      // Update local state instead of reloading all data
-      if (successCount > 0) {
-        const updater = (list) => [...(list || []), ...successfulRecords];
-        setAllData(prev => ({ ...prev, [currentTab]: updater(prev[currentTab] || []) }));
-        setFilteredData(prev => ({ ...prev, [currentTab]: updater(prev[currentTab] || []) }));
-        setData(prev => updater(prev));
-        setTableKey(prev => prev + 1);
+					'Áp dụng best practices vào thực tế quản lý nhân sự',
 
-        message.success(`Import thành công ${successCount} bản ghi${errorCount > 0 ? `, ${errorCount} bản ghi thất bại` : ''}!`);
+					'HR Management, Best Practices, Leadership',
 
-        setImportModalVisible(false);
+				],
 
-        setImportPreviewData(null);
+			];
 
-      } else {
+			fileName = 'Case_Training_Template.xlsx';
 
-        message.error('Không thể import bản ghi nào!');
+		} else if (currentTab === 'library') {
 
-      }
+			headers = ['Title', 'CID', 'Summary', 'Detail', 'Category', 'Pages'];
 
+			sampleData = [
 
+				[
 
-    } catch (error) {
+					'Ý tưởng khởi nghiệp từ nhu cầu thực tế',
 
-      console.error('Error in bulk import:', error);
+					'CID005',
 
-      message.error('Có lỗi khi import dữ liệu!');
+					'Cách thức phát hiện và phát triển ý tưởng khởi nghiệp từ những nhu cầu thực tế trong cuộc sống.',
 
-    } finally {
+					'Cuốn sách này hướng dẫn cách phát hiện các vấn đề và nhu cầu thực tế, từ đó phát triển thành ý tưởng khởi nghiệp khả thi.',
 
-      setUploadingImport(false);
+					'Ý tưởng khởi nghiệp',
 
-    }
+					'280',
 
-  };
+				],
 
+				[
 
+					'Tips thành công cho startup giai đoạn đầu',
+					'CID006',
 
-  // Generate and download Excel template
+					'Những lời khuyên và kinh nghiệm quý báu cho các startup trong giai đoạn khởi đầu.',
 
-  const handleDownloadTemplate = () => {
+					'Tài liệu tổng hợp những tips quan trọng từ các founder thành công, giúp startup tránh được những sai lầm phổ biến.',
 
-    let headers = [];
+					'Tips khởi nghiệp',
 
-    let sampleData = [];
+					'156',
 
-    let fileName = '';
+				],
 
+			];
 
+			fileName = 'Sang_Tao_Khoi_Nghiep_Template.xlsx';
 
-    if (currentTab === 'news') {
+		} else if (currentTab === 'story') {
 
-      headers = ['Title', 'CID', 'Summary', 'Detail', 'Category', 'Source', 'Sentiment', 'Impact', 'Tag4'];
+			headers = ['Title', 'CID', 'Summary', 'Detail', 'Category', 'Duration', 'StoryType'];
 
-      sampleData = [
+			sampleData = [
 
-        [
+				[
 
-          'Tin tức về xu hướng công nghệ mới',
+					'Case study: Startup fintech thành công',
 
-          'CID001',
+					'CID006',
 
-          'Tổng hợp những tin tức mới nhất về xu hướng công nghệ đang phát triển.',
+					'Hành trình từ ý tưởng đến IPO của một startup fintech hàng đầu Việt Nam.',
 
-          'Bài viết này cung cấp cái nhìn tổng quan về các xu hướng công nghệ mới nhất và tác động của chúng đến doanh nghiệp.',
+					'Case study chi tiết về hành trình 7 năm xây dựng một startup fintech từ con số 0, vượt qua nhiều thử thách để trở thành unicorn đầu tiên của Việt Nam trong lĩnh vực tài chính.',
 
-          'Techtok',
+					'Case study',
 
-          'https://example.com/tech-news',
+					'25 phút',
 
-          'positive',
+					'Podcast',
 
-          'normal',
+				],
 
-          'Program 1, Program 2'
+				[
 
-        ],
+					'Đổi mới sáng tạo trong công nghệ blockchain',
+					'CID007',
 
-        [
+					'Cách thức các doanh nghiệp ứng dụng blockchain để tối ưu hóa quy trình.',
 
-          'Phân tích thị trường tài chính tuần này',
+					'Phỏng vấn với các chuyên gia về cách blockchain đang thay đổi cách thức hoạt động của các doanh nghiệp, từ chuỗi cung ứng đến dịch vụ tài chính.',
 
-          'CID002',
+					'Đổi mới sáng tạo',
 
-          'Đánh giá tình hình thị trường tài chính và dự báo xu hướng trong tuần tới.',
+					'18 phút',
 
-          'Báo cáo chi tiết về diễn biến thị trường tài chính, các yếu tố tác động và dự báo cho tuần tiếp theo.',
+					'Interview',
 
-          'Kinh tế vỉa hè',
+				],
 
-          'https://example.com/finance-analysis',
+			];
 
-          'neutral',
+			fileName = 'Story_Case_Template.xlsx';
 
-          'important',
+		}
 
-          'Program 2, Program 3'
 
-        ]
+		// Create workbook and worksheet
 
-      ];
+		const workbook = XLSX.utils.book_new();
 
-    } else if (currentTab === 'longForm') {
+		const worksheetData = [headers, ...sampleData];
 
-      headers = ['Title', 'CID', 'Summary', 'Detail', 'Category', 'Source', 'Sentiment', 'Impact', 'Tag4'];
+		const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
 
-      sampleData = [
 
-        [
+		// Set column widths
 
-          'Lý thuyết về quản lý chiến lược doanh nghiệp',
+		const columnWidths = headers.map(header => {
 
-          'CID001',
+			if (header === 'Title') return { wch: 50 };
 
-          'Hướng dẫn chi tiết về các lý thuyết cơ bản trong quản lý chiến lược doanh nghiệp.',
+			if (header === 'Summary') return { wch: 60 };
 
-          'Tài liệu này trình bày các lý thuyết nền tảng về chiến lược doanh nghiệp, từ việc phân tích môi trường, xác định mục tiêu đến việc triển khai và đánh giá kết quả.',
+			if (header === 'Detail') return { wch: 80 };
 
-          'Lý thuyết (Theory)',
+			if (header === 'Category') return { wch: 20 };
 
-          'https://example.com/framework',
+			if (header === 'Source') return { wch: 30 };
 
-          'positive',
+			return { wch: 15 };
 
-          'important',
+		});
 
-          'Program 1, Program 2'
+		worksheet['!cols'] = columnWidths;
 
-        ],
 
-        [
+		// Style the header row (bold and background color)
 
-          'Khái niệm về Business Model Canvas',
+		for (let col = 0; col < headers.length; col++) {
 
-          'CID002',
+			const cellAddress = XLSX.utils.encode_cell({ c: col, r: 0 });
 
-          'Giới thiệu về khái niệm và cách sử dụng Business Model Canvas trong kinh doanh.',
+			if (!worksheet[cellAddress]) continue;
 
-          'Tài liệu này giải thích chi tiết về khái niệm Business Model Canvas và cách áp dụng vào thực tế kinh doanh.',
+			worksheet[cellAddress].s = {
 
-          'Khái niệm (Concept)',
+				font: { bold: true, color: { rgb: 'FFFFFF' } },
 
-          'https://example.com/process',
+				fill: { fgColor: { rgb: 'FF4472C4' } },
 
-          'positive',
+				alignment: { horizontal: 'center', vertical: 'center' },
 
-          'normal',
+				border: {
 
-          'Program 1, Program 2'
+					top: { style: 'thin', color: { rgb: '000000' } },
 
-        ]
+					bottom: { style: 'thin', color: { rgb: '000000' } },
 
-      ];
+					left: { style: 'thin', color: { rgb: '000000' } },
 
-      fileName = 'LongForm_Template.xlsx';
+					right: { style: 'thin', color: { rgb: '000000' } },
 
-    } else if (currentTab === 'home') {
+				},
 
-      headers = ['Title', 'CID', 'Summary', 'Detail', 'Category', 'Source', 'Sentiment', 'Impact', 'Tag4', 'Priority', 'Featured', 'HomeCategory', 'DisplayOrder'];
+			};
 
-      sampleData = [
+		}
 
-        [
 
-          'Bài viết nổi bật về quản lý doanh nghiệp',
+		// Style sample data rows
 
-          'CID003',
+		for (let row = 1; row <= sampleData.length; row++) {
 
-          'Tổng hợp những kiến thức quan trọng về quản lý doanh nghiệp hiện đại.',
+			for (let col = 0; col < headers.length; col++) {
 
-          'Tài liệu này trình bày các phương pháp và chiến lược quản lý doanh nghiệp hiệu quả trong thời đại số.',
+				const cellAddress = XLSX.utils.encode_cell({ c: col, r: row });
 
-          'Tư duy & Kỹ năng',
+				if (!worksheet[cellAddress]) continue;
 
-          'https://example.com/management',
+				worksheet[cellAddress].s = {
 
-          'positive',
+					alignment: { horizontal: 'left', vertical: 'top', wrapText: true },
 
-          'important',
+					border: {
 
-          'Program 1, Program 2',
+						top: { style: 'thin', color: { rgb: 'CCCCCC' } },
 
-          'high',
+						bottom: { style: 'thin', color: { rgb: 'CCCCCC' } },
 
-          'true',
+						left: { style: 'thin', color: { rgb: 'CCCCCC' } },
 
-          'featured',
+						right: { style: 'thin', color: { rgb: 'CCCCCC' } },
 
-          '1'
+					},
 
-        ],
+				};
 
-        [
+			}
 
-          'Hướng dẫn khởi nghiệp cho người mới bắt đầu',
+		}
 
-          'CID004',
 
-          'Những bước cơ bản để bắt đầu hành trình khởi nghiệp thành công.',
+		// Set row heights
 
-          'Tài liệu hướng dẫn chi tiết từ việc lên ý tưởng đến việc triển khai và phát triển doanh nghiệp.',
+		worksheet['!rows'] = [
 
-          'Mô hình & Công cụ ứng dụng',
+			{ hpt: 25 }, // Header row height
 
-          'https://example.com/startup',
+			...sampleData.map(() => ({ hpt: 60 })), // Sample data rows height
 
-          'positive',
+		];
 
-          'normal',
 
-          'Program 1, Program 2',
+		// Add worksheet to workbook
 
-          'medium',
+		XLSX.utils.book_append_sheet(workbook, worksheet, 'Template');
 
-          'false',
 
-          'recommended',
+		// Add instructions sheet
 
-          '2'
+		const instructionsData = [
 
-        ]
+			['HƯỚNG DẪN SỬ DỤNG TEMPLATE'],
 
-      ];
+			[''],
 
-      fileName = 'Home_Template.xlsx';
+			['1. CÁC CỘT BẮT BUỘC:'],
 
-    } else if (currentTab === 'caseTraining') {
+			['   - Title: Tiêu đề bài viết (không được để trống)'],
 
-      headers = ['Title', 'CID', 'Summary', 'Detail', 'Source', 'Impact', 'Tag1', 'Tag2', 'Tag3', 'Tag4', 'DifficultyLevel', 'EstimatedTime', 'LearningObjectives', 'Keywords'];
+			['   - Summary: Tóm tắt nội dung (không được để trống)'],
 
-      sampleData = [
+			[''],
 
-        [
+			['2. CÁC CỘT TÙY CHỌN:'],
 
-          'Lý thuyết về quản lý chiến lược doanh nghiệp',
+			['   - Detail: Nội dung chi tiết'],
 
-          'CID004',
+			['   - Category: Danh mục (xem giá trị hợp lệ bên dưới)'],
 
-          'Hướng dẫn chi tiết về các lý thuyết cơ bản trong quản lý chiến lược doanh nghiệp.',
+			['   - Status: Trạng thái (published/draft/archived)'],
 
-          'Tài liệu này trình bày các lý thuyết nền tảng về chiến lược doanh nghiệp, từ việc phân tích môi trường, xác định mục tiêu đến việc triển khai và đánh giá kết quả.',
+			[''],
 
-          'https://example.com/theory',
+			['3. GIÁ TRỊ HỢP LỆ CHO CATEGORY:'],
 
-          'important',
+			...((currentTab === 'home' || currentTab === 'news' || currentTab === 'caseTraining' || currentTab === 'longForm') ? [
 
-          'Business Strategy',
+				['   - Lý thuyết (Theory)'],
 
-          'Advanced',
+				['   - Khái niệm (Concept)'],
 
-          'Enterprise',
+				['   - Nguyên tắc kinh doanh (Principle)'],
 
-          'Program 1, Program 2',
+				['   - Khung phân tích (Framework)'],
 
-          'intermediate',
+				['   - Mô hình (Business model)'],
 
-          '45 phút',
+				['   - Phương pháp luận (Methodology)'],
 
-          'Hiểu được các khái niệm cơ bản về quản lý chiến lược',
+				['   - Công cụ & kỹ thuật (Tools & Technique)'],
 
-          'Business Strategy, Management, Leadership'
+				['   - Các báo cáo ngành - vĩ mô'],
 
-        ],
+				['   - Best Practices'],
 
-        [
+				['   - Case Studies'],
 
-          'Khái niệm về Business Model Canvas',
+				['   - Tài nguyên khác'],
 
-          'CID005',
+			] : currentTab === 'library' ? [
 
-          'Giới thiệu về khái niệm và cách sử dụng Business Model Canvas trong kinh doanh.',
+				['   - Ý tưởng khởi nghiệp'],
 
-          'Tài liệu này giải thích chi tiết về khái niệm Business Model Canvas và cách áp dụng vào thực tế kinh doanh.',
+				['   - Tips khởi nghiệp'],
 
-          'https://example.com/concept',
+				['   - Sáng tạo khác'],
 
-          'normal',
+			] : [
 
-          'Business Strategy',
+				['   - Case study'],
 
-          'Intermediate',
+				['   - Kinh tế - tài chính'],
 
-          'SME',
+				['   - Thế giới'],
 
-          'Program 1, Program 2',
+				['   - Công nghệ'],
 
-          'beginner',
+				['   - Đổi mới sáng tạo'],
 
-          '30 phút',
+				['   - Khác'],
 
-          'Nắm vững khái niệm Business Model Canvas',
+			]),
 
-          'Business Model, Strategy, Innovation'
+			[''],
 
-        ],
+			...(currentTab === 'home' || currentTab === 'news' ? [
 
-        [
+				['4. CÁC CỘT ĐẶC BIỆT CHO NEWS:'],
 
-          'Best Practices trong quản lý nhân sự',
-          'CID006',
+				['   - Source: Nguồn tin (URL)'],
 
-          'Những kinh nghiệm thực tế và bài học thành công trong quản lý nhân sự.',
+				['   - Sentiment: positive/negative/neutral'],
 
-          'Tài liệu này tổng hợp những best practice từ các công ty hàng đầu về cách tuyển dụng, đào tạo và phát triển nhân sự.',
+				['   - Impact: important/normal/skip'],
 
-          'https://example.com/best-practice',
+			] : currentTab === 'caseTraining' ? [
 
-          'important',
+				['4. CÁC CỘT ĐẶC BIỆT CHO CASE TRAINING:'],
 
-          'Leadership',
+				['   - Source: Nguồn tin (URL)'],
 
-          'Expert',
+				['   - Sentiment: positive/negative/neutral'],
 
-          'Global',
+				['   - Impact: important/normal/skip'],
 
-          'Program 1, Program 2',
+				['   - Tag1: Phân loại chủ đề (Business Strategy, Marketing, Finance, v.v.)'],
 
-          'advanced',
+				['   - Tag2: Phân loại mức độ (Beginner, Intermediate, Advanced, Expert, v.v.)'],
 
-          '1 giờ',
+				['   - Tag3: Phân loại quy mô (Industry, Startup, Enterprise, SME, v.v.)'],
 
-          'Áp dụng best practices vào thực tế quản lý nhân sự',
+			] : currentTab === 'story' ? [
 
-          'HR Management, Best Practices, Leadership'
+				['4. CÁC CỘT ĐẶC BIỆT CHO STORY:'],
 
-        ]
+				['   - Duration: Thời lượng (VD: "15 phút")'],
 
-      ];
+				['   - StoryType: Podcast/Video Story/Interview/Documentary'],
 
-      fileName = 'Case_Training_Template.xlsx';
+			] : [
 
-    } else if (currentTab === 'library') {
+				['4. CÁC CỘT ĐẶC BIỆT CHO LIBRARY:'],
 
-      headers = ['Title', 'CID', 'Summary', 'Detail', 'Category', 'Pages'];
+				['   - Pages: Số trang (VD: "120")'],
 
-      sampleData = [
+			]),
 
-        [
+			[''],
 
-          'Ý tưởng khởi nghiệp từ nhu cầu thực tế',
+			['5. LƯU Ý:'],
 
-          'CID005',
+			['   - Xóa các dòng mẫu trước khi nhập dữ liệu thực'],
 
-          'Cách thức phát hiện và phát triển ý tưởng khởi nghiệp từ những nhu cầu thực tế trong cuộc sống.',
+			['   - Giữ nguyên tên các cột trong dòng header'],
 
-          'Cuốn sách này hướng dẫn cách phát hiện các vấn đề và nhu cầu thực tế, từ đó phát triển thành ý tưởng khởi nghiệp khả thi.',
+			['   - Mỗi dòng tương ứng với một bài viết'],
 
-          'Ý tưởng khởi nghiệp',
+		];
 
-          '280'
 
-        ],
+		const instructionsSheet = XLSX.utils.aoa_to_sheet(instructionsData);
 
-        [
+		instructionsSheet['!cols'] = [{ wch: 60 }];
 
-          'Tips thành công cho startup giai đoạn đầu',
-          'CID006',
 
-          'Những lời khuyên và kinh nghiệm quý báu cho các startup trong giai đoạn khởi đầu.',
+		// Style instructions header
 
-          'Tài liệu tổng hợp những tips quan trọng từ các founder thành công, giúp startup tránh được những sai lầm phổ biến.',
+		instructionsSheet['A1'].s = {
 
-          'Tips khởi nghiệp',
+			font: { bold: true, size: 16 },
 
-          '156'
+			alignment: { horizontal: 'center' },
 
-        ]
+		};
 
-      ];
 
-      fileName = 'Sang_Tao_Khoi_Nghiep_Template.xlsx';
+		XLSX.utils.book_append_sheet(workbook, instructionsSheet, 'Hướng dẫn');
 
-    } else if (currentTab === 'story') {
 
-      headers = ['Title', 'CID', 'Summary', 'Detail', 'Category', 'Duration', 'StoryType'];
+		// Download file
 
-      sampleData = [
+		XLSX.writeFile(workbook, fileName);
 
-        [
 
-          'Case study: Startup fintech thành công',
+		message.success(`Đã tải xuống file mẫu: ${fileName}`);
 
-          'CID006',
+	};
 
-          'Hành trình từ ý tưởng đến IPO của một startup fintech hàng đầu Việt Nam.',
 
-          'Case study chi tiết về hành trình 7 năm xây dựng một startup fintech từ con số 0, vượt qua nhiều thử thách để trở thành unicorn đầu tiên của Việt Nam trong lĩnh vực tài chính.',
+	// JSON Import Functions
 
-          'Case study',
+	const getJsonTemplate = () => {
 
-          '25 phút',
+		if (currentTab === 'home') {
 
-          'Podcast'
-
-        ],
-
-        [
-
-          'Đổi mới sáng tạo trong công nghệ blockchain',
-          'CID007',
-
-          'Cách thức các doanh nghiệp ứng dụng blockchain để tối ưu hóa quy trình.',
-
-          'Phỏng vấn với các chuyên gia về cách blockchain đang thay đổi cách thức hoạt động của các doanh nghiệp, từ chuỗi cung ứng đến dịch vụ tài chính.',
-
-          'Đổi mới sáng tạo',
-
-          '18 phút',
-
-          'Interview'
-
-        ]
-
-      ];
-
-      fileName = 'Story_Case_Template.xlsx';
-
-    }
-
-
-
-    // Create workbook and worksheet
-
-    const workbook = XLSX.utils.book_new();
-
-    const worksheetData = [headers, ...sampleData];
-
-    const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
-
-
-
-    // Set column widths
-
-    const columnWidths = headers.map(header => {
-
-      if (header === 'Title') return { wch: 50 };
-
-      if (header === 'Summary') return { wch: 60 };
-
-      if (header === 'Detail') return { wch: 80 };
-
-      if (header === 'Category') return { wch: 20 };
-
-      if (header === 'Source') return { wch: 30 };
-
-      return { wch: 15 };
-
-    });
-
-    worksheet['!cols'] = columnWidths;
-
-
-
-    // Style the header row (bold and background color)
-
-    for (let col = 0; col < headers.length; col++) {
-
-      const cellAddress = XLSX.utils.encode_cell({ c: col, r: 0 });
-
-      if (!worksheet[cellAddress]) continue;
-
-      worksheet[cellAddress].s = {
-
-        font: { bold: true, color: { rgb: "FFFFFF" } },
-
-        fill: { fgColor: { rgb: "FF4472C4" } },
-
-        alignment: { horizontal: "center", vertical: "center" },
-
-        border: {
-
-          top: { style: "thin", color: { rgb: "000000" } },
-
-          bottom: { style: "thin", color: { rgb: "000000" } },
-
-          left: { style: "thin", color: { rgb: "000000" } },
-
-          right: { style: "thin", color: { rgb: "000000" } }
-
-        }
-
-      };
-
-    }
-
-
-
-    // Style sample data rows
-
-    for (let row = 1; row <= sampleData.length; row++) {
-
-      for (let col = 0; col < headers.length; col++) {
-
-        const cellAddress = XLSX.utils.encode_cell({ c: col, r: row });
-
-        if (!worksheet[cellAddress]) continue;
-
-        worksheet[cellAddress].s = {
-
-          alignment: { horizontal: "left", vertical: "top", wrapText: true },
-
-          border: {
-
-            top: { style: "thin", color: { rgb: "CCCCCC" } },
-
-            bottom: { style: "thin", color: { rgb: "CCCCCC" } },
-
-            left: { style: "thin", color: { rgb: "CCCCCC" } },
-
-            right: { style: "thin", color: { rgb: "CCCCCC" } }
-
-          }
-
-        };
-
-      }
-
-    }
-
-
-
-    // Set row heights
-
-    worksheet['!rows'] = [
-
-      { hpt: 25 }, // Header row height
-
-      ...sampleData.map(() => ({ hpt: 60 })) // Sample data rows height
-
-    ];
-
-
-
-    // Add worksheet to workbook
-
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Template');
-
-
-
-    // Add instructions sheet
-
-    const instructionsData = [
-
-      ['HƯỚNG DẪN SỬ DỤNG TEMPLATE'],
-
-      [''],
-
-      ['1. CÁC CỘT BẮT BUỘC:'],
-
-      ['   - Title: Tiêu đề bài viết (không được để trống)'],
-
-      ['   - Summary: Tóm tắt nội dung (không được để trống)'],
-
-      [''],
-
-      ['2. CÁC CỘT TÙY CHỌN:'],
-
-      ['   - Detail: Nội dung chi tiết'],
-
-      ['   - Category: Danh mục (xem giá trị hợp lệ bên dưới)'],
-
-      ['   - Status: Trạng thái (published/draft/archived)'],
-
-      [''],
-
-      ['3. GIÁ TRỊ HỢP LỆ CHO CATEGORY:'],
-
-      ...((currentTab === 'home' || currentTab === 'news' || currentTab === 'caseTraining' || currentTab === 'longForm') ? [
-
-        ['   - Lý thuyết (Theory)'],
-
-        ['   - Khái niệm (Concept)'],
-
-        ['   - Nguyên tắc kinh doanh (Principle)'],
-
-        ['   - Khung phân tích (Framework)'],
-
-        ['   - Mô hình (Business model)'],
-
-        ['   - Phương pháp luận (Methodology)'],
-
-        ['   - Công cụ & kỹ thuật (Tools & Technique)'],
-
-        ['   - Các báo cáo ngành - vĩ mô'],
-
-        ['   - Best Practices'],
-
-        ['   - Case Studies'],
-
-        ['   - Tài nguyên khác']
-
-      ] : currentTab === 'library' ? [
-
-        ['   - Ý tưởng khởi nghiệp'],
-
-        ['   - Tips khởi nghiệp'],
-
-        ['   - Sáng tạo khác']
-
-      ] : [
-
-        ['   - Case study'],
-
-        ['   - Kinh tế - tài chính'],
-
-        ['   - Thế giới'],
-
-        ['   - Công nghệ'],
-
-        ['   - Đổi mới sáng tạo'],
-
-        ['   - Khác']
-
-      ]),
-
-      [''],
-
-      ...(currentTab === 'home' || currentTab === 'news' ? [
-
-        ['4. CÁC CỘT ĐẶC BIỆT CHO NEWS:'],
-
-        ['   - Source: Nguồn tin (URL)'],
-
-        ['   - Sentiment: positive/negative/neutral'],
-
-        ['   - Impact: important/normal/skip']
-
-      ] : currentTab === 'caseTraining' ? [
-
-        ['4. CÁC CỘT ĐẶC BIỆT CHO CASE TRAINING:'],
-
-        ['   - Source: Nguồn tin (URL)'],
-
-        ['   - Sentiment: positive/negative/neutral'],
-
-        ['   - Impact: important/normal/skip'],
-
-        ['   - Tag1: Phân loại chủ đề (Business Strategy, Marketing, Finance, v.v.)'],
-
-        ['   - Tag2: Phân loại mức độ (Beginner, Intermediate, Advanced, Expert, v.v.)'],
-
-        ['   - Tag3: Phân loại quy mô (Industry, Startup, Enterprise, SME, v.v.)']
-
-      ] : currentTab === 'story' ? [
-
-        ['4. CÁC CỘT ĐẶC BIỆT CHO STORY:'],
-
-        ['   - Duration: Thời lượng (VD: "15 phút")'],
-
-        ['   - StoryType: Podcast/Video Story/Interview/Documentary']
-
-      ] : [
-
-        ['4. CÁC CỘT ĐẶC BIỆT CHO LIBRARY:'],
-
-        ['   - Pages: Số trang (VD: "120")']
-
-      ]),
-
-      [''],
-
-      ['5. LƯU Ý:'],
-
-      ['   - Xóa các dòng mẫu trước khi nhập dữ liệu thực'],
-
-      ['   - Giữ nguyên tên các cột trong dòng header'],
-
-      ['   - Mỗi dòng tương ứng với một bài viết']
-
-    ];
-
-
-
-    const instructionsSheet = XLSX.utils.aoa_to_sheet(instructionsData);
-
-    instructionsSheet['!cols'] = [{ wch: 60 }];
-
-
-
-    // Style instructions header
-
-    instructionsSheet['A1'].s = {
-
-      font: { bold: true, size: 16 },
-
-      alignment: { horizontal: "center" }
-
-    };
-
-
-
-    XLSX.utils.book_append_sheet(workbook, instructionsSheet, 'Hướng dẫn');
-
-
-
-    // Download file
-
-    XLSX.writeFile(workbook, fileName);
-
-
-
-    message.success(`Đã tải xuống file mẫu: ${fileName}`);
-
-  };
-
-
-
-  // JSON Import Functions
-
-  const getJsonTemplate = () => {
-
-    if (currentTab === 'home') {
-
-      return `[
+			return `[
 
   {
 
@@ -10483,9 +10159,9 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
 
 ]`;
 
-    } else if (currentTab === 'news' || currentTab === 'longForm') {
+		} else if (currentTab === 'news' || currentTab === 'longForm') {
 
-      return `[
+			return `[
 
   {
 
@@ -10559,9 +10235,9 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
 
 ]`;
 
-    } else if (currentTab === 'caseTraining') {
+		} else if (currentTab === 'caseTraining') {
 
-      return `[
+			return `[
 
   {
 
@@ -10665,9 +10341,9 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
 
 ]`;
 
-    } else if (currentTab === 'library') {
+		} else if (currentTab === 'library') {
 
-      return `[
+			return `[
 
   {
 
@@ -10701,9 +10377,9 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
 
 ]`;
 
-    } else if (currentTab === 'story') {
+		} else if (currentTab === 'story') {
 
-      return `[
+			return `[
 
   {
 
@@ -10749,469 +10425,443 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
 
 ]`;
 
-    }
+		}
 
-    return '[]';
+		return '[]';
 
-  };
+	};
 
 
+	const handleJsonImport = () => {
 
-  const handleJsonImport = () => {
+		setJsonImportModalVisible(true);
 
-    setJsonImportModalVisible(true);
+		setJsonInput('');
 
-    setJsonInput('');
+		setJsonPreviewData(null);
 
-    setJsonPreviewData(null);
+	};
 
-  };
 
+	const handleReportOverviewSettings = async () => {
 
+		try {
 
-  const handleReportOverviewSettings = async () => {
+			// Load current overview settings from database
 
-    try {
+			const settings = await getSettingByType('REPORT_OVERVIEW');
 
-      // Load current overview settings from database
+			if (settings?.setting) {
 
-      const settings = await getSettingByType('REPORT_OVERVIEW');
+				setReportOverviewData(settings.setting);
 
-      if (settings?.setting) {
+			} else {
 
-        setReportOverviewData(settings.setting);
+				setReportOverviewData(null);
 
-      } else {
+			}
 
-        setReportOverviewData(null);
+			setReportOverviewModalVisible(true);
 
-      }
+		} catch (error) {
 
-      setReportOverviewModalVisible(true);
+			console.error('Error loading report overview settings:', error);
 
-    } catch (error) {
+			setReportOverviewData(null);
 
-      console.error('Error loading report overview settings:', error);
+			setReportOverviewModalVisible(true);
 
-      setReportOverviewData(null);
+		}
 
-      setReportOverviewModalVisible(true);
+	};
 
-    }
 
-  };
+	const handleReportOverviewSave = (overviewData) => {
 
+		setReportOverviewData(overviewData);
 
+		setReportOverviewModalVisible(false);
 
-  const handleReportOverviewSave = (overviewData) => {
+	};
 
-    setReportOverviewData(overviewData);
 
-    setReportOverviewModalVisible(false);
+	const handleJsonInputChange = (value) => {
 
-  };
+		setJsonInput(value);
 
+		setJsonPreviewData(null);
 
+	};
 
-  const handleJsonInputChange = (value) => {
 
-    setJsonInput(value);
+	const handleJsonPreview = () => {
 
-    setJsonPreviewData(null);
+		if (!jsonInput.trim()) {
 
-  };
+			message.warning('Vui lòng nhập JSON!');
 
+			return;
 
+		}
 
-  const handleJsonPreview = () => {
 
-    if (!jsonInput.trim()) {
+		try {
 
-      message.warning('Vui lòng nhập JSON!');
+			const parsedData = JSON.parse(jsonInput);
 
-      return;
 
-    }
+			if (!Array.isArray(parsedData)) {
 
+				message.error('JSON phải là một mảng!');
 
+				return;
 
-    try {
+			}
 
-      const parsedData = JSON.parse(jsonInput);
 
+			if (parsedData.length === 0) {
 
+				message.warning('Mảng JSON không được rỗng!');
 
-      if (!Array.isArray(parsedData)) {
+				return;
 
-        message.error('JSON phải là một mảng!');
+			}
 
-        return;
 
-      }
+			// Validate each item
 
+			const validRecords = [];
 
+			const invalidRecords = [];
 
-      if (parsedData.length === 0) {
 
-        message.warning('Mảng JSON không được rỗng!');
+			parsedData.forEach((item, index) => {
 
-        return;
+				if (!item.title || !item.summary) {
 
-      }
+					invalidRecords.push({
 
+						index: index + 1,
 
+						reason: 'Thiếu title hoặc summary',
 
-      // Validate each item
+					});
 
-      const validRecords = [];
+				} else {
 
-      const invalidRecords = [];
+					validRecords.push({
 
+						...item,
 
+						_rowIndex: index + 1,
 
-      parsedData.forEach((item, index) => {
+					});
 
-        if (!item.title || !item.summary) {
+				}
 
-          invalidRecords.push({
+			});
 
-            index: index + 1,
 
-            reason: 'Thiếu title hoặc summary'
+			setJsonPreviewData({
 
-          });
+				records: validRecords,
 
-        } else {
+				invalidRecords,
 
-          validRecords.push({
+				totalRows: parsedData.length,
 
-            ...item,
+				validRows: validRecords.length,
 
-            _rowIndex: index + 1
+			});
 
-          });
 
-        }
+			if (validRecords.length > 0) {
 
-      });
+				message.success(`Đã parse thành công ${validRecords.length}/${parsedData.length} bản ghi hợp lệ!`);
 
+			} else {
 
+				message.error('Không có bản ghi hợp lệ nào!');
 
-      setJsonPreviewData({
+			}
 
-        records: validRecords,
 
-        invalidRecords,
+		} catch (error) {
 
-        totalRows: parsedData.length,
+			console.error('Error parsing JSON:', error);
 
-        validRows: validRecords.length
+			message.error('JSON không hợp lệ: ' + error.message);
 
-      });
+		}
 
+	};
 
 
-      if (validRecords.length > 0) {
+	const handleConfirmJsonImport = async () => {
 
-        message.success(`Đã parse thành công ${validRecords.length}/${parsedData.length} bản ghi hợp lệ!`);
+		if (!jsonPreviewData || !jsonPreviewData.records.length) {
 
-      } else {
+			message.error('Không có dữ liệu để import!');
 
-        message.error('Không có bản ghi hợp lệ nào!');
+			return;
 
-      }
+		}
 
 
+		setUploadingJson(true);
 
-    } catch (error) {
+		let successCount = 0;
 
-      console.error('Error parsing JSON:', error);
+		let errorCount = 0;
 
-      message.error('JSON không hợp lệ: ' + error.message);
+      let successfulRecords = [];
 
-    }
+      try {
 
-  };
+			for (const record of jsonPreviewData.records) {
 
+				try {
 
+					const newRecord = {
 
-  const handleConfirmJsonImport = async () => {
+						tag4: record.tag4 || null,
 
-    if (!jsonPreviewData || !jsonPreviewData.records.length) {
+						title: record.title || '',
 
-      message.error('Không có dữ liệu để import!');
+						summary: record.summary || '',
 
-      return;
+						detail: record.detail || record.summary || '',
 
-    }
+						category: record.category || null,
 
+						type: currentTab,
 
+						status: record.status || 'published',
 
-    setUploadingJson(true);
+						cid: record.cid || null,
 
-    let successCount = 0;
+						// Specific fields based on type
 
-    let errorCount = 0;
+						...((currentTab === 'news' || currentTab === 'caseTraining' || currentTab === 'longForm') && {
 
+							source: record.source || '',
 
+							sentiment: record.sentiment || null,
 
-    try {
+							impact: record.impact || 'normal',
 
-      for (const record of jsonPreviewData.records) {
+							tag1: record.tag1 || null,
 
-        try {
+							tag2: record.tag2 || null,
 
-          const newRecord = {
+						}),
 
-            tag4: record.tag4 || null,
+						...(currentTab === 'home' && {
 
-            title: record.title || '',
+							source: record.source || '',
 
-            summary: record.summary || '',
+							sentiment: record.sentiment || null,
 
-            detail: record.detail || record.summary || '',
+							impact: record.impact || 'normal',
 
-            category: record.category || null,
+							priority: record.priority || 'medium',
 
-            type: currentTab,
+							featured: record.featured || false,
 
-            status: record.status || 'published',
+							homeCategory: record.homeCategory || 'latest',
 
-            cid: record.cid || null,
+							displayOrder: record.displayOrder || 1,
 
-            // Specific fields based on type
+						}),
 
-            ...((currentTab === 'news' || currentTab === 'caseTraining' || currentTab === 'longForm') && {
+						...(currentTab === 'library' && {
 
-              source: record.source || '',
+							pages: record.pages || null,
 
-              sentiment: record.sentiment || null,
+						}),
 
-              impact: record.impact || 'normal',
+						...(currentTab === 'story' && {
 
-              tag1: record.tag1 || null,
+							duration: record.duration || '',
 
-              tag2: record.tag2 || null
+							storyType: record.storyType || 'Podcast',
 
-            }),
+							audioText: record.audioText || '',
 
-            ...(currentTab === 'home' && {
+						}),
 
-              source: record.source || '',
+					};
 
-              sentiment: record.sentiment || null,
 
-              impact: record.impact || 'normal',
+					const data = await createK9(newRecord);
+                  const normalized = Array.isArray(data.data)
+                      ? data.data
+                      : [data.data];
 
-              priority: record.priority || 'medium',
+                  successfulRecords = normalized;
+					successCount++;
 
-              featured: record.featured || false,
+				} catch (error) {
 
-              homeCategory: record.homeCategory || 'latest',
+					console.error(`Error creating record at row ${record._rowIndex}:`, error);
 
-              displayOrder: record.displayOrder || 1
+					errorCount++;
 
-            }),
+				}
 
-            ...(currentTab === 'library' && {
+			}
 
-              pages: record.pages || null
 
-            }),
+			// Update local state instead of reloading all data
+			if (successCount > 0) {
+				const updater = (list) => [...(list || []), ...successfulRecords];
+				setAllData(prev => ({ ...prev, [currentTab]: updater(prev[currentTab] || []) }));
+				setFilteredData(prev => ({ ...prev, [currentTab]: updater(prev[currentTab] || []) }));
+				setData(prev => updater(prev));
+				setTableKey(prev => prev + 1);
 
-            ...(currentTab === 'story' && {
+				message.success(`Import JSON thành công ${successCount} bản ghi${errorCount > 0 ? `, ${errorCount} bản ghi thất bại` : ''}!`);
 
-              duration: record.duration || '',
+				setJsonImportModalVisible(false);
 
-              storyType: record.storyType || 'Podcast',
+				setJsonInput('');
 
-              audioText: record.audioText || ''
+				setJsonPreviewData(null);
 
-            })
+			} else {
 
-          };
+				message.error('Không thể import bản ghi nào!');
 
+			}
 
 
-          await createK9(newRecord);
+		} catch (error) {
 
-          successCount++;
+			console.error('Error in JSON import:', error);
 
-        } catch (error) {
+			message.error('Có lỗi khi import dữ liệu JSON!');
 
-          console.error(`Error creating record at row ${record._rowIndex}:`, error);
+		} finally {
 
-          errorCount++;
+			setUploadingJson(false);
 
-        }
+		}
 
-      }
+	};
 
 
+	const handleLoadJsonTemplate = () => {
 
-      // Update local state instead of reloading all data
-      if (successCount > 0) {
-        const updater = (list) => [...(list || []), ...successfulRecords];
-        setAllData(prev => ({ ...prev, [currentTab]: updater(prev[currentTab] || []) }));
-        setFilteredData(prev => ({ ...prev, [currentTab]: updater(prev[currentTab] || []) }));
-        setData(prev => updater(prev));
-        setTableKey(prev => prev + 1);
+		setJsonInput(getJsonTemplate());
 
-        message.success(`Import JSON thành công ${successCount} bản ghi${errorCount > 0 ? `, ${errorCount} bản ghi thất bại` : ''}!`);
+		setJsonPreviewData(null);
 
-        setJsonImportModalVisible(false);
+	};
 
-        setJsonInput('');
 
-        setJsonPreviewData(null);
+	const handleCreate = () => {
 
-      } else {
+		setModalMode('create');
 
-        message.error('Không thể import bản ghi nào!');
+		setSelectedRecord(null);
 
-      }
+		form.resetFields();
 
+		resetUploadStates();
 
+		setCustomVoiceText(''); // Reset custom voice text for new creation
 
-    } catch (error) {
+		setAudioText(''); // Reset audioText
 
-      console.error('Error in JSON import:', error);
+		setFormKey(prev => prev + 1);
 
-      message.error('Có lỗi khi import dữ liệu JSON!');
+		setModalVisible(true);
 
-    } finally {
+	};
 
-      setUploadingJson(false);
 
-    }
+	const handleCreateCompanySummary = () => {
 
-  };
+		setCompanySummaryModalVisible(true);
 
+		setCompanySummarySearchTerm('');
 
+		setCompanySummaryData(null);
 
-  const handleLoadJsonTemplate = () => {
+	};
 
-    setJsonInput(getJsonTemplate());
 
-    setJsonPreviewData(null);
+	const handleClassifyNews = async () => {
 
-  };
+		setLoadingClassify(true);
 
+		try {
 
+			// Lấy tất cả data hiện có cho tab hiện tại
 
-  const handleCreate = () => {
+			const allData = await getK9ByType(currentTab);
 
-    setModalMode('create');
 
-    setSelectedRecord(null);
+			// Lọc ra những item chưa có đầy đủ thông tin phân loại
 
-    form.resetFields();
+			const unclassifiedItems = allData.filter(item => {
 
-    resetUploadStates();
+				const basicFields = !item.sentiment || !item.category || !item.impact ||
 
-    setCustomVoiceText(''); // Reset custom voice text for new creation
+					item.sentiment === '' || item.category === '' || item.impact === '';
 
-    setAudioText(''); // Reset audioText
 
-    setFormKey(prev => prev + 1);
+				// Thêm kiểm tra cho loại home
 
-    setModalVisible(true);
+				if (currentTab === 'home') {
 
-  };
+					return basicFields || !item.priority || !item.homeCategory || !item.displayOrder;
 
+				}
 
 
-  const handleCreateCompanySummary = () => {
+				return basicFields;
 
-    setCompanySummaryModalVisible(true);
+			});
 
-    setCompanySummarySearchTerm('');
 
-    setCompanySummaryData(null);
+			if (unclassifiedItems.length === 0) {
 
-  };
+				const tabLabel = currentTab === 'home' ? 'home' : currentTab === 'news' ? 'news' : currentTab === 'caseTraining' ? 'case training' : currentTab === 'longForm' ? 'longForm' : 'items';
 
+				message.info(`Tất cả ${tabLabel} đã được phân loại đầy đủ!`);
 
+				return;
 
-  const handleClassifyNews = async () => {
+			}
 
-    setLoadingClassify(true);
 
-    try {
+			const tabLabel = currentTab === 'news' ? 'news' : currentTab === 'caseTraining' ? 'case training' : currentTab === 'longForm' ? 'longForm' : 'items';
 
-      // Lấy tất cả data hiện có cho tab hiện tại
+			message.info(`Bắt đầu phân loại ${unclassifiedItems.length} ${tabLabel}...`);
 
-      const allData = await getK9ByType(currentTab);
 
+			let successCount = 0;
 
+			let errorCount = 0;
 
-      // Lọc ra những item chưa có đầy đủ thông tin phân loại
 
-      const unclassifiedItems = allData.filter(item => {
+			for (const item of unclassifiedItems) {
 
-        const basicFields = !item.sentiment || !item.category || !item.impact ||
+				try {
 
-            item.sentiment === '' || item.category === '' || item.impact === '';
+					// Detect ngôn ngữ và dịch nếu cần thiết
 
+					let processedTitle = item.title;
 
+					let processedSummary = item.summary;
 
-        // Thêm kiểm tra cho loại home
+					let processedDetail = item.detail || item.summary;
 
-        if (currentTab === 'home') {
 
-          return basicFields || !item.priority || !item.homeCategory || !item.displayOrder;
+					// Kiểm tra xem có phải tiếng Anh không bằng AI
 
-        }
-
-
-
-        return basicFields;
-
-      });
-
-
-
-      if (unclassifiedItems.length === 0) {
-
-        const tabLabel = currentTab === 'home' ? 'home' : currentTab === 'news' ? 'news' : currentTab === 'caseTraining' ? 'case training' : currentTab === 'longForm' ? 'longForm' : 'items';
-
-        message.info(`Tất cả ${tabLabel} đã được phân loại đầy đủ!`);
-
-        return;
-
-      }
-
-
-
-      const tabLabel = currentTab === 'news' ? 'news' : currentTab === 'caseTraining' ? 'case training' : currentTab === 'longForm' ? 'longForm' : 'items';
-
-      message.info(`Bắt đầu phân loại ${unclassifiedItems.length} ${tabLabel}...`);
-
-
-
-      let successCount = 0;
-
-      let errorCount = 0;
-
-
-
-      for (const item of unclassifiedItems) {
-
-        try {
-
-          // Detect ngôn ngữ và dịch nếu cần thiết
-
-          let processedTitle = item.title;
-
-          let processedSummary = item.summary;
-
-          let processedDetail = item.detail || item.summary;
-
-
-
-          // Kiểm tra xem có phải tiếng Anh không bằng AI
-
-          const languageDetectionPrompt = `
+					const languageDetectionPrompt = `
 
 Xác định ngôn ngữ của văn bản sau:
 
@@ -11236,60 +10886,53 @@ Trả về kết quả theo định dạng JSON:
 Chỉ trả về JSON, không thêm text khác.`;
 
 
+					const languageResponse = await aiGen(
+						languageDetectionPrompt,
 
-          const languageResponse = await aiGen(
+						'Bạn là chuyên gia phân tích ngôn ngữ. Hãy xác định chính xác ngôn ngữ của văn bản.',
 
-              languageDetectionPrompt,
+						'gpt-4o-mini',
 
-              "Bạn là chuyên gia phân tích ngôn ngữ. Hãy xác định chính xác ngôn ngữ của văn bản.",
-
-              'gpt-4o-mini',
-
-              'text'
-
-          );
+						'text',
+					);
 
 
-
-          const languageResult = languageResponse.result || languageResponse.answer || languageResponse.content || languageResponse;
-
+					const languageResult = languageResponse.result || languageResponse.answer || languageResponse.content || languageResponse;
 
 
-          let languageInfo;
+					let languageInfo;
 
-          try {
+					try {
 
-            const jsonMatch = languageResult.match(/\{[\s\S]*\}/);
+						const jsonMatch = languageResult.match(/\{[\s\S]*\}/);
 
-            if (jsonMatch) {
+						if (jsonMatch) {
 
-              languageInfo = JSON.parse(jsonMatch[0]);
+							languageInfo = JSON.parse(jsonMatch[0]);
 
-            } else {
+						} else {
 
-              languageInfo = { language: 'vi', confidence: 'low' };
+							languageInfo = { language: 'vi', confidence: 'low' };
 
-            }
+						}
 
-          } catch (parseError) {
+					} catch (parseError) {
 
-            console.error('Error parsing language detection:', parseError);
+						console.error('Error parsing language detection:', parseError);
 
-            languageInfo = { language: 'vi', confidence: 'low' };
+						languageInfo = { language: 'vi', confidence: 'low' };
 
-          }
-
-
-
-          // Nếu là tiếng Anh thì dịch sang tiếng Việt
-
-          if (languageInfo.language === 'en') {
-
-            console.log(`🌐 Detected English content for ${currentTab} ${item.id}, translating to Vietnamese...`);
+					}
 
 
+					// Nếu là tiếng Anh thì dịch sang tiếng Việt
 
-            const translationPrompt = `
+					if (languageInfo.language === 'en') {
+
+						console.log(`🌐 Detected English content for ${currentTab} ${item.id}, translating to Vietnamese...`);
+
+
+						const translationPrompt = `
 
 Dịch văn bản tiếng Anh sau sang tiếng Việt một cách chính xác và tự nhiên:
 
@@ -11330,60 +10973,53 @@ Yêu cầu dịch:
 Chỉ trả về JSON, không thêm text khác.`;
 
 
+						const translationResponse = await aiGen(
+							translationPrompt,
 
-            const translationResponse = await aiGen(
+							'Bạn là chuyên gia dịch thuật English-Vietnamese. Hãy dịch chính xác và tự nhiên.',
 
-                translationPrompt,
+							'gpt-4o-mini',
 
-                "Bạn là chuyên gia dịch thuật English-Vietnamese. Hãy dịch chính xác và tự nhiên.",
-
-                'gpt-4o-mini',
-
-                'text'
-
-            );
+							'text',
+						);
 
 
-
-            const translationResult = translationResponse.result || translationResponse.answer || translationResponse.content || translationResponse;
-
+						const translationResult = translationResponse.result || translationResponse.answer || translationResponse.content || translationResponse;
 
 
-            try {
+						try {
 
-              const jsonMatch = translationResult.match(/\{[\s\S]*\}/);
+							const jsonMatch = translationResult.match(/\{[\s\S]*\}/);
 
-              if (jsonMatch) {
+							if (jsonMatch) {
 
-                const translatedContent = JSON.parse(jsonMatch[0]);
+								const translatedContent = JSON.parse(jsonMatch[0]);
 
-                processedTitle = translatedContent.title || news.title;
+								processedTitle = translatedContent.title || news.title;
 
-                processedSummary = translatedContent.summary || news.summary;
+								processedSummary = translatedContent.summary || news.summary;
 
-                processedDetail = translatedContent.detail || processedDetail;
-
-
-
-                console.log(`✅ Translated news ${news.id} from English to Vietnamese`);
-
-              }
-
-            } catch (parseError) {
-
-              console.error('Error parsing translation result:', parseError);
-
-              // Giữ nguyên nội dung gốc nếu dịch thất bại
-
-            }
-
-          }
+								processedDetail = translatedContent.detail || processedDetail;
 
 
+								console.log(`✅ Translated news ${news.id} from English to Vietnamese`);
 
-          // Tạo prompt cho AI để phân tích (sử dụng nội dung đã được dịch)
+							}
 
-          const analysisPrompt = `
+						} catch (parseError) {
+
+							console.error('Error parsing translation result:', parseError);
+
+							// Giữ nguyên nội dung gốc nếu dịch thất bại
+
+						}
+
+					}
+
+
+					// Tạo prompt cho AI để phân tích (sử dụng nội dung đã được dịch)
+
+					const analysisPrompt = `
 
 Phân tích bài viết tin tức sau và cung cấp thông tin phân loại:
 
@@ -11444,4255 +11080,3990 @@ Quy tắc phân loại:
 Chỉ trả về JSON, không thêm text khác.`;
 
 
+					const systemMessage = 'Bạn là chuyên gia phân tích tin tức. Hãy phân loại tin tức một cách chính xác và khách quan.';
 
-          const systemMessage = "Bạn là chuyên gia phân tích tin tức. Hãy phân loại tin tức một cách chính xác và khách quan.";
 
+					// Gọi AI để phân tích
 
+					const response = await aiGen(
+						analysisPrompt,
 
-          // Gọi AI để phân tích
+						systemMessage,
 
-          const response = await aiGen(
+						'gpt-4o-mini', // Model AI để sử dụng
 
-              analysisPrompt,
+						'text',
+					);
 
-              systemMessage,
 
-              'gpt-4o-mini', // Model AI để sử dụng
+					const aiResult = response.result || response.answer || response.content || response;
 
-              'text'
 
-          );
+					// Parse kết quả JSON từ AI
 
+					let classificationResult;
 
+					try {
 
-          const aiResult = response.result || response.answer || response.content || response;
+						// Tìm JSON trong response
 
+						const jsonMatch = aiResult.match(/\{[\s\S]*\}/);
 
+						if (jsonMatch) {
 
-          // Parse kết quả JSON từ AI
+							classificationResult = JSON.parse(jsonMatch[0]);
 
-          let classificationResult;
+						} else {
 
-          try {
+							throw new Error('Không tìm thấy JSON trong response');
 
-            // Tìm JSON trong response
+						}
 
-            const jsonMatch = aiResult.match(/\{[\s\S]*\}/);
+					} catch (parseError) {
 
-            if (jsonMatch) {
+						console.error('Error parsing AI response:', parseError, 'Response:', aiResult);
 
-              classificationResult = JSON.parse(jsonMatch[0]);
+						// Fallback: sử dụng logic đơn giản
 
-            } else {
+						classificationResult = {
 
-              throw new Error('Không tìm thấy JSON trong response');
+							sentiment: getSentimentFromTitle(news.title),
 
-            }
+							category: getCategoryFromContent(news.title, news.summary),
 
-          } catch (parseError) {
+							impact: 'normal',
 
-            console.error('Error parsing AI response:', parseError, 'Response:', aiResult);
+						};
 
-            // Fallback: sử dụng logic đơn giản
+					}
 
-            classificationResult = {
 
-              sentiment: getSentimentFromTitle(news.title),
+					// Validate và chuẩn hóa kết quả
 
-              category: getCategoryFromContent(news.title, news.summary),
+					const validSentiments = ['positive', 'negative', 'neutral'];
 
-              impact: 'normal'
+					const validCategories = ['Tư duy & Kỹ năng', 'Mô hình & Công cụ ứng dụng'];
 
-            };
+					const validImpacts = ['important', 'normal', 'skip'];
 
-          }
 
+					const normalizedResult = {
 
+						sentiment: validSentiments.includes(classificationResult.sentiment) ? classificationResult.sentiment : 'neutral',
 
-          // Validate và chuẩn hóa kết quả
+						category: validCategories.includes(classificationResult.category) ? classificationResult.category : 'Tài nguyên khác',
 
-          const validSentiments = ['positive', 'negative', 'neutral'];
+						impact: validImpacts.includes(classificationResult.impact) ? classificationResult.impact : 'normal',
 
-          const validCategories = ['Tư duy & Kỹ năng', 'Mô hình & Công cụ ứng dụng'];
+					};
 
-          const validImpacts = ['important', 'normal', 'skip'];
 
+					// Cập nhật news trong database (bao gồm nội dung đã dịch nếu có)
 
+					const updatedNews = {
 
-          const normalizedResult = {
+						...news,
 
-            sentiment: validSentiments.includes(classificationResult.sentiment) ? classificationResult.sentiment : 'neutral',
+						title: processedTitle, // Cập nhật title đã dịch (nếu có)
 
-            category: validCategories.includes(classificationResult.category) ? classificationResult.category : 'Tài nguyên khác',
+						summary: processedSummary, // Cập nhật summary đã dịch (nếu có)
 
-            impact: validImpacts.includes(classificationResult.impact) ? classificationResult.impact : 'normal'
+						detail: processedDetail, // Cập nhật detail đã dịch (nếu có)
 
-          };
+						sentiment: normalizedResult.sentiment,
 
+						category: normalizedResult.category,
 
+						impact: normalizedResult.impact,
 
-          // Cập nhật news trong database (bao gồm nội dung đã dịch nếu có)
+					};
 
-          const updatedNews = {
 
-            ...news,
+					await updateK9(updatedNews);
 
-            title: processedTitle, // Cập nhật title đã dịch (nếu có)
+					successCount++;
 
-            summary: processedSummary, // Cập nhật summary đã dịch (nếu có)
 
-            detail: processedDetail, // Cập nhật detail đã dịch (nếu có)
+					console.log(`✅ Classified news ${news.id}:`, normalizedResult);
 
-            sentiment: normalizedResult.sentiment,
 
-            category: normalizedResult.category,
+					// Log translation info if translated
 
-            impact: normalizedResult.impact
+					if (languageInfo && languageInfo.language === 'en') {
 
-          };
+						console.log(`🌐 Also translated content for news ${news.id} from English to Vietnamese`);
 
+					}
 
 
-          await updateK9(updatedNews);
+				} catch (error) {
 
-          successCount++;
+					console.error(`❌ Error classifying news ${news.id}:`, error);
 
+					errorCount++;
 
+				}
 
-          console.log(`✅ Classified news ${news.id}:`, normalizedResult);
+			}
 
 
+			// Update local state instead of reloading all data
+			if (successCount > 0) {
+				const updater = (list) => list.map(item => {
+					const updatedItem = updatedItems.find(updated => updated.id === item.id);
+					return updatedItem || item;
+				});
+				setAllData(prev => ({ ...prev, [currentTab]: updater(prev[currentTab] || []) }));
+				setFilteredData(prev => ({ ...prev, [currentTab]: updater(prev[currentTab] || []) }));
+				setData(prev => updater(prev));
+				setTableKey(prev => prev + 1);
 
-          // Log translation info if translated
+				message.success(`Phân loại thành công ${successCount} bài viết${errorCount > 0 ? `, ${errorCount} bài thất bại` : ''}!`);
 
-          if (languageInfo && languageInfo.language === 'en') {
+			} else {
 
-            console.log(`🌐 Also translated content for news ${news.id} from English to Vietnamese`);
+				message.error('Không thể phân loại bài viết nào');
 
-          }
+			}
 
 
+		} catch (error) {
 
-        } catch (error) {
+			console.error('Error in handleClassifyNews:', error);
 
-          console.error(`❌ Error classifying news ${news.id}:`, error);
+			message.error('Lỗi khi phân loại news: ' + error.message);
 
-          errorCount++;
+		} finally {
 
-        }
+			setLoadingClassify(false);
 
-      }
+		}
 
+	};
 
 
-      // Update local state instead of reloading all data
-      if (successCount > 0) {
-        const updater = (list) => list.map(item => {
-          const updatedItem = updatedItems.find(updated => updated.id === item.id);
-          return updatedItem || item;
-        });
-        setAllData(prev => ({ ...prev, [currentTab]: updater(prev[currentTab] || []) }));
-        setFilteredData(prev => ({ ...prev, [currentTab]: updater(prev[currentTab] || []) }));
-        setData(prev => updater(prev));
-        setTableKey(prev => prev + 1);
+	// Helper functions để fallback khi AI parse lỗi
 
-        message.success(`Phân loại thành công ${successCount} bài viết${errorCount > 0 ? `, ${errorCount} bài thất bại` : ''}!`);
+	const getSentimentFromTitle = (title) => {
 
-      } else {
+		const lowerTitle = title.toLowerCase();
 
-        message.error('Không thể phân loại bài viết nào');
+		if (lowerTitle.includes('thành công') || lowerTitle.includes('tăng trưởng') || lowerTitle.includes('hợp tác')) return 'positive';
 
-      }
+		if (lowerTitle.includes('tai nạn') || lowerTitle.includes('lừa đảo') || lowerTitle.includes('cách chức') || lowerTitle.includes('sụp đổ')) return 'negative';
 
+		return 'neutral';
 
+	};
 
-    } catch (error) {
 
-      console.error('Error in handleClassifyNews:', error);
+	const getCategoryFromContent = (title, summary) => {
 
-      message.error('Lỗi khi phân loại news: ' + error.message);
+		const content = (title + ' ' + summary).toLowerCase();
 
-    } finally {
+		if (content.includes('lý thuyết') || content.includes('nguyên lý') || content.includes('học thuyết')) return 'Lý thuyết (Theory)';
 
-      setLoadingClassify(false);
+		if (content.includes('khái niệm') || content.includes('định nghĩa') || content.includes('ý tưởng cơ bản')) return 'Khái niệm (Concept)';
 
-    }
+		if (content.includes('nguyên tắc') || content.includes('quy tắc') || content.includes('chuẩn mực')) return 'Nguyên tắc kinh doanh (Principle)';
 
-  };
+		if (content.includes('framework') || content.includes('khung phân tích') || content.includes('mô hình phân tích')) return 'Khung phân tích (Framework)';
 
+		if (content.includes('business model') || content.includes('mô hình kinh doanh') || content.includes('mô hình hoạt động')) return 'Mô hình (Business model)';
 
+		if (content.includes('phương pháp') || content.includes('quy trình') || content.includes('cách tiếp cận')) return 'Phương pháp luận (Methodology)';
 
-  // Helper functions để fallback khi AI parse lỗi
+		if (content.includes('công cụ') || content.includes('kỹ thuật') || content.includes('phương tiện')) return 'Công cụ & kỹ thuật (Tools & Technique)';
 
-  const getSentimentFromTitle = (title) => {
+		if (content.includes('báo cáo ngành') || content.includes('báo cáo vĩ mô') || content.includes('thống kê')) return 'Các báo cáo ngành - vĩ mô';
 
-    const lowerTitle = title.toLowerCase();
+		if (content.includes('best practice') || content.includes('kinh nghiệm tốt') || content.includes('thực hành tốt')) return 'Best Practices';
 
-    if (lowerTitle.includes('thành công') || lowerTitle.includes('tăng trưởng') || lowerTitle.includes('hợp tác')) return 'positive';
+		if (content.includes('case study') || content.includes('nghiên cứu tình huống') || content.includes('ví dụ thực tế')) return 'Case Studies';
 
-    if (lowerTitle.includes('tai nạn') || lowerTitle.includes('lừa đảo') || lowerTitle.includes('cách chức') || lowerTitle.includes('sụp đổ')) return 'negative';
+		return 'Tài nguyên khác'; // default category
 
-    return 'neutral';
+	};
 
-  };
 
+	// Helper functions for audio processing (from AnswerPanel)
 
+	const cleanBase64 = (base64String) => {
 
-  const getCategoryFromContent = (title, summary) => {
+		return base64String.replace(/[\n\r\s]/g, '');
 
-    const content = (title + ' ' + summary).toLowerCase();
+	};
 
-    if (content.includes('lý thuyết') || content.includes('nguyên lý') || content.includes('học thuyết')) return 'Lý thuyết (Theory)';
 
-    if (content.includes('khái niệm') || content.includes('định nghĩa') || content.includes('ý tưởng cơ bản')) return 'Khái niệm (Concept)';
+	const base64ToUint8Array = (base64) => {
 
-    if (content.includes('nguyên tắc') || content.includes('quy tắc') || content.includes('chuẩn mực')) return 'Nguyên tắc kinh doanh (Principle)';
+		const binaryString = atob(base64);
 
-    if (content.includes('framework') || content.includes('khung phân tích') || content.includes('mô hình phân tích')) return 'Khung phân tích (Framework)';
+		const bytes = new Uint8Array(binaryString.length);
 
-    if (content.includes('business model') || content.includes('mô hình kinh doanh') || content.includes('mô hình hoạt động')) return 'Mô hình (Business model)';
+		for (let i = 0; i < binaryString.length; i++) {
 
-    if (content.includes('phương pháp') || content.includes('quy trình') || content.includes('cách tiếp cận')) return 'Phương pháp luận (Methodology)';
+			bytes[i] = binaryString.charCodeAt(i);
 
-    if (content.includes('công cụ') || content.includes('kỹ thuật') || content.includes('phương tiện')) return 'Công cụ & kỹ thuật (Tools & Technique)';
+		}
 
-    if (content.includes('báo cáo ngành') || content.includes('báo cáo vĩ mô') || content.includes('thống kê')) return 'Các báo cáo ngành - vĩ mô';
+		return bytes;
 
-    if (content.includes('best practice') || content.includes('kinh nghiệm tốt') || content.includes('thực hành tốt')) return 'Best Practices';
+	};
 
-    if (content.includes('case study') || content.includes('nghiên cứu tình huống') || content.includes('ví dụ thực tế')) return 'Case Studies';
 
-    return 'Tài nguyên khác'; // default category
+	const ensureFileNameWithExtension = (fileName, contentType) => {
 
-  };
+		const extensionMap = {
 
+			'audio/mpeg': '.mp3',
 
+			'audio/mp3': '.mp3',
 
-  // Helper functions for audio processing (from AnswerPanel)
+			'audio/wav': '.wav',
 
-  const cleanBase64 = (base64String) => {
+			'audio/x-wav': '.wav',
 
-    return base64String.replace(/[\n\r\s]/g, '');
+			'application/octet-stream': '.mp3', // Default to mp3
 
-  };
+		};
 
 
+		const extension = extensionMap[contentType] || '.mp3';
 
-  const base64ToUint8Array = (base64) => {
 
-    const binaryString = atob(base64);
+		if (!fileName.endsWith(extension)) {
 
-    const bytes = new Uint8Array(binaryString.length);
+			return fileName + extension;
 
-    for (let i = 0; i < binaryString.length; i++) {
+		}
 
-      bytes[i] = binaryString.charCodeAt(i);
+		return fileName;
 
-    }
+	};
 
-    return bytes;
 
-  };
+	const handlePlayAudio = async (audioUrl) => {
 
+		if (!audioUrl) {
 
+			message.warning('Không có audio để phát!');
 
-  const ensureFileNameWithExtension = (fileName, contentType) => {
+			return;
 
-    const extensionMap = {
+		}
 
-      'audio/mpeg': '.mp3',
 
-      'audio/mp3': '.mp3',
+		// Nếu đang phát cùng audio thì pause/resume
 
-      'audio/wav': '.wav',
+		if (audioRef.current && audioRef.current.src === audioUrl) {
 
-      'audio/x-wav': '.wav',
+			if (isAudioPlaying) {
 
-      'application/octet-stream': '.mp3' // Default to mp3
+				audioRef.current.pause();
 
-    };
+				setIsAudioPlaying(false);
 
+			} else {
 
+				try {
 
-    const extension = extensionMap[contentType] || '.mp3';
+					await audioRef.current.play();
 
+					setIsAudioPlaying(true);
 
+				} catch (error) {
 
-    if (!fileName.endsWith(extension)) {
+					console.error('Error resuming audio:', error);
 
-      return fileName + extension;
+					message.error('Không thể phát audio!');
 
-    }
+				}
 
-    return fileName;
+			}
 
-  };
+			return;
 
+		}
 
 
-  const handlePlayAudio = async (audioUrl) => {
+		// Dừng audio cũ nếu có
 
-    if (!audioUrl) {
+		if (audioRef.current) {
 
-      message.warning('Không có audio để phát!');
+			audioRef.current.pause();
 
-      return;
+		}
 
-    }
 
+		setIsAudioLoading(true);
 
 
-    // Nếu đang phát cùng audio thì pause/resume
+		try {
 
-    if (audioRef.current && audioRef.current.src === audioUrl) {
+			// Tạo audio element mới
 
-      if (isAudioPlaying) {
+			const audio = new Audio(audioUrl);
 
-        audioRef.current.pause();
+			audioRef.current = audio;
 
-        setIsAudioPlaying(false);
 
-      } else {
+			// Xử lý events
 
-        try {
+			audio.onloadstart = () => setIsAudioLoading(true);
 
-          await audioRef.current.play();
+			audio.oncanplay = () => setIsAudioLoading(false);
 
-          setIsAudioPlaying(true);
+			audio.onplay = () => setIsAudioPlaying(true);
 
-        } catch (error) {
+			audio.onpause = () => setIsAudioPlaying(false);
 
-          console.error('Error resuming audio:', error);
+			audio.onended = () => {
 
-          message.error('Không thể phát audio!');
+				setIsAudioPlaying(false);
 
-        }
+			};
 
-      }
+			audio.onerror = () => {
 
-      return;
+				setIsAudioLoading(false);
 
-    }
+				setIsAudioPlaying(false);
 
+				message.error('Không thể tải audio!');
 
+			};
 
-    // Dừng audio cũ nếu có
 
-    if (audioRef.current) {
+			// Phát audio
 
-      audioRef.current.pause();
+			await audio.play();
 
-    }
 
+		} catch (error) {
 
+			console.error('Error playing audio:', error);
 
-    setIsAudioLoading(true);
+			setIsAudioLoading(false);
 
+			message.error('Không thể phát audio!');
 
+		}
 
-    try {
+	};
 
-      // Tạo audio element mới
 
-      const audio = new Audio(audioUrl);
+	const handleCreateVoice = async (record) => {
 
-      audioRef.current = audio;
+		if (!record.audioText) {
 
+			message.warning('Không có nội dung audioText để tạo voice!');
 
+			return;
 
-      // Xử lý events
+		}
 
-      audio.onloadstart = () => setIsAudioLoading(true);
 
-      audio.oncanplay = () => setIsAudioLoading(false);
+		// Nếu đã có audioUrl thì thông báo
 
-      audio.onplay = () => setIsAudioPlaying(true);
+		if (record.audioUrl) {
 
-      audio.onpause = () => setIsAudioPlaying(false);
+			message.info('Story này đã có voice!');
 
-      audio.onended = () => {
+			return;
 
-        setIsAudioPlaying(false);
+		}
 
-      };
 
-      audio.onerror = () => {
+		// Kiểm tra xem đã có trong queue chưa
 
-        setIsAudioLoading(false);
+		const existingTask = voiceQueue.find(task => task.recordId === record.id);
 
-        setIsAudioPlaying(false);
+		if (existingTask) {
 
-        message.error('Không thể tải audio!');
+			message.warning(`"${record.title}" đã có trong hàng đợi tạo voice!`);
 
-      };
+			return;
 
+		}
 
 
-      // Phát audio
+		// Kiểm tra xem có đang được xử lý trong queue processor không
 
-      await audio.play();
+		if (currentProcessing && currentProcessing.recordId === record.id) {
 
+			message.warning(`"${record.title}" đang được tạo voice!`);
 
+			return;
 
-    } catch (error) {
+		}
 
-      console.error('Error playing audio:', error);
 
-      setIsAudioLoading(false);
+		// Sử dụng audioText làm nội dung để tạo voice
 
-      message.error('Không thể phát audio!');
+		const content = record.audioText;
 
-    }
 
-  };
+		// Thêm vào queue
 
+		addVoiceToQueue(
+			record.id,
 
+			record.title,
 
-  const handleCreateVoice = async (record) => {
+			content,
 
-    if (!record.audioText) {
+			'single',
+		);
 
-      message.warning('Không có nội dung audioText để tạo voice!');
+	};
 
-      return;
 
-    }
+	// Create voice from detail field - for all tabs
 
+	const handleCreateVoiceFromDetail = async (record) => {
 
+		if (!record.detail) {
 
-    // Nếu đã có audioUrl thì thông báo
+			message.warning('Không có nội dung detail để tạo voice!');
 
-    if (record.audioUrl) {
+			return;
 
-      message.info('Story này đã có voice!');
+		}
 
-      return;
 
-    }
+		// Nếu đã có audioUrl thì thông báo
 
+		if (record.audioUrl) {
 
+			message.info('Bản ghi này đã có voice!');
 
-    // Kiểm tra xem đã có trong queue chưa
+			return;
 
-    const existingTask = voiceQueue.find(task => task.recordId === record.id);
+		}
 
-    if (existingTask) {
 
-      message.warning(`"${record.title}" đã có trong hàng đợi tạo voice!`);
+		// Kiểm tra xem đã có trong queue chưa
 
-      return;
+		const existingTask = voiceQueue.find(task => task.recordId === record.id);
 
-    }
+		if (existingTask) {
 
+			message.warning(`"${record.title}" đã có trong hàng đợi tạo voice!`);
 
+			return;
 
-    // Kiểm tra xem có đang được xử lý trong queue processor không
+		}
 
-    if (currentProcessing && currentProcessing.recordId === record.id) {
 
-      message.warning(`"${record.title}" đang được tạo voice!`);
+		// Kiểm tra xem có đang được xử lý trong queue processor không
 
-      return;
+		if (currentProcessing && currentProcessing.recordId === record.id) {
 
-    }
+			message.warning(`"${record.title}" đang được tạo voice!`);
 
+			return;
 
+		}
 
-    // Sử dụng audioText làm nội dung để tạo voice
 
-    const content = record.audioText;
+		// Sử dụng detail làm nội dung để tạo voice
 
+		const content = record.detail;
 
 
-    // Thêm vào queue
+		// Thêm vào queue
 
-    addVoiceToQueue(
+		addVoiceToQueue(
+			record.id,
 
-        record.id,
+			record.title,
 
-        record.title,
+			content,
 
-        content,
+			'detail-single',
+		);
 
-        'single'
+	};
 
-    );
 
-  };
+	const handleEdit = (record) => {
 
+		setModalMode('edit');
 
+		setSelectedRecord(record);
 
-  // Create voice from detail field - for all tabs
+		// Ensure tag1, tag2, and tag3 are properly set in the form only for caseTraining
 
-  const handleCreateVoiceFromDetail = async (record) => {
+		// Parse info to get filedLabel_1 and filedLabel_2
+		let filedLabel_1 = '';
+		let filedLabel_2 = '';
+		if (record.info) {
+			try {
+				const parsed = typeof record.info === 'string' ? JSON.parse(record.info) : record.info;
+				filedLabel_1 = parsed.filedLabel_1 || '';
+				filedLabel_2 = parsed.filedLabel_2 || '';
+			} catch (e) {
+				console.error('Error parsing info:', e);
+			}
+		}
 
-    if (!record.detail) {
+		const formData = {
 
-      message.warning('Không có nội dung detail để tạo voice!');
+			...record,
 
-      return;
+			// Add filedLabel fields from info
+			filedLabel_1: filedLabel_1,
+			filedLabel_2: filedLabel_2,
 
-    }
+			...(currentTab === 'caseTraining' && {
 
+				tag1: record.tag1 || undefined,
 
+				tag2: record.tag2 || undefined,
 
-    // Nếu đã có audioUrl thì thông báo
+				tag3: record.tag3 || undefined,
 
-    if (record.audioUrl) {
+				tag4: record.tag4 || undefined,
 
-      message.info('Bản ghi này đã có voice!');
+				difficultyLevel: record.difficultyLevel || undefined,
 
-      return;
+				estimatedTime: record.estimatedTime || undefined,
 
-    }
+				learningObjectives: record.learningObjectives || undefined,
 
+				keywords: record.keywords || undefined,
 
+			}),
 
-    // Kiểm tra xem đã có trong queue chưa
+			...(currentTab === 'home' && {
 
-    const existingTask = voiceQueue.find(task => task.recordId === record.id);
+				priority: record.priority || 'medium',
 
-    if (existingTask) {
+				featured: record.featured || false,
 
-      message.warning(`"${record.title}" đã có trong hàng đợi tạo voice!`);
+				homeCategory: record.homeCategory || 'latest',
 
-      return;
+				displayOrder: record.displayOrder || 1,
 
-    }
+			}),
 
+		};
 
+		form.setFieldsValue(formData);
 
-    // Kiểm tra xem có đang được xử lý trong queue processor không
+		resetUploadStates();
 
-    if (currentProcessing && currentProcessing.recordId === record.id) {
+		setCustomVoiceText('');
 
-      message.warning(`"${record.title}" đang được tạo voice!`);
+		setQuizContent(record.quizContent || '');
 
-      return;
+		setAudioFileList(record.backgroundAudio ? [{
+			uid: '-1',
+			name: 'background-audio.mp3',
+			status: 'done',
+			url: record.backgroundAudio,
+		}] : []);
 
-    }
+		if (record.type === 'library') {
 
+			if (record.imgUrls && Array.isArray(record.imgUrls)) {
 
+				setUploadedImageUrls(record.imgUrls);
 
-    // Sử dụng detail làm nội dung để tạo voice
+				// Create file list for display
 
-    const content = record.detail;
+				const imageFileList = record.imgUrls.map((item, index) => {
+					// imgUrls can be array of strings or array of objects with {url, description}
+					let urlString = '';
+					if (typeof item === 'string') {
+						// If item is a string, use it directly
+						urlString = item;
+					} else if (item && typeof item === 'object') {
+						// If item is an object, extract url property
+						urlString = item.url || item.URL || '';
+						if (typeof urlString !== 'string') {
+							urlString = String(urlString || '');
+						}
+					} else {
+						// Fallback: convert to string
+						urlString = String(item || '');
+					}
 
+					return {
+						uid: `-${index}`,
+						name: `image-${index + 1}`,
+						status: 'done',
+						url: urlString,
+					};
+				});
 
+				setSelectedImages(imageFileList);
 
-    // Thêm vào queue
+			}
 
-    addVoiceToQueue(
 
-        record.id,
+			if (record.videoUrl) {
+				// Ensure videoUrl is a string
+				let videoUrl = record.videoUrl;
+				if (typeof videoUrl !== 'string') {
+					console.warn('videoUrl is not a string:', typeof videoUrl, videoUrl);
+					videoUrl = Array.isArray(videoUrl) ? (videoUrl[0] || '') : String(videoUrl || '');
+				}
+				if (videoUrl) {
+					setUploadedVideoUrl(videoUrl);
+					setSelectedVideo({
+						uid: '-1',
+						name: 'video',
+						status: 'done',
+						url: videoUrl,
+					});
+				}
 
-        record.title,
+			}
 
-        content,
+		}
 
-        'detail-single'
+		// Load avatar data
+		if (record.avatarUrl) {
+			// Ensure avatarUrl is a string - Ant Design Upload requires string URL
+			let avatarUrl = record.avatarUrl;
+			if (typeof avatarUrl !== 'string') {
+				console.warn('avatarUrl is not a string:', typeof avatarUrl, avatarUrl);
+				if (Array.isArray(avatarUrl)) {
+					avatarUrl = avatarUrl[0] || '';
+				} else {
+					avatarUrl = String(avatarUrl || '');
+				}
+			}
+			if (avatarUrl) {
+				setUploadedAvatarUrl(avatarUrl);
+				setSelectedAvatar({
+					uid: '-1',
+					name: 'avatar',
+					status: 'done',
+					url: avatarUrl,
+				});
+			}
+		}
 
-    );
+		// Load diagram data
+		if (record.diagramUrl) {
+			// diagramUrl can be an array for kroki mode, but Upload component needs string
+			let diagramUrl = record.diagramUrl;
+			if (typeof diagramUrl !== 'string') {
+				console.warn('diagramUrl is not a string:', typeof diagramUrl, diagramUrl);
+				if (Array.isArray(diagramUrl) && diagramUrl.length > 0) {
+					diagramUrl = typeof diagramUrl[0] === 'string' ? diagramUrl[0] : String(diagramUrl[0] || '');
+				} else {
+					diagramUrl = String(diagramUrl || '');
+				}
+			}
+			if (diagramUrl) {
+				setUploadedDiagramUrl(diagramUrl);
+				setSelectedDiagram({
+					uid: '-1',
+					name: 'diagram',
+					status: 'done',
+					url: diagramUrl,
+				});
+			}
+		}
 
-  };
+		if (record.type === 'news' || record.type === 'home' || record.type === 'longForm' || record.type === 'caseTraining') {
+			// Load existing files for news type
 
+			if (record.fileUrls && Array.isArray(record.fileUrls)) {
 
+				setUploadedFileUrls(record.fileUrls);
 
-  const handleEdit = (record) => {
+				// Create file list for display
 
-    setModalMode('edit');
+				const fileList = record.fileUrls.map((url, index) => {
+					// Ensure url is a string - Ant Design Upload requires string URL
+					let urlString = url;
+					if (typeof urlString !== 'string') {
+						console.warn(`fileUrls[${index}] is not a string:`, typeof urlString, urlString);
+						urlString = Array.isArray(urlString) ? (urlString[0] || '') : String(urlString || '');
+					}
+					const fileName = urlString.split('/').pop() || `file-${index + 1}`;
 
-    setSelectedRecord(record);
+					return {
 
-    // Ensure tag1, tag2, and tag3 are properly set in the form only for caseTraining
+						uid: `-${index}`,
 
-    // Parse info to get filedLabel_1 and filedLabel_2
-    let filedLabel_1 = '';
-    let filedLabel_2 = '';
-    if (record.info) {
-      try {
-        const parsed = typeof record.info === 'string' ? JSON.parse(record.info) : record.info;
-        filedLabel_1 = parsed.filedLabel_1 || '';
-        filedLabel_2 = parsed.filedLabel_2 || '';
-      } catch (e) {
-        console.error('Error parsing info:', e);
-      }
-    }
+						name: fileName,
 
-    const formData = {
+						status: 'done',
 
-      ...record,
+						url: urlString,
 
-      // Add filedLabel fields from info
-      filedLabel_1: filedLabel_1,
-      filedLabel_2: filedLabel_2,
+					};
 
-      ...(currentTab === 'caseTraining' && {
+				});
 
-        tag1: record.tag1 || undefined,
+				setSelectedFiles(fileList);
 
-        tag2: record.tag2 || undefined,
+			}
 
-        tag3: record.tag3 || undefined,
 
-        tag4: record.tag4 || undefined,
+			// Load existing images for news type
 
-        difficultyLevel: record.difficultyLevel || undefined,
+			if (record.imgUrls && Array.isArray(record.imgUrls)) {
 
-        estimatedTime: record.estimatedTime || undefined,
+				setUploadedImageUrls(record.imgUrls);
 
-        learningObjectives: record.learningObjectives || undefined,
+				// Create file list for display
 
-        keywords: record.keywords || undefined
+				const imageFileList = record.imgUrls.map((item, index) => {
+					// imgUrls can be array of strings or array of objects with {url, description}
+					let urlString = '';
+					if (typeof item === 'string') {
+						// If item is a string, use it directly
+						urlString = item;
+					} else if (item && typeof item === 'object') {
+						// If item is an object, extract url property
+						urlString = item.url || item.URL || '';
+						if (typeof urlString !== 'string') {
+							urlString = String(urlString || '');
+						}
+					} else {
+						// Fallback: convert to string
+						urlString = String(item || '');
+					}
 
-      }),
+					return {
+						uid: `-${index}`,
+						name: `image-${index + 1}`,
+						status: 'done',
+						url: urlString,
+					};
+				});
 
-      ...(currentTab === 'home' && {
+				setSelectedImages(imageFileList);
 
-        priority: record.priority || 'medium',
+			}
 
-        featured: record.featured || false,
 
-        homeCategory: record.homeCategory || 'latest',
+			// Load existing video for news type
 
-        displayOrder: record.displayOrder || 1
+			if (record.videoUrl) {
+				// Ensure videoUrl is a string
+				let videoUrl = record.videoUrl;
+				if (typeof videoUrl !== 'string') {
+					console.warn('videoUrl is not a string:', typeof videoUrl, videoUrl);
+					videoUrl = Array.isArray(videoUrl) ? (videoUrl[0] || '') : String(videoUrl || '');
+				}
+				if (videoUrl) {
+					setUploadedVideoUrl(videoUrl);
+					setSelectedVideo({
+						uid: '-1',
+						name: 'video',
+						status: 'done',
+						url: videoUrl,
+					});
+				}
 
-      })
+			}
 
-    };
+		} else if (record.type === 'story') {
 
-    form.setFieldsValue(formData);
+			// Load existing audio for story type
 
-    resetUploadStates();
+			if (record.audioUrl) {
 
-    setCustomVoiceText('');
+				setUploadedAudioUrl(record.audioUrl);
 
-    setQuizContent(record.quizContent || '');
+				setSelectedAudio({
 
-    setAudioFileList(record.backgroundAudio ? [{ uid: '-1', name: 'background-audio.mp3', status: 'done', url: record.backgroundAudio }] : []);
+					uid: '-1',
 
-    if (record.type === 'library') {
+					name: 'audio',
 
-      if (record.imgUrls && Array.isArray(record.imgUrls)) {
+					status: 'done',
 
-        setUploadedImageUrls(record.imgUrls);
+					url: record.audioUrl,
 
-        // Create file list for display
+				});
 
-        const imageFileList = record.imgUrls.map((item, index) => {
-          // imgUrls can be array of strings or array of objects with {url, description}
-          let urlString = '';
-          if (typeof item === 'string') {
-            // If item is a string, use it directly
-            urlString = item;
-          } else if (item && typeof item === 'object') {
-            // If item is an object, extract url property
-            urlString = item.url || item.URL || '';
-            if (typeof urlString !== 'string') {
-              urlString = String(urlString || '');
-            }
-          } else {
-            // Fallback: convert to string
-            urlString = String(item || '');
-          }
+			}
 
-          return {
-            uid: `-${index}`,
-            name: `image-${index + 1}`,
-            status: 'done',
-            url: urlString,
-          };
-        });
 
-        setSelectedImages(imageFileList);
+			// Load existing audioText for story type
 
-      }
+			if (record.audioText) {
 
+				setAudioText(record.audioText || '');
 
+			}
 
-      if (record.videoUrl) {
-        // Ensure videoUrl is a string
-        let videoUrl = record.videoUrl;
-        if (typeof videoUrl !== 'string') {
-          console.warn('videoUrl is not a string:', typeof videoUrl, videoUrl);
-          videoUrl = Array.isArray(videoUrl) ? (videoUrl[0] || '') : String(videoUrl || '');
-        }
-        if (videoUrl) {
-          setUploadedVideoUrl(videoUrl);
-          setSelectedVideo({
-            uid: '-1',
-            name: 'video',
-            status: 'done',
-            url: videoUrl,
-          });
-        }
+		} else if (record.type === 'report') {
 
-      }
+			// Load existing files for report type
 
-    }
+			if (record.fileUrls && Array.isArray(record.fileUrls)) {
 
-    // Load avatar data
-    if (record.avatarUrl) {
-      // Ensure avatarUrl is a string - Ant Design Upload requires string URL
-      let avatarUrl = record.avatarUrl;
-      if (typeof avatarUrl !== 'string') {
-        console.warn('avatarUrl is not a string:', typeof avatarUrl, avatarUrl);
-        if (Array.isArray(avatarUrl)) {
-          avatarUrl = avatarUrl[0] || '';
-        } else {
-          avatarUrl = String(avatarUrl || '');
-        }
-      }
-      if (avatarUrl) {
-        setUploadedAvatarUrl(avatarUrl);
-        setSelectedAvatar({
-          uid: '-1',
-          name: 'avatar',
-          status: 'done',
-          url: avatarUrl,
-        });
-      }
-    }
+				setUploadedFileUrls(record.fileUrls);
 
-    // Load diagram data
-    if (record.diagramUrl) {
-      // diagramUrl can be an array for kroki mode, but Upload component needs string
-      let diagramUrl = record.diagramUrl;
-      if (typeof diagramUrl !== 'string') {
-        console.warn('diagramUrl is not a string:', typeof diagramUrl, diagramUrl);
-        if (Array.isArray(diagramUrl) && diagramUrl.length > 0) {
-          diagramUrl = typeof diagramUrl[0] === 'string' ? diagramUrl[0] : String(diagramUrl[0] || '');
-        } else {
-          diagramUrl = String(diagramUrl || '');
-        }
-      }
-      if (diagramUrl) {
-        setUploadedDiagramUrl(diagramUrl);
-        setSelectedDiagram({
-          uid: '-1',
-          name: 'diagram',
-          status: 'done',
-          url: diagramUrl,
-        });
-      }
-    }
+				// Create file list for display
 
-    if (record.type === 'news' || record.type === 'home' || record.type === 'longForm' || record.type === 'caseTraining') {
-      // Load existing files for news type
+				const fileList = record.fileUrls.map((url, index) => {
+					// Ensure url is a string - Ant Design Upload requires string URL
+					let urlString = url;
+					if (typeof urlString !== 'string') {
+						console.warn(`fileUrls[${index}] is not a string:`, typeof urlString, urlString);
+						urlString = Array.isArray(urlString) ? (urlString[0] || '') : String(urlString || '');
+					}
+					const fileName = urlString.split('/').pop() || `file-${index + 1}`;
 
-      if (record.fileUrls && Array.isArray(record.fileUrls)) {
+					return {
 
-        setUploadedFileUrls(record.fileUrls);
+						uid: `-${index}`,
 
-        // Create file list for display
+						name: fileName,
 
-        const fileList = record.fileUrls.map((url, index) => {
-          // Ensure url is a string - Ant Design Upload requires string URL
-          let urlString = url;
-          if (typeof urlString !== 'string') {
-            console.warn(`fileUrls[${index}] is not a string:`, typeof urlString, urlString);
-            urlString = Array.isArray(urlString) ? (urlString[0] || '') : String(urlString || '');
-          }
-          const fileName = urlString.split('/').pop() || `file-${index + 1}`;
+						status: 'done',
 
-          return {
+						url: urlString,
 
-            uid: `-${index}`,
+					};
 
-            name: fileName,
+				});
 
-            status: 'done',
+				setSelectedFiles(fileList);
 
-            url: urlString,
+			}
 
-          };
+		}
 
-        });
+		setFormKey(prev => prev + 1);
 
-        setSelectedFiles(fileList);
+		setModalVisible(true);
 
-      }
+	};
 
 
+	const handleView = (record) => {
 
-      // Load existing images for news type
+		setSelectedRecord(record);
 
-      if (record.imgUrls && Array.isArray(record.imgUrls)) {
+		setViewModalVisible(true);
 
-        setUploadedImageUrls(record.imgUrls);
 
-        // Create file list for display
+		// Reset audio state khi mở modal mới
 
-        const imageFileList = record.imgUrls.map((item, index) => {
-          // imgUrls can be array of strings or array of objects with {url, description}
-          let urlString = '';
-          if (typeof item === 'string') {
-            // If item is a string, use it directly
-            urlString = item;
-          } else if (item && typeof item === 'object') {
-            // If item is an object, extract url property
-            urlString = item.url || item.URL || '';
-            if (typeof urlString !== 'string') {
-              urlString = String(urlString || '');
-            }
-          } else {
-            // Fallback: convert to string
-            urlString = String(item || '');
-          }
+		if (audioRef.current) {
 
-          return {
-            uid: `-${index}`,
-            name: `image-${index + 1}`,
-            status: 'done',
-            url: urlString,
-          };
-        });
+			audioRef.current.pause();
 
-        setSelectedImages(imageFileList);
+			setIsAudioPlaying(false);
 
-      }
+			setIsAudioLoading(false);
 
+		}
 
 
-      // Load existing video for news type
+	};
 
-      if (record.videoUrl) {
-        // Ensure videoUrl is a string
-        let videoUrl = record.videoUrl;
-        if (typeof videoUrl !== 'string') {
-          console.warn('videoUrl is not a string:', typeof videoUrl, videoUrl);
-          videoUrl = Array.isArray(videoUrl) ? (videoUrl[0] || '') : String(videoUrl || '');
-        }
-        if (videoUrl) {
-          setUploadedVideoUrl(videoUrl);
-          setSelectedVideo({
-            uid: '-1',
-            name: 'video',
-            status: 'done',
-            url: videoUrl,
-          });
-        }
 
-      }
+	const handleViewQuestionContent = (record) => {
 
-    } else if (record.type === 'story') {
+		const questionContent = record.questionContent || record.quizContent || record.quizzContent;
 
-      // Load existing audio for story type
+		setSelectedQuestionContent(questionContent);
 
-      if (record.audioUrl) {
+		setSelectedQuestionContentTitle(record.title || 'Không có tiêu đề');
 
-        setUploadedAudioUrl(record.audioUrl);
+		setSelectedQuestionContentRecord(record);
 
-        setSelectedAudio({
+		setQuestionContentModalVisible(true);
 
-          uid: '-1',
+	};
 
-          name: 'audio',
 
-          status: 'done',
+	const handleUpdateQuestionContent = async (newQuestionContent) => {
 
-          url: record.audioUrl,
+		if (!selectedQuestionContentRecord) return;
 
-        });
 
-      }
+		try {
 
+			await updateK9({
 
+				id: selectedQuestionContentRecord.id,
 
-      // Load existing audioText for story type
+				questionContent: newQuestionContent,
 
-      if (record.audioText) {
+			});
 
-        setAudioText(record.audioText || '');
 
-      }
+			message.success('Cập nhật thành công');
 
-    } else if (record.type === 'report') {
 
-      // Load existing files for report type
+			// Update local data
 
-      if (record.fileUrls && Array.isArray(record.fileUrls)) {
+			const updater = (list) => list.map(item =>
 
-        setUploadedFileUrls(record.fileUrls);
+				item.id === selectedQuestionContentRecord.id
 
-        // Create file list for display
+					? { ...item, questionContent: newQuestionContent }
 
-        const fileList = record.fileUrls.map((url, index) => {
-          // Ensure url is a string - Ant Design Upload requires string URL
-          let urlString = url;
-          if (typeof urlString !== 'string') {
-            console.warn(`fileUrls[${index}] is not a string:`, typeof urlString, urlString);
-            urlString = Array.isArray(urlString) ? (urlString[0] || '') : String(urlString || '');
-          }
-          const fileName = urlString.split('/').pop() || `file-${index + 1}`;
+					: item,
+			);
 
-          return {
 
-            uid: `-${index}`,
+			if (currentTab === 'report') {
 
-            name: fileName,
+				setAiSummaryData(prev => updater(prev));
 
-            status: 'done',
+			} else if (currentTab === 'reportDN') {
 
-            url: urlString,
+				setReportDNData(prev => updater(prev));
 
-          };
+			} else {
 
-        });
+				setAllData(prev => ({
 
-        setSelectedFiles(fileList);
+					...prev,
 
-      }
+					[currentTab]: updater(prev[currentTab] || []),
 
-    }
+				}));
 
-    setFormKey(prev => prev + 1);
+				setFilteredData(prev => ({
 
-    setModalVisible(true);
+					...prev,
 
-  };
+					[currentTab]: updater(prev[currentTab] || []),
 
+				}));
 
+				setData(prev => updater(prev));
 
+			}
 
 
+			// Close modal and reset states
 
+			setQuestionContentModalVisible(false);
 
-  const handleView = (record) => {
+			setSelectedQuestionContent(null);
 
-    setSelectedRecord(record);
+			setSelectedQuestionContentTitle('');
 
-    setViewModalVisible(true);
+			setSelectedQuestionContentRecord(null);
 
+		} catch (error) {
 
+			console.error('Error updating question content:', error);
 
-    // Reset audio state khi mở modal mới
+			message.error('Lỗi khi cập nhật: ' + error.message);
 
-    if (audioRef.current) {
+		}
 
-      audioRef.current.pause();
+	};
 
-      setIsAudioPlaying(false);
 
-      setIsAudioLoading(false);
+	const handleDelete = async (id) => {
 
-    }
+		try {
 
+			await deleteK9(id);
 
+			// Update local state instead of reloading all data
+			const updater = (list) => list.filter(item => item.id !== id);
+			setAllData(prev => ({ ...prev, [currentTab]: updater(prev[currentTab] || []) }));
+			setFilteredData(prev => ({ ...prev, [currentTab]: updater(prev[currentTab] || []) }));
+			setData(prev => updater(prev));
 
+			message.success('Xóa thành công');
 
+		} catch (error) {
 
-  };
+			message.error('Lỗi khi xóa: ' + error.message);
 
+		}
 
+	};
 
-  const handleViewQuestionContent = (record) => {
 
-    const questionContent = record.questionContent || record.quizContent || record.quizzContent;
+	// Bulk delete function
 
-    setSelectedQuestionContent(questionContent);
+	const handleBulkDelete = async () => {
 
-    setSelectedQuestionContentTitle(record.title || 'Không có tiêu đề');
+		if (selectedRowKeys.length === 0) {
 
-    setSelectedQuestionContentRecord(record);
+			message.warning('Vui lòng chọn ít nhất một mục để xóa!');
 
-    setQuestionContentModalVisible(true);
+			return;
 
-  };
+		}
 
 
+		Modal.confirm({
 
-  const handleUpdateQuestionContent = async (newQuestionContent) => {
+			title: 'Xác nhận xóa hàng loạt',
 
-    if (!selectedQuestionContentRecord) return;
+			content: `Bạn có chắc chắn muốn xóa ${selectedRowKeys.length} mục đã chọn? Hành động này không thể hoàn tác.`,
 
+			okText: 'Xóa',
 
+			okType: 'danger',
 
-    try {
+			cancelText: 'Hủy',
 
-      await updateK9({
+			onOk: async () => {
 
-        id: selectedQuestionContentRecord.id,
+				try {
 
-        questionContent: newQuestionContent
+					let successCount = 0;
 
-      });
+					let errorCount = 0;
 
 
+					for (const id of selectedRowKeys) {
 
-      message.success('Cập nhật thành công');
+						try {
 
+							await deleteK9(id);
 
+							successCount++;
 
-      // Update local data
+						} catch (error) {
 
-      const updater = (list) => list.map(item =>
+							console.error(`Error deleting item ${id}:`, error);
 
-          item.id === selectedQuestionContentRecord.id
+							errorCount++;
 
-              ? { ...item, questionContent: newQuestionContent }
+						}
 
-              : item
+					}
 
-      );
 
+					// Update local state instead of reloading all data
+					if (successCount > 0) {
+						const updater = (list) => list.filter(item => !selectedRowKeys.includes(item.id));
+						setAllData(prev => ({ ...prev, [currentTab]: updater(prev[currentTab] || []) }));
+						setFilteredData(prev => ({ ...prev, [currentTab]: updater(prev[currentTab] || []) }));
+						setData(prev => updater(prev));
+					}
 
+					setSelectedRowKeys([]);
 
-      if (currentTab === 'report') {
 
-        setAiSummaryData(prev => updater(prev));
+					if (successCount > 0) {
 
-      } else if (currentTab === 'reportDN') {
+						message.success(`Xóa thành công ${successCount} mục${errorCount > 0 ? `, ${errorCount} mục thất bại` : ''}!`);
 
-        setReportDNData(prev => updater(prev));
+					} else {
 
-      } else {
+						message.error('Không thể xóa mục nào!');
 
-        setAllData(prev => ({
+					}
 
-          ...prev,
+				} catch (error) {
 
-          [currentTab]: updater(prev[currentTab] || [])
+					console.error('Error in bulk delete:', error);
 
-        }));
+					message.error('Lỗi khi xóa hàng loạt: ' + error.message);
 
-        setFilteredData(prev => ({
+				}
 
-          ...prev,
+			},
 
-          [currentTab]: updater(prev[currentTab] || [])
+		});
 
-        }));
+	};
 
-        setData(prev => updater(prev));
 
-      }
+	const handleModalOk = async () => {
 
+		try {
 
+			const values = form.getFieldsValue();
 
-      // Close modal and reset states
+			// Debug logging
 
-      setQuestionContentModalVisible(false);
+			console.log('Form values:', values);
 
-      setSelectedQuestionContent(null);
+			console.log('AudioText from state:', audioText);
 
-      setSelectedQuestionContentTitle('');
+			const contentType = modalMode === 'create' ? currentTab : selectedRecord?.type;
 
-      setSelectedQuestionContentRecord(null);
+			// Extract filedLabel fields and remove them from recordData
+			const filedLabel_1 = values.filedLabel_1 || '';
+			const filedLabel_2 = values.filedLabel_2 || '';
+			const { filedLabel_1: _, filedLabel_2: __, ...valuesWithoutFiledLabels } = values;
 
-    } catch (error) {
+			let recordData = {
 
-      console.error('Error updating question content:', error);
+				...valuesWithoutFiledLabels,
 
-      message.error('Lỗi khi cập nhật: ' + error.message);
+				lessonNumber: values.lessonNumber || null,
+				type: contentType,
 
-    }
+				status: values.status || 'draft',
 
-  };
+				// Build info object with filedLabel fields
+				info: {
+					...(selectedRecord?.info && (
+						typeof selectedRecord.info === 'string'
+							? JSON.parse(selectedRecord.info)
+							: selectedRecord.info
+					)),
+					filedLabel_1: filedLabel_1,
+					filedLabel_2: filedLabel_2,
+				},
 
+				...(currentTab === 'caseTraining' && {
 
+					tag1: values.tag1 || null,
 
-  const handleDelete = async (id) => {
+					tag2: values.tag2 || null,
 
-    try {
+					tag3: values.tag3 || null,
 
-      await deleteK9(id);
+					difficultyLevel: values.difficultyLevel || null,
 
-      // Update local state instead of reloading all data
-      const updater = (list) => list.filter(item => item.id !== id);
-      setAllData(prev => ({ ...prev, [currentTab]: updater(prev[currentTab] || []) }));
-      setFilteredData(prev => ({ ...prev, [currentTab]: updater(prev[currentTab] || []) }));
-      setData(prev => updater(prev));
+					estimatedTime: values.estimatedTime || null,
 
-      message.success('Xóa thành công');
+					learningObjectives: values.learningObjectives || null,
 
-    } catch (error) {
+					keywords: values.keywords || null,
 
-      message.error('Lỗi khi xóa: ' + error.message);
+				}),
 
-    }
+				...(currentTab === 'home' && {
 
-  };
+					priority: values.priority || 'medium',
 
+					featured: values.featured || false,
 
+					homeCategory: values.homeCategory || 'latest',
 
-  // Bulk delete function
+					displayOrder: values.displayOrder || 1,
 
-  const handleBulkDelete = async () => {
+				}),
 
-    if (selectedRowKeys.length === 0) {
+			};
 
-      message.warning('Vui lòng chọn ít nhất một mục để xóa!');
+			if (contentType === 'story') {
 
-      return;
+				recordData.audioText = audioText;
 
-    }
+				if (uploadedAudioUrl) {
 
+					recordData.audioUrl = uploadedAudioUrl;
 
+				}
 
-    Modal.confirm({
+			}
 
-      title: 'Xác nhận xóa hàng loạt',
+			if (contentType === 'library') {
 
-      content: `Bạn có chắc chắn muốn xóa ${selectedRowKeys.length} mục đã chọn? Hành động này không thể hoàn tác.`,
+				if (uploadedImageUrls.length > 0) {
 
-      okText: 'Xóa',
+					recordData.imgUrls = uploadedImageUrls;
 
-      okType: 'danger',
+				}
 
-      cancelText: 'Hủy',
+				if (uploadedVideoUrl) {
 
-      onOk: async () => {
+					recordData.videoUrl = uploadedVideoUrl;
 
-        try {
+				}
 
-          let successCount = 0;
+			} else if (contentType === 'news' || contentType === 'home' || contentType === 'longForm') {
 
-          let errorCount = 0;
+				if (uploadedFileUrls.length > 0) {
 
+					recordData.fileUrls = uploadedFileUrls;
 
+				}
 
-          for (const id of selectedRowKeys) {
+				if (uploadedImageUrls.length > 0) {
 
-            try {
+					recordData.imgUrls = uploadedImageUrls;
 
-              await deleteK9(id);
+				}
 
-              successCount++;
+				if (uploadedVideoUrl) {
 
-            } catch (error) {
+					recordData.videoUrl = uploadedVideoUrl;
 
-              console.error(`Error deleting item ${id}:`, error);
+				}
 
-              errorCount++;
+			} else if (contentType === 'report') {
 
-            }
+				if (uploadedFileUrls.length > 0) {
 
-          }
+					recordData.fileUrls = uploadedFileUrls;
 
+				}
 
+			}
 
-          // Update local state instead of reloading all data
-          if (successCount > 0) {
-            const updater = (list) => list.filter(item => !selectedRowKeys.includes(item.id));
-            setAllData(prev => ({ ...prev, [currentTab]: updater(prev[currentTab] || []) }));
-            setFilteredData(prev => ({ ...prev, [currentTab]: updater(prev[currentTab] || []) }));
-            setData(prev => updater(prev));
-          }
 
-          setSelectedRowKeys([]);
+			// Add avatar and diagram URLs for all content types
+			if (uploadedAvatarUrl) {
+				recordData.avatarUrl = uploadedAvatarUrl;
+			}
+			if (uploadedDiagramUrl) {
+				recordData.diagramUrl = uploadedDiagramUrl;
+			}
+			if (modalMode === 'create') {
 
+				console.log('Record data before save:', recordData);
 
+				const newRecord = await createK9(recordData);
 
-          if (successCount > 0) {
+				message.success('Tạo mới thành công');
 
-            message.success(`Xóa thành công ${successCount} mục${errorCount > 0 ? `, ${errorCount} mục thất bại` : ''}!`);
+				// Update local state instead of reloading all data
+				if (newRecord) {
+					const updater = (list) => [...(list || []), newRecord];
+					setAllData(prev => ({ ...prev, [currentTab]: updater(prev[currentTab] || []) }));
+					setFilteredData(prev => ({ ...prev, [currentTab]: updater(prev[currentTab] || []) }));
+					setData(prev => updater(prev));
+				}
 
-          } else {
+			} else {
 
-            message.error('Không thể xóa mục nào!');
+				const updatedRecord = {
 
-          }
+					...selectedRecord,
 
-        } catch (error) {
+					...recordData,
 
-          console.error('Error in bulk delete:', error);
+					fileUrls: uploadedFileUrls,
 
-          message.error('Lỗi khi xóa hàng loạt: ' + error.message);
+					imgUrls: uploadedImageUrls,
 
-        }
+					videoUrl: uploadedVideoUrl,
 
-      }
+					audioUrl: uploadedAudioUrl,
 
-    });
+					avatarUrl: uploadedAvatarUrl,
+					diagramUrl: uploadedDiagramUrl,
+					// Ensure info is properly merged
+					info: recordData.info,
+				};
 
-  };
+				console.log('Updated record:', updatedRecord);
 
+				await updateK9(updatedRecord);
 
+				message.success('Cập nhật thành công');
 
-  const handleModalOk = async () => {
+				// Update local state instead of reloading all data
+				const updater = (list) => list.map(item => item.id === updatedRecord.id ? updatedRecord : item);
+				setAllData(prev => ({ ...prev, [currentTab]: updater(prev[currentTab] || []) }));
+				setFilteredData(prev => ({ ...prev, [currentTab]: updater(prev[currentTab] || []) }));
+				setData(prev => updater(prev));
+			}
 
-    try {
+			setTableKey(prev => prev + 1);
 
-      const values = form.getFieldsValue();
+			setModalVisible(false);
 
-      // Debug logging
+			form.resetFields();
 
-      console.log('Form values:', values);
+			resetUploadStates();
 
-      console.log('AudioText from state:', audioText);
+			setCustomVoiceText('');
 
-      const contentType = modalMode === 'create' ? currentTab : selectedRecord?.type;
+			setSelectedRecord(null);
 
-      // Extract filedLabel fields and remove them from recordData
-      const filedLabel_1 = values.filedLabel_1 || '';
-      const filedLabel_2 = values.filedLabel_2 || '';
-      const { filedLabel_1: _, filedLabel_2: __, ...valuesWithoutFiledLabels } = values;
+			setAudioText('');
 
-      let recordData = {
+			setSelectedRowKeys([]); // Clear selection after save
 
-        ...valuesWithoutFiledLabels,
+			// Reset tag fields only for caseTraining
 
-        lessonNumber: values.lessonNumber || null,
-        type: contentType,
+			if (currentTab === 'caseTraining') {
 
-        status: values.status || 'draft',
+				form.setFieldsValue({
 
-        // Build info object with filedLabel fields
-        info: {
-          ...(selectedRecord?.info && (
-              typeof selectedRecord.info === 'string'
-                  ? JSON.parse(selectedRecord.info)
-                  : selectedRecord.info
-          )),
-          filedLabel_1: filedLabel_1,
-          filedLabel_2: filedLabel_2
-        },
+					tag1: undefined,
 
-        ...(currentTab === 'caseTraining' && {
+					tag2: undefined,
 
-          tag1: values.tag1 || null,
+					tag3: undefined,
 
-          tag2: values.tag2 || null,
+					difficultyLevel: undefined,
 
-          tag3: values.tag3 || null,
+					estimatedTime: undefined,
 
-          difficultyLevel: values.difficultyLevel || null,
+					learningObjectives: undefined,
 
-          estimatedTime: values.estimatedTime || null,
+					keywords: undefined,
 
-          learningObjectives: values.learningObjectives || null,
+				});
 
-          keywords: values.keywords || null
+			}
 
-        }),
+			// Reset home fields
 
-        ...(currentTab === 'home' && {
+			if (currentTab === 'home') {
 
-          priority: values.priority || 'medium',
+				form.setFieldsValue({
 
-          featured: values.featured || false,
+					priority: undefined,
 
-          homeCategory: values.homeCategory || 'latest',
+					featured: false,
 
-          displayOrder: values.displayOrder || 1
+					homeCategory: undefined,
 
-        })
+					displayOrder: undefined,
 
-      };
+				});
 
-      if (contentType === 'story') {
+			}
 
-        recordData.audioText = audioText;
+			// Reset other fields
 
-        if (uploadedAudioUrl) {
+			setQuizContent('');
 
-          recordData.audioUrl = uploadedAudioUrl;
+			setAudioFileList([]);
 
-        }
+			setCustomVoiceText('');
 
-      }
+		} catch (error) {
 
-      if (contentType === 'library') {
+			console.error('Error saving data:', error);
 
-        if (uploadedImageUrls.length > 0) {
+			message.error('Lỗi khi lưu dữ liệu: ' + error.message);
 
-          recordData.imgUrls = uploadedImageUrls;
+		}
 
-        }
+	};
 
-        if (uploadedVideoUrl) {
 
-          recordData.videoUrl = uploadedVideoUrl;
+	const handleModalCancel = () => {
 
-        }
+		setModalVisible(false);
 
-      } else if (contentType === 'news' || contentType === 'home' || contentType === 'longForm') {
+		form.resetFields();
 
-        if (uploadedFileUrls.length > 0) {
+		resetUploadStates();
 
-          recordData.fileUrls = uploadedFileUrls;
+		setCustomVoiceText('');
 
-        }
+		setSelectedRecord(null);
 
-        if (uploadedImageUrls.length > 0) {
+		setAudioText('');
 
-          recordData.imgUrls = uploadedImageUrls;
+		// Reset tag fields only for caseTraining
 
-        }
+		if (currentTab === 'caseTraining') {
 
-        if (uploadedVideoUrl) {
+			form.setFieldsValue({
 
-          recordData.videoUrl = uploadedVideoUrl;
+				tag1: undefined,
 
-        }
+				tag2: undefined,
 
-      } else if (contentType === 'report') {
+				tag3: undefined,
 
-        if (uploadedFileUrls.length > 0) {
+				difficultyLevel: undefined,
 
-          recordData.fileUrls = uploadedFileUrls;
+				estimatedTime: undefined,
 
-        }
+				learningObjectives: undefined,
 
-      }
+				keywords: undefined,
 
+			});
 
-      // Add avatar and diagram URLs for all content types
-      if (uploadedAvatarUrl) {
-        recordData.avatarUrl = uploadedAvatarUrl;
-      }
-      if (uploadedDiagramUrl) {
-        recordData.diagramUrl = uploadedDiagramUrl;
-      }
-      if (modalMode === 'create') {
+		}
 
-        console.log('Record data before save:', recordData);
+		// Reset other fields
 
-        const newRecord = await createK9(recordData);
+		setQuizContent('');
 
-        message.success('Tạo mới thành công');
+		setAudioFileList([]);
 
-        // Update local state instead of reloading all data
-        if (newRecord) {
-          const updater = (list) => [...(list || []), newRecord];
-          setAllData(prev => ({ ...prev, [currentTab]: updater(prev[currentTab] || []) }));
-          setFilteredData(prev => ({ ...prev, [currentTab]: updater(prev[currentTab] || []) }));
-          setData(prev => updater(prev));
-        }
+		setCustomVoiceText('');
 
-      } else {
+	};
 
-        const updatedRecord = {
+	// Helper function to normalize fileList - ensure all URLs are strings
+	// This prevents "url2.split is not a function" error from Ant Design Upload
+	const normalizeFileList = (fileList) => {
+		if (!fileList || !Array.isArray(fileList)) return [];
+		return fileList.map(file => {
+			if (!file) return file;
+			const normalizedFile = { ...file };
+			// Ensure url is always a string (Ant Design requires string for .split() method)
+			if (normalizedFile.url !== undefined && normalizedFile.url !== null) {
+				if (typeof normalizedFile.url !== 'string') {
+					// If url is array, take first element
+					if (Array.isArray(normalizedFile.url) && normalizedFile.url.length > 0) {
+						normalizedFile.url = String(normalizedFile.url[0] || '');
+					} else {
+						// Convert to string
+						normalizedFile.url = String(normalizedFile.url || '');
+					}
+				}
+			}
+			return normalizedFile;
+		});
+	};
 
-          ...selectedRecord,
+	const getFormFields = () => {
 
-          ...recordData,
+		// Determine content type from selected record or current tab
 
-          fileUrls: uploadedFileUrls,
+		const contentType = modalMode === 'edit' && selectedRecord
 
-          imgUrls: uploadedImageUrls,
+			? selectedRecord.type
 
-          videoUrl: uploadedVideoUrl,
+			: currentTab;
 
-          audioUrl: uploadedAudioUrl,
 
-          avatarUrl: uploadedAvatarUrl,
-          diagramUrl: uploadedDiagramUrl,
-          // Ensure info is properly merged
-          info: recordData.info
-        };
+		const fields = [];
 
-        console.log('Updated record:', updatedRecord);
 
-        await updateK9(updatedRecord);
+		// Common fields for all types
 
-        message.success('Cập nhật thành công');
+		fields.push(
+			<Form.Item key='title' name='title' label='Tiêu đề'>
 
-        // Update local state instead of reloading all data
-        const updater = (list) => list.map(item => item.id === updatedRecord.id ? updatedRecord : item);
-        setAllData(prev => ({ ...prev, [currentTab]: updater(prev[currentTab] || []) }));
-        setFilteredData(prev => ({ ...prev, [currentTab]: updater(prev[currentTab] || []) }));
-        setData(prev => updater(prev));
-      }
+				<Input placeholder='Nhập tiêu đề' />
 
-      setTableKey(prev => prev + 1);
+			</Form.Item>,
+		);
 
-      setModalVisible(false);
+		// CID field
 
-      form.resetFields();
+		fields.push(
+			<Form.Item key='cid' name='cid' label='CID'>
 
-      resetUploadStates();
+				<Input placeholder='Nhập CID' />
 
-      setCustomVoiceText('');
+			</Form.Item>,
+		);
 
-      setSelectedRecord(null);
+		// Số bài field
 
-      setAudioText('');
+		fields.push(
+			<Form.Item key='lessonNumber' name='lessonNumber' label='Số bài'>
 
-      setSelectedRowKeys([]); // Clear selection after save
+				<InputNumber
 
-      // Reset tag fields only for caseTraining
+					placeholder='Nhập số bài'
 
-      if (currentTab === 'caseTraining') {
+					min={1}
 
-        form.setFieldsValue({
+					style={{ width: '100%' }}
 
-          tag1: undefined,
+				/>
 
-          tag2: undefined,
+			</Form.Item>,
+		);
 
-          tag3: undefined,
 
-          difficultyLevel: undefined,
+		// Category field
 
-          estimatedTime: undefined,
+		let categoryOptions = [];
 
-          learningObjectives: undefined,
+		if (contentType === 'news' || contentType === 'caseTraining' || contentType === 'longForm') {
 
-          keywords: undefined
+			categoryOptions = categoriesOptions;
 
-        });
+		} else if (contentType === 'library') {
 
-      }
+			categoryOptions = [
 
-      // Reset home fields
+				{ value: 'Ý tưởng khởi nghiệp', label: 'Ý tưởng khởi nghiệp' },
 
-      if (currentTab === 'home') {
+				{ value: 'Tips khởi nghiệp', label: 'Tips khởi nghiệp' },
 
-        form.setFieldsValue({
+				{ value: 'Sáng tạo khác', label: 'Sáng tạo khác' },
 
-          priority: undefined,
+			];
 
-          featured: false,
+		} else if (contentType === 'story') {
 
-          homeCategory: undefined,
+			categoryOptions = [
 
-          displayOrder: undefined
+				{ value: 'Podcast', label: 'Podcast' },
 
-        });
+				{ value: 'Bài viết', label: 'Bài viết' },
 
-      }
+			];
 
-      // Reset other fields
+		}
 
-      setQuizContent('');
+		if (contentType === 'news' || contentType === 'home' || contentType === 'longForm') {
 
-      setAudioFileList([]);
+			fields.push(
+				<Form.Item key='category' name='category' label='Danh mục'>
 
-      setCustomVoiceText('');
+					<Select placeholder='Chọn danh mục'>
 
-    } catch (error) {
+						{categoryOptions.map(option => (
 
-      console.error('Error saving data:', error);
+							<Option key={option.value} value={option.value}>
 
-      message.error('Lỗi khi lưu dữ liệu: ' + error.message);
+								{option.label}
 
-    }
+							</Option>
 
-  };
+						))}
 
+					</Select>
 
+				</Form.Item>,
+			);
 
-  const handleModalCancel = () => {
+		}
 
-    setModalVisible(false);
 
-    form.resetFields();
+		fields.push(
+			<Form.Item key='summary' name='summary' label='Tóm tắt'>
 
-    resetUploadStates();
+				<TextArea
+					placeholder='Nhập tóm tắt'
+					autoSize={{ minRows: 2 }}
+					style={{ resize: 'none' }}
+				/>
+			</Form.Item>,
+		);
 
-    setCustomVoiceText('');
 
-    setSelectedRecord(null);
+		fields.push(
+			<Form.Item key='detail' name='detail' label='Chi tiết'>
 
-    setAudioText('');
+				<TextArea
+					placeholder='Nhập chi tiết'
+					autoSize={{ minRows: 3 }}
+					style={{ resize: 'none' }}
+				/>
+			</Form.Item>,
+		);
 
-    // Reset tag fields only for caseTraining
+		// FiledLabel fields
+		fields.push(
+			<Form.Item key='filedLabel_1' name='filedLabel_1' label='Filed Label 1'>
+				<Input placeholder='Nhập filedLabel_1' />
+			</Form.Item>,
+		);
 
-    if (currentTab === 'caseTraining') {
+		fields.push(
+			<Form.Item key='filedLabel_2' name='filedLabel_2' label='Filed Label 2'>
+				<Input placeholder='Nhập filedLabel_2' />
+			</Form.Item>,
+		);
 
-      form.setFieldsValue({
 
-        tag1: undefined,
+		// Type-specific fields for news, caseTraining, longForm, and home
 
-        tag2: undefined,
+		if (contentType === 'news' || contentType === 'caseTraining' || contentType === 'longForm' || contentType === 'home') {
 
-        tag3: undefined,
+			// Sentiment field
 
-        difficultyLevel: undefined,
+			fields.push(
+				<Form.Item key='sentiment' name='sentiment' label='Sentiment'>
 
-        estimatedTime: undefined,
+					<Select placeholder='Chọn sentiment'>
 
-        learningObjectives: undefined,
+						<Option value='positive'>Tích cực</Option>
 
-        keywords: undefined
+						<Option value='negative'>Tiêu cực</Option>
 
-      });
+						<Option value='neutral'>Trung tính</Option>
 
-    }
+					</Select>
 
-    // Reset other fields
+				</Form.Item>,
+			);
 
-    setQuizContent('');
 
-    setAudioFileList([]);
+			fields.push(
+				<Form.Item key='tag4' name='tag4' label='Program'>
 
-    setCustomVoiceText('');
+					<Select placeholder='Chọn program' mode='multiple' allowClear>
 
-  };
+						{tag4Options.map(option => (
 
-  // Helper function to normalize fileList - ensure all URLs are strings
-  // This prevents "url2.split is not a function" error from Ant Design Upload
-  const normalizeFileList = (fileList) => {
-    if (!fileList || !Array.isArray(fileList)) return [];
-    return fileList.map(file => {
-      if (!file) return file;
-      const normalizedFile = { ...file };
-      // Ensure url is always a string (Ant Design requires string for .split() method)
-      if (normalizedFile.url !== undefined && normalizedFile.url !== null) {
-        if (typeof normalizedFile.url !== 'string') {
-          // If url is array, take first element
-          if (Array.isArray(normalizedFile.url) && normalizedFile.url.length > 0) {
-            normalizedFile.url = String(normalizedFile.url[0] || '');
-          } else {
-            // Convert to string
-            normalizedFile.url = String(normalizedFile.url || '');
-          }
-        }
-      }
-      return normalizedFile;
-    });
-  };
+							<Option key={option.value} value={option.value}>
 
-  const getFormFields = () => {
+								{option.label}
 
-    // Determine content type from selected record or current tab
+							</Option>
 
-    const contentType = modalMode === 'edit' && selectedRecord
+						))}
 
-        ? selectedRecord.type
+					</Select>
 
-        : currentTab;
+				</Form.Item>,
+			);
 
 
+			// Impact field
 
-    const fields = [];
+			fields.push(
+				<Form.Item key='impact' name='impact' label='Tầm quan trọng'>
 
+					<Select placeholder='Chọn tầm quan trọng'>
 
+						<Option value='important'>Quan trọng</Option>
 
-    // Common fields for all types
+						<Option value='normal'>Bình thường</Option>
 
-    fields.push(
+						<Option value='skip'>Bỏ qua</Option>
 
-        <Form.Item key="title" name="title" label="Tiêu đề">
+					</Select>
 
-          <Input placeholder="Nhập tiêu đề" />
+				</Form.Item>,
+			);
 
-        </Form.Item>
 
-    );
+			// Source field
 
-    // CID field
+			fields.push(
+				<Form.Item key='source' name='source' label='Nguồn'>
 
-    fields.push(
+					<Input placeholder='Nguồn tin tức' />
 
-        <Form.Item key="cid" name="cid" label="CID">
+				</Form.Item>,
+			);
 
-          <Input placeholder="Nhập CID" />
 
-        </Form.Item>
+			// Tag fields only for caseTraining
 
-    );
+			if (currentTab === 'caseTraining') {
 
-    // Số bài field
+				// Tag1 field
 
-    fields.push(
+				fields.push(
+					<Form.Item key='tag1' name='tag1' label='Categories'>
 
-        <Form.Item key="lessonNumber" name="lessonNumber" label="Số bài">
+						<Select
 
-          <InputNumber
+							placeholder='Chọn category'
 
-              placeholder="Nhập số bài"
+							allowClear
 
-              min={1}
+							showSearch
 
-              style={{ width: '100%' }}
+							filterOption={(input, option) =>
 
-          />
+								(option?.label ?? '').toLowerCase().includes(input.toLowerCase())
 
-        </Form.Item>
+							}
 
-    );
+						>
 
+							{tag1Options.map(option => (
 
+								<Option key={option.value} value={option.value} label={option.label}>
 
-    // Category field
+									{option.label}
 
-    let categoryOptions = [];
+								</Option>
 
-    if (contentType === 'news' || contentType === 'caseTraining' || contentType === 'longForm') {
+							))}
 
-      categoryOptions = categoriesOptions;
+						</Select>
 
-    } else if (contentType === 'library') {
+					</Form.Item>,
+				);
 
-      categoryOptions = [
 
-        { value: 'Ý tưởng khởi nghiệp', label: 'Ý tưởng khởi nghiệp' },
+				// Tag2 field
 
-        { value: 'Tips khởi nghiệp', label: 'Tips khởi nghiệp' },
+				fields.push(
+					<Form.Item key='tag2' name='tag2' label='Levels'>
 
-        { value: 'Sáng tạo khác', label: 'Sáng tạo khác' }
+						<Select
 
-      ];
+							placeholder='Chọn level'
 
-    } else if (contentType === 'story') {
+							allowClear
 
-      categoryOptions = [
+							showSearch
 
-        { value: 'Podcast', label: 'Podcast' },
+							filterOption={(input, option) =>
 
-        { value: 'Bài viết', label: 'Bài viết' }
+								(option?.label ?? '').toLowerCase().includes(input.toLowerCase())
 
-      ];
+							}
 
-    }
+						>
 
-    if (contentType === 'news' || contentType === 'home' || contentType === 'longForm') {
+							{tag2Options.map(option => (
 
-      fields.push(
+								<Option key={option.value} value={option.value} label={option.label}>
 
-          <Form.Item key="category" name="category" label="Danh mục">
+									{option.label}
 
-            <Select placeholder="Chọn danh mục">
+								</Option>
 
-              {categoryOptions.map(option => (
+							))}
 
-                  <Option key={option.value} value={option.value}>
+						</Select>
 
-                    {option.label}
+					</Form.Item>,
+				);
 
-                  </Option>
 
-              ))}
+				// Tag3 field
 
-            </Select>
+				fields.push(
+					<Form.Item key='tag3' name='tag3' label='Series'>
 
-          </Form.Item>
+						<Select
 
-      );
+							placeholder='Chọn series'
 
-    }
+							allowClear
 
+							showSearch
 
+							filterOption={(input, option) =>
 
-    fields.push(
+								(option?.label ?? '').toLowerCase().includes(input.toLowerCase())
 
-        <Form.Item key="summary" name="summary" label="Tóm tắt">
+							}
 
-          <TextArea
-              placeholder="Nhập tóm tắt"
-              autoSize={{ minRows: 2 }}
-              style={{ resize: 'none' }}
-          />
-        </Form.Item>
+						>
 
-    );
+							{tag3Options.map(option => (
 
+								<Option key={option.value} value={option.value} label={option.label}>
 
+									{option.label}
 
-    fields.push(
+								</Option>
 
-        <Form.Item key="detail" name="detail" label="Chi tiết">
+							))}
 
-          <TextArea
-              placeholder="Nhập chi tiết"
-              autoSize={{ minRows: 3 }}
-              style={{ resize: 'none' }}
-          />
-        </Form.Item>
+						</Select>
 
-    );
+					</Form.Item>,
+				);
 
-    // FiledLabel fields
-    fields.push(
-        <Form.Item key="filedLabel_1" name="filedLabel_1" label="Filed Label 1">
-          <Input placeholder="Nhập filedLabel_1" />
-        </Form.Item>
-    );
+			}
 
-    fields.push(
-        <Form.Item key="filedLabel_2" name="filedLabel_2" label="Filed Label 2">
-          <Input placeholder="Nhập filedLabel_2" />
-        </Form.Item>
-    );
 
+			// Special fields for home type
 
+			if (currentTab === 'home') {
 
+				// Priority field for home items
 
+				fields.push(
+					<Form.Item key='priority' name='priority' label='Độ ưu tiên'>
 
-    // Type-specific fields for news, caseTraining, longForm, and home
+						<Select placeholder='Chọn độ ưu tiên'>
 
-    if (contentType === 'news' || contentType === 'caseTraining' || contentType === 'longForm' || contentType === 'home') {
+							<Option value='high'>Cao</Option>
 
-      // Sentiment field
+							<Option value='medium'>Trung bình</Option>
 
-      fields.push(
+							<Option value='low'>Thấp</Option>
 
-          <Form.Item key="sentiment" name="sentiment" label="Sentiment">
+						</Select>
 
-            <Select placeholder="Chọn sentiment">
+					</Form.Item>,
+				);
 
-              <Option value="positive">Tích cực</Option>
 
-              <Option value="negative">Tiêu cực</Option>
+				// Featured field for home items
 
-              <Option value="neutral">Trung tính</Option>
+				fields.push(
+					<Form.Item key='featured' name='featured' label='Nổi bật' valuePropName='checked'>
 
-            </Select>
+						<Switch />
 
-          </Form.Item>
+					</Form.Item>,
+				);
 
-      );
 
+				// Home category field (different from main category)
 
+				fields.push(
+					<Form.Item key='homeCategory' name='homeCategory' label='Danh mục Home'>
 
-      fields.push(
+						<Select placeholder='Chọn danh mục Home'>
 
+							<Option value='featured'>Nổi bật</Option>
 
+							<Option value='trending'>Xu hướng</Option>
 
-          <Form.Item key="tag4" name="tag4" label="Program">
+							<Option value='recommended'>Đề xuất</Option>
 
-            <Select placeholder="Chọn program" mode="multiple" allowClear>
+							<Option value='latest'>Mới nhất</Option>
 
-              {tag4Options.map(option => (
+							<Option value='popular'>Phổ biến</Option>
 
-                  <Option key={option.value} value={option.value}>
+						</Select>
 
-                    {option.label}
+					</Form.Item>,
+				);
 
-                  </Option>
 
-              ))}
+				// Display order field for home items
 
-            </Select>
+				fields.push(
+					<Form.Item key='displayOrder' name='displayOrder' label='Thứ tự hiển thị'>
 
-          </Form.Item>
+						<InputNumber
 
-      );
+							placeholder='Nhập số thứ tự'
 
+							min={1}
 
+							max={100}
 
-      // Impact field
+							style={{ width: '100%' }}
 
-      fields.push(
+						/>
 
-          <Form.Item key="impact" name="impact" label="Tầm quan trọng">
+					</Form.Item>,
+				);
 
-            <Select placeholder="Chọn tầm quan trọng">
+			}
 
-              <Option value="important">Quan trọng</Option>
 
-              <Option value="normal">Bình thường</Option>
+			// Status field for news and caseTraining
 
-              <Option value="skip">Bỏ qua</Option>
+			fields.push(
+				<Form.Item key='status' name='status' label='Trạng thái'>
 
-            </Select>
+					<Select placeholder='Chọn trạng thái'>
 
-          </Form.Item>
+						<Option value='draft'>Bản nháp</Option>
 
-      );
+						<Option value='published'>Đã xuất bản</Option>
 
+						<Option value='archived'>Đã lưu trữ</Option>
 
+					</Select>
 
-      // Source field
+				</Form.Item>,
+			);
 
-      fields.push(
+			// Avatar upload field
+			fields.push(
+				<Form.Item key='avatarUrl' label='Avatar'>
+					<Upload
+						listType='picture-card'
+						fileList={normalizeFileList(selectedAvatar ? [selectedAvatar] : [])}
+						beforeUpload={() => false} // Prevent auto upload
+						onChange={({ fileList }) => {
+							if (fileList.length > 0) {
+								handleAvatarUpload(fileList[0]);
+							} else {
+								handleAvatarUpload(null);
+							}
+						}}
+						onRemove={() => {
+							handleAvatarUpload(null);
+						}}
+						maxCount={1}
+					>
+						{selectedAvatar ? null : (
+							<div>
+								<UploadOutlined />
+								<div style={{ marginTop: 8 }}>Upload Avatar</div>
+							</div>
+						)}
+					</Upload>
+				</Form.Item>,
+			);
 
-          <Form.Item key="source" name="source" label="Nguồn">
 
-            <Input placeholder="Nguồn tin tức" />
+			// Image upload field for news and caseTraining
 
-          </Form.Item>
+			fields.push(
+				<Form.Item key='images' label='Hình ảnh'>
 
-      );
+					<Upload
 
+						listType='picture-card'
 
+						fileList={normalizeFileList(selectedImages)}
 
-      // Tag fields only for caseTraining
+						multiple
 
-      if (currentTab === 'caseTraining') {
+						beforeUpload={() => false} // Prevent auto upload
 
-        // Tag1 field
+						onChange={({ fileList }) => handleImageUpload(fileList)}
 
-        fields.push(
+						onRemove={(file) => {
 
-            <Form.Item key="tag1" name="tag1" label="Categories">
+							// Khi remove, filter ra file đó khỏi list
 
-              <Select
+							const newFileList = selectedImages.filter(item => item.uid !== file.uid);
 
-                  placeholder="Chọn category"
+							setSelectedImages(newFileList);
 
-                  allowClear
 
-                  showSearch
+							// Cập nhật uploadedImageUrls để loại bỏ URL của file bị xóa
 
-                  filterOption={(input, option) =>
+							if (file.url) {
 
-                      (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+								const newUrls = uploadedImageUrls.filter(url => url !== file.url);
 
-                  }
+								setUploadedImageUrls(newUrls);
 
-              >
+							}
 
-                {tag1Options.map(option => (
 
-                    <Option key={option.value} value={option.value} label={option.label}>
+							return false; // Prevent default remove behavior
 
-                      {option.label}
+						}}
 
-                    </Option>
+						accept='image/*'
 
-                ))}
+						showUploadList={{
 
-              </Select>
+							showPreviewIcon: true,
 
-            </Form.Item>
+							showRemoveIcon: true,
 
-        );
+						}}
 
+					>
 
+						{selectedImages.length >= 8 ? null : (
 
-        // Tag2 field
+							<div>
 
-        fields.push(
+								<PlusOutlined />
 
-            <Form.Item key="tag2" name="tag2" label="Levels">
+								<div style={{ marginTop: 8 }}>Upload</div>
 
-              <Select
+							</div>
 
-                  placeholder="Chọn level"
+						)}
 
-                  allowClear
+					</Upload>
 
-                  showSearch
+					{uploadingImages && (
 
-                  filterOption={(input, option) =>
+						<Progress
 
-                      (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+							percent={uploadProgress.images}
 
-                  }
+							size='small'
 
-              >
+							style={{ marginTop: 10 }}
 
-                {tag2Options.map(option => (
+						/>
 
-                    <Option key={option.value} value={option.value} label={option.label}>
+					)}
 
-                      {option.label}
+					<div style={{ marginTop: 8, fontSize: '12px', color: '#666' }}>
 
-                    </Option>
+						Hỗ trợ: JPG, PNG, GIF. Tối đa 8 ảnh.
 
-                ))}
+					</div>
 
-              </Select>
+				</Form.Item>,
+			);
 
-            </Form.Item>
 
-        );
+			// Video upload field for news and caseTraining
 
+			fields.push(
+				<Form.Item key='video' label='Video'>
 
+					<Dragger
 
-        // Tag3 field
+						fileList={normalizeFileList(selectedVideo ? [selectedVideo] : [])}
 
-        fields.push(
+						beforeUpload={() => false} // Prevent auto upload
 
-            <Form.Item key="tag3" name="tag3" label="Series">
+						onChange={({ fileList }) => {
 
-              <Select
+							if (fileList.length === 0) {
 
-                  placeholder="Chọn series"
+								handleVideoUpload(null);
 
-                  allowClear
+							} else {
 
-                  showSearch
+								const file = fileList[fileList.length - 1];
 
-                  filterOption={(input, option) =>
+								handleVideoUpload(file);
 
-                      (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+							}
 
-                  }
+						}}
 
-              >
+						onRemove={() => {
 
-                {tag3Options.map(option => (
+							setSelectedVideo(null);
 
-                    <Option key={option.value} value={option.value} label={option.label}>
+							setUploadedVideoUrl('');
 
-                      {option.label}
+							return false; // Prevent default remove behavior
 
-                    </Option>
+						}}
 
-                ))}
+						accept='video/*'
 
-              </Select>
+						maxCount={1}
 
-            </Form.Item>
+						showUploadList={{
 
-        );
+							showPreviewIcon: true,
 
-      }
+							showRemoveIcon: true,
 
+						}}
 
+					>
 
-      // Special fields for home type
+						<p className='ant-upload-drag-icon'>
 
-      if (currentTab === 'home') {
+							<InboxOutlined />
 
-        // Priority field for home items
+						</p>
 
-        fields.push(
+						<p className='ant-upload-text'>Click hoặc kéo thả file video vào đây</p>
 
-            <Form.Item key="priority" name="priority" label="Độ ưu tiên">
+						<p className='ant-upload-hint'>
 
-              <Select placeholder="Chọn độ ưu tiên">
+							Hỗ trợ: MP4, WebM, OGG. Tối đa 1 video.
 
-                <Option value="high">Cao</Option>
+						</p>
 
-                <Option value="medium">Trung bình</Option>
+					</Dragger>
 
-                <Option value="low">Thấp</Option>
+					{uploadingVideo && (
 
-              </Select>
+						<Progress
 
-            </Form.Item>
+							percent={uploadProgress.video}
 
-        );
+							size='small'
 
+							style={{ marginTop: 10 }}
 
+						/>
 
-        // Featured field for home items
+					)}
 
-        fields.push(
+				</Form.Item>,
+			);
 
-            <Form.Item key="featured" name="featured" label="Nổi bật" valuePropName="checked">
 
-              <Switch />
+			// File upload field for news and caseTraining
 
-            </Form.Item>
+			fields.push(
+				<Form.Item key='files' label='File đính kèm'>
 
-        );
+					<Upload
 
+						listType='text'
 
+						fileList={normalizeFileList(selectedFiles)}
 
-        // Home category field (different from main category)
+						multiple
 
-        fields.push(
+						beforeUpload={() => false} // Prevent auto upload
 
-            <Form.Item key="homeCategory" name="homeCategory" label="Danh mục Home">
+						onChange={({ fileList }) => handleFileUpload(fileList)}
 
-              <Select placeholder="Chọn danh mục Home">
+						onRemove={(file) => {
 
-                <Option value="featured">Nổi bật</Option>
+							// Khi remove, filter ra file đó khỏi list
 
-                <Option value="trending">Xu hướng</Option>
+							const newFileList = selectedFiles.filter(item => item.uid !== file.uid);
 
-                <Option value="recommended">Đề xuất</Option>
+							setSelectedFiles(newFileList);
 
-                <Option value="latest">Mới nhất</Option>
 
-                <Option value="popular">Phổ biến</Option>
+							// Cập nhật uploadedFileUrls để loại bỏ URL của file bị xóa
 
-              </Select>
+							if (file.url) {
 
-            </Form.Item>
+								const newUrls = uploadedFileUrls.filter(url => url !== file.url);
 
-        );
+								setUploadedFileUrls(newUrls);
 
+							}
 
 
-        // Display order field for home items
+							return false; // Prevent default remove behavior
 
-        fields.push(
+						}}
 
-            <Form.Item key="displayOrder" name="displayOrder" label="Thứ tự hiển thị">
+						accept='.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip,.rar'
 
-              <InputNumber
+						showUploadList={{
 
-                  placeholder="Nhập số thứ tự"
+							showPreviewIcon: true,
 
-                  min={1}
+							showRemoveIcon: true,
 
-                  max={100}
+						}}
 
-                  style={{ width: '100%' }}
+						maxCount={10}
 
-              />
+					>
 
-            </Form.Item>
+						<Button icon={<UploadOutlined />} disabled={selectedFiles.length >= 10}>
 
-        );
+							Upload Files {selectedFiles.length > 0 ? `(${selectedFiles.length}/10)` : ''}
 
-      }
+						</Button>
 
+					</Upload>
 
+					{uploadingFiles && (
 
-      // Status field for news and caseTraining
+						<Progress
 
-      fields.push(
+							percent={uploadProgress.files}
 
-          <Form.Item key="status" name="status" label="Trạng thái">
+							size='small'
 
-            <Select placeholder="Chọn trạng thái">
+							style={{ marginTop: 10 }}
 
-              <Option value="draft">Bản nháp</Option>
+						/>
 
-              <Option value="published">Đã xuất bản</Option>
+					)}
 
-              <Option value="archived">Đã lưu trữ</Option>
+					<div style={{ marginTop: 8, fontSize: '12px', color: '#666' }}>
 
-            </Select>
+						Hỗ trợ: PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX, TXT, ZIP, RAR. Tối đa 10 file.
 
-          </Form.Item>
+					</div>
 
-      );
+				</Form.Item>,
+			);
 
-      // Avatar upload field
-      fields.push(
-          <Form.Item key="avatarUrl" label="Avatar">
-            <Upload
-                listType="picture-card"
-                fileList={normalizeFileList(selectedAvatar ? [selectedAvatar] : [])}
-                beforeUpload={() => false} // Prevent auto upload
-                onChange={({ fileList }) => {
-                  if (fileList.length > 0) {
-                    handleAvatarUpload(fileList[0]);
-                  } else {
-                    handleAvatarUpload(null);
-                  }
-                }}
-                onRemove={() => {
-                  handleAvatarUpload(null);
-                }}
-                maxCount={1}
-            >
-              {selectedAvatar ? null : (
-                  <div>
-                    <UploadOutlined />
-                    <div style={{ marginTop: 8 }}>Upload Avatar</div>
-                  </div>
-              )}
-            </Upload>
-          </Form.Item>
-      );
 
+			// Quiz content field for news and caseTraining
 
+			fields.push(
+				<Form.Item key='quizContent' name='quizContent' label='Nội dung Quiz'>
 
-      // Image upload field for news and caseTraining
+					<TextArea
 
-      fields.push(
+						rows={4}
 
-          <Form.Item key="images" label="Hình ảnh">
+						placeholder='Nhập nội dung quiz (JSON format)'
 
-            <Upload
+						value={quizContent}
 
-                listType="picture-card"
+						onChange={(e) => setQuizContent(e.target.value)}
 
-                fileList={normalizeFileList(selectedImages)}
+					/>
 
-                multiple
+				</Form.Item>,
+			);
 
-                beforeUpload={() => false} // Prevent auto upload
 
-                onChange={({ fileList }) => handleImageUpload(fileList)}
+			// Background audio field for news and caseTraining
 
-                onRemove={(file) => {
+			fields.push(
+				<Form.Item key='backgroundAudio' name='backgroundAudio' label='Âm thanh nền'>
 
-                  // Khi remove, filter ra file đó khỏi list
+					<Upload
 
-                  const newFileList = selectedImages.filter(item => item.uid !== file.uid);
+						accept='audio/*'
 
-                  setSelectedImages(newFileList);
+						maxCount={1}
 
+						beforeUpload={() => false}
 
+						onChange={({ fileList }) => {
 
-                  // Cập nhật uploadedImageUrls để loại bỏ URL của file bị xóa
+							setAudioFileList(fileList);
 
-                  if (file.url) {
+						}}
 
-                    const newUrls = uploadedImageUrls.filter(url => url !== file.url);
+						fileList={audioFileList}
 
-                    setUploadedImageUrls(newUrls);
+					>
 
-                  }
+						<Button icon={<UploadOutlined />}>Tải lên âm thanh</Button>
 
+					</Upload>
 
+				</Form.Item>,
+			);
 
-                  return false; // Prevent default remove behavior
 
-                }}
+			// Custom voice text field for news and caseTraining
 
-                accept="image/*"
+			fields.push(
+				<Form.Item key='customVoiceText' name='customVoiceText' label='Văn bản tùy chỉnh cho Voice'>
 
-                showUploadList={{
+					<TextArea
 
-                  showPreviewIcon: true,
+						rows={3}
 
-                  showRemoveIcon: true,
+						placeholder='Nhập văn bản để tạo voice tùy chỉnh'
 
-                }}
+						value={customVoiceText}
 
-            >
+						onChange={(e) => setCustomVoiceText(e.target.value)}
 
-              {selectedImages.length >= 8 ? null : (
+					/>
 
-                  <div>
+				</Form.Item>,
+			);
 
-                    <PlusOutlined />
 
-                    <div style={{ marginTop: 8 }}>Upload</div>
+			// AI Summary field for news and caseTraining
 
-                  </div>
+			fields.push(
+				<Form.Item key='aiSummary' name='aiSummary' label='Tóm tắt AI'>
 
-              )}
+					<TextArea
 
-            </Upload>
+						rows={3}
 
-            {uploadingImages && (
+						placeholder='Tóm tắt được tạo bởi AI'
 
-                <Progress
+						readOnly
 
-                    percent={uploadProgress.images}
+					/>
 
-                    size="small"
+				</Form.Item>,
+			);
 
-                    style={{ marginTop: 10 }}
 
-                />
+			// Keywords field for news and caseTraining
 
-            )}
+			fields.push(
+				<Form.Item key='keywords' name='keywords' label='Từ khóa'>
 
-            <div style={{ marginTop: 8, fontSize: '12px', color: '#666' }}>
+					<Select
 
-              Hỗ trợ: JPG, PNG, GIF. Tối đa 8 ảnh.
+						mode='tags'
 
-            </div>
+						placeholder='Nhập từ khóa'
 
-          </Form.Item>
+						style={{ width: '100%' }}
 
-      );
+					/>
 
+				</Form.Item>,
+			);
 
 
-      // Video upload field for news and caseTraining
+			// Difficulty level field for caseTraining
 
-      fields.push(
+			if (currentTab === 'caseTraining') {
 
-          <Form.Item key="video" label="Video">
+				fields.push(
+					<Form.Item key='difficultyLevel' name='difficultyLevel' label='Mức độ khó'>
 
-            <Dragger
+						<Select placeholder='Chọn mức độ khó'>
 
-                fileList={normalizeFileList(selectedVideo ? [selectedVideo] : [])}
+							<Option value='beginner'>Người mới bắt đầu</Option>
 
-                beforeUpload={() => false} // Prevent auto upload
+							<Option value='intermediate'>Trung cấp</Option>
 
-                onChange={({ fileList }) => {
+							<Option value='advanced'>Nâng cao</Option>
 
-                  if (fileList.length === 0) {
+							<Option value='expert'>Chuyên gia</Option>
 
-                    handleVideoUpload(null);
+						</Select>
 
-                  } else {
+					</Form.Item>,
+				);
 
-                    const file = fileList[fileList.length - 1];
 
-                    handleVideoUpload(file);
+				fields.push(
+					<Form.Item key='estimatedTime' name='estimatedTime' label='Thời gian ước tính'>
 
-                  }
+						<Input placeholder='VD: 30 phút, 2 giờ' />
 
-                }}
+					</Form.Item>,
+				);
 
-                onRemove={() => {
 
-                  setSelectedVideo(null);
+				fields.push(
+					<Form.Item key='learningObjectives' name='learningObjectives' label='Mục tiêu học tập'>
 
-                  setUploadedVideoUrl('');
+						<TextArea
 
-                  return false; // Prevent default remove behavior
+							rows={3}
 
-                }}
+							placeholder='Nhập các mục tiêu học tập'
 
-                accept="video/*"
+						/>
 
-                maxCount={1}
+					</Form.Item>,
+				);
 
-                showUploadList={{
+			}
 
-                  showPreviewIcon: true,
+		} else if (contentType === 'library') {
 
-                  showRemoveIcon: true,
+			// fields.push(
 
-                }}
+			//   <Form.Item key="pages" name="pages" label="Số trang">
 
-            >
+			//     <Input placeholder="VD: 45 trang" />
 
-              <p className="ant-upload-drag-icon">
+			//   </Form.Item>
 
-                <InboxOutlined />
+			// );
 
-              </p>
 
-              <p className="ant-upload-text">Click hoặc kéo thả file video vào đây</p>
+			// Image upload field
 
-              <p className="ant-upload-hint">
+			fields.push(
+				<Form.Item key='images' label='Hình ảnh'>
 
-                Hỗ trợ: MP4, WebM, OGG. Tối đa 1 video.
+					<Upload
 
-              </p>
+						listType='picture-card'
 
-            </Dragger>
+						fileList={normalizeFileList(selectedImages)}
 
-            {uploadingVideo && (
+						multiple
 
-                <Progress
+						beforeUpload={() => false} // Prevent auto upload
 
-                    percent={uploadProgress.video}
+						onChange={({ fileList }) => handleImageUpload(fileList)}
 
-                    size="small"
+						onRemove={(file) => {
 
-                    style={{ marginTop: 10 }}
+							// Khi remove, filter ra file đó khỏi list
 
-                />
+							const newFileList = selectedImages.filter(item => item.uid !== file.uid);
 
-            )}
+							setSelectedImages(newFileList);
 
-          </Form.Item>
 
-      );
+							// Cập nhật uploadedImageUrls để loại bỏ URL của file bị xóa
 
+							if (file.url) {
 
+								const newUrls = uploadedImageUrls.filter(url => url !== file.url);
 
-      // File upload field for news and caseTraining
+								setUploadedImageUrls(newUrls);
 
-      fields.push(
+							}
 
-          <Form.Item key="files" label="File đính kèm">
 
-            <Upload
+							return false; // Prevent default remove behavior
 
-                listType="text"
+						}}
 
-                fileList={normalizeFileList(selectedFiles)}
+						accept='image/*'
 
-                multiple
+						showUploadList={{
 
-                beforeUpload={() => false} // Prevent auto upload
+							showPreviewIcon: true,
 
-                onChange={({ fileList }) => handleFileUpload(fileList)}
+							showRemoveIcon: true,
 
-                onRemove={(file) => {
+						}}
 
-                  // Khi remove, filter ra file đó khỏi list
+					>
 
-                  const newFileList = selectedFiles.filter(item => item.uid !== file.uid);
+						{selectedImages.length >= 8 ? null : (
 
-                  setSelectedFiles(newFileList);
+							<div>
 
+								<PlusOutlined />
 
+								<div style={{ marginTop: 8 }}>Upload</div>
 
-                  // Cập nhật uploadedFileUrls để loại bỏ URL của file bị xóa
+							</div>
 
-                  if (file.url) {
+						)}
 
-                    const newUrls = uploadedFileUrls.filter(url => url !== file.url);
+					</Upload>
 
-                    setUploadedFileUrls(newUrls);
+					{uploadingImages && (
 
-                  }
+						<Progress
 
+							percent={uploadProgress.images}
 
+							size='small'
 
-                  return false; // Prevent default remove behavior
+							style={{ marginTop: 10 }}
 
-                }}
+						/>
 
-                accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip,.rar"
+					)}
 
-                showUploadList={{
+					<div style={{ marginTop: 8, fontSize: '12px', color: '#666' }}>
 
-                  showPreviewIcon: true,
+						Hỗ trợ: JPG, PNG, GIF. Tối đa 8 ảnh.
 
-                  showRemoveIcon: true,
+					</div>
 
-                }}
+				</Form.Item>,
+			);
 
-                maxCount={10}
 
-            >
+			// Video upload field
 
-              <Button icon={<UploadOutlined />} disabled={selectedFiles.length >= 10}>
+			fields.push(
+				<Form.Item key='video' label='Video'>
 
-                Upload Files {selectedFiles.length > 0 ? `(${selectedFiles.length}/10)` : ''}
+					<Dragger
 
-              </Button>
+						fileList={normalizeFileList(selectedVideo ? [selectedVideo] : [])}
 
-            </Upload>
+						beforeUpload={() => false} // Prevent auto upload
 
-            {uploadingFiles && (
+						onChange={({ fileList }) => {
 
-                <Progress
+							if (fileList.length === 0) {
 
-                    percent={uploadProgress.files}
+								handleVideoUpload(null);
 
-                    size="small"
+							} else {
 
-                    style={{ marginTop: 10 }}
+								const file = fileList[fileList.length - 1];
 
-                />
+								handleVideoUpload(file);
 
-            )}
+							}
 
-            <div style={{ marginTop: 8, fontSize: '12px', color: '#666' }}>
+						}}
 
-              Hỗ trợ: PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX, TXT, ZIP, RAR. Tối đa 10 file.
+						onRemove={() => {
 
-            </div>
+							setSelectedVideo(null);
 
-          </Form.Item>
+							setUploadedVideoUrl('');
 
-      );
+							return false; // Prevent default remove behavior
 
+						}}
 
+						accept='video/*'
 
-      // Quiz content field for news and caseTraining
+						maxCount={1}
 
-      fields.push(
+						showUploadList={{
 
-          <Form.Item key="quizContent" name="quizContent" label="Nội dung Quiz">
+							showPreviewIcon: false,
 
-            <TextArea
+							showRemoveIcon: true,
 
-                rows={4}
+						}}
 
-                placeholder="Nhập nội dung quiz (JSON format)"
+					>
 
-                value={quizContent}
+						<p className='ant-upload-drag-icon'>
 
-                onChange={(e) => setQuizContent(e.target.value)}
+							<InboxOutlined />
 
-            />
+						</p>
 
-          </Form.Item>
+						<p className='ant-upload-text'>
 
-      );
+							Click hoặc kéo thả video vào đây để upload
 
+						</p>
 
+						<p className='ant-upload-hint'>
 
-      // Background audio field for news and caseTraining
+							Hỗ trợ: MP4, AVI, MOV, WMV. Tối đa 1 video.
 
-      fields.push(
+						</p>
 
-          <Form.Item key="backgroundAudio" name="backgroundAudio" label="Âm thanh nền">
+					</Dragger>
 
-            <Upload
+					{uploadingVideo && (
 
-                accept="audio/*"
+						<Progress
 
-                maxCount={1}
+							percent={uploadProgress.video}
 
-                beforeUpload={() => false}
+							size='small'
 
-                onChange={({ fileList }) => {
+							style={{ marginTop: 10 }}
 
-                  setAudioFileList(fileList);
+						/>
 
-                }}
+					)}
 
-                fileList={audioFileList}
+				</Form.Item>,
+			);
 
-            >
 
-              <Button icon={<UploadOutlined />}>Tải lên âm thanh</Button>
+		} else if (contentType === 'report') {
 
-            </Upload>
+			// File upload field for report
 
-          </Form.Item>
+			fields.push(
+				<Form.Item key='files' label='File đính kèm'>
 
-      );
+					<Upload
 
+						listType='text'
 
+						fileList={normalizeFileList(selectedFiles)}
 
-      // Custom voice text field for news and caseTraining
+						multiple
 
-      fields.push(
+						beforeUpload={() => false} // Prevent auto upload
 
-          <Form.Item key="customVoiceText" name="customVoiceText" label="Văn bản tùy chỉnh cho Voice">
+						onChange={({ fileList }) => handleFileUpload(fileList)}
 
-            <TextArea
+						onRemove={(file) => {
 
-                rows={3}
+							// Khi remove, filter ra file đó khỏi list
 
-                placeholder="Nhập văn bản để tạo voice tùy chỉnh"
+							const newFileList = selectedFiles.filter(item => item.uid !== file.uid);
 
-                value={customVoiceText}
+							setSelectedFiles(newFileList);
 
-                onChange={(e) => setCustomVoiceText(e.target.value)}
 
-            />
+							// Cập nhật uploadedFileUrls để loại bỏ URL của file bị xóa
 
-          </Form.Item>
+							if (file.url) {
 
-      );
+								const newUrls = uploadedFileUrls.filter(url => url !== file.url);
 
+								setUploadedFileUrls(newUrls);
 
+							}
 
-      // AI Summary field for news and caseTraining
 
-      fields.push(
+							return false; // Prevent default remove behavior
 
-          <Form.Item key="aiSummary" name="aiSummary" label="Tóm tắt AI">
+						}}
 
-            <TextArea
+						accept='.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip,.rar'
 
-                rows={3}
+						showUploadList={{
 
-                placeholder="Tóm tắt được tạo bởi AI"
+							showPreviewIcon: true,
 
-                readOnly
+							showRemoveIcon: true,
 
-            />
+						}}
 
-          </Form.Item>
+						maxCount={10}
 
-      );
+					>
 
+						<Button icon={<UploadOutlined />} disabled={selectedFiles.length >= 10}>
 
+							Upload Files {selectedFiles.length > 0 ? `(${selectedFiles.length}/10)` : ''}
 
-      // Keywords field for news and caseTraining
+						</Button>
 
-      fields.push(
+					</Upload>
 
-          <Form.Item key="keywords" name="keywords" label="Từ khóa">
+					{uploadingFiles && (
 
-            <Select
+						<Progress
 
-                mode="tags"
+							percent={uploadProgress.files}
 
-                placeholder="Nhập từ khóa"
+							size='small'
 
-                style={{ width: '100%' }}
+							style={{ marginTop: 10 }}
 
-            />
+						/>
 
-          </Form.Item>
+					)}
 
-      );
+					<div style={{ marginTop: 8, fontSize: '12px', color: '#666' }}>
 
+						Hỗ trợ: PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX, TXT, ZIP, RAR. Tối đa 10 file.
 
+					</div>
 
-      // Difficulty level field for caseTraining
+				</Form.Item>,
+			);
 
-      if (currentTab === 'caseTraining') {
+		} else if (contentType === 'story') {
 
-        fields.push(
+			fields.push(
+				<Form.Item key='duration' name='duration' label='Thời lượng'>
 
-            <Form.Item key="difficultyLevel" name="difficultyLevel" label="Mức độ khó">
+					<Input placeholder='VD: 15 phút' />
 
-              <Select placeholder="Chọn mức độ khó">
+				</Form.Item>,
+			);
 
-                <Option value="beginner">Người mới bắt đầu</Option>
 
-                <Option value="intermediate">Trung cấp</Option>
+			fields.push(
+				<Form.Item key='storyType' name='storyType' label='Loại'>
 
-                <Option value="advanced">Nâng cao</Option>
+					<Select placeholder='Chọn loại'>
 
-                <Option value="expert">Chuyên gia</Option>
+						<Option value='Podcast'>Podcast</Option>
 
-              </Select>
+						<Option value='Video Story'>Video Story</Option>
 
-            </Form.Item>
+						<Option value='Interview'>Interview</Option>
 
-        );
+						<Option value='Documentary'>Documentary</Option>
 
+					</Select>
 
+				</Form.Item>,
+			);
 
-        fields.push(
 
-            <Form.Item key="estimatedTime" name="estimatedTime" label="Thời gian ước tính">
+			// Add audioText field for story type
 
-              <Input placeholder="VD: 30 phút, 2 giờ" />
+			fields.push(
+				<Form.Item
 
-            </Form.Item>
+					key='audioText'
 
-        );
+					name='audioText'
 
+					label='Nội dung Voice'
 
+					rules={[{ required: false, type: 'string' }]}
 
-        fields.push(
+				>
 
-            <Form.Item key="learningObjectives" name="learningObjectives" label="Mục tiêu học tập">
+					<TextArea
 
-              <TextArea
+						rows={6}
 
-                  rows={3}
+						placeholder='Nhập nội dung để tạo voice cho story này...'
 
-                  placeholder="Nhập các mục tiêu học tập"
+						showCount
 
-              />
+						maxLength={50000}
 
-            </Form.Item>
+						value={audioText}
 
-        );
+						onChange={e => setAudioText(e.target.value)}
 
-      }
+					/>
 
-    } else if (contentType === 'library') {
+					<div style={{ marginTop: 8, fontSize: '12px', color: '#666' }}>
 
-      // fields.push(
+						Nội dung này sẽ được sử dụng để tạo voice cho story. Tối đa 50000 ký tự.
 
-      //   <Form.Item key="pages" name="pages" label="Số trang">
+					</div>
 
-      //     <Input placeholder="VD: 45 trang" />
+				</Form.Item>,
+			);
 
-      //   </Form.Item>
 
-      // );
+			// Audio upload or AI generation field
 
+			fields.push(
+				<Form.Item key='audio' label='Audio'>
 
+					{/* AI Voice Generation Section - Only show in edit mode */}
 
-      // Image upload field
+					{modalMode === 'edit' && (
 
-      fields.push(
+						<div style={{
 
-          <Form.Item key="images" label="Hình ảnh">
+							marginBottom: '16px',
 
-            <Upload
+							padding: '16px',
 
-                listType="picture-card"
+							border: '1px dashed #d9d9d9',
 
-                fileList={normalizeFileList(selectedImages)}
+							borderRadius: '6px',
 
-                multiple
+							backgroundColor: '#fafafa',
 
-                beforeUpload={() => false} // Prevent auto upload
+						}}>
 
-                onChange={({ fileList }) => handleImageUpload(fileList)}
+							<div style={{ marginBottom: '12px', fontWeight: 'bold', color: '#1890ff' }}>
 
-                onRemove={(file) => {
+								Tạo Voice bằng AI
 
-                  // Khi remove, filter ra file đó khỏi list
+							</div>
 
-                  const newFileList = selectedImages.filter(item => item.uid !== file.uid);
+							<div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
 
-                  setSelectedImages(newFileList);
+								<Button
 
+									type='primary'
 
+									icon={<SoundOutlined />}
 
-                  // Cập nhật uploadedImageUrls để loại bỏ URL của file bị xóa
+									onClick={() => {
 
-                  if (file.url) {
+										// Thêm vào queue tạo voice từ audioText
 
-                    const newUrls = uploadedImageUrls.filter(url => url !== file.url);
+										if (!audioText) return;
 
-                    setUploadedImageUrls(newUrls);
+										if (selectedRecord) {
 
-                  }
+											// Không cho phép thêm nếu đã có trong queue hoặc đang xử lý
 
+											if (
 
+												voiceQueue.find(task => task.recordId === selectedRecord.id) ||
 
-                  return false; // Prevent default remove behavior
+												(currentProcessing && currentProcessing.recordId === selectedRecord.id)
 
-                }}
+											) return;
 
-                accept="image/*"
+											addVoiceToQueue(
+												selectedRecord.id,
 
-                showUploadList={{
+												selectedRecord.title,
 
-                  showPreviewIcon: true,
+												audioText,
 
-                  showRemoveIcon: true,
+												'custom',
+											);
 
-                }}
+										}
 
-            >
+									}}
 
-              {selectedImages.length >= 8 ? null : (
+									disabled={
 
-                  <div>
+										!audioText ||
 
-                    <PlusOutlined />
+										(modalMode === 'edit' && selectedRecord &&
 
-                    <div style={{ marginTop: 8 }}>Upload</div>
+											voiceQueue.find(task => task.recordId === selectedRecord.id)) ||
 
-                  </div>
+										(modalMode === 'edit' && selectedRecord &&
 
-              )}
+											currentProcessing && currentProcessing.recordId === selectedRecord.id)
 
-            </Upload>
+									}
 
-            {uploadingImages && (
+								>
 
-                <Progress
+									{modalMode === 'edit' && selectedRecord &&
 
-                    percent={uploadProgress.images}
+									voiceQueue.find(task => task.recordId === selectedRecord.id) ?
 
-                    size="small"
+										'Đã trong hàng đợi' :
 
-                    style={{ marginTop: 10 }}
+										modalMode === 'edit' && selectedRecord &&
 
-                />
+										currentProcessing && currentProcessing.recordId === selectedRecord.id ?
 
-            )}
+											'Đang tạo voice...' :
 
-            <div style={{ marginTop: 8, fontSize: '12px', color: '#666' }}>
+											'Thêm vào hàng đợi'}
 
-              Hỗ trợ: JPG, PNG, GIF. Tối đa 8 ảnh.
+								</Button>
 
-            </div>
-
-          </Form.Item>
-
-      );
-
-
-
-      // Video upload field
-
-      fields.push(
-
-          <Form.Item key="video" label="Video">
-
-            <Dragger
-
-                fileList={normalizeFileList(selectedVideo ? [selectedVideo] : [])}
-
-                beforeUpload={() => false} // Prevent auto upload
-
-                onChange={({ fileList }) => {
-
-                  if (fileList.length === 0) {
-
-                    handleVideoUpload(null);
-
-                  } else {
-
-                    const file = fileList[fileList.length - 1];
-
-                    handleVideoUpload(file);
-
-                  }
-
-                }}
-
-                onRemove={() => {
-
-                  setSelectedVideo(null);
-
-                  setUploadedVideoUrl('');
-
-                  return false; // Prevent default remove behavior
-
-                }}
-
-                accept="video/*"
-
-                maxCount={1}
-
-                showUploadList={{
-
-                  showPreviewIcon: false,
-
-                  showRemoveIcon: true,
-
-                }}
-
-            >
-
-              <p className="ant-upload-drag-icon">
-
-                <InboxOutlined />
-
-              </p>
-
-              <p className="ant-upload-text">
-
-                Click hoặc kéo thả video vào đây để upload
-
-              </p>
-
-              <p className="ant-upload-hint">
-
-                Hỗ trợ: MP4, AVI, MOV, WMV. Tối đa 1 video.
-
-              </p>
-
-            </Dragger>
-
-            {uploadingVideo && (
-
-                <Progress
-
-                    percent={uploadProgress.video}
-
-                    size="small"
-
-                    style={{ marginTop: 10 }}
-
-                />
-
-            )}
-
-          </Form.Item>
-
-      );
-
-
-
-
-
-    } else if (contentType === 'report') {
-
-      // File upload field for report
-
-      fields.push(
-
-          <Form.Item key="files" label="File đính kèm">
-
-            <Upload
-
-                listType="text"
-
-                fileList={normalizeFileList(selectedFiles)}
-
-                multiple
-
-                beforeUpload={() => false} // Prevent auto upload
-
-                onChange={({ fileList }) => handleFileUpload(fileList)}
-
-                onRemove={(file) => {
-
-                  // Khi remove, filter ra file đó khỏi list
-
-                  const newFileList = selectedFiles.filter(item => item.uid !== file.uid);
-
-                  setSelectedFiles(newFileList);
-
-
-
-                  // Cập nhật uploadedFileUrls để loại bỏ URL của file bị xóa
-
-                  if (file.url) {
-
-                    const newUrls = uploadedFileUrls.filter(url => url !== file.url);
-
-                    setUploadedFileUrls(newUrls);
-
-                  }
-
-
-
-                  return false; // Prevent default remove behavior
-
-                }}
-
-                accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip,.rar"
-
-                showUploadList={{
-
-                  showPreviewIcon: true,
-
-                  showRemoveIcon: true,
-
-                }}
-
-                maxCount={10}
-
-            >
-
-              <Button icon={<UploadOutlined />} disabled={selectedFiles.length >= 10}>
-
-                Upload Files {selectedFiles.length > 0 ? `(${selectedFiles.length}/10)` : ''}
-
-              </Button>
-
-            </Upload>
-
-            {uploadingFiles && (
-
-                <Progress
-
-                    percent={uploadProgress.files}
-
-                    size="small"
-
-                    style={{ marginTop: 10 }}
-
-                />
-
-            )}
-
-            <div style={{ marginTop: 8, fontSize: '12px', color: '#666' }}>
-
-              Hỗ trợ: PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX, TXT, ZIP, RAR. Tối đa 10 file.
-
-            </div>
-
-          </Form.Item>
-
-      );
-
-    } else if (contentType === 'story') {
-
-      fields.push(
-
-          <Form.Item key="duration" name="duration" label="Thời lượng">
-
-            <Input placeholder="VD: 15 phút" />
-
-          </Form.Item>
-
-      );
-
-
-
-      fields.push(
-
-          <Form.Item key="storyType" name="storyType" label="Loại">
-
-            <Select placeholder="Chọn loại">
-
-              <Option value="Podcast">Podcast</Option>
-
-              <Option value="Video Story">Video Story</Option>
-
-              <Option value="Interview">Interview</Option>
-
-              <Option value="Documentary">Documentary</Option>
-
-            </Select>
-
-          </Form.Item>
-
-      );
-
-
-
-      // Add audioText field for story type
-
-      fields.push(
-
-          <Form.Item
-
-              key="audioText"
-
-              name="audioText"
-
-              label="Nội dung Voice"
-
-              rules={[{ required: false, type: 'string' }]}
-
-          >
-
-            <TextArea
-
-                rows={6}
-
-                placeholder="Nhập nội dung để tạo voice cho story này..."
-
-                showCount
-
-                maxLength={50000}
-
-                value={audioText}
-
-                onChange={e => setAudioText(e.target.value)}
-
-            />
-
-            <div style={{ marginTop: 8, fontSize: '12px', color: '#666' }}>
-
-              Nội dung này sẽ được sử dụng để tạo voice cho story. Tối đa 50000 ký tự.
-
-            </div>
-
-          </Form.Item>
-
-      );
-
-
-
-      // Audio upload or AI generation field
-
-      fields.push(
-
-          <Form.Item key="audio" label="Audio">
-
-            {/* AI Voice Generation Section - Only show in edit mode */}
-
-            {modalMode === 'edit' && (
-
-                <div style={{
-
-                  marginBottom: '16px',
-
-                  padding: '16px',
-
-                  border: '1px dashed #d9d9d9',
-
-                  borderRadius: '6px',
-
-                  backgroundColor: '#fafafa'
-
-                }}>
-
-                  <div style={{ marginBottom: '12px', fontWeight: 'bold', color: '#1890ff' }}>
-
-                    Tạo Voice bằng AI
-
-                  </div>
-
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
-
-                    <Button
-
-                        type="primary"
-
-                        icon={<SoundOutlined />}
-
-                        onClick={() => {
-
-                          // Thêm vào queue tạo voice từ audioText
-
-                          if (!audioText) return;
-
-                          if (selectedRecord) {
-
-                            // Không cho phép thêm nếu đã có trong queue hoặc đang xử lý
-
-                            if (
-
-                                voiceQueue.find(task => task.recordId === selectedRecord.id) ||
-
-                                (currentProcessing && currentProcessing.recordId === selectedRecord.id)
-
-                            ) return;
-
-                            addVoiceToQueue(
-
-                                selectedRecord.id,
-
-                                selectedRecord.title,
-
-                                audioText,
-
-                                'custom'
-
-                            );
-
-                          }
-
-                        }}
-
-                        disabled={
-
-                            !audioText ||
-
-                            (modalMode === 'edit' && selectedRecord &&
-
-                                voiceQueue.find(task => task.recordId === selectedRecord.id)) ||
-
-                            (modalMode === 'edit' && selectedRecord &&
-
-                                currentProcessing && currentProcessing.recordId === selectedRecord.id)
-
-                        }
-
-                    >
-
-                      {modalMode === 'edit' && selectedRecord &&
-
-                      voiceQueue.find(task => task.recordId === selectedRecord.id) ?
-
-                          'Đã trong hàng đợi' :
-
-                          modalMode === 'edit' && selectedRecord &&
-
-                          currentProcessing && currentProcessing.recordId === selectedRecord.id ?
-
-                              'Đang tạo voice...' :
-
-                              'Thêm vào hàng đợi'}
-
-                    </Button>
-
-                    <span style={{ fontSize: '12px', color: '#666' }}>
+								<span style={{ fontSize: '12px', color: '#666' }}>
 
                   Voice sẽ được thêm vào hàng đợi và tự động xử lý từ nội dung "Nội dung Voice" phía trên
 
                 </span>
 
-                  </div>
+							</div>
 
-                </div>
+						</div>
 
-            )}
+					)}
 
 
+					<div style={{ marginBottom: '16px' }}>
 
-            <div style={{ marginBottom: '16px' }}>
+						<Dragger
 
-              <Dragger
+							fileList={normalizeFileList(selectedAudio ? [selectedAudio] : [])}
 
-                  fileList={normalizeFileList(selectedAudio ? [selectedAudio] : [])}
+							beforeUpload={() => false} // Prevent auto upload
 
-                  beforeUpload={() => false} // Prevent auto upload
+							onChange={({ fileList }) => {
 
-                  onChange={({ fileList }) => {
+								if (fileList.length === 0) {
 
-                    if (fileList.length === 0) {
+									handleAudioUpload(null);
 
-                      handleAudioUpload(null);
+								} else {
 
-                    } else {
+									const file = fileList[fileList.length - 1];
 
-                      const file = fileList[fileList.length - 1];
+									handleAudioUpload(file);
 
-                      handleAudioUpload(file);
+								}
 
-                    }
+							}}
 
-                  }}
+							onRemove={() => {
 
-                  onRemove={() => {
+								setSelectedAudio(null);
 
-                    setSelectedAudio(null);
+								setUploadedAudioUrl('');
 
-                    setUploadedAudioUrl('');
+								return false; // Prevent default remove behavior
 
-                    return false; // Prevent default remove behavior
+							}}
 
-                  }}
+							accept='audio/*'
 
-                  accept="audio/*"
+							maxCount={1}
 
-                  maxCount={1}
+							showUploadList={{
 
-                  showUploadList={{
+								showPreviewIcon: false,
 
-                    showPreviewIcon: false,
+								showRemoveIcon: true,
 
-                    showRemoveIcon: true,
+							}}
 
-                  }}
+						>
 
-              >
+							<p className='ant-upload-drag-icon'>
 
-                <p className="ant-upload-drag-icon">
+								<SoundOutlined />
 
-                  <SoundOutlined />
+							</p>
 
-                </p>
+							<p className='ant-upload-text'>
 
-                <p className="ant-upload-text">
+								Click hoặc kéo thả audio vào đây để upload
 
-                  Click hoặc kéo thả audio vào đây để upload
+							</p>
 
-                </p>
+							<p className='ant-upload-hint'>
 
-                <p className="ant-upload-hint">
+								Hỗ trợ: MP3, WAV, AAC, M4A. Hoặc có thể tạo bằng AI bên dưới.
 
-                  Hỗ trợ: MP3, WAV, AAC, M4A. Hoặc có thể tạo bằng AI bên dưới.
+							</p>
 
-                </p>
+						</Dragger>
 
-              </Dragger>
+						{uploadingAudio && (
 
-              {uploadingAudio && (
+							<Progress
 
-                  <Progress
+								percent={uploadProgress.audio}
 
-                      percent={uploadProgress.audio}
+								size='small'
 
-                      size="small"
+								style={{ marginTop: 10 }}
 
-                      style={{ marginTop: 10 }}
+							/>
 
-                  />
+						)}
 
-              )}
+					</div>
 
-            </div>
 
+					{/* Hidden field để lưu audioUrl vào form */}
 
+					<Form.Item name='audioUrl' style={{ display: 'none' }}>
 
-            {/* Hidden field để lưu audioUrl vào form */}
+						<Input />
 
-            <Form.Item name="audioUrl" style={{ display: 'none' }}>
+					</Form.Item>
 
-              <Input />
+				</Form.Item>,
+			);
 
-            </Form.Item>
+		}
 
-          </Form.Item>
+		// Status field (always last)
 
-      );
+		fields.push(
+			<Form.Item key='status' name='status' label='Trạng thái'>
 
-    }
+				<Select placeholder='Chọn trạng thái'>
 
-    // Status field (always last)
+					<Option value='draft'>Nháp</Option>
 
-    fields.push(
+					<Option value='published'>Đã xuất bản</Option>
 
-        <Form.Item key="status" name="status" label="Trạng thái">
+					<Option value='archived'>Lưu trữ</Option>
 
-          <Select placeholder="Chọn trạng thái">
+				</Select>
 
-            <Option value="draft">Nháp</Option>
+			</Form.Item>,
+		);
 
-            <Option value="published">Đã xuất bản</Option>
 
-            <Option value="archived">Lưu trữ</Option>
+		return fields;
 
-          </Select>
+	};
 
-        </Form.Item>
 
-    );
+	const tabOptions = [
 
+		// { key: 'story', label: 'Podcast & Câu chuyện', count: allData.story?.length || 0 },
 
+		{ key: 'home', label: 'Home', count: allData.home?.length || 0 },
 
-    return fields;
+		{ key: 'news', label: 'Learning Block', count: allData.news?.length || 0 },
 
-  };
+		{ key: 'caseTraining', label: 'Case Training', count: allData.caseTraining?.length || 0 },
 
+		{ key: 'longForm', label: 'Kho tài nguyên', count: allData.longForm?.length || 0 },
 
+		// { key: 'report', label: 'Báo cáo ngành, Vĩ mô', count: aiSummaryData.length || 0 },
 
-  const tabOptions = [
+		// { key: 'reportDN', label: 'Báo cáo doanh nghiệp', count: reportDNData.length || 0 },
 
-    // { key: 'story', label: 'Podcast & Câu chuyện', count: allData.story?.length || 0 },
+	];
 
-    { key: 'home', label: 'Home', count: allData.home?.length || 0 },
 
-    { key: 'news', label: 'Learning Block', count: allData.news?.length || 0 },
+	// Bulk voice creation function - QUEUE VERSION
 
-    { key: 'caseTraining', label: 'Case Training', count: allData.caseTraining?.length || 0 },
+	const handleBulkCreateVoice = async () => {
 
-    { key: 'longForm', label: 'Kho tài nguyên', count: allData.longForm?.length || 0 },
+		if (selectedRowKeys.length === 0) {
 
-    // { key: 'report', label: 'Báo cáo ngành, Vĩ mô', count: aiSummaryData.length || 0 },
+			message.warning('Vui lòng chọn ít nhất một story để tạo voice!');
 
-    // { key: 'reportDN', label: 'Báo cáo doanh nghiệp', count: reportDNData.length || 0 },
+			return;
 
-  ];
+		}
 
 
+		// Lọc ra những story chưa có voice, thuộc loại story và có audioText
 
-  // Bulk voice creation function - QUEUE VERSION
+		const selectedStories = data.filter(item =>
 
-  const handleBulkCreateVoice = async () => {
+			selectedRowKeys.includes(item.id) &&
 
-    if (selectedRowKeys.length === 0) {
+			item.type === 'story' &&
 
-      message.warning('Vui lòng chọn ít nhất một story để tạo voice!');
+			!item.audioUrl &&
 
-      return;
+			item.audioText,
+		);
 
-    }
 
+		if (selectedStories.length === 0) {
 
+			message.warning('Không có story nào được chọn hoặc tất cả đã có voice!');
 
-    // Lọc ra những story chưa có voice, thuộc loại story và có audioText
+			return;
 
-    const selectedStories = data.filter(item =>
+		}
 
-        selectedRowKeys.includes(item.id) &&
 
-        item.type === 'story' &&
+		// Kiểm tra và lọc ra những story chưa có trong queue
 
-        !item.audioUrl &&
+		const storiesNotInQueue = selectedStories.filter(story => {
 
-        item.audioText
+			const existingTask = voiceQueue.find(task => task.recordId === story.id);
 
-    );
+			const isProcessing = currentProcessing && currentProcessing.recordId === story.id;
 
+			return !existingTask && !isProcessing;
 
+		});
 
-    if (selectedStories.length === 0) {
 
-      message.warning('Không có story nào được chọn hoặc tất cả đã có voice!');
+		if (storiesNotInQueue.length === 0) {
 
-      return;
+			message.warning('Tất cả story đã có trong hàng đợi hoặc đang được xử lý!');
 
-    }
+			return;
 
+		}
 
 
-    // Kiểm tra và lọc ra những story chưa có trong queue
+		let addedCount = 0;
 
-    const storiesNotInQueue = selectedStories.filter(story => {
 
-      const existingTask = voiceQueue.find(task => task.recordId === story.id);
+		// Thêm tất cả vào queue
 
-      const isProcessing = currentProcessing && currentProcessing.recordId === story.id;
+		storiesNotInQueue.forEach(story => {
 
-      return !existingTask && !isProcessing;
+			const content = story.audioText;
 
-    });
+			if (content) {
 
+				addVoiceToQueue(
+					story.id,
 
+					story.title,
 
-    if (storiesNotInQueue.length === 0) {
+					content,
 
-      message.warning('Tất cả story đã có trong hàng đợi hoặc đang được xử lý!');
+					'bulk',
+				);
 
-      return;
+				addedCount++;
 
-    }
+			}
 
+		});
 
 
-    let addedCount = 0;
+		// Clear selection
 
+		setSelectedRowKeys([]);
 
 
-    // Thêm tất cả vào queue
+		if (addedCount > 0) {
 
-    storiesNotInQueue.forEach(story => {
+			message.success(`📝 Đã thêm ${addedCount} story vào hàng đợi tạo voice!`);
 
-      const content = story.audioText;
+		} else {
 
-      if (content) {
+			message.warning('Không có story nào có audioText để tạo voice!');
 
-        addVoiceToQueue(
+		}
 
-            story.id,
+	};
 
-            story.title,
 
-            content,
+	// Bulk voice creation from detail - for all tabs except story
 
-            'bulk'
+	const handleBulkCreateVoiceFromDetail = async () => {
 
-        );
+		if (selectedRowKeys.length === 0) {
 
-        addedCount++;
+			message.warning('Vui lòng chọn ít nhất một bản ghi để tạo voice!');
 
-      }
+			return;
 
-    });
+		}
 
 
+		// Lọc ra những bản ghi chưa có voice và có detail
 
-    // Clear selection
+		const selectedRecords = data.filter(item =>
 
-    setSelectedRowKeys([]);
+			selectedRowKeys.includes(item.id) &&
 
+			!item.audioUrl &&
 
+			item.detail,
+		);
 
-    if (addedCount > 0) {
 
-      message.success(`📝 Đã thêm ${addedCount} story vào hàng đợi tạo voice!`);
+		if (selectedRecords.length === 0) {
 
-    } else {
+			message.warning('Tất cả bản ghi đã có voice!');
 
-      message.warning('Không có story nào có audioText để tạo voice!');
+			return;
 
-    }
+		}
 
-  };
 
+		// Kiểm tra và lọc ra những bản ghi chưa có trong queue
 
+		const recordsNotInQueue = selectedRecords.filter(record => {
 
-  // Bulk voice creation from detail - for all tabs except story
+			const existingTask = voiceQueue.find(task => task.recordId === record.id);
 
-  const handleBulkCreateVoiceFromDetail = async () => {
+			const isProcessing = currentProcessing && currentProcessing.recordId === record.id;
 
-    if (selectedRowKeys.length === 0) {
+			return !existingTask && !isProcessing;
 
-      message.warning('Vui lòng chọn ít nhất một bản ghi để tạo voice!');
+		});
 
-      return;
 
-    }
+		if (recordsNotInQueue.length === 0) {
 
+			message.warning('Tất cả bản ghi đã có trong hàng đợi hoặc đang được xử lý!');
 
+			return;
 
-    // Lọc ra những bản ghi chưa có voice và có detail
+		}
 
-    const selectedRecords = data.filter(item =>
 
-        selectedRowKeys.includes(item.id) &&
+		let addedCount = 0;
 
-        !item.audioUrl &&
 
-        item.detail
+		// Thêm tất cả vào queue
 
-    );
+		recordsNotInQueue.forEach(record => {
 
+			const content = record.detail;
 
+			if (content) {
 
-    if (selectedRecords.length === 0) {
+				addVoiceToQueue(
+					record.id,
 
-      message.warning('Tất cả bản ghi đã có voice!');
+					record.title,
 
-      return;
+					content,
 
-    }
+					'detail-bulk',
+				);
 
+				addedCount++;
 
+			}
 
-    // Kiểm tra và lọc ra những bản ghi chưa có trong queue
+		});
 
-    const recordsNotInQueue = selectedRecords.filter(record => {
 
-      const existingTask = voiceQueue.find(task => task.recordId === record.id);
+		// Clear selection
 
-      const isProcessing = currentProcessing && currentProcessing.recordId === record.id;
+		setSelectedRowKeys([]);
 
-      return !existingTask && !isProcessing;
 
-    });
+		if (addedCount > 0) {
 
+			message.success(`📝 Đã thêm ${addedCount} bản ghi vào hàng đợi tạo voice từ detail!`);
 
+		} else {
 
-    if (recordsNotInQueue.length === 0) {
+			message.warning('Không có bản ghi nào có detail để tạo voice!');
 
-      message.warning('Tất cả bản ghi đã có trong hàng đợi hoặc đang được xử lý!');
+		}
 
-      return;
+	};
 
-    }
+	// Bulk Summary Detail creation function - Queue version
+	const handleBulkCreateSummaryDetail = async () => {
+		if (selectedRowKeys.length === 0) {
+			message.warning('Vui lòng chọn ít nhất một bản ghi để tạo summaryDetail!');
+			return;
+		}
 
+		if (!summaryDetailConfig.aiModel || !summaryDetailConfig.aiPrompt) {
+			message.warning('Vui lòng cấu hình prompt tóm tắt detail trước!');
+			setSummaryDetailConfigModalVisible(true);
+			return;
+		}
 
+		// Lọc ra những bản ghi chưa có summaryDetail và có detail
+		const selectedRecords = data.filter(item =>
+			selectedRowKeys.includes(item.id) &&
+			!item.summaryDetail &&
+			item.detail,
+		);
 
-    let addedCount = 0;
+		if (selectedRecords.length === 0) {
+			message.warning('Tất cả bản ghi đã có summaryDetail hoặc không có detail!');
+			return;
+		}
 
+		// Kiểm tra và lọc ra những bản ghi chưa có trong queue
+		const recordsNotInQueue = selectedRecords.filter(record => {
+			const existingTask = summaryDetailQueue.find(task => task.recordId === record.id);
+			const isProcessing = currentSummaryDetailProcessing && currentSummaryDetailProcessing.recordId === record.id;
+			return !existingTask && !isProcessing;
+		});
 
+		if (recordsNotInQueue.length === 0) {
+			message.warning('Tất cả bản ghi đã có trong hàng đợi hoặc đang được xử lý!');
+			return;
+		}
 
-    // Thêm tất cả vào queue
+		let addedCount = 0;
 
-    recordsNotInQueue.forEach(record => {
+		// Thêm tất cả vào queue
+		recordsNotInQueue.forEach(record => {
+			addSummaryDetailToQueue(record.id, record.title);
+			addedCount++;
+		});
 
-      const content = record.detail;
+		// Clear selection
+		setSelectedRowKeys([]);
 
-      if (content) {
+		if (addedCount > 0) {
+			message.success(`📝 Đã thêm ${addedCount} bản ghi vào hàng đợi tạo summaryDetail!`);
+		}
+	};
 
-        addVoiceToQueue(
+	// Bulk image creation function - QUEUE VERSION
 
-            record.id,
+	const handleBulkCreateImage = async () => {
 
-            record.title,
+		if (selectedRowKeys.length === 0) {
 
-            content,
+			const tabLabel = currentTab === 'news' ? 'news' : currentTab === 'caseTraining' ? 'case training' : currentTab === 'longForm' ? 'longForm' : 'item';
 
-            'detail-bulk'
+			message.warning(`Vui lòng chọn ít nhất một ${tabLabel} để tạo ảnh!`);
 
-        );
+			return;
 
-        addedCount++;
+		}
 
-      }
 
-    });
+		// Lọc ra những item chưa có avatarUrl và thuộc loại hiện tại
 
+		const selectedItems = data.filter(item =>
 
+			selectedRowKeys.includes(item.id) &&
 
-    // Clear selection
+			item.type === currentTab &&
 
-    setSelectedRowKeys([]);
+			!item.avatarUrl,
+		);
 
 
+		if (selectedItems.length === 0) {
 
-    if (addedCount > 0) {
+			const tabLabel = currentTab === 'news' ? 'news' : currentTab === 'caseTraining' ? 'case training' : currentTab === 'longForm' ? 'longForm' : 'item';
 
-      message.success(`📝 Đã thêm ${addedCount} bản ghi vào hàng đợi tạo voice từ detail!`);
+			message.warning(`Không có ${tabLabel} nào được chọn hoặc tất cả đã có ảnh!`);
 
-    } else {
+			return;
 
-      message.warning('Không có bản ghi nào có detail để tạo voice!');
+		}
 
-    }
 
-  };
+		// Kiểm tra và lọc ra những item chưa có trong queue
 
-  // Bulk Summary Detail creation function - Queue version
-  const handleBulkCreateSummaryDetail = async () => {
-    if (selectedRowKeys.length === 0) {
-      message.warning('Vui lòng chọn ít nhất một bản ghi để tạo summaryDetail!');
-      return;
-    }
+		const itemsNotInQueue = selectedItems.filter(item => {
 
-    if (!summaryDetailConfig.aiModel || !summaryDetailConfig.aiPrompt) {
-      message.warning('Vui lòng cấu hình prompt tóm tắt detail trước!');
-      setSummaryDetailConfigModalVisible(true);
-      return;
-    }
+			const existingTask = imageGenerationQueue.find(task => task.recordId === item.id);
 
-    // Lọc ra những bản ghi chưa có summaryDetail và có detail
-    const selectedRecords = data.filter(item =>
-        selectedRowKeys.includes(item.id) &&
-        !item.summaryDetail &&
-        item.detail
-    );
+			const isProcessing = currentImageProcessing && currentImageProcessing.recordId === item.id;
 
-    if (selectedRecords.length === 0) {
-      message.warning('Tất cả bản ghi đã có summaryDetail hoặc không có detail!');
-      return;
-    }
+			return !existingTask && !isProcessing;
 
-    // Kiểm tra và lọc ra những bản ghi chưa có trong queue
-    const recordsNotInQueue = selectedRecords.filter(record => {
-      const existingTask = summaryDetailQueue.find(task => task.recordId === record.id);
-      const isProcessing = currentSummaryDetailProcessing && currentSummaryDetailProcessing.recordId === record.id;
-      return !existingTask && !isProcessing;
-    });
+		});
 
-    if (recordsNotInQueue.length === 0) {
-      message.warning('Tất cả bản ghi đã có trong hàng đợi hoặc đang được xử lý!');
-      return;
-    }
 
-    let addedCount = 0;
+		if (itemsNotInQueue.length === 0) {
 
-    // Thêm tất cả vào queue
-    recordsNotInQueue.forEach(record => {
-      addSummaryDetailToQueue(record.id, record.title);
-      addedCount++;
-    });
+			const tabLabel = currentTab === 'news' ? 'news' : currentTab === 'caseTraining' ? 'case training' : currentTab === 'longForm' ? 'longForm' : 'item';
 
-    // Clear selection
-    setSelectedRowKeys([]);
+			message.warning(`Tất cả ${tabLabel} đã có trong hàng đợi hoặc đang được xử lý!`);
 
-    if (addedCount > 0) {
-      message.success(`📝 Đã thêm ${addedCount} bản ghi vào hàng đợi tạo summaryDetail!`);
-    }
-  };
+			return;
 
-  // Bulk image creation function - QUEUE VERSION
+		}
 
-  const handleBulkCreateImage = async () => {
 
-    if (selectedRowKeys.length === 0) {
+		let addedCount = 0;
 
-      const tabLabel = currentTab === 'news' ? 'news' : currentTab === 'caseTraining' ? 'case training' : currentTab === 'longForm' ? 'longForm' : 'item';
 
-      message.warning(`Vui lòng chọn ít nhất một ${tabLabel} để tạo ảnh!`);
+		// Thêm tất cả vào queue
 
-      return;
+		itemsNotInQueue.forEach(item => {
 
-    }
+			if (item.summary) {
 
+				addImageToQueue(item.id, item.title);
 
+				addedCount++;
 
-    // Lọc ra những item chưa có avatarUrl và thuộc loại hiện tại
+			}
 
-    const selectedItems = data.filter(item =>
+		});
 
-        selectedRowKeys.includes(item.id) &&
 
-        item.type === currentTab &&
+		// Clear selection
 
-        !item.avatarUrl
+		setSelectedRowKeys([]);
 
-    );
 
+		if (addedCount > 0) {
 
+			const tabLabel = currentTab === 'news' ? 'news' : currentTab === 'caseTraining' ? 'case training' : currentTab === 'longForm' ? 'longForm' : 'item';
 
-    if (selectedItems.length === 0) {
+			message.success(`📝 Đã thêm ${addedCount} ${tabLabel} vào hàng đợi tạo ảnh!`);
 
-      const tabLabel = currentTab === 'news' ? 'news' : currentTab === 'caseTraining' ? 'case training' : currentTab === 'longForm' ? 'longForm' : 'item';
+		} else {
 
-      message.warning(`Không có ${tabLabel} nào được chọn hoặc tất cả đã có ảnh!`);
+			const tabLabel = currentTab === 'news' ? 'news' : currentTab === 'caseTraining' ? 'case training' : currentTab === 'longForm' ? 'longForm' : 'item';
 
-      return;
+			message.warning(`Không có ${tabLabel} nào có tóm tắt để tạo ảnh!`);
 
-    }
+		}
 
+	};
 
 
-    // Kiểm tra và lọc ra những item chưa có trong queue
+	// Bulk diagram creation function - QUEUE VERSION
+	const handleBulkCreateDiagram = async (mode = 'kroki') => {
+		if (selectedRowKeys.length === 0) {
+			const tabLabel = currentTab === 'news' ? 'news' : currentTab === 'caseTraining' ? 'case training' : currentTab === 'longForm' ? 'longForm' : 'item';
+			message.warning(`Vui lòng chọn ít nhất một ${tabLabel} để tạo ${mode === 'html' ? 'HTML code' : 'diagram'}!`);
+			return;
+		}
 
-    const itemsNotInQueue = selectedItems.filter(item => {
+		// Lọc ra những item chưa có diagram data và thuộc loại hiện tại
+		const selectedItems = data.filter(item => {
+			if (!selectedRowKeys.includes(item.id) || item.type !== currentTab) {
+				return false;
+			}
 
-      const existingTask = imageGenerationQueue.find(task => task.recordId === item.id);
+			// Check if already has diagram data of the SPECIFIC type we're creating
+			if (mode === 'html') {
+				// For HTML mode, only check HTML code
+				const hasExistingHtmlCode = item.diagramHtmlCode && item.diagramHtmlCode.length > 0;
+				if (hasExistingHtmlCode) {
+					return false;
+				}
+			} else if (mode === 'excalidraw-react') {
+				// For Excalidraw mode, only check Excalidraw JSON
+				const hasExistingExcalidrawJson = item.diagramExcalidrawJson && item.diagramExcalidrawJson.length > 0;
+				if (hasExistingExcalidrawJson) {
+					return false;
+				}
+			} else {
+				// For kroki mode, check all diagram types
+				const hasExistingDiagram = item.diagramUrl && item.diagramUrl.length > 0;
+				const hasExistingHtmlCode = item.diagramHtmlCode && item.diagramHtmlCode.length > 0;
+				const hasExistingExcalidrawJson = item.diagramExcalidrawJson && item.diagramExcalidrawJson.length > 0;
+				if (hasExistingDiagram || hasExistingHtmlCode || hasExistingExcalidrawJson) {
+					return false;
+				}
+			}
 
-      const isProcessing = currentImageProcessing && currentImageProcessing.recordId === item.id;
+			return true;
+		});
 
-      return !existingTask && !isProcessing;
+		if (selectedItems.length === 0) {
+			const tabLabel = currentTab === 'news' ? 'news' : currentTab === 'caseTraining' ? 'case training' : currentTab === 'longForm' ? 'longForm' : 'item';
+			const modeText = mode === 'html' ? 'HTML code' : mode === 'excalidraw-react' ? 'Excalidraw diagram' : 'diagram';
+			message.warning(`Không có ${tabLabel} nào được chọn hoặc tất cả đã có ${modeText}!`);
+			return;
+		}
 
-    });
+		// Kiểm tra và lọc ra những item chưa có trong queue với cùng mode
+		const itemsNotInQueue = selectedItems.filter(item => {
+			// Check if there's a task with same recordId AND same mode
+			const existingTask = diagramGenerationQueue.find(task =>
+				task.recordId === item.id && task.mode === mode,
+			);
+			// Check if currently processing with same recordId AND same mode
+			const isProcessing = currentDiagramProcessing &&
+				currentDiagramProcessing.recordId === item.id &&
+				currentDiagramProcessing.mode === mode;
+			return !existingTask && !isProcessing;
+		});
 
+		if (itemsNotInQueue.length === 0) {
+			const tabLabel = currentTab === 'news' ? 'news' : currentTab === 'caseTraining' ? 'case training' : currentTab === 'longForm' ? 'longForm' : 'item';
+			message.warning(`Tất cả ${tabLabel} đã có trong hàng đợi hoặc đang được xử lý!`);
+			return;
+		}
 
+		// Lưu mode và records để dùng sau khi chọn prompt
+		setPendingDiagramMode(mode);
+		setPendingDiagramRecords(itemsNotInQueue);
+		setSelectDiagramPromptModalVisible(true);
+	};
 
-    if (itemsNotInQueue.length === 0) {
+	// Bulk: tạo Case Training từ Learning Block (news)
+	const handleBulkCreateCaseFromLearningBlock = async () => {
+		if (currentTab !== 'news') {
+			message.warning('Chức năng này chỉ dùng trong tab Learning Block!');
+			return;
+		}
 
-      const tabLabel = currentTab === 'news' ? 'news' : currentTab === 'caseTraining' ? 'case training' : currentTab === 'longForm' ? 'longForm' : 'item';
+		if (selectedRowKeys.length === 0) {
+			message.warning('Vui lòng chọn ít nhất một Learning Block để tạo Case Training!');
+			return;
+		}
 
-      message.warning(`Tất cả ${tabLabel} đã có trong hàng đợi hoặc đang được xử lý!`);
+		// Chỉ lấy các bản ghi thuộc loại news (Learning Block)
+		const selectedItems = data.filter(item =>
+			selectedRowKeys.includes(item.id) &&
+			item.type === 'news',
+		);
 
-      return;
+		if (selectedItems.length === 0) {
+			message.warning('Không có Learning Block hợp lệ nào được chọn!');
+			return;
+		}
 
-    }
+		setPendingCaseFromLearningRecords(selectedItems);
+		setSelectCaseFromLearningPromptModalVisible(true);
+	};
 
+	const handleDiagramPromptSelected = (prompt) => {
+		setSelectDiagramPromptModalVisible(false);
 
+		const mode = pendingDiagramMode;
+		const itemsNotInQueue = pendingDiagramRecords;
 
-    let addedCount = 0;
+		// If single record (not from bulk), use single handler
+		if (itemsNotInQueue.length === 1 && selectedRowKeys.length === 0) {
+			handleSingleDiagramPromptSelected(prompt);
+			return;
+		}
 
+		let addedCount = 0;
 
+		// Thêm tất cả vào queue với prompt đã chọn
+		itemsNotInQueue.forEach(item => {
+			if (item.detail) {
+				addDiagramToQueue(item.id, item.title, mode, prompt);
+				addedCount++;
+			}
+		});
 
-    // Thêm tất cả vào queue
+		// Clear selection
+		setSelectedRowKeys([]);
+		setPendingDiagramMode(null);
+		setPendingDiagramRecords([]);
 
-    itemsNotInQueue.forEach(item => {
+		if (addedCount > 0) {
+			const tabLabel = currentTab === 'news' ? 'news' : currentTab === 'caseTraining' ? 'case training' : currentTab === 'longForm' ? 'longForm' : 'item';
+			message.success(`📝 Đã thêm ${addedCount} ${tabLabel} vào hàng đợi tạo ${mode === 'html' ? 'HTML code' : 'diagram'}!`);
+		} else {
+			const tabLabel = currentTab === 'news' ? 'news' : currentTab === 'caseTraining' ? 'case training' : currentTab === 'longForm' ? 'longForm' : 'item';
+			message.warning(`Không có ${tabLabel} nào có nội dung detail để tạo ${mode === 'html' ? 'HTML code' : 'diagram'}!`);
+		}
+	};
 
-      if (item.summary) {
 
-        addImageToQueue(item.id, item.title);
+	// Process Voice Queue
 
-        addedCount++;
+	const processVoiceQueue = async () => {
 
-      }
+		if (voiceQueue.length === 0 || processingQueue) {
 
-    });
+			return;
 
+		}
 
 
-    // Clear selection
+		setProcessingQueue(true);
 
-    setSelectedRowKeys([]);
 
+		const queue = [...voiceQueue];
 
 
-    if (addedCount > 0) {
+		for (let i = 0; i < queue.length; i++) {
 
-      const tabLabel = currentTab === 'news' ? 'news' : currentTab === 'caseTraining' ? 'case training' : currentTab === 'longForm' ? 'longForm' : 'item';
+			const task = queue[i];
 
-      message.success(`📝 Đã thêm ${addedCount} ${tabLabel} vào hàng đợi tạo ảnh!`);
+			setCurrentProcessing(task);
 
-    } else {
 
-      const tabLabel = currentTab === 'news' ? 'news' : currentTab === 'caseTraining' ? 'case training' : currentTab === 'longForm' ? 'longForm' : 'item';
+			// Remove from queue immediately
 
-      message.warning(`Không có ${tabLabel} nào có tóm tắt để tạo ảnh!`);
+			setVoiceQueue(prev => prev.filter(item => item.id !== task.id));
 
-    }
 
-  };
+			try {
 
+				const aiGenResult = await generateText(
+					task.content,
+					voiceSettings.systemMessage,
+					voiceSettings.textModel,
+				);
 
-  // Bulk diagram creation function - QUEUE VERSION
-  const handleBulkCreateDiagram = async (mode = 'kroki') => {
-    if (selectedRowKeys.length === 0) {
-      const tabLabel = currentTab === 'news' ? 'news' : currentTab === 'caseTraining' ? 'case training' : currentTab === 'longForm' ? 'longForm' : 'item';
-      message.warning(`Vui lòng chọn ít nhất một ${tabLabel} để tạo ${mode === 'html' ? 'HTML code' : 'diagram'}!`);
-      return;
-    }
+				const listeningContent = aiGenResult?.response || aiGenResult?.result || aiGenResult?.data || aiGenResult;
 
-    // Lọc ra những item chưa có diagram data và thuộc loại hiện tại
-    const selectedItems = data.filter(item => {
-      if (!selectedRowKeys.includes(item.id) || item.type !== currentTab) {
-        return false;
-      }
+				// Gọi API để tạo voice
+				const response = await generateAudio(
+					listeningContent,
+					'',
+					voiceSettings.audioModel,
+					voiceSettings.voiceType,
+					'mp3',
+					voiceSettings.speed,
+				);
 
-      // Check if already has diagram data of the SPECIFIC type we're creating
-      if (mode === 'html') {
-        // For HTML mode, only check HTML code
-        const hasExistingHtmlCode = item.diagramHtmlCode && item.diagramHtmlCode.length > 0;
-        if (hasExistingHtmlCode) {
-          return false;
-        }
-      } else if (mode === 'excalidraw-react') {
-        // For Excalidraw mode, only check Excalidraw JSON
-        const hasExistingExcalidrawJson = item.diagramExcalidrawJson && item.diagramExcalidrawJson.length > 0;
-        if (hasExistingExcalidrawJson) {
-          return false;
-        }
-      } else {
-        // For kroki mode, check all diagram types
-        const hasExistingDiagram = item.diagramUrl && item.diagramUrl.length > 0;
-        const hasExistingHtmlCode = item.diagramHtmlCode && item.diagramHtmlCode.length > 0;
-        const hasExistingExcalidrawJson = item.diagramExcalidrawJson && item.diagramExcalidrawJson.length > 0;
-        if (hasExistingDiagram || hasExistingHtmlCode || hasExistingExcalidrawJson) {
-          return false;
-        }
-      }
+				const aiResult = response?.data;
 
-      return true;
-    });
 
-    if (selectedItems.length === 0) {
-      const tabLabel = currentTab === 'news' ? 'news' : currentTab === 'caseTraining' ? 'case training' : currentTab === 'longForm' ? 'longForm' : 'item';
-      const modeText = mode === 'html' ? 'HTML code' : mode === 'excalidraw-react' ? 'Excalidraw diagram' : 'diagram';
-      message.warning(`Không có ${tabLabel} nào được chọn hoặc tất cả đã có ${modeText}!`);
-      return;
-    }
+				if (aiResult && aiResult.audio_base64) {
 
-    // Kiểm tra và lọc ra những item chưa có trong queue với cùng mode
-    const itemsNotInQueue = selectedItems.filter(item => {
-      // Check if there's a task with same recordId AND same mode
-      const existingTask = diagramGenerationQueue.find(task =>
-          task.recordId === item.id && task.mode === mode
-      );
-      // Check if currently processing with same recordId AND same mode
-      const isProcessing = currentDiagramProcessing &&
-          currentDiagramProcessing.recordId === item.id &&
-          currentDiagramProcessing.mode === mode;
-      return !existingTask && !isProcessing;
-    });
+					// Xử lý upload audio base64 lên cloud
 
-    if (itemsNotInQueue.length === 0) {
-      const tabLabel = currentTab === 'news' ? 'news' : currentTab === 'caseTraining' ? 'case training' : currentTab === 'longForm' ? 'longForm' : 'item';
-      message.warning(`Tất cả ${tabLabel} đã có trong hàng đợi hoặc đang được xử lý!`);
-      return;
-    }
+					const contentType = aiResult.audio_format === 'mp3' ? 'audio/mpeg' : 'application/octet-stream';
 
-    // Lưu mode và records để dùng sau khi chọn prompt
-    setPendingDiagramMode(mode);
-    setPendingDiagramRecords(itemsNotInQueue);
-    setSelectDiagramPromptModalVisible(true);
-  };
+					const base64 = cleanBase64(aiResult.audio_base64);
 
-  // Bulk: tạo Case Training từ Learning Block (news)
-  const handleBulkCreateCaseFromLearningBlock = async () => {
-    if (currentTab !== 'news') {
-      message.warning('Chức năng này chỉ dùng trong tab Learning Block!');
-      return;
-    }
+					const bytes = base64ToUint8Array(base64);
 
-    if (selectedRowKeys.length === 0) {
-      message.warning('Vui lòng chọn ít nhất một Learning Block để tạo Case Training!');
-      return;
-    }
+					const blob = new Blob([bytes], { type: contentType });
 
-    // Chỉ lấy các bản ghi thuộc loại news (Learning Block)
-    const selectedItems = data.filter(item =>
-        selectedRowKeys.includes(item.id) &&
-        item.type === 'news'
-    );
+					const finalFileName = ensureFileNameWithExtension(`voice_${task.recordId}_${Date.now()}`, contentType);
 
-    if (selectedItems.length === 0) {
-      message.warning('Không có Learning Block hợp lệ nào được chọn!');
-      return;
-    }
+					const fileObj = new File([blob], finalFileName, { type: contentType });
 
-    setPendingCaseFromLearningRecords(selectedItems);
-    setSelectCaseFromLearningPromptModalVisible(true);
-  };
 
-  const handleDiagramPromptSelected = (prompt) => {
-    setSelectDiagramPromptModalVisible(false);
+					try {
 
-    const mode = pendingDiagramMode;
-    const itemsNotInQueue = pendingDiagramRecords;
+						const res = await uploadFiles([fileObj]);
 
-    // If single record (not from bulk), use single handler
-    if (itemsNotInQueue.length === 1 && selectedRowKeys.length === 0) {
-      handleSingleDiagramPromptSelected(prompt);
-      return;
-    }
+						const url = res.files?.[0]?.fileUrl || res.files?.[0]?.url || '';
 
-    let addedCount = 0;
 
-    // Thêm tất cả vào queue với prompt đã chọn
-    itemsNotInQueue.forEach(item => {
-      if (item.detail) {
-        addDiagramToQueue(item.id, item.title, mode, prompt);
-        addedCount++;
-      }
-    });
+						// Lấy record mới nhất từ database
 
-    // Clear selection
-    setSelectedRowKeys([]);
-    setPendingDiagramMode(null);
-    setPendingDiagramRecords([]);
+						const currentRecord = await getK9ById(task.recordId);
 
-    if (addedCount > 0) {
-      const tabLabel = currentTab === 'news' ? 'news' : currentTab === 'caseTraining' ? 'case training' : currentTab === 'longForm' ? 'longForm' : 'item';
-      message.success(`📝 Đã thêm ${addedCount} ${tabLabel} vào hàng đợi tạo ${mode === 'html' ? 'HTML code' : 'diagram'}!`);
-    } else {
-      const tabLabel = currentTab === 'news' ? 'news' : currentTab === 'caseTraining' ? 'case training' : currentTab === 'longForm' ? 'longForm' : 'item';
-      message.warning(`Không có ${tabLabel} nào có nội dung detail để tạo ${mode === 'html' ? 'HTML code' : 'diagram'}!`);
-    }
-  };
 
+						// Cập nhật record với audioUrl và audioText
 
-  // Process Voice Queue
+						const updatedRecord = {
 
-  const processVoiceQueue = async () => {
+							...currentRecord,
 
-    if (voiceQueue.length === 0 || processingQueue) {
+							audioUrl: url,
 
-      return;
+							audioText: task.content,
 
-    }
+						};
 
 
+						await updateK9(updatedRecord);
 
-    setProcessingQueue(true);
+						// Update local state instead of reloading all data
+						const updater = (list) => list.map(item => item.id === task.recordId ? updatedRecord : item);
+						setAllData(prev => ({ ...prev, [currentTab]: updater(prev[currentTab] || []) }));
+						setFilteredData(prev => ({ ...prev, [currentTab]: updater(prev[currentTab] || []) }));
+						setData(prev => updater(prev));
+						setTableKey(prev => prev + 1);
 
+						// Nếu đang edit record này trong modal, cập nhật modal
 
+						if (modalVisible && selectedRecord && selectedRecord.id === task.recordId) {
 
-    const queue = [...voiceQueue];
+							setSelectedRecord(updatedRecord);
 
+							setUploadedAudioUrl(url);
 
+							setSelectedAudio({
 
-    for (let i = 0; i < queue.length; i++) {
+								uid: '-1',
 
-      const task = queue[i];
+								name: 'voice_audio',
 
-      setCurrentProcessing(task);
+								status: 'done',
 
+								url: url,
 
+							});
 
-      // Remove from queue immediately
+							form.setFieldValue('audioUrl', url);
 
-      setVoiceQueue(prev => prev.filter(item => item.id !== task.id));
+						}
 
 
+						message.success(`✅ Tạo voice thành công cho "${task.title}"!`);
 
-      try {
 
-        const aiGenResult = await generateText(
-            task.content,
-            voiceSettings.systemMessage,
-            voiceSettings.textModel
-        );
+					} catch (uploadError) {
 
-        const listeningContent = aiGenResult?.response || aiGenResult?.result || aiGenResult?.data || aiGenResult;
+						console.error(`Upload error for task ${task.id}:`, uploadError);
 
-        // Gọi API để tạo voice
-        const response = await generateAudio(
-            listeningContent,
-            '',
-            voiceSettings.audioModel,
-            voiceSettings.voiceType,
-            'mp3',
-            voiceSettings.speed,
-        );
+						message.error(`❌ Upload voice thất bại cho "${task.title}"!`);
 
-        const aiResult = response?.data
+					}
 
+				} else {
 
-        if (aiResult && aiResult.audio_base64) {
+					message.error(`❌ Không tạo được voice cho "${task.title}"!`);
 
-          // Xử lý upload audio base64 lên cloud
+				}
 
-          const contentType = aiResult.audio_format === 'mp3' ? 'audio/mpeg' : 'application/octet-stream';
+			} catch (error) {
 
-          const base64 = cleanBase64(aiResult.audio_base64);
+				console.error(`Error creating voice for task ${task.id}:`, error);
 
-          const bytes = base64ToUint8Array(base64);
+				message.error(`❌ Lỗi khi tạo voice cho "${task.title}"!`);
 
-          const blob = new Blob([bytes], { type: contentType });
+			}
 
-          const finalFileName = ensureFileNameWithExtension(`voice_${task.recordId}_${Date.now()}`, contentType);
 
-          const fileObj = new File([blob], finalFileName, { type: contentType });
+			// Delay giữa các task
 
+			if (i < queue.length - 1) {
 
+				await new Promise(resolve => setTimeout(resolve, 1000));
 
-          try {
+			}
 
-            const res = await uploadFiles([fileObj]);
+		}
 
-            const url = res.files?.[0]?.fileUrl || res.files?.[0]?.url || '';
 
+		setCurrentProcessing(null);
 
+		setProcessingQueue(false);
 
-            // Lấy record mới nhất từ database
+	};
 
-            const currentRecord = await getK9ById(task.recordId);
+	// Stop a task from queue
+	const handleStopVoiceTask = (taskId) => {
+		// Remove from queue
+		setVoiceQueue(prev => prev.filter(item => item.id !== taskId));
 
+		message.success('Đã dừng task!');
+	};
 
+	// Add voice task to queue
 
-            // Cập nhật record với audioUrl và audioText
+	const addVoiceToQueue = (recordId, title, content, source = 'custom') => {
 
-            const updatedRecord = {
+		const task = {
 
-              ...currentRecord,
+			id: `voice_${recordId}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
 
-              audioUrl: url,
+			recordId,
 
-              audioText: task.content
+			title: title?.length > 50 ? title.substring(0, 50) + '...' : title,
 
-            };
+			content,
 
+			source, // 'custom', 'bulk', 'single'
 
+			createdAt: new Date().toISOString(),
 
-            await updateK9(updatedRecord);
+		};
 
-            // Update local state instead of reloading all data
-            const updater = (list) => list.map(item => item.id === task.recordId ? updatedRecord : item);
-            setAllData(prev => ({ ...prev, [currentTab]: updater(prev[currentTab] || []) }));
-            setFilteredData(prev => ({ ...prev, [currentTab]: updater(prev[currentTab] || []) }));
-            setData(prev => updater(prev));
-            setTableKey(prev => prev + 1);
 
-            // Nếu đang edit record này trong modal, cập nhật modal
+		setVoiceQueue(prev => [...prev, task]);
 
-            if (modalVisible && selectedRecord && selectedRecord.id === task.recordId) {
+		message.success(`📝 Đã thêm "${task.title}" vào hàng đợi tạo voice!`);
 
-              setSelectedRecord(updatedRecord);
 
-              setUploadedAudioUrl(url);
+		return task;
 
-              setSelectedAudio({
+	};
 
-                uid: '-1',
 
-                name: 'voice_audio',
+	// Handle bulk delete avatar
 
-                status: 'done',
+	const handleBulkDeleteAvatar = async () => {
 
-                url: url,
+		if (selectedRowKeys.length === 0) {
 
-              });
+			message.warning('Vui lòng chọn ít nhất một dòng để xóa avatar!');
 
-              form.setFieldValue('audioUrl', url);
+			return;
 
-            }
+		}
 
 
+		try {
 
-            message.success(`✅ Tạo voice thành công cho "${task.title}"!`);
+			setLoading(true);
 
+			const updatePromises = selectedRowKeys.map(id =>
 
+				updateK9({ id, avatarUrl: null }),
+			);
 
-          } catch (uploadError) {
 
-            console.error(`Upload error for task ${task.id}:`, uploadError);
+			await Promise.all(updatePromises);
 
-            message.error(`❌ Upload voice thất bại cho "${task.title}"!`);
 
-          }
+			message.success(`Đã xóa avatar cho ${selectedRowKeys.length} dòng!`);
 
-        } else {
+			setSelectedRowKeys([]);
 
-          message.error(`❌ Không tạo được voice cho "${task.title}"!`);
+			loadAllData(); // Reload data to reflect changes
 
-        }
+		} catch (error) {
 
-      } catch (error) {
+			console.error('Error deleting avatars:', error);
 
-        console.error(`Error creating voice for task ${task.id}:`, error);
+			message.error('Xóa avatar thất bại!');
 
-        message.error(`❌ Lỗi khi tạo voice cho "${task.title}"!`);
+		} finally {
 
-      }
+			setLoading(false);
 
+		}
 
+	};
 
-      // Delay giữa các task
 
-      if (i < queue.length - 1) {
+	// Handle bulk delete HTML diagram
+	const handleBulkDeleteHtmlDiagram = async () => {
+		if (selectedRowKeys.length === 0) {
+			message.warning('Vui lòng chọn ít nhất một dòng để xóa diagram HTML!');
+			return;
+		}
 
-        await new Promise(resolve => setTimeout(resolve, 1000));
+		try {
+			setLoading(true);
+			const updatePromises = selectedRowKeys.map(id =>
+				updateK9({ id, diagramHtmlCode: null, diagramNote: null }),
+			);
 
-      }
+			await Promise.all(updatePromises);
 
-    }
+			message.success(`Đã xóa diagram HTML cho ${selectedRowKeys.length} dòng!`);
+			setSelectedRowKeys([]);
+			loadAllData(); // Reload data to reflect changes
+		} catch (error) {
+			console.error('Error deleting HTML diagrams:', error);
+			message.error('Xóa diagram HTML thất bại!');
+		} finally {
+			setLoading(false);
+		}
+	};
 
+	// Handle bulk delete Excalidraw diagram
+	const handleBulkDeleteExcalidrawDiagram = async () => {
+		if (selectedRowKeys.length === 0) {
+			message.warning('Vui lòng chọn ít nhất một dòng để xóa diagram Excalidraw!');
+			return;
+		}
 
+		try {
+			setLoading(true);
+			const updatePromises = selectedRowKeys.map(id =>
+				updateK9({
+					id,
+					diagramExcalidrawJson: null,
+					diagramExcalidrawNote: null,
+					diagramExcalidrawImageUrls: null,
+				}),
+			);
 
-    setCurrentProcessing(null);
+			await Promise.all(updatePromises);
 
-    setProcessingQueue(false);
+			message.success(`Đã xóa diagram Excalidraw cho ${selectedRowKeys.length} dòng!`);
+			setSelectedRowKeys([]);
+			loadAllData(); // Reload data to reflect changes
+		} catch (error) {
+			console.error('Error deleting Excalidraw diagrams:', error);
+			message.error('Xóa diagram Excalidraw thất bại!');
+		} finally {
+			setLoading(false);
+		}
+	};
 
-  };
+	// Handle bulk delete audio
+	const handleBulkDeleteAudio = async () => {
+		if (selectedRowKeys.length === 0) {
+			message.warning('Vui lòng chọn ít nhất một dòng để xóa audio!');
+			return;
+		}
 
-  // Stop a task from queue
-  const handleStopVoiceTask = (taskId) => {
-    // Remove from queue
-    setVoiceQueue(prev => prev.filter(item => item.id !== taskId));
+		try {
+			setLoading(true);
+			const updateData = {
+				ids: selectedRowKeys,
+				fieldToUpdate: 'audioUrl',
+				value: null,
+			};
+			await updateK9Bulk(updateData);
 
-    message.success('Đã dừng task!');
-  };
+			message.success(`Đã xóa audio cho ${selectedRowKeys.length} dòng!`);
+			setSelectedRowKeys([]);
+			setAllData(prev => ({
+				...prev,
+				[currentTab]: prev[currentTab].map(item =>
+					selectedRowKeys.includes(item.id)
+						? { ...item, audioUrl: null } // chỉ xóa audio
+						: item,
+				),
+			}));
+		} catch (error) {
+			console.error('Error deleting audio:', error);
+			message.error('Xóa audio thất bại!');
+		} finally {
+			setLoading(false);
+		}
+	};
 
-  // Add voice task to queue
+	// Company Summary functions
 
-  const addVoiceToQueue = (recordId, title, content, source = 'custom') => {
+	const handleCompanySummarySearch = async () => {
 
-    const task = {
+		if (!companySummarySearchTerm.trim()) {
 
-      id: `voice_${recordId}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+			message.warning('Vui lòng nhập mã chứng khoán!');
 
-      recordId,
+			return;
 
-      title: title?.length > 50 ? title.substring(0, 50) + '...' : title,
+		}
 
-      content,
 
-      source, // 'custom', 'bulk', 'single'
+		setCompanySummaryLoading(true);
 
-      createdAt: new Date().toISOString()
+		try {
 
-    };
+			// Load all necessary data
 
+			const [companyReports, companyInfos, finRatios, finRatioNH, finRatioCK, finRatioBH] = await Promise.all([
 
+				getAllCompanyReports(),
 
-    setVoiceQueue(prev => [...prev, task]);
+				getAllCompanyInfos(),
 
-    message.success(`📝 Đã thêm "${task.title}" vào hàng đợi tạo voice!`);
+				getAllFinRatios(),
 
+				getAllFinRatioNganhangs(),
 
+				getAllFinRatioChungkhoans(),
 
-    return task;
+				getAllFinRatioBaohiems(),
 
-  };
+			]);
 
 
+			const companyReportData = companyReports.map(item => item.data);
 
-  // Handle bulk delete avatar
+			const companyInfoData = companyInfos.map(item => item.data);
 
-  const handleBulkDeleteAvatar = async () => {
+			const finRatioData = finRatios.map(item => item.data);
 
-    if (selectedRowKeys.length === 0) {
+			const finRatioDataNH = finRatioNH.map(item => item.data);
 
-      message.warning('Vui lòng chọn ít nhất một dòng để xóa avatar!');
+			const finRatioDataCK = finRatioCK.map(item => item.data);
 
-      return;
+			const finRatioDataBH = finRatioBH.map(item => item.data);
 
-    }
 
+			// Filter data for the search term
 
+			const searchLower = companySummarySearchTerm.toLowerCase();
 
-    try {
 
-      setLoading(true);
+			// Filter company reports
 
-      const updatePromises = selectedRowKeys.map(id =>
+			const filteredReports = companyReportData.filter(item => {
 
-          updateK9({ id, avatarUrl: null })
+				try {
 
-      );
+					const maCK = item['Mã CK'] || '';
 
+					return maCK.toLowerCase().includes(searchLower);
 
+				} catch {
 
-      await Promise.all(updatePromises);
+					return false;
 
+				}
 
+			});
 
-      message.success(`Đã xóa avatar cho ${selectedRowKeys.length} dòng!`);
 
-      setSelectedRowKeys([]);
+			// Filter financial ratios
 
-      loadAllData(); // Reload data to reflect changes
+			const allFinRatioData = [...finRatioData, ...finRatioDataNH, ...finRatioDataCK, ...finRatioDataBH];
 
-    } catch (error) {
+			const filteredFinRatios = allFinRatioData.filter(item => {
 
-      console.error('Error deleting avatars:', error);
+				try {
 
-      message.error('Xóa avatar thất bại!');
+					const maCK = item['Mã CK'] || '';
 
-    } finally {
+					return maCK.toLowerCase().includes(searchLower);
 
-      setLoading(false);
+				} catch {
 
-    }
+					return false;
 
-  };
+				}
 
+			});
 
-  // Handle bulk delete HTML diagram
-  const handleBulkDeleteHtmlDiagram = async () => {
-    if (selectedRowKeys.length === 0) {
-      message.warning('Vui lòng chọn ít nhất một dòng để xóa diagram HTML!');
-      return;
-    }
 
-    try {
-      setLoading(true);
-      const updatePromises = selectedRowKeys.map(id =>
-          updateK9({ id, diagramHtmlCode: null, diagramNote: null })
-      );
+			// Find company info
 
-      await Promise.all(updatePromises);
+			const companyInfo = companyInfoData.find(item =>
 
-      message.success(`Đã xóa diagram HTML cho ${selectedRowKeys.length} dòng!`);
-      setSelectedRowKeys([]);
-      loadAllData(); // Reload data to reflect changes
-    } catch (error) {
-      console.error('Error deleting HTML diagrams:', error);
-      message.error('Xóa diagram HTML thất bại!');
-    } finally {
-      setLoading(false);
-    }
-  };
+				(item['Mã CK'] || '').toLowerCase() === searchLower,
+			);
 
-  // Handle bulk delete Excalidraw diagram
-  const handleBulkDeleteExcalidrawDiagram = async () => {
-    if (selectedRowKeys.length === 0) {
-      message.warning('Vui lòng chọn ít nhất một dòng để xóa diagram Excalidraw!');
-      return;
-    }
 
-    try {
-      setLoading(true);
-      const updatePromises = selectedRowKeys.map(id =>
-          updateK9({ id, diagramExcalidrawJson: null, diagramExcalidrawNote: null, diagramExcalidrawImageUrls: null })
-      );
+			setCompanySummaryData({
 
-      await Promise.all(updatePromises);
+				searchTerm: companySummarySearchTerm,
 
-      message.success(`Đã xóa diagram Excalidraw cho ${selectedRowKeys.length} dòng!`);
-      setSelectedRowKeys([]);
-      loadAllData(); // Reload data to reflect changes
-    } catch (error) {
-      console.error('Error deleting Excalidraw diagrams:', error);
-      message.error('Xóa diagram Excalidraw thất bại!');
-    } finally {
-      setLoading(false);
-    }
-  };
+				companyInfo,
 
-  // Handle bulk delete audio
-  const handleBulkDeleteAudio = async () => {
-    if (selectedRowKeys.length === 0) {
-      message.warning('Vui lòng chọn ít nhất một dòng để xóa audio!');
-      return;
-    }
+				valuationData: filteredReports,
 
-    try {
-      setLoading(true);
-      const updateData = {
-        ids: selectedRowKeys,
-        fieldToUpdate: 'audioUrl',
-        value: null
-      };
-      await updateK9Bulk(updateData);
+				financialRatioData: filteredFinRatios,
 
-      message.success(`Đã xóa audio cho ${selectedRowKeys.length} dòng!`);
-      setSelectedRowKeys([]);
-      setAllData(prev => ({
-        ...prev,
-        [currentTab]: prev[currentTab].map(item =>
-            selectedRowKeys.includes(item.id)
-                ? { ...item, audioUrl: null } // chỉ xóa audio
-                : item
-        ),
-      }));
-    } catch (error) {
-      console.error('Error deleting audio:', error);
-      message.error('Xóa audio thất bại!');
-    } finally {
-      setLoading(false);
-    }
-  };
+				hasData: filteredReports.length > 0 || filteredFinRatios.length > 0,
 
-  // Company Summary functions
+			});
 
-  const handleCompanySummarySearch = async () => {
 
-    if (!companySummarySearchTerm.trim()) {
+		} catch (error) {
 
-      message.warning('Vui lòng nhập mã chứng khoán!');
+			console.error('Error loading company summary data:', error);
 
-      return;
+			message.error('Lỗi khi tải dữ liệu!');
 
-    }
+		} finally {
 
+			setCompanySummaryLoading(false);
 
+		}
 
-    setCompanySummaryLoading(true);
+	};
 
-    try {
 
-      // Load all necessary data
+	const handleCreateCompanySummaryReport = async () => {
 
-      const [companyReports, companyInfos, finRatios, finRatioNH, finRatioCK, finRatioBH] = await Promise.all([
+		if (!companySummaryData || !companySummaryData.hasData) {
 
-        getAllCompanyReports(),
+			message.warning('Không có dữ liệu để tạo tổng quan!');
 
-        getAllCompanyInfos(),
+			return;
 
-        getAllFinRatios(),
+		}
 
-        getAllFinRatioNganhangs(),
 
-        getAllFinRatioChungkhoans(),
+		// Add to queue instead of creating immediately
 
-        getAllFinRatioBaohiems()
+		const task = {
 
-      ]);
+			id: `company_summary_${companySummaryData.searchTerm}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
 
+			searchTerm: companySummaryData.searchTerm,
 
+			data: companySummaryData,
 
-      const companyReportData = companyReports.map(item => item.data);
+			createdAt: new Date().toISOString(),
 
-      const companyInfoData = companyInfos.map(item => item.data);
+		};
 
-      const finRatioData = finRatios.map(item => item.data);
 
-      const finRatioDataNH = finRatioNH.map(item => item.data);
+		setCompanySummaryQueue(prev => [...prev, task]);
 
-      const finRatioDataCK = finRatioCK.map(item => item.data);
+		message.success(`📝 Đã thêm "${companySummaryData.searchTerm}" vào hàng đợi tạo tổng quan!`);
 
-      const finRatioDataBH = finRatioBH.map(item => item.data);
 
+		// Close modal
 
+		setCompanySummaryModalVisible(false);
 
-      // Filter data for the search term
+		setCompanySummarySearchTerm('');
 
-      const searchLower = companySummarySearchTerm.toLowerCase();
+		setCompanySummaryData(null);
 
+	};
 
 
-      // Filter company reports
+	// Process company summary queue
 
-      const filteredReports = companyReportData.filter(item => {
+	const processCompanySummaryQueue = async () => {
 
-        try {
+		if (processingCompanySummaryQueue || companySummaryQueue.length === 0) {
 
-          const maCK = item['Mã CK'] || '';
+			return;
 
-          return maCK.toLowerCase().includes(searchLower);
+		}
 
-        } catch {
 
-          return false;
+		setProcessingCompanySummaryQueue(true);
 
-        }
 
-      });
+		while (companySummaryQueue.length > 0) {
 
+			const task = companySummaryQueue[0];
 
+			setCurrentCompanySummaryProcessing(task);
 
-      // Filter financial ratios
 
-      const allFinRatioData = [...finRatioData, ...finRatioDataNH, ...finRatioDataCK, ...finRatioDataBH];
+			try {
 
-      const filteredFinRatios = allFinRatioData.filter(item => {
+				const analysisData = {
 
-        try {
+					searchTerm: task.data.searchTerm,
 
-          const maCK = item['Mã CK'] || '';
+					companyInfo: task.data.companyInfo || null,
 
-          return maCK.toLowerCase().includes(searchLower);
+					valuationData: task.data.valuationData,
 
-        } catch {
+					financialRatioData: task.data.financialRatioData,
 
-          return false;
+					industryComparisonData: [],
 
-        }
+				};
 
-      });
 
+				const prompt = JSON.stringify(analysisData, null, 2);
 
-
-      // Find company info
-
-      const companyInfo = companyInfoData.find(item =>
-
-          (item['Mã CK'] || '').toLowerCase() === searchLower
-
-      );
-
-
-
-      setCompanySummaryData({
-
-        searchTerm: companySummarySearchTerm,
-
-        companyInfo,
-
-        valuationData: filteredReports,
-
-        financialRatioData: filteredFinRatios,
-
-        hasData: filteredReports.length > 0 || filteredFinRatios.length > 0
-
-      });
-
-
-
-    } catch (error) {
-
-      console.error('Error loading company summary data:', error);
-
-      message.error('Lỗi khi tải dữ liệu!');
-
-    } finally {
-
-      setCompanySummaryLoading(false);
-
-    }
-
-  };
-
-
-
-  const handleCreateCompanySummaryReport = async () => {
-
-    if (!companySummaryData || !companySummaryData.hasData) {
-
-      message.warning('Không có dữ liệu để tạo tổng quan!');
-
-      return;
-
-    }
-
-
-
-    // Add to queue instead of creating immediately
-
-    const task = {
-
-      id: `company_summary_${companySummaryData.searchTerm}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-
-      searchTerm: companySummaryData.searchTerm,
-
-      data: companySummaryData,
-
-      createdAt: new Date().toISOString()
-
-    };
-
-
-
-    setCompanySummaryQueue(prev => [...prev, task]);
-
-    message.success(`📝 Đã thêm "${companySummaryData.searchTerm}" vào hàng đợi tạo tổng quan!`);
-
-
-
-    // Close modal
-
-    setCompanySummaryModalVisible(false);
-
-    setCompanySummarySearchTerm('');
-
-    setCompanySummaryData(null);
-
-  };
-
-
-
-  // Process company summary queue
-
-  const processCompanySummaryQueue = async () => {
-
-    if (processingCompanySummaryQueue || companySummaryQueue.length === 0) {
-
-      return;
-
-    }
-
-
-
-    setProcessingCompanySummaryQueue(true);
-
-
-
-    while (companySummaryQueue.length > 0) {
-
-      const task = companySummaryQueue[0];
-
-      setCurrentCompanySummaryProcessing(task);
-
-
-
-      try {
-
-        const analysisData = {
-
-          searchTerm: task.data.searchTerm,
-
-          companyInfo: task.data.companyInfo || null,
-
-          valuationData: task.data.valuationData,
-
-          financialRatioData: task.data.financialRatioData,
-
-          industryComparisonData: []
-
-        };
-
-
-
-        const prompt = JSON.stringify(analysisData, null, 2);
-
-        const systemMessage = `
+				const systemMessage = `
 
 Bạn sẽ nhận toàn bộ dữ liệu phân tích của một mã chứng khoán dưới dạng JSON bao gồm:
 
@@ -15727,265 +15098,253 @@ Chỉ trả về nội dung theo đúng định dạng trên, không thêm phầ
 `;
 
 
+				const model = 'google/gemini-2.5-pro';
 
-        const model = "google/gemini-2.5-pro";
+				const response = await aiGen(prompt, systemMessage, model, 'text');
 
-        const response = await aiGen(prompt, systemMessage, model, 'text');
+				console.log('AI Response:', response);
 
-        console.log('AI Response:', response);
 
+				if (response && response.result) {
 
+					const resultText = response.result;
 
-        if (response && response.result) {
 
-          const resultText = response.result;
+					const shortMatch = resultText.match(/\[SUMMARY_SHORT\]\s*\n([\s\S]*?)(?=\n\[SUMMARY_DETAILED\]|$)/);
 
+					const summary1 = shortMatch ? shortMatch[1].trim() : '';
 
 
-          const shortMatch = resultText.match(/\[SUMMARY_SHORT\]\s*\n([\s\S]*?)(?=\n\[SUMMARY_DETAILED\]|$)/);
+					const detailedMatch = resultText.match(/\[SUMMARY_DETAILED\]\s*\n([\s\S]*?)$/);
 
-          const summary1 = shortMatch ? shortMatch[1].trim() : '';
+					const summary2 = detailedMatch ? detailedMatch[1].trim() : '';
 
 
+					if (summary1 || summary2) {
 
-          const detailedMatch = resultText.match(/\[SUMMARY_DETAILED\]\s*\n([\s\S]*?)$/);
+						const aiSummaryData = {
 
-          const summary2 = detailedMatch ? detailedMatch[1].trim() : '';
+							summary1: summary1 || null,
 
+							summary2: summary2 || null,
 
+							info: {
 
-          if (summary1 || summary2) {
+								title: 'Phân tích tổng quan ' + task.data.searchTerm,
 
-            const aiSummaryData = {
+								sheetName: 'CompanySummary',
 
-              summary1: summary1 || null,
+								searchTerm: task.data.searchTerm,
 
-              summary2: summary2 || null,
+								companyInfo: task.data.companyInfo ? true : false,
 
-              info: {
+								valuationDataCount: task.data.valuationData.length,
 
-                title: 'Phân tích tổng quan ' + task.data.searchTerm,
+								finalRatioDataCount: task.data.financialRatioData.length,
 
-                sheetName: 'CompanySummary',
+								industryComparisonCount: 0,
 
-                searchTerm: task.data.searchTerm,
+								dataType: 'CompanySummary',
 
-                companyInfo: task.data.companyInfo ? true : false,
+							},
 
-                valuationDataCount: task.data.valuationData.length,
+						};
 
-                finalRatioDataCount: task.data.financialRatioData.length,
 
-                industryComparisonCount: 0,
+						const savedSummary = await createAISummary(aiSummaryData);
 
-                dataType: 'CompanySummary'
+						console.log('Saved to aiSummary table:', savedSummary);
 
-              }
 
-            };
+						message.success(`✅ Tạo tổng quan cho ${task.data.searchTerm} hoàn thành!`);
 
+					} else {
 
+						message.warning(`⚠️ Tạo tổng quan cho ${task.data.searchTerm} hoàn thành nhưng không thể trích xuất nội dung tóm tắt`);
 
-            const savedSummary = await createAISummary(aiSummaryData);
+					}
 
-            console.log('Saved to aiSummary table:', savedSummary);
+				} else {
 
+					message.warning(`⚠️ Tạo tổng quan cho ${task.data.searchTerm} hoàn thành nhưng không nhận được kết quả hợp lệ`);
 
+				}
 
-            message.success(`✅ Tạo tổng quan cho ${task.data.searchTerm} hoàn thành!`);
+			} catch (error) {
 
-          } else {
+				console.error('Lỗi khi tạo tổng quan:', error);
 
-            message.warning(`⚠️ Tạo tổng quan cho ${task.data.searchTerm} hoàn thành nhưng không thể trích xuất nội dung tóm tắt`);
+				message.error(`❌ Lỗi khi tạo tổng quan cho ${task.data.searchTerm}`);
 
-          }
+			}
 
-        } else {
 
-          message.warning(`⚠️ Tạo tổng quan cho ${task.data.searchTerm} hoàn thành nhưng không nhận được kết quả hợp lệ`);
+			// Remove completed task from queue
 
-        }
+			setCompanySummaryQueue(prev => prev.slice(1));
 
-      } catch (error) {
 
-        console.error('Lỗi khi tạo tổng quan:', error);
+			// Small delay between tasks
 
-        message.error(`❌ Lỗi khi tạo tổng quan cho ${task.data.searchTerm}`);
+			await new Promise(resolve => setTimeout(resolve, 1000));
 
-      }
+		}
 
 
+		setProcessingCompanySummaryQueue(false);
 
-      // Remove completed task from queue
+		setCurrentCompanySummaryProcessing(null);
 
-      setCompanySummaryQueue(prev => prev.slice(1));
 
+		// Refresh data after all tasks are completed
 
+		loadAllData();
 
-      // Small delay between tasks
+	};
 
-      await new Promise(resolve => setTimeout(resolve, 1000));
 
-    }
+	// Auto-process queue when it changes
 
+	useEffect(() => {
 
+		if (companySummaryQueue.length > 0 && !processingCompanySummaryQueue) {
 
-    setProcessingCompanySummaryQueue(false);
+			processCompanySummaryQueue();
 
-    setCurrentCompanySummaryProcessing(null);
+		}
 
+	}, [companySummaryQueue, processingCompanySummaryQueue]);
 
 
-    // Refresh data after all tasks are completed
+	return (
 
-    loadAllData();
+		<div className={styles.container}>
 
-  };
+			<Card>
 
+				<div className={styles.header}>
 
+					<div style={{
+						display: 'flex',
+						alignItems: 'center',
+						justifyContent: 'space-between',
+						flexWrap: 'wrap',
+					}}>
 
-  // Auto-process queue when it changes
+						<div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
 
-  useEffect(() => {
+							<Button
 
-    if (companySummaryQueue.length > 0 && !processingCompanySummaryQueue) {
+								type='text'
 
-      processCompanySummaryQueue();
+								icon={<ArrowLeftOutlined />}
 
-    }
+								onClick={handleBackToK9}
 
-  }, [companySummaryQueue, processingCompanySummaryQueue]);
+								className={styles.backButton}
 
+							>
 
+							</Button>
 
+							<Tooltip title='Cài đặt Voice'>
 
+								<Button
 
+									type='text'
 
+									icon={<SoundOutlined />}
 
-  return (
+									onClick={() => setVoiceSettingsVisible(true)}
 
-      <div className={styles.container}>
+									style={{ color: '#52c41a' }}
 
-        <Card>
+								/>
 
-          <div className={styles.header}>
+							</Tooltip>
 
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap' }}>
+							<Tooltip title={`Voice Queue (${voiceQueue.length + (currentProcessing ? 1 : 0)} tasks)`}>
+								<Button
+									type='text'
+									icon={<InboxOutlined />}
+									onClick={() => setVoiceQueueModalVisible(true)}
+									style={{
+										color: '#1890ff',
+										position: 'relative',
+									}}
+								>
+									{(voiceQueue.length > 0 || currentProcessing) && (
+										<Badge
+											count={voiceQueue.length + (currentProcessing ? 1 : 0)}
+											offset={[-8, 8]}
+											style={{ backgroundColor: '#52c41a' }}
+										/>
+									)}
+								</Button>
+							</Tooltip>
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+							<Tooltip title='Cài đặt nhạc nền'>
 
-                <Button
+								<Button
 
-                    type="text"
+									type='text'
 
-                    icon={<ArrowLeftOutlined />}
+									icon={<SettingOutlined />}
 
-                    onClick={handleBackToK9}
+									onClick={() => setBgAudioSettingsVisible(true)}
 
-                    className={styles.backButton}
+									style={{ color: bgAudioSettings.enabled ? '#1890ff' : undefined }}
 
-                >
+								/>
 
-                </Button>
+							</Tooltip>
 
-                <Tooltip title="Cài đặt Voice">
+							<Tooltip title='Cài đặt Guideline'>
 
-                  <Button
+								<Button
 
-                      type="text"
+									type='text'
 
-                      icon={<SoundOutlined />}
+									icon={<FileTextOutlined />}
 
-                      onClick={() => setVoiceSettingsVisible(true)}
+									onClick={() => setGuidelineSettingsVisible(true)}
 
-                      style={{ color: '#52c41a' }}
+									style={{ color: guidelineSettings.imageUrl || guidelineSettings.markdownText ? '#1890ff' : undefined }}
 
-                  />
+								/>
 
-                </Tooltip>
+							</Tooltip>
 
-                <Tooltip title={`Voice Queue (${voiceQueue.length + (currentProcessing ? 1 : 0)} tasks)`}>
-                  <Button
-                      type="text"
-                      icon={<InboxOutlined />}
-                      onClick={() => setVoiceQueueModalVisible(true)}
-                      style={{
-                        color: '#1890ff',
-                        position: 'relative'
-                      }}
-                  >
-                    {(voiceQueue.length > 0 || currentProcessing) && (
-                        <Badge
-                            count={voiceQueue.length + (currentProcessing ? 1 : 0)}
-                            offset={[-8, 8]}
-                            style={{ backgroundColor: '#52c41a' }}
-                        />
-                    )}
-                  </Button>
-                </Tooltip>
+							{(currentTab === 'home' || currentTab === 'news' || currentTab === 'caseTraining' || currentTab === 'longForm') && (
 
-                <Tooltip title="Cài đặt nhạc nền">
+								<>
 
-                  <Button
+									<Tooltip title='Cấu hình tạo ảnh'>
 
-                      type="text"
+										<Button
 
-                      icon={<SettingOutlined />}
+											type='text'
 
-                      onClick={() => setBgAudioSettingsVisible(true)}
+											icon={<PictureOutlined />}
 
-                      style={{ color: bgAudioSettings.enabled ? '#1890ff' : undefined }}
+											onClick={() => setImageConfigModalVisible(true)}
 
-                  />
+											style={{ color: '#1890ff' }}
 
-                </Tooltip>
+										/>
 
-                <Tooltip title="Cài đặt Guideline">
+									</Tooltip>
 
-                  <Button
+									<Tooltip title='Cấu hình tạo diagram'>
+										<Button
+											type='text'
+											icon={<NodeIndexOutlined />}
+											onClick={() => setDiagramConfigModalVisible(true)}
+											style={{ color: '#1890ff' }}
+										/>
+									</Tooltip>
 
-                      type="text"
-
-                      icon={<FileTextOutlined />}
-
-                      onClick={() => setGuidelineSettingsVisible(true)}
-
-                      style={{ color: guidelineSettings.imageUrl || guidelineSettings.markdownText ? '#1890ff' : undefined }}
-
-                  />
-
-                </Tooltip>
-
-                {(currentTab === 'home' || currentTab === 'news' || currentTab === 'caseTraining' || currentTab === 'longForm') && (
-
-                    <>
-
-                      <Tooltip title="Cấu hình tạo ảnh">
-
-                        <Button
-
-                            type="text"
-
-                            icon={<PictureOutlined />}
-
-                            onClick={() => setImageConfigModalVisible(true)}
-
-                            style={{ color: '#1890ff' }}
-
-                        />
-
-                      </Tooltip>
-
-                      <Tooltip title="Cấu hình tạo diagram">
-                        <Button
-                            type="text"
-                            icon={<NodeIndexOutlined />}
-                            onClick={() => setDiagramConfigModalVisible(true)}
-                            style={{ color: '#1890ff' }}
-                        />
-                      </Tooltip>
-
-                      {/* <Tooltip title="Cấu hình tóm tắt Detail">
+									{/* <Tooltip title="Cấu hình tóm tắt Detail">
                     <Button
                       type="text"
                       icon={<ThunderboltOutlined />}
@@ -15994,56 +15353,56 @@ Chỉ trả về nội dung theo đúng định dạng trên, không thêm phầ
                     />
                   </Tooltip> */}
 
-                      <Tooltip title="Quản lý Tag">
+									<Tooltip title='Quản lý Tag'>
 
-                        <Button
+										<Button
 
-                            type="text"
+											type='text'
 
-                            icon={<TagsOutlined />}
+											icon={<TagsOutlined />}
 
-                            onClick={() => setTagManagementModalVisible(true)}
+											onClick={() => setTagManagementModalVisible(true)}
 
-                            style={{ color: '#1890ff' }}
+											style={{ color: '#1890ff' }}
 
-                        />
+										/>
 
-                      </Tooltip>
+									</Tooltip>
 
-                      <Tooltip title="Quản lý Categories">
+									<Tooltip title='Quản lý Categories'>
 
-                        <Button
+										<Button
 
-                            type="text"
+											type='text'
 
-                            icon={<AppstoreOutlined />}
+											icon={<AppstoreOutlined />}
 
-                            onClick={() => setCategoriesManagementModalVisible(true)}
+											onClick={() => setCategoriesManagementModalVisible(true)}
 
-                            style={{ color: '#52c41a' }}
+											style={{ color: '#52c41a' }}
 
-                        />
+										/>
 
-                      </Tooltip>
+									</Tooltip>
 
-                      <Tooltip title="Quản lý Program">
+									<Tooltip title='Quản lý Program'>
 
-                        <Button
+										<Button
 
-                            type="text"
+											type='text'
 
-                            icon={<ThunderboltOutlined />}
+											icon={<ThunderboltOutlined />}
 
-                            onClick={() => setProgramManagementModalVisible(true)}
+											onClick={() => setProgramManagementModalVisible(true)}
 
-                            style={{ color: '#1890ff' }}
+											style={{ color: '#1890ff' }}
 
-                        />
+										/>
 
-                      </Tooltip>
+									</Tooltip>
 
 
-                      {/* <Tooltip title="Cài đặt Prompt AI Update Quiz & Content">
+									{/* <Tooltip title="Cài đặt Prompt AI Update Quiz & Content">
 
                     <Button
 
@@ -16059,507 +15418,505 @@ Chỉ trả về nội dung theo đúng định dạng trên, không thêm phầ
 
                   </Tooltip> */}
 
-                      <Tooltip title="Cài đặt Prompt AI (Danh sách)">
+									<Tooltip title='Cài đặt Prompt AI (Danh sách)'>
 
-                        <Button
+										<Button
 
-                            type="text"
+											type='text'
 
-                            icon={<SettingOutlined />}
+											icon={<SettingOutlined />}
 
-                            onClick={() => setPromptSettingsListModalVisible(true)}
+											onClick={() => setPromptSettingsListModalVisible(true)}
 
-                            style={{ color: '#fa8c16' }}
+											style={{ color: '#fa8c16' }}
 
-                        />
+										/>
 
-                      </Tooltip>
+									</Tooltip>
 
-                    </>
+								</>
 
-                )}
+							)}
 
-              </div>
+						</div>
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+						<div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
 
-                <AutoComplete
+							<AutoComplete
 
-                    placeholder="Tìm kiếm theo tiêu đề, tóm tắt, chi tiết..."
+								placeholder='Tìm kiếm theo tiêu đề, tóm tắt, chi tiết...'
 
-                    value={searchText}
+								value={searchText}
 
-                    onChange={(value) => handleLocalSearch(value)}
+								onChange={(value) => handleLocalSearch(value)}
 
-                    onSearch={handleSearchSubmit}
+								onSearch={handleSearchSubmit}
 
-                    style={{ width: 250 }}
+								style={{ width: 250 }}
 
-                    allowClear
+								allowClear
 
-                    loading={searchLoading}
+								loading={searchLoading}
 
-                    options={searchHistory[currentTab]?.map(term => ({
+								options={searchHistory[currentTab]?.map(term => ({
 
-                      value: term,
+									value: term,
 
-                      label: (
+									label: (
 
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+										<div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
 
-                            <HistoryOutlined style={{ color: '#999' }} />
+											<HistoryOutlined style={{ color: '#999' }} />
 
-                            <span>{term}</span>
+											<span>{term}</span>
 
-                          </div>
+										</div>
 
-                      )
+									),
 
-                    })) || []}
+								})) || []}
 
-                    onSelect={(value) => handleSearchSubmit(value)}
+								onSelect={(value) => handleSearchSubmit(value)}
 
-                />
+							/>
 
-                {processingImageQueue && (
+							{processingImageQueue && (
 
-                    <div style={{
+								<div style={{
 
-                      display: 'flex',
+									display: 'flex',
 
-                      alignItems: 'center',
+									alignItems: 'center',
 
-                      gap: 4,
+									gap: 4,
 
-                      padding: '4px 8px',
+									padding: '4px 8px',
 
-                      backgroundColor: '#e6f7ff',
+									backgroundColor: '#e6f7ff',
 
-                      borderRadius: '4px',
+									borderRadius: '4px',
 
-                      border: '1px solid #91d5ff'
+									border: '1px solid #91d5ff',
 
-                    }}>
+								}}>
 
-                      <LoadingOutlined style={{ color: '#1890ff' }} />
+									<LoadingOutlined style={{ color: '#1890ff' }} />
 
-                      <span style={{ fontSize: '12px', color: '#1890ff' }}>
+									<span style={{ fontSize: '12px', color: '#1890ff' }}>
 
                     Đang tạo ảnh: {imageGenerationQueue.length + 1}
 
                   </span>
 
-                    </div>
+								</div>
 
-                )}
+							)}
 
-                {processingDiagramQueue && (
+							{processingDiagramQueue && (
 
-                    <div
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: 4,
-                          padding: '4px 8px',
-                          backgroundColor: '#fff7e6',
-                          borderRadius: '4px',
-                          border: '1px solid #ffd591'
-                        }}
-                    >
-                      <div
-                          style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 4,
-                            flex: 1,
-                            cursor: 'pointer'
-                          }}
-                          onClick={() => setDiagramProgressModalVisible(true)}
-                      >
-                        <LoadingOutlined style={{ color: '#fa8c16' }} />
-                        <span style={{ fontSize: '12px', color: '#fa8c16' }}>
+								<div
+									style={{
+										display: 'flex',
+										alignItems: 'center',
+										gap: 4,
+										padding: '4px 8px',
+										backgroundColor: '#fff7e6',
+										borderRadius: '4px',
+										border: '1px solid #ffd591',
+									}}
+								>
+									<div
+										style={{
+											display: 'flex',
+											alignItems: 'center',
+											gap: 4,
+											flex: 1,
+											cursor: 'pointer',
+										}}
+										onClick={() => setDiagramProgressModalVisible(true)}
+									>
+										<LoadingOutlined style={{ color: '#fa8c16' }} />
+										<span style={{ fontSize: '12px', color: '#fa8c16' }}>
                       Đang tạo: {currentDiagramProcessing?.title}
-                          {diagramGenerationQueue.length > 0 && (
-                              <span style={{ color: '#666', marginLeft: '4px' }}>
+											{diagramGenerationQueue.length > 0 && (
+												<span style={{ color: '#666', marginLeft: '4px' }}>
                           (+{diagramGenerationQueue.length} chờ)
                         </span>
-                          )}
+											)}
                     </span>
-                      </div>
-                      <Button
-                          size="small"
-                          danger
-                          onClick={handleStopDiagramGeneration}
-                          style={{ fontSize: '10px', height: '20px', padding: '0 6px' }}
-                      >
-                        Dừng
-                      </Button>
-                    </div>
+									</div>
+									<Button
+										size='small'
+										danger
+										onClick={handleStopDiagramGeneration}
+										style={{ fontSize: '10px', height: '20px', padding: '0 6px' }}
+									>
+										Dừng
+									</Button>
+								</div>
 
-                )}
+							)}
 
-                {diagramGenerationResults.length > 0 && !processingDiagramQueue && (
+							{diagramGenerationResults.length > 0 && !processingDiagramQueue && (
 
-                    <div
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: 4,
-                          padding: '4px 8px',
-                          backgroundColor: '#f6ffed',
-                          borderRadius: '4px',
-                          border: '1px solid #b7eb8f',
-                          cursor: 'pointer'
-                        }}
-                        onClick={() => setDiagramProgressModalVisible(true)}
-                    >
-                      <CheckCircleOutlined style={{ color: '#52c41a' }} />
-                      <span style={{ fontSize: '12px', color: '#52c41a' }}>
+								<div
+									style={{
+										display: 'flex',
+										alignItems: 'center',
+										gap: 4,
+										padding: '4px 8px',
+										backgroundColor: '#f6ffed',
+										borderRadius: '4px',
+										border: '1px solid #b7eb8f',
+										cursor: 'pointer',
+									}}
+									onClick={() => setDiagramProgressModalVisible(true)}
+								>
+									<CheckCircleOutlined style={{ color: '#52c41a' }} />
+									<span style={{ fontSize: '12px', color: '#52c41a' }}>
                     Hoàn thành: {diagramGenerationStats.success}/{diagramGenerationStats.total} {diagramGenerationStats.type === 'html' ? 'HTML code' : 'diagram'}
 
-                        {diagramGenerationStats.failed > 0 && (
-                            <span style={{ color: '#ff4d4f', marginLeft: '8px' }}>
+										{diagramGenerationStats.failed > 0 && (
+											<span style={{ color: '#ff4d4f', marginLeft: '8px' }}>
                         ({diagramGenerationStats.failed} thất bại)
                       </span>
-                        )}
+										)}
                   </span>
-                    </div>
+								</div>
 
-                )}
+							)}
 
-                {processingCaseFromLearningBlockQueue && (
+							{processingCaseFromLearningBlockQueue && (
 
-                    <div
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: 4,
-                          padding: '4px 8px',
-                          backgroundColor: '#fff7e6',
-                          borderRadius: '4px',
-                          border: '1px solid #ffd591'
-                        }}
-                    >
-                      <div
-                          style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 4,
-                            flex: 1,
-                            cursor: 'pointer'
-                          }}
-                          onClick={() => setCaseFromLearningProgressModalVisible(true)}
-                      >
-                        <LoadingOutlined style={{ color: '#fa8c16' }} />
-                        <span style={{ fontSize: '12px', color: '#fa8c16' }}>
+								<div
+									style={{
+										display: 'flex',
+										alignItems: 'center',
+										gap: 4,
+										padding: '4px 8px',
+										backgroundColor: '#fff7e6',
+										borderRadius: '4px',
+										border: '1px solid #ffd591',
+									}}
+								>
+									<div
+										style={{
+											display: 'flex',
+											alignItems: 'center',
+											gap: 4,
+											flex: 1,
+											cursor: 'pointer',
+										}}
+										onClick={() => setCaseFromLearningProgressModalVisible(true)}
+									>
+										<LoadingOutlined style={{ color: '#fa8c16' }} />
+										<span style={{ fontSize: '12px', color: '#fa8c16' }}>
                       Đang tạo Case: {currentCaseFromLearningBlockProcessing?.title}
-                          {caseFromLearningBlockQueue.length > 0 && (
-                              <span style={{ color: '#666', marginLeft: '4px' }}>
+											{caseFromLearningBlockQueue.length > 0 && (
+												<span style={{ color: '#666', marginLeft: '4px' }}>
                           (+{caseFromLearningBlockQueue.length} chờ)
                         </span>
-                          )}
+											)}
                     </span>
-                      </div>
-                    </div>
+									</div>
+								</div>
 
-                )}
+							)}
 
-                {caseFromLearningResults.length > 0 && !processingCaseFromLearningBlockQueue && (
+							{caseFromLearningResults.length > 0 && !processingCaseFromLearningBlockQueue && (
 
-                    <div
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: 4,
-                          padding: '4px 8px',
-                          backgroundColor: '#f6ffed',
-                          borderRadius: '4px',
-                          border: '1px solid #b7eb8f',
-                          cursor: 'pointer'
-                        }}
-                        onClick={() => setCaseFromLearningProgressModalVisible(true)}
-                    >
-                      <CheckCircleOutlined style={{ color: '#52c41a' }} />
-                      <span style={{ fontSize: '12px', color: '#52c41a' }}>
+								<div
+									style={{
+										display: 'flex',
+										alignItems: 'center',
+										gap: 4,
+										padding: '4px 8px',
+										backgroundColor: '#f6ffed',
+										borderRadius: '4px',
+										border: '1px solid #b7eb8f',
+										cursor: 'pointer',
+									}}
+									onClick={() => setCaseFromLearningProgressModalVisible(true)}
+								>
+									<CheckCircleOutlined style={{ color: '#52c41a' }} />
+									<span style={{ fontSize: '12px', color: '#52c41a' }}>
                     Hoàn thành Case: {caseFromLearningStats.success}/{caseFromLearningStats.total}
-                        {caseFromLearningStats.failed > 0 && (
-                            <span style={{ color: '#ff4d4f', marginLeft: '8px' }}>
+										{caseFromLearningStats.failed > 0 && (
+											<span style={{ color: '#ff4d4f', marginLeft: '8px' }}>
                         ({caseFromLearningStats.failed} thất bại)
                       </span>
-                        )}
+										)}
                   </span>
-                    </div>
+								</div>
 
-                )}
+							)}
 
-                {companySummaryQueue.length > 0 && (
+							{companySummaryQueue.length > 0 && (
 
-                    <div style={{
+								<div style={{
 
-                      display: 'flex',
+									display: 'flex',
 
-                      alignItems: 'center',
+									alignItems: 'center',
 
-                      gap: 4,
+									gap: 4,
 
-                      padding: '4px 8px',
+									padding: '4px 8px',
 
-                      backgroundColor: '#f6ffed',
+									backgroundColor: '#f6ffed',
 
-                      borderRadius: '4px',
+									borderRadius: '4px',
 
-                      border: '1px solid #b7eb8f'
+									border: '1px solid #b7eb8f',
 
-                    }}>
+								}}>
 
-                      <LoadingOutlined style={{ color: '#52c41a' }} />
+									<LoadingOutlined style={{ color: '#52c41a' }} />
 
-                      <span style={{ fontSize: '12px', color: '#52c41a' }}>
+									<span style={{ fontSize: '12px', color: '#52c41a' }}>
 
                     Đang tạo tổng quan: {currentCompanySummaryProcessing?.searchTerm} ({companySummaryQueue.length} bản ghi)
 
                   </span>
 
-                    </div>
+								</div>
 
-                )}
+							)}
 
-              </div>
+						</div>
 
-            </div>
+					</div>
 
-            {/* Thanh menu các nút chức năng */}
+					{/* Thanh menu các nút chức năng */}
 
-            <Space style={{ flexWrap: 'wrap' }}>
+					<Space style={{ flexWrap: 'wrap' }}>
 
-              <Button
+						<Button
 
-                  type="primary"
+							type='primary'
 
-                  icon={<PlusOutlined />}
+							icon={<PlusOutlined />}
 
-                  onClick={handleCreate}
+							onClick={handleCreate}
 
-              >
+						>
 
-              </Button>
+						</Button>
 
 
+						{(currentTab === 'news' || currentTab === 'report' || currentTab === 'reportDN') &&
 
-              {(currentTab === 'news' || currentTab === 'report' || currentTab === 'reportDN') &&
+							<Button
 
-                  <Button
+								icon={<ThunderboltOutlined />}
 
-                      icon={<ThunderboltOutlined />}
+								onClick={handleEmbedingAll}
 
-                      onClick={handleEmbedingAll}
+								loading={embeddingAllLoading}
 
-                      loading={embeddingAllLoading}
+								disabled={embeddingAllLoading}
 
-                      disabled={embeddingAllLoading}
+							>
 
-                  >
+								{embeddingAllLoading
 
-                    {embeddingAllLoading
+									? `Đang Embedding... (${embeddingProgress.current}/${embeddingProgress.total})`
 
-                        ? `Đang Embedding... (${embeddingProgress.current}/${embeddingProgress.total})`
+									: selectedRowKeys.length > 0
 
-                        : selectedRowKeys.length > 0
+										? `Embedding selected (${selectedRowKeys.length})`
 
-                            ? `Embedding selected (${selectedRowKeys.length})`
+										: 'Embedding all'
 
-                            : 'Embedding all'
+								}
 
-                    }
+							</Button>
 
-                  </Button>
+						}
 
-              }
+						{currentTab !== 'report' && currentTab !== 'reportDN' && (
 
-              {currentTab !== 'report' && currentTab !== 'reportDN' && (
+							<>
 
-                  <>
+								<Button
 
-                    <Button
+									icon={<FileExcelOutlined />}
 
-                        icon={<FileExcelOutlined />}
+									onClick={handleBulkImport}
 
-                        onClick={handleBulkImport}
+									style={{ color: '#52c41a', borderColor: '#52c41a' }}
 
-                        style={{ color: '#52c41a', borderColor: '#52c41a' }}
+								>
 
-                    >
+									Import Excel
 
-                      Import Excel
+								</Button>
 
-                    </Button>
+								<Button
 
-                    <Button
+									icon={<FileExcelOutlined />}
 
-                        icon={<FileExcelOutlined />}
+									onClick={handleJsonImport}
 
-                        onClick={handleJsonImport}
+									style={{ color: '#722ed1', borderColor: '#722ed1' }}
 
-                        style={{ color: '#722ed1', borderColor: '#722ed1' }}
+								>
 
-                    >
+									Import JSON
 
-                      Import JSON
+								</Button>
 
-                    </Button>
+							</>
 
-                  </>
+						)}
 
-              )}
+						<Button
 
-              <Button
+							icon={<SettingOutlined />}
 
-                  icon={<SettingOutlined />}
+							onClick={handleReportOverviewSettings}
 
-                  onClick={handleReportOverviewSettings}
+							style={{ color: '#1890ff', borderColor: '#1890ff' }}
 
-                  style={{ color: '#1890ff', borderColor: '#1890ff' }}
+						>
 
-              >
+							Cài đặt tổng quan
 
-                Cài đặt tổng quan
+						</Button>
 
-              </Button>
+						{(currentTab === 'news' || currentTab === 'caseTraining') && (
 
-              {(currentTab === 'news' || currentTab === 'caseTraining') && (
+							<>
 
-                  <>
+								{/*<Button*/}
 
-                    {/*<Button*/}
+								{/*  type="primary"*/}
 
-                    {/*  type="primary"*/}
+								{/*  onClick={handleGetFeed}*/}
 
-                    {/*  onClick={handleGetFeed}*/}
+								{/*  loading={loadingGetFeeds}*/}
 
-                    {/*  loading={loadingGetFeeds}*/}
+								{/*>*/}
 
-                    {/*>*/}
+								{/*  Lấy tin mới*/}
 
-                    {/*  Lấy tin mới*/}
+								{/*</Button>*/}
 
-                    {/*</Button>*/}
+								<Button
 
-                    <Button
+									type='primary'
 
-                        type="primary"
+									onClick={handleClassifyNews}
 
-                        onClick={handleClassifyNews}
+									loading={loadingClassify}
 
-                        loading={loadingClassify}
+								>
 
-                    >
+									Phân loại AI
 
-                      Phân loại AI
+								</Button>
 
-                    </Button>
 
+							</>
 
+						)}
 
-                  </>
+						{currentTab === 'reportDN' && (
 
-              )}
+							<Button
 
-              {currentTab === 'reportDN' && (
+								type='primary'
 
-                  <Button
+								icon={<PlusOutlined />}
 
-                      type="primary"
+								onClick={handleCreateCompanySummary}
 
-                      icon={<PlusOutlined />}
+							>
 
-                      onClick={handleCreateCompanySummary}
+								Tạo mới
 
-                  >
+							</Button>
 
-                    Tạo mới
+						)}
 
-                  </Button>
+						{selectedRowKeys.length > 0 && (
 
-              )}
+							<>
 
-              {selectedRowKeys.length > 0 && (
+								<Button
 
-                  <>
+									danger
 
-                    <Button
+									icon={<DeleteOutlined />}
 
-                        danger
+									onClick={handleBulkDelete}
 
-                        icon={<DeleteOutlined />}
+								>
 
-                        onClick={handleBulkDelete}
+									Xóa ({selectedRowKeys.length})
 
-                    >
+								</Button>
 
-                      Xóa ({selectedRowKeys.length})
+								<Button
 
-                    </Button>
+									type='primary'
 
-                    <Button
+									icon={<CheckCircleOutlined />}
 
-                        type="primary"
+									onClick={() => handleBulkToggleHasTitle(true)}
 
-                        icon={<CheckCircleOutlined />}
+									disabled={loading}
 
-                        onClick={() => handleBulkToggleHasTitle(true)}
+								>
 
-                        disabled={loading}
+									Bật mục lục ({selectedRowKeys.length})
 
-                    >
+								</Button>
 
-                      Bật mục lục ({selectedRowKeys.length})
+								<Button
 
-                    </Button>
+									onClick={() => handleBulkToggleHasTitle(false)}
 
-                    <Button
+									disabled={loading}
 
-                        onClick={() => handleBulkToggleHasTitle(false)}
+								>
 
-                        disabled={loading}
+									Tắt mục lục ({selectedRowKeys.length})
 
-                    >
+								</Button>
 
-                      Tắt mục lục ({selectedRowKeys.length})
+								<Button
+									type='primary'
+									icon={<CheckCircleOutlined />}
+									onClick={() => handleBulkToggleIsPublic(true)}
+									disabled={loading}
+								>
+									Bật Public ({selectedRowKeys.length})
+								</Button>
 
-                    </Button>
+								<Button
+									onClick={() => handleBulkToggleIsPublic(false)}
+									disabled={loading}
+								>
+									Tắt Public ({selectedRowKeys.length})
+								</Button>
 
-                    <Button
-                        type="primary"
-                        icon={<CheckCircleOutlined />}
-                        onClick={() => handleBulkToggleIsPublic(true)}
-                        disabled={loading}
-                    >
-                      Bật Public ({selectedRowKeys.length})
-                    </Button>
+								<Button
+									type='primary'
+									onClick={() => handleBulkToggleAllowRetake(true)}
+									disabled={loading}
+								>
+									Bật làm lại Quiz ({selectedRowKeys.length})
+								</Button>
 
-                    <Button
-                        onClick={() => handleBulkToggleIsPublic(false)}
-                        disabled={loading}
-                    >
-                      Tắt Public ({selectedRowKeys.length})
-                    </Button>
+								<Button
+									onClick={() => handleBulkToggleAllowRetake(false)}
+									disabled={loading}
+								>
+									Tắt làm lại Quiz ({selectedRowKeys.length})
+								</Button>
 
-                    <Button
-                        type="primary"
-                        onClick={() => handleBulkToggleAllowRetake(true)}
-                        disabled={loading}
-                    >
-                      Bật làm lại Quiz ({selectedRowKeys.length})
-                    </Button>
-
-                    <Button
-                        onClick={() => handleBulkToggleAllowRetake(false)}
-                        disabled={loading}
-                    >
-                      Tắt làm lại Quiz ({selectedRowKeys.length})
-                    </Button>
-
-                    {/* <Button
+								{/* <Button
                   icon={<TagsOutlined />}
                   onClick={() => {
                     // Nếu chỉ chọn 1 bản ghi, load allowed_user_class hiện tại
@@ -16595,555 +15952,550 @@ Chỉ trả về nội dung theo đúng định dạng trên, không thêm phầ
                   </Button>
                 </Popconfirm> */}
 
-                    {(currentTab === 'home' || currentTab === 'news' || currentTab === 'caseTraining' || currentTab === 'longForm') && (
+								{(currentTab === 'home' || currentTab === 'news' || currentTab === 'caseTraining' || currentTab === 'longForm') && (
 
-                        <>
-                          <Popconfirm
-                              title="Xác nhận xóa avatar"
-                              description={`Bạn có chắc chắn muốn xóa avatar cho ${selectedRowKeys.length} bản ghi đã chọn?`}
-                              onConfirm={handleBulkDeleteAvatar}
-                              okText="Xác nhận"
-                              cancelText="Hủy"
-                              okButtonProps={{ danger: true }}
-                          >
-                            <Button
-                                danger
-                                icon={<PictureOutlined />}
-                                disabled={loading}
-                            >
-                              Xóa avatar ({selectedRowKeys.length})
-                            </Button>
-                          </Popconfirm>
+									<>
+										<Popconfirm
+											title='Xác nhận xóa avatar'
+											description={`Bạn có chắc chắn muốn xóa avatar cho ${selectedRowKeys.length} bản ghi đã chọn?`}
+											onConfirm={handleBulkDeleteAvatar}
+											okText='Xác nhận'
+											cancelText='Hủy'
+											okButtonProps={{ danger: true }}
+										>
+											<Button
+												danger
+												icon={<PictureOutlined />}
+												disabled={loading}
+											>
+												Xóa avatar ({selectedRowKeys.length})
+											</Button>
+										</Popconfirm>
 
-                          <Popconfirm
-                              title="Xác nhận xóa diagram HTML"
-                              description={`Bạn có chắc chắn muốn xóa diagram HTML cho ${selectedRowKeys.length} bản ghi đã chọn?`}
-                              onConfirm={handleBulkDeleteHtmlDiagram}
-                              okText="Xác nhận"
-                              cancelText="Hủy"
-                              okButtonProps={{ danger: true }}
-                          >
-                            <Button
-                                danger
-                                icon={<FileTextOutlined />}
-                                disabled={loading}
-                                style={{ marginRight: '8px' }}
-                            >
-                              Xóa diagram HTML ({selectedRowKeys.length})
-                            </Button>
-                          </Popconfirm>
-                          <Popconfirm
-                              title="Xác nhận xóa diagram Excalidraw"
-                              description={`Bạn có chắc chắn muốn xóa diagram Excalidraw cho ${selectedRowKeys.length} bản ghi đã chọn?`}
-                              onConfirm={handleBulkDeleteExcalidrawDiagram}
-                              okText="Xác nhận"
-                              cancelText="Hủy"
-                              okButtonProps={{ danger: true }}
-                          >
-                            <Button
-                                danger
-                                icon={<PictureOutlined />}
-                                disabled={loading}
-                            >
-                              Xóa diagram Excalidraw ({selectedRowKeys.length})
-                            </Button>
-                          </Popconfirm>
-                        </>
-                    )}
+										<Popconfirm
+											title='Xác nhận xóa diagram HTML'
+											description={`Bạn có chắc chắn muốn xóa diagram HTML cho ${selectedRowKeys.length} bản ghi đã chọn?`}
+											onConfirm={handleBulkDeleteHtmlDiagram}
+											okText='Xác nhận'
+											cancelText='Hủy'
+											okButtonProps={{ danger: true }}
+										>
+											<Button
+												danger
+												icon={<FileTextOutlined />}
+												disabled={loading}
+												style={{ marginRight: '8px' }}
+											>
+												Xóa diagram HTML ({selectedRowKeys.length})
+											</Button>
+										</Popconfirm>
+										<Popconfirm
+											title='Xác nhận xóa diagram Excalidraw'
+											description={`Bạn có chắc chắn muốn xóa diagram Excalidraw cho ${selectedRowKeys.length} bản ghi đã chọn?`}
+											onConfirm={handleBulkDeleteExcalidrawDiagram}
+											okText='Xác nhận'
+											cancelText='Hủy'
+											okButtonProps={{ danger: true }}
+										>
+											<Button
+												danger
+												icon={<PictureOutlined />}
+												disabled={loading}
+											>
+												Xóa diagram Excalidraw ({selectedRowKeys.length})
+											</Button>
+										</Popconfirm>
+									</>
+								)}
 
-                    <Popconfirm
-                        title="Xác nhận xóa audio"
-                        description={`Bạn có chắc chắn muốn xóa audio cho ${selectedRowKeys.length} bản ghi đã chọn?`}
-                        onConfirm={handleBulkDeleteAudio}
-                        okText="Xác nhận"
-                        cancelText="Hủy"
-                        okButtonProps={{ danger: true }}
-                    >
-                      <Button
-                          danger
-                          icon={<SoundOutlined />}
-                          disabled={loading}
-                      >
-                        Xóa audio ({selectedRowKeys.length})
-                      </Button>
-                    </Popconfirm>
-
-
-                    {currentTab === 'story' && (
-
-                        <Button
-
-                            type="primary"
-
-                            icon={<ThunderboltOutlined />}
-
-                            onClick={handleBulkCreateVoice}
-
-                            disabled={processingQueue}
-
-                        >
-
-                          Thêm vào hàng đợi ({selectedRowKeys.length})
-
-                        </Button>
-
-                    )}
+								<Popconfirm
+									title='Xác nhận xóa audio'
+									description={`Bạn có chắc chắn muốn xóa audio cho ${selectedRowKeys.length} bản ghi đã chọn?`}
+									onConfirm={handleBulkDeleteAudio}
+									okText='Xác nhận'
+									cancelText='Hủy'
+									okButtonProps={{ danger: true }}
+								>
+									<Button
+										danger
+										icon={<SoundOutlined />}
+										disabled={loading}
+									>
+										Xóa audio ({selectedRowKeys.length})
+									</Button>
+								</Popconfirm>
 
 
+								{currentTab === 'story' && (
 
-                    <Button
-                        type="primary"
-                        icon={<ThunderboltOutlined />}
-                        onClick={handleBulkCreateVoiceFromDetail}
-                        disabled={processingQueue}
-                    >
-                      Tạo voice từ detail ({selectedRowKeys.length})
-                    </Button>
+									<Button
+
+										type='primary'
+
+										icon={<ThunderboltOutlined />}
+
+										onClick={handleBulkCreateVoice}
+
+										disabled={processingQueue}
+
+									>
+
+										Thêm vào hàng đợi ({selectedRowKeys.length})
+
+									</Button>
+
+								)}
 
 
-                    {(currentTab === 'home' || currentTab === 'news' || currentTab === 'caseTraining' || currentTab === 'longForm') && (
+								<Button
+									type='primary'
+									icon={<ThunderboltOutlined />}
+									onClick={handleBulkCreateVoiceFromDetail}
+									disabled={processingQueue}
+								>
+									Tạo voice từ detail ({selectedRowKeys.length})
+								</Button>
 
-                        <>
 
-                          <Button
-                              type="primary"
-                              icon={<ThunderboltOutlined />}
-                              onClick={handleBulkCreateSummaryDetail}
-                              disabled={processingSummaryDetailQueue}
-                              style={{ backgroundColor: '#722ed1', borderColor: '#722ed1' }}
-                          >
-                            Tạo Summary Detail ({selectedRowKeys.length})
-                          </Button>
+								{(currentTab === 'home' || currentTab === 'news' || currentTab === 'caseTraining' || currentTab === 'longForm') && (
 
-                          <Button
+									<>
 
-                              type="primary"
+										<Button
+											type='primary'
+											icon={<ThunderboltOutlined />}
+											onClick={handleBulkCreateSummaryDetail}
+											disabled={processingSummaryDetailQueue}
+											style={{ backgroundColor: '#722ed1', borderColor: '#722ed1' }}
+										>
+											Tạo Summary Detail ({selectedRowKeys.length})
+										</Button>
 
-                              icon={<PictureOutlined />}
+										<Button
 
-                              onClick={handleBulkCreateImage}
+											type='primary'
 
-                              disabled={processingImageQueue}
+											icon={<PictureOutlined />}
 
-                          >
+											onClick={handleBulkCreateImage}
 
-                            Tạo ảnh ({selectedRowKeys.length})
+											disabled={processingImageQueue}
 
-                          </Button>
+										>
 
-                          {currentTab === 'news' && (
-                              <Space>
-                                <Button
-                                    type="primary"
-                                    icon={<AppstoreOutlined />}
-                                    onClick={handleBulkCreateCaseFromLearningBlock}
-                                    disabled={processingCaseFromLearningBlockQueue}
-                                    loading={processingCaseFromLearningBlockQueue}
-                                >
-                                  Tạo Case từ Learning Block ({selectedRowKeys.length})
-                                </Button>
-                                {/* <Button
+											Tạo ảnh ({selectedRowKeys.length})
+
+										</Button>
+
+										{currentTab === 'news' && (
+											<Space>
+												<Button
+													type='primary'
+													icon={<AppstoreOutlined />}
+													onClick={handleBulkCreateCaseFromLearningBlock}
+													disabled={processingCaseFromLearningBlockQueue}
+													loading={processingCaseFromLearningBlockQueue}
+												>
+													Tạo Case từ Learning Block ({selectedRowKeys.length})
+												</Button>
+												{/* <Button
                           type="default"
                           onClick={() => setCaseFromLearningProgressModalVisible(true)}
                         >
                           Xem tiến trình Case
                         </Button> */}
-                              </Space>
-                          )}
+											</Space>
+										)}
 
-                          <Dropdown
-                              menu={{
-                                items: [
+										<Dropdown
+											menu={{
+												items: [
 
-                                  {
-                                    key: 'html',
-                                    label: '💻 Tạo HTML code',
-                                    icon: <FileTextOutlined />,
-                                    onClick: () => handleBulkCreateDiagram('html')
-                                  },
-                                  {
-                                    key: 'excalidraw-react',
-                                    label: '🎨 Tạo Excalidraw React',
-                                    icon: <PictureOutlined />,
-                                    onClick: () => handleBulkCreateDiagram('excalidraw-react')
-                                  }
-                                ]
-                              }}
-                              disabled={processingDiagramQueue}
-                              trigger={['click']}
-                          >
-                            <Button
-                                type="primary"
-                                icon={<NodeIndexOutlined />}
-                                disabled={processingDiagramQueue}
-                            >
-                              Tạo diagram ({selectedRowKeys.length}) <DownOutlined />
-                            </Button>
-                          </Dropdown>
-                          <Button
+													{
+														key: 'html',
+														label: '💻 Tạo HTML code',
+														icon: <FileTextOutlined />,
+														onClick: () => handleBulkCreateDiagram('html'),
+													},
+													{
+														key: 'excalidraw-react',
+														label: '🎨 Tạo Excalidraw React',
+														icon: <PictureOutlined />,
+														onClick: () => handleBulkCreateDiagram('excalidraw-react'),
+													},
+												],
+											}}
+											disabled={processingDiagramQueue}
+											trigger={['click']}
+										>
+											<Button
+												type='primary'
+												icon={<NodeIndexOutlined />}
+												disabled={processingDiagramQueue}
+											>
+												Tạo diagram ({selectedRowKeys.length}) <DownOutlined />
+											</Button>
+										</Dropdown>
+										<Button
 
-                              disabled={false}
+											disabled={false}
 
-                              type="primary"
+											type='primary'
 
-                              onClick={() => {
+											onClick={() => {
 
-                                setShowImproveDetail(true)
+												setShowImproveDetail(true);
 
-                              }}
+											}}
 
-                          >
+										>
 
-                            {improveDetailLoading ? <Spin size="small" className={styles.spinDotItem} /> : null}
+											{improveDetailLoading ?
+												<Spin size='small' className={styles.spinDotItem} /> : null}
 
 
+											Improve Detail ({selectedRowKeys.length})
 
-                            Improve Detail ({selectedRowKeys.length})
+										</Button>
 
-                          </Button>
+										<Button
 
-                          <Button
+											type='primary'
 
-                              type="primary"
+											disabled={false}
 
-                              disabled={false}
+											onClick={() => {
 
-                              onClick={() => {
+												if (selectedRowKeys.length === 0) {
 
-                                if (selectedRowKeys.length === 0) {
+													message.warning('Vui lòng chọn ít nhất một bản ghi!');
 
-                                  message.warning('Vui lòng chọn ít nhất một bản ghi!');
+													return;
 
-                                  return;
+												}
 
-                                }
+												setShowCreateQuiz(true);
 
-                                setShowCreateQuiz(true);
+											}}
 
-                              }}
+											// loading={createQuizzLoading}
 
-                              // loading={createQuizzLoading}
+										>
 
-                          >
+											{createQuizzLoading ?
+												<Spin size='small' className={styles.spinDotItem} /> : null}
 
-                            {createQuizzLoading ? <Spin size="small" className={styles.spinDotItem} /> : null}
+											Create Quizz ({selectedRowKeys.length})
 
-                            Create Quizz ({selectedRowKeys.length})
+										</Button>
 
-                          </Button>
+										{currentTab === 'caseTraining' && (
+											<>
+												<Button
 
-                          {currentTab === 'caseTraining' && (
-                              <>
-                                <Button
+													type='primary'
 
-                                    type="primary"
+													disabled={false}
 
-                                    disabled={false}
+													onClick={() => {
 
-                                    onClick={() => {
+														if (selectedRowKeys.length === 0) {
 
-                                      if (selectedRowKeys.length === 0) {
+															message.warning('Vui lòng chọn ít nhất một bản ghi!');
 
-                                        message.warning('Vui lòng chọn ít nhất một bản ghi!');
+															return;
 
-                                        return;
+														}
+														setShowUpdateQuiz(true);
+													}}
+												>
+													Cập nhật Quiz & Nội dung theo CID ({selectedRowKeys.length})
+												</Button>
+											</>
+										)}
+										<Button
 
-                                      }
-                                      setShowUpdateQuiz(true);
-                                    }}
-                                >
-                                  Cập nhật Quiz & Nội dung theo CID ({selectedRowKeys.length})
-                                </Button>
-                              </>
-                          )}
-                          <Button
+											type='primary'
 
-                              type="primary"
+											icon={<ThunderboltOutlined />}
 
-                              icon={<ThunderboltOutlined />}
+											onClick={handleEmbedingAll}
 
-                              onClick={handleEmbedingAll}
+											loading={embeddingAllLoading}
 
-                              loading={embeddingAllLoading}
+											disabled={embeddingAllLoading}
 
-                              disabled={embeddingAllLoading}
+										>
 
-                          >
+											{embeddingAllLoading
 
-                            {embeddingAllLoading
+												? `Đang Embedding... (${embeddingProgress.current}/${embeddingProgress.total})`
 
-                                ? `Đang Embedding... (${embeddingProgress.current}/${embeddingProgress.total})`
+												: selectedRowKeys.length > 0
 
-                                : selectedRowKeys.length > 0
+													? `Embedding selected (${selectedRowKeys.length})`
 
-                                    ? `Embedding selected (${selectedRowKeys.length})`
+													: 'Embedding all'
 
-                                    : 'Embedding all'
+											}
 
-                            }
+										</Button>
 
-                          </Button>
+									</>
 
-                        </>
+								)}
 
-                    )}
+								{/* Bulk Update Buttons for different tabs */}
 
-                    {/* Bulk Update Buttons for different tabs */}
+								{(currentTab === 'news' || currentTab === 'longForm' || currentTab === 'home' || currentTab === 'report' || currentTab === 'reportDN') && (
 
-                    {(currentTab === 'news' || currentTab === 'longForm' || currentTab === 'home' || currentTab === 'report' || currentTab === 'reportDN') && (
+									<>
 
-                        <>
+										<Button
 
-                          <Button
+											type='primary'
 
-                              type="primary"
+											disabled={false}
 
-                              disabled={false}
+											onClick={() => {
 
-                              onClick={() => {
+												if (selectedRowKeys.length === 0) {
 
-                                if (selectedRowKeys.length === 0) {
+													message.warning('Vui lòng chọn ít nhất một bản ghi!');
 
-                                  message.warning('Vui lòng chọn ít nhất một bản ghi!');
+													return;
 
-                                  return;
+												}
 
-                                }
+												handleBulkUpdate('category');
 
-                                handleBulkUpdate('category');
+											}}
 
-                              }}
+										>
 
-                          >
+											{updateCategoryLoading ?
+												<Spin size='small' className={styles.spinDotItem} /> : null}
 
-                            {updateCategoryLoading ? <Spin size="small" className={styles.spinDotItem} /> : null}
+											Update Danh mục ({selectedRowKeys.length})
 
-                            Update Danh mục ({selectedRowKeys.length})
+										</Button>
 
-                          </Button>
 
+									</>
 
+								)}
 
-                        </>
 
-                    )}
+								{/* Special buttons for caseTraining tab */}
 
+								{currentTab === 'caseTraining' && (
 
+									<>
 
-                    {/* Special buttons for caseTraining tab */}
+										<Button
 
-                    {currentTab === 'caseTraining' && (
+											type='primary'
 
-                        <>
+											disabled={false}
 
-                          <Button
+											onClick={() => {
 
-                              type="primary"
+												if (selectedRowKeys.length === 0) {
 
-                              disabled={false}
+													message.warning('Vui lòng chọn ít nhất một bản ghi!');
 
-                              onClick={() => {
+													return;
 
-                                if (selectedRowKeys.length === 0) {
+												}
 
-                                  message.warning('Vui lòng chọn ít nhất một bản ghi!');
+												handleBulkUpdate('tag1');
 
-                                  return;
+											}}
 
-                                }
+										>
 
-                                handleBulkUpdate('tag1');
+											Update Category ({selectedRowKeys.length})
 
-                              }}
+										</Button>
 
-                          >
+										<Button
 
-                            Update Category ({selectedRowKeys.length})
+											type='primary'
 
-                          </Button>
+											disabled={false}
 
-                          <Button
+											onClick={() => {
 
-                              type="primary"
+												if (selectedRowKeys.length === 0) {
 
-                              disabled={false}
+													message.warning('Vui lòng chọn ít nhất một bản ghi!');
 
-                              onClick={() => {
+													return;
 
-                                if (selectedRowKeys.length === 0) {
+												}
 
-                                  message.warning('Vui lòng chọn ít nhất một bản ghi!');
+												handleBulkUpdate('tag2');
 
-                                  return;
+											}}
 
-                                }
+										>
 
-                                handleBulkUpdate('tag2');
+											Update Level ({selectedRowKeys.length})
 
-                              }}
+										</Button>
 
-                          >
+										<Button
 
-                            Update Level ({selectedRowKeys.length})
+											type='primary'
 
-                          </Button>
+											disabled={false}
 
-                          <Button
+											onClick={() => {
 
-                              type="primary"
+												if (selectedRowKeys.length === 0) {
 
-                              disabled={false}
+													message.warning('Vui lòng chọn ít nhất một bản ghi!');
 
-                              onClick={() => {
+													return;
 
-                                if (selectedRowKeys.length === 0) {
+												}
 
-                                  message.warning('Vui lòng chọn ít nhất một bản ghi!');
+												handleBulkUpdate('tag3');
 
-                                  return;
+											}}
 
-                                }
+										>
 
-                                handleBulkUpdate('tag3');
+											Update Series ({selectedRowKeys.length})
 
-                              }}
+										</Button>
 
-                          >
 
-                            Update Series ({selectedRowKeys.length})
+									</>
 
-                          </Button>
+								)}
 
+							</>
 
+						)}
 
-                        </>
+						{
+							selectedRowKeys.length > 0 && (
+								<Button
 
-                    )}
+									type='primary'
 
-                  </>
+									disabled={false}
 
-              )}
+									onClick={() => {
 
-              {
-                  selectedRowKeys.length > 0 && (
-                      <Button
+										if (selectedRowKeys.length === 0) {
 
-                          type="primary"
+											message.warning('Vui lòng chọn ít nhất một bản ghi!');
 
-                          disabled={false}
+											return;
 
-                          onClick={() => {
+										}
 
-                            if (selectedRowKeys.length === 0) {
+										handleBulkUpdate('tag4');
 
-                              message.warning('Vui lòng chọn ít nhất một bản ghi!');
+									}}
 
-                              return;
+								>
 
-                            }
+									Update Program ({selectedRowKeys.length})
 
-                            handleBulkUpdate('tag4');
+								</Button>
 
-                          }}
+							)
+						}
 
-                      >
+					</Space>
 
-                        Update Program ({selectedRowKeys.length})
+					{/* ... phần còn lại ... */}
 
-                      </Button>
+				</div>
 
-                  )
-              }
 
-            </Space>
+				<div className={styles.tabsContainer}>
 
-            {/* ... phần còn lại ... */}
+					{tabOptions.map(tab => (
 
-          </div>
+						<button
 
+							key={tab.key}
 
+							className={`${styles.tabButton} ${currentTab === tab.key ? styles.active : ''}`}
 
-          <div className={styles.tabsContainer}>
+							onClick={() => handleTabChange(tab.key)}
 
-            {tabOptions.map(tab => (
+						>
 
-                <button
+							{tab.label}
 
-                    key={tab.key}
+							<Badge count={tab.count} size='small' className={styles.tabBadge} />
 
-                    className={`${styles.tabButton} ${currentTab === tab.key ? styles.active : ''}`}
+						</button>
 
-                    onClick={() => handleTabChange(tab.key)}
+					))}
 
-                >
+				</div>
 
-                  {tab.label}
 
-                  <Badge count={tab.count} size="small" className={styles.tabBadge} />
+				{/* Filter section for home, news, caseTraining, and longForm tabs */}
 
-                </button>
+				{(currentTab === 'home' || currentTab === 'news' || currentTab === 'caseTraining' || currentTab === 'longForm') && (
 
-            ))}
+					<div style={{
 
-          </div>
+						marginBottom: '16px',
 
+						padding: '16px',
 
+						backgroundColor: '#fafafa',
 
-          {/* Filter section for home, news, caseTraining, and longForm tabs */}
+						borderRadius: '8px',
 
-          {(currentTab === 'home' || currentTab === 'news' || currentTab === 'caseTraining' || currentTab === 'longForm') && (
+						border: '1px solid #e8e8e8',
 
-              <div style={{
+					}}>
 
-                marginBottom: '16px',
+						<div style={{
 
-                padding: '16px',
+							display: 'flex',
 
-                backgroundColor: '#fafafa',
+							alignItems: 'center',
 
-                borderRadius: '8px',
+							gap: '16px',
 
-                border: '1px solid #e8e8e8'
+							flexWrap: 'wrap',
 
-              }}>
+						}}>
 
-                <div style={{
+							<div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
 
-                  display: 'flex',
+								<span style={{ fontWeight: 'bold', fontSize: '14px' }}>Lọc theo:</span>
 
-                  alignItems: 'center',
+							</div>
 
-                  gap: '16px',
 
-                  flexWrap: 'wrap'
+							{/* Filter Count Display */}
 
-                }}>
+							<div style={{
 
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+								display: 'flex',
 
-                    <span style={{ fontWeight: 'bold', fontSize: '14px' }}>Lọc theo:</span>
+								alignItems: 'center',
 
-                  </div>
+								gap: '8px',
 
+								marginLeft: 'auto',
 
+								fontSize: '12px',
 
-                  {/* Filter Count Display */}
+								color: '#666',
 
-                  <div style={{
-
-                    display: 'flex',
-
-                    alignItems: 'center',
-
-                    gap: '8px',
-
-                    marginLeft: 'auto',
-
-                    fontSize: '12px',
-
-                    color: '#666'
-
-                  }}>
+							}}>
 
                 <span>
 
@@ -17151,2017 +16503,2017 @@ Chỉ trả về nội dung theo đúng định dạng trên, không thêm phầ
 
                 </span>
 
-                  </div>
+							</div>
 
 
+							{/* Category Filter */}
 
-                  {/* Category Filter */}
+							<div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
 
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+								{
 
-                    {
+									currentTab !== 'caseTraining' && <>
 
-                        currentTab !== 'caseTraining' && <>
+										<span style={{ fontSize: '14px' }}>Danh mục:</span>
 
-                          <span style={{ fontSize: '14px' }}>Danh mục:</span>
+										<Select
 
-                          <Select
+											value={categoryFilter}
 
-                              value={categoryFilter}
+											onChange={(value) => handleCategoryFilterChange(value)}
 
-                              onChange={(value) => handleCategoryFilterChange(value)}
+											style={{ width: 200 }}
 
-                              style={{ width: 200 }}
+											placeholder='Chọn danh mục'
 
-                              placeholder="Chọn danh mục"
+										>
 
-                          >
 
+											<Option value=''>Trống</Option>
 
-                            <Option value="">Trống</Option>
+											{categoriesOptions.map(option => (
 
-                            {categoriesOptions.map(option => (
+												<Option key={option.key} value={option.key}>
 
-                                <Option key={option.key} value={option.key}>
+													{option.label}
 
-                                  {option.label}
+												</Option>
 
-                                </Option>
+											))}
 
-                            ))}
 
+										</Select>
 
+									</>
 
+								}
 
 
-                          </Select>
+							</div>
 
-                        </>
+							{/* Program Filter */}
+							<div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+								<span style={{ fontSize: '14px' }}>Program:</span>
+								<Select
+									value={programFilter}
+									onChange={handleProgramFilterChange}
+									style={{ width: 200 }}
+									placeholder='Chọn program'
+									showSearch
+									filterOption={(input, option) =>
+										(option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+									}
+								>
+									<Option value='all'>Tất cả</Option>
+									<Option value=''>Trống</Option>
+									{programOptions.map(option => (
+										<Option key={option.value} value={option.value}>
+											{option.label}
+										</Option>
+									))}
+								</Select>
+							</div>
 
-                    }
 
+							{/* Image Filter */}
 
+							<div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
 
-                  </div>
+								<span style={{ fontSize: '14px' }}>Ảnh:</span>
 
-                  {/* Program Filter */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span style={{ fontSize: '14px' }}>Program:</span>
-                    <Select
-                        value={programFilter}
-                        onChange={handleProgramFilterChange}
-                        style={{ width: 200 }}
-                        placeholder="Chọn program"
-                        showSearch
-                        filterOption={(input, option) =>
-                            (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
-                        }
-                    >
-                      <Option value="all">Tất cả</Option>
-                      <Option value="">Trống</Option>
-                      {programOptions.map(option => (
-                          <Option key={option.value} value={option.value}>
-                            {option.label}
-                          </Option>
-                      ))}
-                    </Select>
-                  </div>
+								<Select
 
+									value={imageFilter}
 
+									onChange={handleImageFilterChange}
 
-                  {/* Image Filter */}
+									style={{ width: 120 }}
 
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+									placeholder='Chọn trạng thái ảnh'
 
-                    <span style={{ fontSize: '14px' }}>Ảnh:</span>
+								>
 
-                    <Select
+									<Option value='all'>Tất cả</Option>
 
-                        value={imageFilter}
+									<Option value='has'>Có ảnh</Option>
 
-                        onChange={handleImageFilterChange}
+									<Option value='no'>Không có ảnh</Option>
 
-                        style={{ width: 120 }}
+								</Select>
 
-                        placeholder="Chọn trạng thái ảnh"
+							</div>
 
-                    >
+							{/* Voice Filter */}
+							<div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+								<span style={{ fontSize: '14px' }}>Voice:</span>
+								<Select
+									value={voiceFilter}
+									onChange={handleVoiceFilterChange}
+									style={{
+										width: 150,
+									}}
+									className={styles.voiceFilter}
+									placeholder='Chọn trạng thái voice'
+								>
+									<Option value='all'>Tất cả</Option>
+									<Option value='hasVoice'>Có voice</Option>
+									<Option value='noVoice'>Không có voice</Option>
+								</Select>
+							</div>
 
-                      <Option value="all">Tất cả</Option>
+							{/* Diagram Filter */}
+							<div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+								<span style={{ fontSize: '14px' }}>Diagram:</span>
+								<Select
+									value={diagramFilter}
+									onChange={handleDiagramFilterChange}
+									placeholder='Chọn loại diagram'
+									style={{ width: 180 }}
+								>
+									<Option value='all'>Tất cả</Option>
+									<Option value='not_created'>Chưa tạo</Option>
+									<Option value='html'>Đã tạo bằng HTML</Option>
+									<Option value='excalidraw'>Đã tạo bằng Excalidraw</Option>
+								</Select>
+							</div>
 
-                      <Option value="has">Có ảnh</Option>
 
-                      <Option value="no">Không có ảnh</Option>
+							{/* Quiz Filter */}
 
-                    </Select>
+							<div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
 
-                  </div>
+								<span style={{ fontSize: '14px' }}>Quiz:</span>
 
-                  {/* Voice Filter */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span style={{ fontSize: '14px' }}>Voice:</span>
-                    <Select
-                        value={voiceFilter}
-                        onChange={handleVoiceFilterChange}
-                        style={{
-                          width: 150,
-                        }}
-                        className={styles.voiceFilter}
-                        placeholder="Chọn trạng thái voice"
-                    >
-                      <Option value="all">Tất cả</Option>
-                      <Option value="hasVoice">Có voice</Option>
-                      <Option value="noVoice">Không có voice</Option>
-                    </Select>
-                  </div>
+								<Select
 
-                  {/* Diagram Filter */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span style={{ fontSize: '14px' }}>Diagram:</span>
-                    <Select
-                        value={diagramFilter}
-                        onChange={handleDiagramFilterChange}
-                        placeholder="Chọn loại diagram"
-                        style={{ width: 180 }}
-                    >
-                      <Option value="all">Tất cả</Option>
-                      <Option value="not_created">Chưa tạo</Option>
-                      <Option value="html">Đã tạo bằng HTML</Option>
-                      <Option value="excalidraw">Đã tạo bằng Excalidraw</Option>
-                    </Select>
-                  </div>
+									value={quizFilter}
 
+									onChange={handleQuizFilterChange}
 
-                  {/* Quiz Filter */}
+									style={{ width: 120 }}
 
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+									placeholder='Chọn trạng thái quiz'
 
-                    <span style={{ fontSize: '14px' }}>Quiz:</span>
+								>
 
-                    <Select
+									<Option value='all'>Tất cả</Option>
 
-                        value={quizFilter}
+									<Option value='has'>Có quiz</Option>
 
-                        onChange={handleQuizFilterChange}
+									<Option value='no'>Không có quiz</Option>
 
-                        style={{ width: 120 }}
+								</Select>
 
-                        placeholder="Chọn trạng thái quiz"
+							</div>
 
-                    >
 
-                      <Option value="all">Tất cả</Option>
+							{/* Tag1 Filter - Only for caseTraining */}
 
-                      <Option value="has">Có quiz</Option>
+							{currentTab === 'caseTraining' && (
 
-                      <Option value="no">Không có quiz</Option>
+								<div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
 
-                    </Select>
+									<span style={{ fontSize: '14px' }}>Categories:</span>
 
-                  </div>
+									<Select
 
+										value={tag1Filter}
 
+										onChange={handleTag1FilterChange}
 
-                  {/* Tag1 Filter - Only for caseTraining */}
+										style={{ width: 150 }}
 
-                  {currentTab === 'caseTraining' && (
+										placeholder='Chọn category'
 
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+									>
 
-                        <span style={{ fontSize: '14px' }}>Categories:</span>
+										<Option value='all'>Tất cả</Option>
 
-                        <Select
+										{tag1Options.map(option => (
 
-                            value={tag1Filter}
+											<Option key={option.value} value={option.value}>
 
-                            onChange={handleTag1FilterChange}
+												{option.label}
 
-                            style={{ width: 150 }}
+											</Option>
 
-                            placeholder="Chọn category"
+										))}
 
-                        >
+									</Select>
 
-                          <Option value="all">Tất cả</Option>
+								</div>
 
-                          {tag1Options.map(option => (
+							)}
 
-                              <Option key={option.value} value={option.value}>
 
-                                {option.label}
+							{/* Tag2 Filter - Only for caseTraining */}
 
-                              </Option>
+							{currentTab === 'caseTraining' && (
 
-                          ))}
+								<div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
 
-                        </Select>
+									<span style={{ fontSize: '14px' }}>Levels:</span>
 
-                      </div>
+									<Select
 
-                  )}
+										value={tag2Filter}
 
+										onChange={handleTag2FilterChange}
 
+										style={{ width: 150 }}
 
-                  {/* Tag2 Filter - Only for caseTraining */}
+										placeholder='Chọn level'
 
-                  {currentTab === 'caseTraining' && (
+									>
 
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+										<Option value='all'>Tất cả</Option>
 
-                        <span style={{ fontSize: '14px' }}>Levels:</span>
+										{tag2Options.map(option => (
 
-                        <Select
+											<Option key={option.value} value={option.value}>
 
-                            value={tag2Filter}
+												{option.label}
 
-                            onChange={handleTag2FilterChange}
+											</Option>
 
-                            style={{ width: 150 }}
+										))}
 
-                            placeholder="Chọn level"
+									</Select>
 
-                        >
+								</div>
 
-                          <Option value="all">Tất cả</Option>
+							)}
 
-                          {tag2Options.map(option => (
 
-                              <Option key={option.value} value={option.value}>
+							{/* Tag3 Filter - Only for caseTraining */}
 
-                                {option.label}
+							{currentTab === 'caseTraining' && (
 
-                              </Option>
+								<div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
 
-                          ))}
+									<span style={{ fontSize: '14px' }}>Series:</span>
 
-                        </Select>
+									<Select
 
-                      </div>
+										value={tag3Filter}
 
-                  )}
+										onChange={handleTag3FilterChange}
 
+										style={{ width: 150 }}
 
+										placeholder='Chọn series'
 
-                  {/* Tag3 Filter - Only for caseTraining */}
+									>
 
-                  {currentTab === 'caseTraining' && (
+										<Option value='all'>Tất cả</Option>
 
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+										{tag3Options.map(option => (
 
-                        <span style={{ fontSize: '14px' }}>Series:</span>
+											<Option key={option.value} value={option.value}>
 
-                        <Select
+												{option.label}
 
-                            value={tag3Filter}
+											</Option>
 
-                            onChange={handleTag3FilterChange}
+										))}
 
-                            style={{ width: 150 }}
+									</Select>
 
-                            placeholder="Chọn series"
+								</div>
 
-                        >
+							)}
 
-                          <Option value="all">Tất cả</Option>
 
-                          {tag3Options.map(option => (
+							{/* Tag4 Filter (Program) - For all tabs */}
 
-                              <Option key={option.value} value={option.value}>
+							<div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
 
-                                {option.label}
+								<span style={{ fontSize: '14px' }}>Program:</span>
 
-                              </Option>
+								<Select
 
-                          ))}
+									mode='multiple'
 
-                        </Select>
+									value={tag4Filter}
 
-                      </div>
+									onChange={handleTag4FilterChange}
 
-                  )}
+									style={{ width: 300 }}
 
+									placeholder='Chọn program'
 
+									maxTagCount='responsive'
 
-                  {/* Tag4 Filter (Program) - For all tabs */}
+									showSearch
 
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+									filterOption={(input, option) =>
 
-                    <span style={{ fontSize: '14px' }}>Program:</span>
+										(option?.label ?? '').toLowerCase().includes(input.toLowerCase())
 
-                    <Select
+									}
 
-                        mode="multiple"
+								>
 
-                        value={tag4Filter}
+									{tag4Options.map(option => (
 
-                        onChange={handleTag4FilterChange}
+										<Option key={option.value} value={option.value} label={option.label}>
 
-                        style={{ width: 300 }}
+											{option.label}
 
-                        placeholder="Chọn program"
+										</Option>
 
-                        maxTagCount="responsive"
+									))}
 
-                        showSearch
+								</Select>
 
-                        filterOption={(input, option) =>
+							</div>
 
-                            (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
 
-                        }
+							{/* Chapter Filter - For all tabs */}
 
-                    >
+							<div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
 
-                      {tag4Options.map(option => (
+								<span style={{ fontSize: '14px' }}>Số program:</span>
 
-                          <Option key={option.value} value={option.value} label={option.label}>
+								<Select
 
-                            {option.label}
+									value={chapterFilter}
 
-                          </Option>
+									onChange={handleChapterFilterChange}
 
-                      ))}
+									style={{ width: 150 }}
 
-                    </Select>
+									placeholder='Chọn số program'
 
-                  </div>
+								>
 
+									<Option value='all'>Tất cả</Option>
 
+									<Option value='has'>Có program</Option>
 
-                  {/* Chapter Filter - For all tabs */}
+									<Option value='no'>Không có program</Option>
 
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+									<Option value='1'>1 program</Option>
 
-                    <span style={{ fontSize: '14px' }}>Số program:</span>
+									<Option value='2'>2 programs</Option>
 
-                    <Select
+									<Option value='3'>3 programs</Option>
 
-                        value={chapterFilter}
+									<Option value='4'>4 programs</Option>
 
-                        onChange={handleChapterFilterChange}
+									<Option value='5'>5 programs</Option>
 
-                        style={{ width: 150 }}
+									<Option value='6'>6 programs</Option>
 
-                        placeholder="Chọn số program"
+									<Option value='7'>7 programs</Option>
+									<Option value='8'>8 programs</Option>
+									<Option value='9'>9 programs</Option>
+									<Option value='10+'>10+ programs</Option>
 
-                    >
+								</Select>
 
-                      <Option value="all">Tất cả</Option>
+							</div>
 
-                      <Option value="has">Có program</Option>
 
-                      <Option value="no">Không có program</Option>
+							{/* Reset Filters Button */}
 
-                      <Option value="1">1 program</Option>
+							<Button
 
-                      <Option value="2">2 programs</Option>
+								onClick={resetFilters}
 
-                      <Option value="3">3 programs</Option>
+								style={{ marginLeft: '8px' }}
 
-                      <Option value="4">4 programs</Option>
+								disabled={categoryFilter === 'all' && imageFilter === 'all' && diagramFilter === 'all' && quizFilter === 'all' && tag4Filter.length === 0 && chapterFilter === 'all' && programFilter === 'all' &&
+									(currentTab === 'caseTraining' ? (tag1Filter === 'all' && tag2Filter === 'all' && tag3Filter === 'all') : true) &&
 
-                      <Option value="5">5 programs</Option>
+									!searchText.trim()}
 
-                      <Option value="6">6 programs</Option>
+							>
 
-                      <Option value="7">7 programs</Option>
-                      <Option value="8">8 programs</Option>
-                      <Option value="9">9 programs</Option>
-                      <Option value="10+">10+ programs</Option>
+								Xóa bộ lọc
 
-                    </Select>
+							</Button>
 
-                  </div>
 
+							{/* Active Filters Display */}
 
+							{(categoryFilter !== 'all' || imageFilter !== 'all' || voiceFilter !== 'all' || diagramFilter !== 'all' || quizFilter !== 'all' || tag4Filter.length > 0 || chapterFilter !== 'all' ||
+								(currentTab === 'caseTraining' && (tag1Filter !== 'all' || tag2Filter !== 'all' || tag3Filter !== 'all'))) && (
 
-                  {/* Reset Filters Button */}
+								<div style={{
 
-                  <Button
+									display: 'flex',
 
-                      onClick={resetFilters}
+									alignItems: 'center',
 
-                      style={{ marginLeft: '8px' }}
+									gap: '8px',
 
-                      disabled={categoryFilter === 'all' && imageFilter === 'all' && diagramFilter === 'all' && quizFilter === 'all' && tag4Filter.length === 0 && chapterFilter === 'all' && programFilter === 'all' &&
-                          (currentTab === 'caseTraining' ? (tag1Filter === 'all' && tag2Filter === 'all' && tag3Filter === 'all') : true) &&
+									marginTop: '8px',
 
-                          !searchText.trim()}
+									flexWrap: 'wrap',
 
-                  >
+								}}>
 
-                    Xóa bộ lọc
+									<span style={{ fontSize: '12px', color: '#666' }}>Bộ lọc đang hoạt động:</span>
 
-                  </Button>
+									{categoryFilter !== 'all' && (
 
+										<Tag color='blue' closable onClose={() => handleCategoryFilterChange('all')}>
 
+											Danh mục: {categoryFilter}
 
+										</Tag>
 
+									)}
 
+									{imageFilter !== 'all' && (
 
+										<Tag color='green' closable onClose={() => handleImageFilterChange('all')}>
 
-                  {/* Active Filters Display */}
+											Ảnh: {imageFilter === 'has' ? 'Có ảnh' : 'Không có ảnh'}
 
-                  {(categoryFilter !== 'all' || imageFilter !== 'all' || voiceFilter !== 'all' || diagramFilter !== 'all' || quizFilter !== 'all' || tag4Filter.length > 0 || chapterFilter !== 'all' ||
-                      (currentTab === 'caseTraining' && (tag1Filter !== 'all' || tag2Filter !== 'all' || tag3Filter !== 'all'))) && (
+										</Tag>
 
-                      <div style={{
+									)}
 
-                        display: 'flex',
+									{voiceFilter !== 'all' && (
 
-                        alignItems: 'center',
+										<Tag color='orange' closable onClose={() => handleVoiceFilterChange('all')}>
 
-                        gap: '8px',
+											Voice: {voiceFilter === 'hasVoice' ? 'Có voice' : 'Không có voice'}
 
-                        marginTop: '8px',
+										</Tag>
 
-                        flexWrap: 'wrap'
+									)}
 
-                      }}>
+									{diagramFilter !== 'all' && (
+										<Tag color='purple' closable onClose={() => handleDiagramFilterChange('all')}>
+											Diagram: {
+											diagramFilter === 'not_created' ? 'Chưa tạo' :
+												diagramFilter === 'html' ? 'Đã tạo bằng HTML' :
+													diagramFilter === 'excalidraw' ? 'Đã tạo bằng Excalidraw' : ''
+										}
+										</Tag>
+									)}
+									{quizFilter !== 'all' && (
 
-                        <span style={{ fontSize: '12px', color: '#666' }}>Bộ lọc đang hoạt động:</span>
+										<Tag color='orange' closable onClose={() => handleQuizFilterChange('all')}>
 
-                        {categoryFilter !== 'all' && (
+											Quiz: {quizFilter === 'has' ? 'Có quiz' : 'Không có quiz'}
 
-                            <Tag color="blue" closable onClose={() => handleCategoryFilterChange('all')}>
+										</Tag>
 
-                              Danh mục: {categoryFilter}
+									)}
 
-                            </Tag>
+									{tag4Filter.length > 0 && (
 
-                        )}
+										<Tag color='magenta' closable onClose={() => handleTag4FilterChange([])}>
 
-                        {imageFilter !== 'all' && (
+											Program: {tag4Filter.length} đã chọn
 
-                            <Tag color="green" closable onClose={() => handleImageFilterChange('all')}>
+										</Tag>
 
-                              Ảnh: {imageFilter === 'has' ? 'Có ảnh' : 'Không có ảnh'}
+									)}
 
-                            </Tag>
+									{chapterFilter !== 'all' && (
 
-                        )}
+										<Tag color='geekblue' closable onClose={() => handleChapterFilterChange('all')}>
 
-                        {voiceFilter !== 'all' && (
+											Số program: {
 
-                            <Tag color="orange" closable onClose={() => handleVoiceFilterChange('all')}>
+											chapterFilter === 'has' ? 'Có program' :
 
-                              Voice: {voiceFilter === 'hasVoice' ? 'Có voice' : 'Không có voice'}
+												chapterFilter === 'no' ? 'Không có program' :
 
-                            </Tag>
+													chapterFilter === '1' ? '1 program' :
 
-                        )}
+														chapterFilter === '2' ? '2 programs' :
 
-                        {diagramFilter !== 'all' && (
-                            <Tag color="purple" closable onClose={() => handleDiagramFilterChange('all')}>
-                              Diagram: {
-                              diagramFilter === 'not_created' ? 'Chưa tạo' :
-                                  diagramFilter === 'html' ? 'Đã tạo bằng HTML' :
-                                      diagramFilter === 'excalidraw' ? 'Đã tạo bằng Excalidraw' : ''
-                            }
-                            </Tag>
-                        )}
-                        {quizFilter !== 'all' && (
+															chapterFilter === '3' ? '3 programs' :
 
-                            <Tag color="orange" closable onClose={() => handleQuizFilterChange('all')}>
+																chapterFilter === '4+' ? '4+ programs' : ''
 
-                              Quiz: {quizFilter === 'has' ? 'Có quiz' : 'Không có quiz'}
+										}
 
-                            </Tag>
+										</Tag>
 
-                        )}
+									)}
 
-                        {tag4Filter.length > 0 && (
+									{programFilter !== 'all' && (
+										<Tag color='lime' closable onClose={() => handleProgramFilterChange('all')}>
+											Program: {programFilter}
+										</Tag>
+									)}
 
-                            <Tag color="magenta" closable onClose={() => handleTag4FilterChange([])}>
+									{currentTab === 'caseTraining' && tag1Filter !== 'all' && (
 
-                              Program: {tag4Filter.length} đã chọn
+										<Tag color='purple' closable onClose={() => handleTag1FilterChange('all')}>
 
-                            </Tag>
+											Categories: {tag1Filter}
 
-                        )}
+										</Tag>
 
-                        {chapterFilter !== 'all' && (
+									)}
 
-                            <Tag color="geekblue" closable onClose={() => handleChapterFilterChange('all')}>
+									{currentTab === 'caseTraining' && tag2Filter !== 'all' && (
 
-                              Số program: {
+										<Tag color='cyan' closable onClose={() => handleTag2FilterChange('all')}>
 
-                              chapterFilter === 'has' ? 'Có program' :
+											Levels: {tag2Filter}
 
-                                  chapterFilter === 'no' ? 'Không có program' :
+										</Tag>
 
-                                      chapterFilter === '1' ? '1 program' :
+									)}
 
-                                          chapterFilter === '2' ? '2 programs' :
+									{currentTab === 'caseTraining' && tag3Filter !== 'all' && (
 
-                                              chapterFilter === '3' ? '3 programs' :
+										<Tag color='red' closable onClose={() => handleTag3FilterChange('all')}>
 
-                                                  chapterFilter === '4+' ? '4+ programs' : ''
+											Series: {tag3Filter}
 
-                            }
+										</Tag>
 
-                            </Tag>
+									)}
 
-                        )}
+								</div>
 
-                        {programFilter !== 'all' && (
-                            <Tag color="lime" closable onClose={() => handleProgramFilterChange('all')}>
-                              Program: {programFilter}
-                            </Tag>
-                        )}
+							)}
 
-                        {currentTab === 'caseTraining' && tag1Filter !== 'all' && (
+						</div>
 
-                            <Tag color="purple" closable onClose={() => handleTag1FilterChange('all')}>
+					</div>
 
-                              Categories: {tag1Filter}
+				)}
 
-                            </Tag>
 
-                        )}
+				{/* Render different content based on current tab */}
 
-                        {currentTab === 'caseTraining' && tag2Filter !== 'all' && (
+				{currentTab === 'report' ? (
 
-                            <Tag color="cyan" closable onClose={() => handleTag2FilterChange('all')}>
+					<Table
 
-                              Levels: {tag2Filter}
+						key='ai-summary-table'
 
-                            </Tag>
+						virtual
 
-                        )}
+						columns={getAISummaryColumns()}
 
-                        {currentTab === 'caseTraining' && tag3Filter !== 'all' && (
+						dataSource={aiSummaryData}
 
-                            <Tag color="red" closable onClose={() => handleTag3FilterChange('all')}>
+						rowKey='id'
 
-                              Series: {tag3Filter}
+						loading={aiSummaryLoading}
 
-                            </Tag>
+						pagination={{
 
-                        )}
+							total: aiSummaryData.length,
 
-                      </div>
+							pageSize: 500,
 
-                  )}
+							showSizeChanger: true,
 
-                </div>
+							showQuickJumper: true,
 
-              </div>
+							showTotal: (total, range) =>
 
-          )}
+								`${range[0]}-${range[1]} của ${total} mục`,
 
+						}}
 
+						scroll={{ x: 800, y: '60vh' }}
 
-          {/* Render different content based on current tab */}
+						className={styles.table}
 
-          {currentTab === 'report' ? (
+						rowSelection={{
 
-              <Table
+							type: 'checkbox',
 
-                  key="ai-summary-table"
+							columnWidth: 48, // chỉnh size của cột checkbox
 
-                  virtual
+							selectedRowKeys,
 
-                  columns={getAISummaryColumns()}
+							onChange: (newSelectedRowKeys) => {
 
-                  dataSource={aiSummaryData}
+								setSelectedRowKeys(newSelectedRowKeys);
 
-                  rowKey="id"
+							},
 
-                  loading={aiSummaryLoading}
+						}}
 
-                  pagination={{
+					/>
 
-                    total: aiSummaryData.length,
+				) : currentTab === 'reportDN' ? (
 
-                    pageSize: 500,
+					<Table
 
-                    showSizeChanger: true,
+						key='report-dn-table'
 
-                    showQuickJumper: true,
+						virtual
 
-                    showTotal: (total, range) =>
+						columns={getAISummaryColumns()}
 
-                        `${range[0]}-${range[1]} của ${total} mục`
+						dataSource={reportDNData}
 
-                  }}
+						rowKey='id'
 
-                  scroll={{ x: 800, y: '60vh' }}
+						loading={reportDNLoading}
 
-                  className={styles.table}
+						pagination={{
 
-                  rowSelection={{
+							total: reportDNData.length,
 
-                    type: 'checkbox',
+							pageSize: 500,
 
-                    columnWidth: 48, // chỉnh size của cột checkbox
+							showSizeChanger: true,
 
-                    selectedRowKeys,
+							showQuickJumper: true,
 
-                    onChange: (newSelectedRowKeys) => {
+							showTotal: (total, range) =>
 
-                      setSelectedRowKeys(newSelectedRowKeys);
+								`${range[0]}-${range[1]} của ${total} mục`,
 
-                    },
+						}}
 
-                  }}
+						scroll={{ x: 800, y: '60vh' }}
 
-              />
+						className={styles.table}
 
-          ) : currentTab === 'reportDN' ? (
+						rowSelection={{
 
-              <Table
+							type: 'checkbox',
 
-                  key="report-dn-table"
+							columnWidth: 48, // chỉnh size của cột checkbox
 
-                  virtual
+							selectedRowKeys,
 
-                  columns={getAISummaryColumns()}
+							onChange: (newSelectedRowKeys) => {
 
-                  dataSource={reportDNData}
+								setSelectedRowKeys(newSelectedRowKeys);
 
-                  rowKey="id"
+							},
 
-                  loading={reportDNLoading}
+						}}
 
-                  pagination={{
+					/>
 
-                    total: reportDNData.length,
+				) : (
 
-                    pageSize: 500,
+					<Table
 
-                    showSizeChanger: true,
+						key={tableKey}
 
-                    showQuickJumper: true,
+						virtual
 
-                    showTotal: (total, range) =>
+						columns={getColumns()}
 
-                        `${range[0]}-${range[1]} của ${total} mục`
+						dataSource={data}
 
-                  }}
+						rowKey='id'
 
-                  scroll={{ x: 800, y: '60vh' }}
+						loading={loading}
 
-                  className={styles.table}
+						pagination={{
 
-                  rowSelection={{
+							total: data.length,
 
-                    type: 'checkbox',
+							pageSize: pageSize,
 
-                    columnWidth: 48, // chỉnh size của cột checkbox
+							pageSizeOptions: ['100', '500', '1000', '2000', '5000'],
 
-                    selectedRowKeys,
+							showSizeChanger: true,
 
-                    onChange: (newSelectedRowKeys) => {
+							showQuickJumper: true,
 
-                      setSelectedRowKeys(newSelectedRowKeys);
+							onShowSizeChange: (current, size) => {
 
-                    },
+								console.log('Page size changed to:', size);
 
-                  }}
+								setPageSize(size);
 
-              />
+							},
 
-          ) : (
+							showTotal: (total, range) =>
 
-              <Table
+								`${range[0]}-${range[1]} của ${total} mục`,
 
-                  key={tableKey}
+						}}
 
-                  virtual
+						scroll={{ x: 3000, y: '50vh' }}
 
-                  columns={getColumns()}
+						className={styles.table}
 
-                  dataSource={data}
+						rowSelection={{
 
-                  rowKey="id"
+							type: 'checkbox',
 
-                  loading={loading}
+							columnWidth: 48, // chỉnh size của cột checkbox
 
-                  pagination={{
+							selectedRowKeys,
 
-                    total: data.length,
+							onChange: (newSelectedRowKeys) => {
 
-                    pageSize: pageSize,
+								setSelectedRowKeys(newSelectedRowKeys);
 
-                    pageSizeOptions: ['100', '500', '1000', '2000', '5000'],
+							},
 
-                    showSizeChanger: true,
+						}}
 
-                    showQuickJumper: true,
+					/>
 
-                    onShowSizeChange: (current, size) => {
+				)}
 
-                      console.log('Page size changed to:', size);
+			</Card>
 
-                      setPageSize(size);
 
-                    },
+			{/* Create/Edit Modal */}
 
-                    showTotal: (total, range) =>
+			{
 
-                        `${range[0]}-${range[1]} của ${total} mục`
+				modalVisible && <CreateEditModal
 
-                  }}
+					visible={modalVisible}
 
-                  scroll={{ x: 3000, y: '50vh' }}
+					onOk={handleModalOk}
 
-                  className={styles.table}
+					onCancel={handleModalCancel}
 
-                  rowSelection={{
+					modalMode={modalMode}
 
-                    type: 'checkbox',
+					formKey={formKey}
 
-                    columnWidth: 48, // chỉnh size của cột checkbox
+					form={form}
 
-                    selectedRowKeys,
+					getFormFields={getFormFields}
 
-                    onChange: (newSelectedRowKeys) => {
+				/>
 
-                      setSelectedRowKeys(newSelectedRowKeys);
+			}
 
-                    },
 
-                  }}
+			{/* View Detail Modal */}
 
-              />
+			{
 
-          )}
+				viewModalVisible && <ViewDetailModal
 
-        </Card>
+					visible={viewModalVisible}
 
+					onCancel={() => {
 
+						// Dừng audio khi đóng modal
 
-        {/* Create/Edit Modal */}
+						if (audioRef.current) {
 
-        {
+							audioRef.current.pause();
 
-            modalVisible && <CreateEditModal
+							setIsAudioPlaying(false);
 
-                visible={modalVisible}
+							setIsAudioLoading(false);
 
-                onOk={handleModalOk}
+						}
 
-                onCancel={handleModalCancel}
+						setViewModalVisible(false);
 
-                modalMode={modalMode}
+					}}
 
-                formKey={formKey}
+					selectedRecord={selectedRecord}
 
-                form={form}
+					isAudioPlaying={isAudioPlaying}
 
-                getFormFields={getFormFields}
+					isAudioLoading={isAudioLoading}
 
-            />
+					handlePlayAudio={handlePlayAudio}
 
-        }
+				/>
 
+			}
 
 
+			{/* Import Excel Modal */}
 
+			<ImportDataExcel
+				handleImportExcel={handleImportExcel}
 
-        {/* View Detail Modal */}
+				importModalVisible={importModalVisible}
 
-        {
+				setImportPreviewData={setImportPreviewData}
 
-            viewModalVisible && <ViewDetailModal
+				setImportModalVisible={setImportModalVisible}
 
-                visible={viewModalVisible}
+				importPreviewData={importPreviewData}
 
-                onCancel={() => {
+				uploadingImport={uploadingImport}
 
-                  // Dừng audio khi đóng modal
+				handleConfirmImport={handleConfirmImport}
 
-                  if (audioRef.current) {
+				handleDownloadTemplate={handleDownloadTemplate}
 
-                    audioRef.current.pause();
+				currentTab={currentTab}
 
-                    setIsAudioPlaying(false);
+			/>
 
-                    setIsAudioLoading(false);
 
-                  }
+			{/* Background Audio Settings Modal */}
 
-                  setViewModalVisible(false);
+			<BackgroundAudio
 
-                }}
+				visible={bgAudioSettingsVisible}
 
-                selectedRecord={selectedRecord}
+				onCancel={() => setBgAudioSettingsVisible(false)}
 
-                isAudioPlaying={isAudioPlaying}
+				onOk={saveBgAudioSettings}
 
-                isAudioLoading={isAudioLoading}
+				bgAudioSettings={bgAudioSettings}
 
-                handlePlayAudio={handlePlayAudio}
+				setBgAudioSettings={setBgAudioSettings}
 
-            />
+				bgAudioFile={bgAudioFile}
 
-        }
+				bgAudioUploading={bgAudioUploading}
 
+				handleBackgroundAudioUpload={handleBackgroundAudioUpload}
 
+			/>
 
 
+			{/* Guideline Settings Modal */}
 
-        {/* Import Excel Modal */}
+			<GuidelineSettingModal
 
-        <ImportDataExcel
-            handleImportExcel={handleImportExcel}
+				visible={guidelineSettingsVisible}
 
-            importModalVisible={importModalVisible}
+				onCancel={() => setGuidelineSettingsVisible(false)}
 
-            setImportPreviewData={setImportPreviewData}
+				onOk={saveGuidelineSettings}
 
-            setImportModalVisible={setImportModalVisible}
+				guidelineSettings={guidelineSettings}
 
-            importPreviewData={importPreviewData}
+				setGuidelineSettings={setGuidelineSettings}
 
-            uploadingImport={uploadingImport}
+				guidelineImageFile={guidelineImageFile}
 
-            handleConfirmImport={handleConfirmImport}
+				guidelineImageUploading={guidelineImageUploading}
 
-            handleDownloadTemplate={handleDownloadTemplate}
+				handleGuidelineImageUpload={handleGuidelineImageUpload}
 
-            currentTab={currentTab}
+			/>
 
-        />
 
+			{/* JSON Import Modal */}
 
+			{
 
-        {/* Background Audio Settings Modal */}
+				jsonImportModalVisible && <ImportDataJson
 
-        <BackgroundAudio
+					setJsonInput={setJsonInput}
 
-            visible={bgAudioSettingsVisible}
+					setJsonPreviewData={setJsonPreviewData}
 
-            onCancel={() => setBgAudioSettingsVisible(false)}
+					jsonImportModalVisible={jsonImportModalVisible}
 
-            onOk={saveBgAudioSettings}
+					setJsonImportModalVisible={setJsonImportModalVisible}
 
-            bgAudioSettings={bgAudioSettings}
+					jsonInput={jsonInput}
 
-            setBgAudioSettings={setBgAudioSettings}
+					jsonPreviewData={jsonPreviewData}
 
-            bgAudioFile={bgAudioFile}
+					uploadingJson={uploadingJson}
 
-            bgAudioUploading={bgAudioUploading}
+					currentTab={currentTab}
 
-            handleBackgroundAudioUpload={handleBackgroundAudioUpload}
+					handleJsonInputChange={handleJsonInputChange}
 
-        />
+					handleJsonPreview={handleJsonPreview}
 
+					handleConfirmJsonImport={handleConfirmJsonImport}
 
+					handleLoadJsonTemplate={handleLoadJsonTemplate}
 
-        {/* Guideline Settings Modal */}
+				/>
 
-        <GuidelineSettingModal
+			}
 
-            visible={guidelineSettingsVisible}
 
-            onCancel={() => setGuidelineSettingsVisible(false)}
+			{/* AI Summary Modal */}
 
-            onOk={saveGuidelineSettings}
+			{
 
-            guidelineSettings={guidelineSettings}
+				aiSummaryModalVisible && <AISummaryTable
 
-            setGuidelineSettings={setGuidelineSettings}
+					aiSummaryModalVisible={aiSummaryModalVisible}
 
-            guidelineImageFile={guidelineImageFile}
+					setAiSummaryModalVisible={setAiSummaryModalVisible}
 
-            guidelineImageUploading={guidelineImageUploading}
+					aiSummaryData={aiSummaryData}
 
-            handleGuidelineImageUpload={handleGuidelineImageUpload}
+					aiSummaryLoading={aiSummaryLoading}
 
-        />
+					getAISummaryColumns={getAISummaryColumns}
 
+					setSelectedAISummary={setSelectedAISummary}
 
+					setAISummaryDetailModalVisible={setAISummaryDetailModalVisible}
 
-        {/* JSON Import Modal */}
+				/>
 
-        {
+			}
 
-            jsonImportModalVisible && <ImportDataJson
 
-                setJsonInput={setJsonInput}
+			{/* AI Summary Detail Modal */}
 
-                setJsonPreviewData={setJsonPreviewData}
+			{
 
-                jsonImportModalVisible={jsonImportModalVisible}
+				aiSummaryDetailModalVisible && <AISummaryDetailModal
 
-                setJsonImportModalVisible={setJsonImportModalVisible}
+					visible={aiSummaryDetailModalVisible}
 
-                jsonInput={jsonInput}
+					onCancel={() => setAISummaryDetailModalVisible(false)}
 
-                jsonPreviewData={jsonPreviewData}
+					selectedAISummary={selectedAISummary}
 
-                uploadingJson={uploadingJson}
+				/>
 
-                currentTab={currentTab}
+			}
 
-                handleJsonInputChange={handleJsonInputChange}
 
-                handleJsonPreview={handleJsonPreview}
+			{/* AI Summary Edit Modal */}
 
-                handleConfirmJsonImport={handleConfirmJsonImport}
+			{
 
-                handleLoadJsonTemplate={handleLoadJsonTemplate}
+				aiSummaryEditModalVisible && <AISummaryEditModal
 
-            />
+					visible={aiSummaryEditModalVisible}
 
-        }
+					onCancel={() => {
 
+						setAISummaryEditModalVisible(false);
 
+						setSelectedAISummary(null);
 
+						aiSummaryEditForm.resetFields();
 
+						setTables([]); // Reset tables when closing modal
 
-        {/* AI Summary Modal */}
+						setUploadedFileUrls([]); // Reset file URLs
 
-        {
+						setSelectedFiles([]); // Reset selected files
 
-            aiSummaryModalVisible && <AISummaryTable
+					}}
 
-                aiSummaryModalVisible={aiSummaryModalVisible}
+					onOk={handleUpdateAISummary}
 
-                setAiSummaryModalVisible={setAiSummaryModalVisible}
+					aiSummaryEditForm={aiSummaryEditForm}
 
-                aiSummaryData={aiSummaryData}
+					selectedFiles={selectedFiles}
 
-                aiSummaryLoading={aiSummaryLoading}
+					uploadingFiles={uploadingFiles}
 
-                getAISummaryColumns={getAISummaryColumns}
+					uploadProgress={uploadProgress}
 
-                setSelectedAISummary={setSelectedAISummary}
+					tables={tables}
 
-                setAISummaryDetailModalVisible={setAISummaryDetailModalVisible}
+					handleFileUpload={handleFileUpload}
 
-            />
+					handleAddTable={handleAddTable}
 
-        }
+					handleEditTable={handleEditTable}
 
+					handleDeleteTable={handleDeleteTable}
 
+				/>
 
+			}
 
 
-        {/* AI Summary Detail Modal */}
+			{imageConfigModalVisible &&
 
-        {
+				<CreateConfigImage
 
-            aiSummaryDetailModalVisible && <AISummaryDetailModal
+					imageConfigModalVisible={imageConfigModalVisible}
 
-                visible={aiSummaryDetailModalVisible}
+					setImageConfigModalVisible={setImageConfigModalVisible}
 
-                onCancel={() => setAISummaryDetailModalVisible(false)}
+					imageConfig={imageConfig}
 
-                selectedAISummary={selectedAISummary}
+					setImageConfig={setImageConfig}
 
-            />
+					saveImageConfig={saveImageConfig}
 
-        }
+				/>
 
+			}
 
 
-        {/* AI Summary Edit Modal */}
+			{/* Table Edit Modal */}
 
-        {
+			{
 
-            aiSummaryEditModalVisible && <AISummaryEditModal
+				tableModalVisible && <TableEditModal
 
-                visible={aiSummaryEditModalVisible}
+					visible={tableModalVisible}
 
-                onCancel={() => {
+					onCancel={() => {
 
-                  setAISummaryEditModalVisible(false);
+						setTableModalVisible(false);
 
-                  setSelectedAISummary(null);
+						setEditingTable(null);
 
-                  aiSummaryEditForm.resetFields();
+					}}
 
-                  setTables([]); // Reset tables when closing modal
+					editingTable={editingTable}
 
-                  setUploadedFileUrls([]); // Reset file URLs
+					onSave={handleSaveTable}
 
-                  setSelectedFiles([]); // Reset selected files
+					generateTableDataStructure={generateTableDataStructure}
 
-                }}
+				/>
 
-                onOk={handleUpdateAISummary}
+			}
 
-                aiSummaryEditForm={aiSummaryEditForm}
 
-                selectedFiles={selectedFiles}
+			{/* Report Overview Modal */}
 
-                uploadingFiles={uploadingFiles}
+			{
 
-                uploadProgress={uploadProgress}
+				reportOverviewModalVisible && <ReportOverviewModal
 
-                tables={tables}
+					visible={reportOverviewModalVisible}
 
-                handleFileUpload={handleFileUpload}
+					onCancel={() => setReportOverviewModalVisible(false)}
 
-                handleAddTable={handleAddTable}
+					onSave={handleReportOverviewSave}
 
-                handleEditTable={handleEditTable}
+					currentOverview={reportOverviewData}
 
-                handleDeleteTable={handleDeleteTable}
+				/>
 
-            />
+			}
 
-        }
 
+			{/* Company Summary Modal */}
 
+			{
 
+				companySummaryModalVisible && <CreateCompanyOverview
 
+					companySummaryModalVisible={companySummaryModalVisible}
 
-        {imageConfigModalVisible &&
+					setCompanySummaryModalVisible={setCompanySummaryModalVisible}
 
-            <CreateConfigImage
+					companySummarySearchTerm={companySummarySearchTerm}
 
-                imageConfigModalVisible={imageConfigModalVisible}
+					setCompanySummarySearchTerm={setCompanySummarySearchTerm}
 
-                setImageConfigModalVisible={setImageConfigModalVisible}
+					companySummaryLoading={companySummaryLoading}
 
-                imageConfig={imageConfig}
+					companySummaryData={companySummaryData}
 
-                setImageConfig={setImageConfig}
+					handleCompanySummarySearch={handleCompanySummarySearch}
 
-                saveImageConfig={saveImageConfig}
+					handleCreateCompanySummaryReport={handleCreateCompanySummaryReport}
 
-            />
+				/>
 
-        }
+			}
 
 
+			<ImproveDetailModal
 
+				visible={showImproveDetail}
 
+				onCancel={() => setShowImproveDetail(false)}
 
+				selectedRecords={
 
+					currentTab === 'report'
 
-        {/* Table Edit Modal */}
+						? aiSummaryData.filter(item => selectedRowKeys.includes(item.id))
 
-        {
+						: currentTab === 'reportDN'
 
-            tableModalVisible && <TableEditModal
+							? reportDNData.filter(item => selectedRowKeys.includes(item.id))
 
-                visible={tableModalVisible}
+							: data.filter(item => selectedRowKeys.includes(item.id))
 
-                onCancel={() => {
+				}
 
-                  setTableModalVisible(false);
+				onSuccess={(updatedRecords = []) => {
 
-                  setEditingTable(null);
+					// Cập nhật cục bộ chỉ các phần tử đã thay đổi
 
-                }}
+					if (Array.isArray(updatedRecords) && updatedRecords.length > 0) {
 
-                editingTable={editingTable}
+						if (currentTab === 'report') {
 
-                onSave={handleSaveTable}
+							setAiSummaryData(prev => prev.map(item => {
 
-                generateTableDataStructure={generateTableDataStructure}
+								const u = updatedRecords.find(r => r.id === item.id);
 
-            />
+								return u ? { ...item, ...u } : item;
 
-        }
+							}));
 
+						} else if (currentTab === 'reportDN') {
 
+							setReportDNData(prev => prev.map(item => {
 
-        {/* Report Overview Modal */}
+								const u = updatedRecords.find(r => r.id === item.id);
 
-        {
+								return u ? { ...item, ...u } : item;
 
-            reportOverviewModalVisible && <ReportOverviewModal
+							}));
 
-                visible={reportOverviewModalVisible}
+						} else {
 
-                onCancel={() => setReportOverviewModalVisible(false)}
+							// news/library/story dataset
 
-                onSave={handleReportOverviewSave}
+							setAllData(prev => ({
 
-                currentOverview={reportOverviewData}
+								...prev,
 
-            />
+								[currentTab]: (prev[currentTab] || []).map(item => {
 
-        }
+									const u = updatedRecords.find(r => r.id === item.id);
 
+									return u ? { ...item, ...u } : item;
 
+								}),
 
+							}));
 
+							setFilteredData(prev => ({
 
-        {/* Company Summary Modal */}
+								...prev,
 
-        {
+								[currentTab]: (prev[currentTab] || []).map(item => {
 
-            companySummaryModalVisible && <CreateCompanyOverview
+									const u = updatedRecords.find(r => r.id === item.id);
 
-                companySummaryModalVisible={companySummaryModalVisible}
+									return u ? { ...item, ...u } : item;
 
-                setCompanySummaryModalVisible={setCompanySummaryModalVisible}
+								}),
 
-                companySummarySearchTerm={companySummarySearchTerm}
+							}));
 
-                setCompanySummarySearchTerm={setCompanySummarySearchTerm}
+							setData(prev => prev.map(item => {
 
-                companySummaryLoading={companySummaryLoading}
+								const u = updatedRecords.find(r => r.id === item.id);
 
-                companySummaryData={companySummaryData}
+								return u ? { ...item, ...u } : item;
 
-                handleCompanySummarySearch={handleCompanySummarySearch}
+							}));
 
-                handleCreateCompanySummaryReport={handleCreateCompanySummaryReport}
+						}
 
-            />
+					}
 
-        }
+					setShowImproveDetail(false);
 
+					setImproveDetailLoading(false);
 
+					setSelectedRowKeys([]);
 
-        <ImproveDetailModal
+				}}
 
-            visible={showImproveDetail}
+				setImproveDetailLoading={setImproveDetailLoading}
 
-            onCancel={() => setShowImproveDetail(false)}
+			/>
 
-            selectedRecords={
 
-              currentTab === 'report'
+			<CreateQuizModal
 
-                  ? aiSummaryData.filter(item => selectedRowKeys.includes(item.id))
+				visible={showCreateQuiz}
 
-                  : currentTab === 'reportDN'
+				onCancel={() => setShowCreateQuiz(false)}
 
-                      ? reportDNData.filter(item => selectedRowKeys.includes(item.id))
+				selectedRecords={
 
-                      : data.filter(item => selectedRowKeys.includes(item.id))
+					currentTab === 'report'
 
-            }
+						? aiSummaryData.filter(item => selectedRowKeys.includes(item.id))
 
-            onSuccess={(updatedRecords = []) => {
+						: currentTab === 'reportDN'
 
-              // Cập nhật cục bộ chỉ các phần tử đã thay đổi
+							? reportDNData.filter(item => selectedRowKeys.includes(item.id))
 
-              if (Array.isArray(updatedRecords) && updatedRecords.length > 0) {
+							: data.filter(item => selectedRowKeys.includes(item.id))
 
-                if (currentTab === 'report') {
+				}
 
-                  setAiSummaryData(prev => prev.map(item => {
+				setCreateQuizzLoading={setCreateQuizzLoading}
 
-                    const u = updatedRecords.find(r => r.id === item.id);
+				onSuccess={(updatedRecords = []) => {
 
-                    return u ? { ...item, ...u } : item;
+					if (Array.isArray(updatedRecords) && updatedRecords.length > 0) {
 
-                  }));
+						if (currentTab === 'report') {
 
-                } else if (currentTab === 'reportDN') {
+							setAiSummaryData(prev => prev.map(item => {
 
-                  setReportDNData(prev => prev.map(item => {
+								const u = updatedRecords.find(r => r.id === item.id);
 
-                    const u = updatedRecords.find(r => r.id === item.id);
+								return u ? { ...item, ...u } : item;
 
-                    return u ? { ...item, ...u } : item;
+							}));
 
-                  }));
+						} else if (currentTab === 'reportDN') {
 
-                } else {
+							setReportDNData(prev => prev.map(item => {
 
-                  // news/library/story dataset
+								const u = updatedRecords.find(r => r.id === item.id);
 
-                  setAllData(prev => ({
+								return u ? { ...item, ...u } : item;
 
-                    ...prev,
+							}));
 
-                    [currentTab]: (prev[currentTab] || []).map(item => {
+						} else {
 
-                      const u = updatedRecords.find(r => r.id === item.id);
+							setAllData(prev => ({
 
-                      return u ? { ...item, ...u } : item;
+								...prev,
 
-                    })
+								[currentTab]: (prev[currentTab] || []).map(item => {
 
-                  }));
+									const u = updatedRecords.find(r => r.id === item.id);
 
-                  setFilteredData(prev => ({
+									return u ? { ...item, ...u } : item;
 
-                    ...prev,
+								}),
 
-                    [currentTab]: (prev[currentTab] || []).map(item => {
+							}));
 
-                      const u = updatedRecords.find(r => r.id === item.id);
+							setFilteredData(prev => ({
 
-                      return u ? { ...item, ...u } : item;
+								...prev,
 
-                    })
+								[currentTab]: (prev[currentTab] || []).map(item => {
 
-                  }));
+									const u = updatedRecords.find(r => r.id === item.id);
 
-                  setData(prev => prev.map(item => {
+									return u ? { ...item, ...u } : item;
 
-                    const u = updatedRecords.find(r => r.id === item.id);
+								}),
 
-                    return u ? { ...item, ...u } : item;
+							}));
 
-                  }));
+							setData(prev => prev.map(item => {
 
-                }
+								const u = updatedRecords.find(r => r.id === item.id);
 
-              }
+								return u ? { ...item, ...u } : item;
 
-              setShowImproveDetail(false);
+							}));
 
-              setImproveDetailLoading(false);
+						}
 
-              setSelectedRowKeys([]);
+					}
 
-            }}
+					setShowCreateQuiz(false);
 
-            setImproveDetailLoading={setImproveDetailLoading}
+					setCreateQuizzLoading(false);
 
-        />
+					setSelectedRowKeys([]);
 
+				}}
 
+			/>
 
-        <CreateQuizModal
+			<UpdateQuizContentModal
+				visible={showUpdateQuiz}
+				onCancel={() => setShowUpdateQuiz(false)}
+				selectedRowKeys={selectedRowKeys}
+				data={data}
+				onUpdate={async (recordsData) => {
+					try {
+						console.log('Updating quiz and content for:', recordsData);
 
-            visible={showCreateQuiz}
+						// Cập nhật data trong state
+						if (recordsData) {
+							await updateK9({
+								id: recordsData.id,
+								title: recordsData.title,
+								summary: recordsData.summary,
+								detail: recordsData.detail,
+								questionContent: recordsData.questionContent,
+							});
+							// Cập nhật trong data chính
+							setData(prev => prev.map(item =>
+								item.id === recordsData.id
+									? { ...item, ...recordsData }
+									: item,
+							));
 
-            onCancel={() => setShowCreateQuiz(false)}
+							// Cập nhật trong filteredData nếu có
+							setFilteredData(prev => ({
+								...prev,
+								[currentTab]: (prev[currentTab] || []).map(item =>
+									item.id === recordsData.id
+										? { ...item, ...recordsData }
+										: item,
+								),
+							}));
 
-            selectedRecords={
+							console.log(`Successfully updated record ${recordsData.id}`);
+						}
+					} catch (error) {
+						console.error('Error updating record:', error);
+						throw error;
+					}
+				}}
+			/>
 
-              currentTab === 'report'
+			{/* Prompt Settings Modal */}
+			<PromptSettingsModal
+				visible={promptSettingsModalVisible}
+				onCancel={() => setPromptSettingsModalVisible(false)}
+				onSuccess={(settings) => {
+					console.log('Prompt settings updated:', settings);
+					message.success('Cài đặt prompt đã được cập nhật!');
+				}}
+			/>
 
-                  ? aiSummaryData.filter(item => selectedRowKeys.includes(item.id))
+			<PromptSettingsListModal
+				visible={promptSettingsListModalVisible}
+				onCancel={() => setPromptSettingsListModalVisible(false)}
+				onSuccess={() => {
+					message.success('Cài đặt prompt danh sách đã được cập nhật!');
+				}}
+			/>
 
-                  : currentTab === 'reportDN'
+			<SelectPromptModal
+				visible={selectDiagramPromptModalVisible}
+				onCancel={() => {
+					setSelectDiagramPromptModalVisible(false);
+					setPendingDiagramMode(null);
+					setPendingDiagramRecords([]);
+				}}
+				onSelect={handleDiagramPromptSelected}
+				promptType={pendingDiagramMode === 'html' ? 'HTML_FROM_DETAIL_PROMPTS' : pendingDiagramMode === 'excalidraw-react' ? 'EXCALIDRAW_REACT_PROMPTS' : null}
+				title={pendingDiagramMode === 'html' ? 'Chọn cài đặt Prompt - HTML từ Detail' : pendingDiagramMode === 'excalidraw-react' ? 'Chọn cài đặt Prompt - Excalidraw React' : 'Chọn cài đặt Prompt'}
+			/>
 
-                      ? reportDNData.filter(item => selectedRowKeys.includes(item.id))
+			<SelectPromptModal
+				visible={selectCaseFromLearningPromptModalVisible}
+				onCancel={() => {
+					setSelectCaseFromLearningPromptModalVisible(false);
+					setPendingCaseFromLearningRecords([]);
+				}}
+				onSelect={handleCaseFromLearningPromptSelected}
+				promptType='CASE_FROM_LEARNING_BLOCK_PROMPTS'
+				title='Chọn cài đặt Prompt - Tạo Case từ Learning Block'
+			/>
 
-                      : data.filter(item => selectedRowKeys.includes(item.id))
+			{/* User Class Modal */}
+			<Modal
+				title={`Gán User Class cho ${selectedRowKeys.length} bản ghi`}
+				open={userClassModalVisible}
+				onCancel={() => {
+					setUserClassModalVisible(false);
+					setSelectedUserClasses([]);
+				}}
+				onOk={handleBulkUpdateUserClasses}
+				okText='Cập nhật'
+				cancelText='Hủy'
+				width={600}
+				loading={loading}
+			>
+				<div style={{ marginTop: 20 }}>
+					<Space direction='vertical' style={{ width: '100%' }}>
+						<Select
+							mode='multiple'
+							placeholder='Chọn nhóm user class'
+							value={selectedUserClasses}
+							onChange={setSelectedUserClasses}
+							style={{ width: '100%' }}
+							showSearch
+							filterOption={(input, option) =>
+								(option?.children ?? '').toLowerCase().includes(input.toLowerCase())
+							}
+							allowClear
+						>
+							{userClasses.map(cls => (
+								<Option key={cls.id} value={cls.id}>
+									{cls.name || `Class #${cls.id}`}
+								</Option>
+							))}
+						</Select>
+						<div style={{ fontSize: '12px', color: '#999', marginTop: 8 }}>
+							Chọn các nhóm user class được phép xem. Để trống nếu muốn xóa giới hạn.
+						</div>
+					</Space>
+				</div>
+			</Modal>
 
-            }
+			{/* Tag Management Modal */}
 
-            setCreateQuizzLoading={setCreateQuizzLoading}
+			{
 
-            onSuccess={(updatedRecords = []) => {
+				tagManagementModalVisible && (
 
-              if (Array.isArray(updatedRecords) && updatedRecords.length > 0) {
+					<TagManagementModal
 
-                if (currentTab === 'report') {
+						visible={tagManagementModalVisible}
 
-                  setAiSummaryData(prev => prev.map(item => {
+						onClose={() => setTagManagementModalVisible(false)}
 
-                    const u = updatedRecords.find(r => r.id === item.id);
+						tag1Options={tag1Options}
 
-                    return u ? { ...item, ...u } : item;
+						tag2Options={tag2Options}
 
-                  }));
+						tag3Options={tag3Options}
 
-                } else if (currentTab === 'reportDN') {
+						onSave={saveTagOptions}
 
-                  setReportDNData(prev => prev.map(item => {
+					/>
 
-                    const u = updatedRecords.find(r => r.id === item.id);
+				)
 
-                    return u ? { ...item, ...u } : item;
+			}
 
-                  }));
+			{/* Categories Management Modal */}
 
-                } else {
+			{
 
-                  setAllData(prev => ({
+				categoriesManagementModalVisible && (
 
-                    ...prev,
+					<CategoriesManagementModal
 
-                    [currentTab]: (prev[currentTab] || []).map(item => {
+						visible={categoriesManagementModalVisible}
 
-                      const u = updatedRecords.find(r => r.id === item.id);
+						onClose={() => setCategoriesManagementModalVisible(false)}
 
-                      return u ? { ...item, ...u } : item;
+						categoriesOptions={categoriesOptions}
 
-                    })
+						onSave={saveCategoriesOptions}
 
-                  }));
+					/>
 
-                  setFilteredData(prev => ({
+				)
 
-                    ...prev,
+			}
 
-                    [currentTab]: (prev[currentTab] || []).map(item => {
 
-                      const u = updatedRecords.find(r => r.id === item.id);
+			{
 
-                      return u ? { ...item, ...u } : item;
+				programManagementModalVisible && (
 
-                    })
+					<TagProgramModal
 
-                  }));
+						visible={programManagementModalVisible}
 
-                  setData(prev => prev.map(item => {
+						onClose={() => setProgramManagementModalVisible(false)}
 
-                    const u = updatedRecords.find(r => r.id === item.id);
+						tag4Options={tag4Options}
 
-                    return u ? { ...item, ...u } : item;
+						onSave={handleSaveTags}
 
-                  }));
+						coursesOptions={coursesOptions}
 
-                }
+						onSaveCourses={handleSaveCourses}
 
-              }
+					/>
 
-              setShowCreateQuiz(false);
+				)
 
-              setCreateQuizzLoading(false);
+			}
 
-              setSelectedRowKeys([]);
 
-            }}
+			{
 
-        />
+				quizEditorVisible && <QuizEditorModal
 
-        <UpdateQuizContentModal
-            visible={showUpdateQuiz}
-            onCancel={() => setShowUpdateQuiz(false)}
-            selectedRowKeys={selectedRowKeys}
-            data={data}
-            onUpdate={async (recordsData) => {
-              try {
-                console.log('Updating quiz and content for:', recordsData);
+					visible={quizEditorVisible}
 
-                // Cập nhật data trong state
-                if (recordsData) {
-                  await updateK9({
-                    id: recordsData.id,
-                    title: recordsData.title,
-                    summary: recordsData.summary,
-                    detail: recordsData.detail,
-                    questionContent: recordsData.questionContent
-                  });
-                  // Cập nhật trong data chính
-                  setData(prev => prev.map(item =>
-                      item.id === recordsData.id
-                          ? { ...item, ...recordsData }
-                          : item
-                  ));
+					onCancel={() => {
+						setQuizEditorVisible(false);
+						setQuizEditorRecord(null);
+					}}
 
-                  // Cập nhật trong filteredData nếu có
-                  setFilteredData(prev => ({
-                    ...prev,
-                    [currentTab]: (prev[currentTab] || []).map(item =>
-                        item.id === recordsData.id
-                            ? { ...item, ...recordsData }
-                            : item
-                    )
-                  }));
+					record={quizEditorRecord}
 
-                  console.log(`Successfully updated record ${recordsData.id}`);
-                }
-              } catch (error) {
-                console.error('Error updating record:', error);
-                throw error;
-              }
-            }}
-        />
+					confirmLoading={savingQuiz}
 
-        {/* Prompt Settings Modal */}
-        <PromptSettingsModal
-            visible={promptSettingsModalVisible}
-            onCancel={() => setPromptSettingsModalVisible(false)}
-            onSuccess={(settings) => {
-              console.log('Prompt settings updated:', settings);
-              message.success('Cài đặt prompt đã được cập nhật!');
-            }}
-        />
+					onSave={async (questionContent) => {
 
-        <PromptSettingsListModal
-            visible={promptSettingsListModalVisible}
-            onCancel={() => setPromptSettingsListModalVisible(false)}
-            onSuccess={() => {
-              message.success('Cài đặt prompt danh sách đã được cập nhật!');
-            }}
-        />
+						if (!quizEditorRecord) return;
 
-        <SelectPromptModal
-            visible={selectDiagramPromptModalVisible}
-            onCancel={() => {
-              setSelectDiagramPromptModalVisible(false);
-              setPendingDiagramMode(null);
-              setPendingDiagramRecords([]);
-            }}
-            onSelect={handleDiagramPromptSelected}
-            promptType={pendingDiagramMode === 'html' ? 'HTML_FROM_DETAIL_PROMPTS' : pendingDiagramMode === 'excalidraw-react' ? 'EXCALIDRAW_REACT_PROMPTS' : null}
-            title={pendingDiagramMode === 'html' ? 'Chọn cài đặt Prompt - HTML từ Detail' : pendingDiagramMode === 'excalidraw-react' ? 'Chọn cài đặt Prompt - Excalidraw React' : 'Chọn cài đặt Prompt'}
-        />
+						try {
 
-        <SelectPromptModal
-            visible={selectCaseFromLearningPromptModalVisible}
-            onCancel={() => {
-              setSelectCaseFromLearningPromptModalVisible(false);
-              setPendingCaseFromLearningRecords([]);
-            }}
-            onSelect={handleCaseFromLearningPromptSelected}
-            promptType="CASE_FROM_LEARNING_BLOCK_PROMPTS"
-            title="Chọn cài đặt Prompt - Tạo Case từ Learning Block"
-        />
+							setSavingQuiz(true);
 
-        {/* User Class Modal */}
-        <Modal
-            title={`Gán User Class cho ${selectedRowKeys.length} bản ghi`}
-            open={userClassModalVisible}
-            onCancel={() => {
-              setUserClassModalVisible(false);
-              setSelectedUserClasses([]);
-            }}
-            onOk={handleBulkUpdateUserClasses}
-            okText="Cập nhật"
-            cancelText="Hủy"
-            width={600}
-            loading={loading}
-        >
-          <div style={{ marginTop: 20 }}>
-            <Space direction="vertical" style={{ width: '100%' }}>
-              <Select
-                  mode="multiple"
-                  placeholder="Chọn nhóm user class"
-                  value={selectedUserClasses}
-                  onChange={setSelectedUserClasses}
-                  style={{ width: '100%' }}
-                  showSearch
-                  filterOption={(input, option) =>
-                      (option?.children ?? '').toLowerCase().includes(input.toLowerCase())
-                  }
-                  allowClear
-              >
-                {userClasses.map(cls => (
-                    <Option key={cls.id} value={cls.id}>
-                      {cls.name || `Class #${cls.id}`}
-                    </Option>
-                ))}
-              </Select>
-              <div style={{ fontSize: '12px', color: '#999', marginTop: 8 }}>
-                Chọn các nhóm user class được phép xem. Để trống nếu muốn xóa giới hạn.
-              </div>
-            </Space>
-          </div>
-        </Modal>
+							await updateK9({ id: quizEditorRecord.id, questionContent });
 
-        {/* Tag Management Modal */}
+							message.success('Lưu quiz/essay thành công');
 
-        {
+							// Update local datasets
 
-            tagManagementModalVisible && (
+							const updater = (list) => list.map(item => item.id === quizEditorRecord.id ? {
+								...item,
+								questionContent,
+							} : item);
 
-                <TagManagementModal
+							if (currentTab === 'report') {
 
-                    visible={tagManagementModalVisible}
+								setAiSummaryData(prev => updater(prev));
 
-                    onClose={() => setTagManagementModalVisible(false)}
+							} else if (currentTab === 'reportDN') {
 
-                    tag1Options={tag1Options}
+								setReportDNData(prev => updater(prev));
 
-                    tag2Options={tag2Options}
+							} else {
 
-                    tag3Options={tag3Options}
+								setAllData(prev => ({ ...prev, [currentTab]: updater(prev[currentTab] || []) }));
 
-                    onSave={saveTagOptions}
+								setFilteredData(prev => ({ ...prev, [currentTab]: updater(prev[currentTab] || []) }));
 
-                />
+								setData(prev => updater(prev));
 
-            )
+							}
 
-        }
+							setQuizEditorVisible(false);
 
-        {/* Categories Management Modal */}
+							setQuizEditorRecord(null);
 
-        {
+						} catch (e) {
 
-            categoriesManagementModalVisible && (
+							console.error(e);
 
-                <CategoriesManagementModal
+							message.error('Lưu quiz/essay thất bại');
 
-                    visible={categoriesManagementModalVisible}
+						} finally {
 
-                    onClose={() => setCategoriesManagementModalVisible(false)}
+							setSavingQuiz(false);
 
-                    categoriesOptions={categoriesOptions}
+						}
 
-                    onSave={saveCategoriesOptions}
+					}}
 
-                />
+				/>
 
-            )
+			}
 
-        }
 
+			{/* QuestionContent Modal */}
 
+			{
 
-        {
+				questionContentModalVisible && <QuestionContentModal
 
-            programManagementModalVisible && (
+					visible={questionContentModalVisible}
 
-                <TagProgramModal
+					onCancel={() => {
 
-                    visible={programManagementModalVisible}
+						setQuestionContentModalVisible(false);
 
-                    onClose={() => setProgramManagementModalVisible(false)}
+						setSelectedQuestionContent(null);
 
-                    tag4Options={tag4Options}
+						setSelectedQuestionContentTitle('');
 
-                    onSave={handleSaveTags}
+						setSelectedQuestionContentRecord(null);
 
-                    coursesOptions={coursesOptions}
+					}}
 
-                    onSaveCourses={handleSaveCourses}
+					questionContent={selectedQuestionContent}
 
-                />
+					recordTitle={selectedQuestionContentTitle}
 
-            )
+					onUpdateQuestionContent={handleUpdateQuestionContent}
 
-        }
+				/>
 
+			}
 
 
+			{/* Bulk Update Modal */}
 
+			<BulkUpdateModal
 
-        {
+				visible={bulkUpdateModalVisible}
 
-            quizEditorVisible && <QuizEditorModal
+				onClose={() => setBulkUpdateModalVisible(false)}
 
-                visible={quizEditorVisible}
+				selectedIds={selectedRowKeys}
 
-                onCancel={() => { setQuizEditorVisible(false); setQuizEditorRecord(null); }}
+				fieldToUpdate={fieldToUpdate}
 
-                record={quizEditorRecord}
+				currentTab={currentTab}
 
-                confirmLoading={savingQuiz}
+				onSuccess={handleBulkUpdateSuccess}
 
-                onSave={async (questionContent) => {
+				categoryOptions={categoriesOptions}
 
-                  if (!quizEditorRecord) return;
+				tagOptions={tag1Options}
 
-                  try {
+				levelOptions={tag2Options}
 
-                    setSavingQuiz(true);
+				seriesOptions={tag3Options}
 
-                    await updateK9({ id: quizEditorRecord.id, questionContent });
+				programOptions={programOptions}
 
-                    message.success('Lưu quiz/essay thành công');
+				setUpdateCategoryLoading={setUpdateCategoryLoading}
 
-                    // Update local datasets
+			/>
 
-                    const updater = (list) => list.map(item => item.id === quizEditorRecord.id ? { ...item, questionContent } : item);
 
-                    if (currentTab === 'report') {
+			{/* Diagram Config Modal */}
+			<CreateConfigDiagram
+				diagramConfigModalVisible={diagramConfigModalVisible}
+				setDiagramConfigModalVisible={setDiagramConfigModalVisible}
+				diagramConfig={diagramConfig}
+				setDiagramConfig={setDiagramConfig}
+				saveDiagramConfig={saveDiagramConfig}
+			/>
 
-                      setAiSummaryData(prev => updater(prev));
+			{/* Summary Detail Config Modal */}
+			<CreateConfigSummaryDetail
+				summaryDetailConfigModalVisible={summaryDetailConfigModalVisible}
+				setSummaryDetailConfigModalVisible={setSummaryDetailConfigModalVisible}
+				summaryDetailConfig={summaryDetailConfig}
+				setSummaryDetailConfig={setSummaryDetailConfig}
+				saveSummaryDetailConfig={saveSummaryDetailConfig}
+			/>
 
-                    } else if (currentTab === 'reportDN') {
+			{/* Diagram Preview Modal */}
+			{
+				diagramPreviewModalVisible && (
+					<DiagramPreviewModal
+						visible={diagramPreviewModalVisible}
+						onClose={() => setDiagramPreviewModalVisible(false)}
+						diagramData={selectedDiagramData}
+						onSave={handleDiagramSave}
+					/>
+				)
+			}
 
-                      setReportDNData(prev => updater(prev));
-
-                    } else {
-
-                      setAllData(prev => ({ ...prev, [currentTab]: updater(prev[currentTab] || []) }));
-
-                      setFilteredData(prev => ({ ...prev, [currentTab]: updater(prev[currentTab] || []) }));
-
-                      setData(prev => updater(prev));
-
-                    }
-
-                    setQuizEditorVisible(false);
-
-                    setQuizEditorRecord(null);
-
-                  } catch (e) {
-
-                    console.error(e);
-
-                    message.error('Lưu quiz/essay thất bại');
-
-                  } finally {
-
-                    setSavingQuiz(false);
-
-                  }
-
-                }}
-
-            />
-
-        }
-
-
-
-        {/* QuestionContent Modal */}
-
-        {
-
-            questionContentModalVisible && <QuestionContentModal
-
-                visible={questionContentModalVisible}
-
-                onCancel={() => {
-
-                  setQuestionContentModalVisible(false);
-
-                  setSelectedQuestionContent(null);
-
-                  setSelectedQuestionContentTitle('');
-
-                  setSelectedQuestionContentRecord(null);
-
-                }}
-
-                questionContent={selectedQuestionContent}
-
-                recordTitle={selectedQuestionContentTitle}
-
-                onUpdateQuestionContent={handleUpdateQuestionContent}
-
-            />
-
-        }
-
-
-
-        {/* Bulk Update Modal */}
-
-        <BulkUpdateModal
-
-            visible={bulkUpdateModalVisible}
-
-            onClose={() => setBulkUpdateModalVisible(false)}
-
-            selectedIds={selectedRowKeys}
-
-            fieldToUpdate={fieldToUpdate}
-
-            currentTab={currentTab}
-
-            onSuccess={handleBulkUpdateSuccess}
-
-            categoryOptions={categoriesOptions}
-
-            tagOptions={tag1Options}
-
-            levelOptions={tag2Options}
-
-            seriesOptions={tag3Options}
-
-            programOptions={programOptions}
-
-            setUpdateCategoryLoading={setUpdateCategoryLoading}
-
-        />
-
-
-
-        {/* Diagram Config Modal */}
-        <CreateConfigDiagram
-            diagramConfigModalVisible={diagramConfigModalVisible}
-            setDiagramConfigModalVisible={setDiagramConfigModalVisible}
-            diagramConfig={diagramConfig}
-            setDiagramConfig={setDiagramConfig}
-            saveDiagramConfig={saveDiagramConfig}
-        />
-
-        {/* Summary Detail Config Modal */}
-        <CreateConfigSummaryDetail
-            summaryDetailConfigModalVisible={summaryDetailConfigModalVisible}
-            setSummaryDetailConfigModalVisible={setSummaryDetailConfigModalVisible}
-            summaryDetailConfig={summaryDetailConfig}
-            setSummaryDetailConfig={setSummaryDetailConfig}
-            saveSummaryDetailConfig={saveSummaryDetailConfig}
-        />
-
-        {/* Diagram Preview Modal */}
-        {
-            diagramPreviewModalVisible && (
-                <DiagramPreviewModal
-                    visible={diagramPreviewModalVisible}
-                    onClose={() => setDiagramPreviewModalVisible(false)}
-                    diagramData={selectedDiagramData}
-                    onSave={handleDiagramSave}
-                />
-            )
-        }
-
-        {/* Diagram Progress Modal */}
-        <Modal
-            title={
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+			{/* Diagram Progress Modal */}
+			<Modal
+				title={
+					<div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <span>Tiến trình tạo {
-              diagramGenerationStats.type === 'html' ? 'HTML Code' :
-                  diagramGenerationStats.type === 'excalidraw-react' ? 'Excalidraw React' :
-                      'Diagram'
-            }</span>
-              </div>
-            }
-            open={diagramProgressModalVisible}
-            onCancel={() => setDiagramProgressModalVisible(false)}
-            footer={[
-              processingDiagramQueue && (
-                  <Button
-                      key="stop"
-                      danger
-                      onClick={handleStopDiagramGeneration}
-                      style={{ marginRight: '8px' }}
-                  >
-                    Dừng quá trình
-                  </Button>
-              ),
-              <Button key="close" onClick={() => setDiagramProgressModalVisible(false)}>
-                Đóng
-              </Button>
-            ]}
-            width={800}
-        >
-          <div style={{ marginBottom: '16px' }}>
-            <div style={{ display: 'flex', gap: '16px', marginBottom: '16px' }}>
-              <div style={{ flex: 1, textAlign: 'center', padding: '12px', backgroundColor: '#f0f0f0', borderRadius: '6px' }}>
-                <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#1890ff' }}>
-                  {diagramGenerationStats.total}
-                </div>
-                <div style={{ fontSize: '12px', color: '#666' }}>Tổng số</div>
-              </div>
-              <div style={{ flex: 1, textAlign: 'center', padding: '12px', backgroundColor: '#f6ffed', borderRadius: '6px' }}>
-                <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#52c41a' }}>
-                  {diagramGenerationStats.success}
-                </div>
-                <div style={{ fontSize: '12px', color: '#666' }}>Thành công</div>
-              </div>
-              <div style={{ flex: 1, textAlign: 'center', padding: '12px', backgroundColor: '#fff2f0', borderRadius: '6px' }}>
-                <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#ff4d4f' }}>
-                  {diagramGenerationStats.failed}
-                </div>
-                <div style={{ fontSize: '12px', color: '#666' }}>Thất bại</div>
-              </div>
-            </div>
+				diagramGenerationStats.type === 'html' ? 'HTML Code' :
+					diagramGenerationStats.type === 'excalidraw-react' ? 'Excalidraw React' :
+						'Diagram'
+			}</span>
+					</div>
+				}
+				open={diagramProgressModalVisible}
+				onCancel={() => setDiagramProgressModalVisible(false)}
+				footer={[
+					processingDiagramQueue && (
+						<Button
+							key='stop'
+							danger
+							onClick={handleStopDiagramGeneration}
+							style={{ marginRight: '8px' }}
+						>
+							Dừng quá trình
+						</Button>
+					),
+					<Button key='close' onClick={() => setDiagramProgressModalVisible(false)}>
+						Đóng
+					</Button>,
+				]}
+				width={800}
+			>
+				<div style={{ marginBottom: '16px' }}>
+					<div style={{ display: 'flex', gap: '16px', marginBottom: '16px' }}>
+						<div style={{
+							flex: 1,
+							textAlign: 'center',
+							padding: '12px',
+							backgroundColor: '#f0f0f0',
+							borderRadius: '6px',
+						}}>
+							<div style={{ fontSize: '24px', fontWeight: 'bold', color: '#1890ff' }}>
+								{diagramGenerationStats.total}
+							</div>
+							<div style={{ fontSize: '12px', color: '#666' }}>Tổng số</div>
+						</div>
+						<div style={{
+							flex: 1,
+							textAlign: 'center',
+							padding: '12px',
+							backgroundColor: '#f6ffed',
+							borderRadius: '6px',
+						}}>
+							<div style={{ fontSize: '24px', fontWeight: 'bold', color: '#52c41a' }}>
+								{diagramGenerationStats.success}
+							</div>
+							<div style={{ fontSize: '12px', color: '#666' }}>Thành công</div>
+						</div>
+						<div style={{
+							flex: 1,
+							textAlign: 'center',
+							padding: '12px',
+							backgroundColor: '#fff2f0',
+							borderRadius: '6px',
+						}}>
+							<div style={{ fontSize: '24px', fontWeight: 'bold', color: '#ff4d4f' }}>
+								{diagramGenerationStats.failed}
+							</div>
+							<div style={{ fontSize: '12px', color: '#666' }}>Thất bại</div>
+						</div>
+					</div>
 
-            {processingDiagramQueue && currentDiagramProcessing && (
-                <div style={{
-                  padding: '12px',
-                  backgroundColor: '#fff7e6',
-                  borderRadius: '6px',
-                  border: '1px solid #ffd591',
-                  marginBottom: '16px'
-                }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                    <LoadingOutlined style={{ color: '#fa8c16' }} />
-                    <span style={{ fontWeight: 'bold' }}>Đang xử lý:</span>
-                  </div>
-                  <div style={{ fontSize: '14px', color: '#666' }}>
-                    {currentDiagramProcessing.title}
-                  </div>
-                </div>
-            )}
+					{processingDiagramQueue && currentDiagramProcessing && (
+						<div style={{
+							padding: '12px',
+							backgroundColor: '#fff7e6',
+							borderRadius: '6px',
+							border: '1px solid #ffd591',
+							marginBottom: '16px',
+						}}>
+							<div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+								<LoadingOutlined style={{ color: '#fa8c16' }} />
+								<span style={{ fontWeight: 'bold' }}>Đang xử lý:</span>
+							</div>
+							<div style={{ fontSize: '14px', color: '#666' }}>
+								{currentDiagramProcessing.title}
+							</div>
+						</div>
+					)}
 
-          </div>
+				</div>
 
-          <div>
-            <div style={{ fontWeight: 'bold', marginBottom: '12px' }}>Danh sách tất cả task:</div>
-            <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
+				<div>
+					<div style={{ fontWeight: 'bold', marginBottom: '12px' }}>Danh sách tất cả task:</div>
+					<div style={{ maxHeight: '400px', overflowY: 'auto' }}>
 
-              {/* Task đang xử lý */}
-              {processingDiagramQueue && currentDiagramProcessing && (
-                  <div
-                      style={{
-                        padding: '12px',
-                        marginBottom: '8px',
-                        borderRadius: '6px',
-                        backgroundColor: '#fff7e6',
-                        border: '1px solid #ffd591'
-                      }}
-                  >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                      <LoadingOutlined style={{ color: '#fa8c16' }} />
-                      <span style={{ fontWeight: 'bold' }}>Đang xử lý: {currentDiagramProcessing.title}</span>
-                      <span style={{
-                        fontSize: '12px',
-                        padding: '2px 6px',
-                        borderRadius: '4px',
-                        backgroundColor: currentDiagramProcessing.mode === 'html' ? '#e6f7ff' : '#fff7e6',
-                        color: currentDiagramProcessing.mode === 'html' ? '#1890ff' : '#fa8c16'
-                      }}>
+						{/* Task đang xử lý */}
+						{processingDiagramQueue && currentDiagramProcessing && (
+							<div
+								style={{
+									padding: '12px',
+									marginBottom: '8px',
+									borderRadius: '6px',
+									backgroundColor: '#fff7e6',
+									border: '1px solid #ffd591',
+								}}
+							>
+								<div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+									<LoadingOutlined style={{ color: '#fa8c16' }} />
+									<span
+										style={{ fontWeight: 'bold' }}>Đang xử lý: {currentDiagramProcessing.title}</span>
+									<span style={{
+										fontSize: '12px',
+										padding: '2px 6px',
+										borderRadius: '4px',
+										backgroundColor: currentDiagramProcessing.mode === 'html' ? '#e6f7ff' : '#fff7e6',
+										color: currentDiagramProcessing.mode === 'html' ? '#1890ff' : '#fa8c16',
+									}}>
                     {currentDiagramProcessing.mode === 'html' ? 'HTML' : 'Kroki'}
                   </span>
-                    </div>
-                    <div style={{ fontSize: '12px', color: '#666' }}>
-                      Đang tạo {currentDiagramProcessing.mode === 'html' ? 'HTML code' : 'diagram'}...
-                    </div>
-                  </div>
-              )}
+								</div>
+								<div style={{ fontSize: '12px', color: '#666' }}>
+									Đang tạo {currentDiagramProcessing.mode === 'html' ? 'HTML code' : 'diagram'}...
+								</div>
+							</div>
+						)}
 
-              {/* Tasks trong queue */}
-              {diagramGenerationQueue.map((task, index) => (
-                  <div
-                      key={task.id}
-                      style={{
-                        padding: '12px',
-                        marginBottom: '8px',
-                        borderRadius: '6px',
-                        backgroundColor: '#f0f0f0',
-                        border: '1px solid #d9d9d9'
-                      }}
-                  >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+						{/* Tasks trong queue */}
+						{diagramGenerationQueue.map((task, index) => (
+							<div
+								key={task.id}
+								style={{
+									padding: '12px',
+									marginBottom: '8px',
+									borderRadius: '6px',
+									backgroundColor: '#f0f0f0',
+									border: '1px solid #d9d9d9',
+								}}
+							>
+								<div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
                   <span style={{
-                    fontSize: '12px',
-                    padding: '2px 6px',
-                    borderRadius: '4px',
-                    backgroundColor: '#e6f7ff',
-                    color: '#1890ff',
-                    fontWeight: 'bold'
-                  }}>
+					  fontSize: '12px',
+					  padding: '2px 6px',
+					  borderRadius: '4px',
+					  backgroundColor: '#e6f7ff',
+					  color: '#1890ff',
+					  fontWeight: 'bold',
+				  }}>
                     #{index + 1}
                   </span>
-                      <span style={{ fontWeight: 'bold' }}>Chờ xử lý: {task.title}</span>
-                      <span style={{
-                        fontSize: '12px',
-                        padding: '2px 6px',
-                        borderRadius: '4px',
-                        backgroundColor: task.mode === 'html' ? '#e6f7ff' : '#fff7e6',
-                        color: task.mode === 'html' ? '#1890ff' : '#fa8c16'
-                      }}>
+									<span style={{ fontWeight: 'bold' }}>Chờ xử lý: {task.title}</span>
+									<span style={{
+										fontSize: '12px',
+										padding: '2px 6px',
+										borderRadius: '4px',
+										backgroundColor: task.mode === 'html' ? '#e6f7ff' : '#fff7e6',
+										color: task.mode === 'html' ? '#1890ff' : '#fa8c16',
+									}}>
                     {task.mode === 'html' ? 'HTML' : 'Kroki'}
                   </span>
-                    </div>
-                    <div style={{ fontSize: '12px', color: '#666' }}>
-                      Sẽ tạo {task.mode === 'html' ? 'HTML code' : 'diagram'} sau khi hoàn thành task trước
-                    </div>
-                  </div>
-              ))}
+								</div>
+								<div style={{ fontSize: '12px', color: '#666' }}>
+									Sẽ tạo {task.mode === 'html' ? 'HTML code' : 'diagram'} sau khi hoàn thành task
+									trước
+								</div>
+							</div>
+						))}
 
-              {/* Kết quả đã hoàn thành */}
-              {diagramGenerationResults.length > 0 && (
-                  <>
-                    <div style={{
-                      fontWeight: 'bold',
-                      marginTop: '16px',
-                      marginBottom: '12px',
-                      padding: '8px',
-                      backgroundColor: '#f6ffed',
-                      borderRadius: '4px',
-                      border: '1px solid #b7eb8f'
-                    }}>
-                      ✅ Kết quả đã hoàn thành ({diagramGenerationResults.length}):
-                    </div>
-                    {diagramGenerationResults.map((result, index) => (
-                        <div
-                            key={result.id}
-                            style={{
-                              padding: '12px',
-                              marginBottom: '8px',
-                              borderRadius: '6px',
-                              backgroundColor: result.status === 'success' ? '#f6ffed' : '#fff2f0',
-                              border: `1px solid ${result.status === 'success' ? '#b7eb8f' : '#ffccc7'}`
-                            }}
-                        >
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                            {result.status === 'success' ? (
-                                <CheckCircleOutlined style={{ color: '#52c41a' }} />
-                            ) : (
-                                <span style={{ color: '#ff4d4f' }}>❌</span>
-                            )}
-                            <span style={{ fontWeight: 'bold' }}>✅ Hoàn thành: {result.title}</span>
-                            <span style={{
-                              fontSize: '12px',
-                              padding: '2px 6px',
-                              borderRadius: '4px',
-                              backgroundColor: result.type === 'html' ? '#e6f7ff' : '#fff7e6',
-                              color: result.type === 'html' ? '#1890ff' : '#fa8c16'
-                            }}>
+						{/* Kết quả đã hoàn thành */}
+						{diagramGenerationResults.length > 0 && (
+							<>
+								<div style={{
+									fontWeight: 'bold',
+									marginTop: '16px',
+									marginBottom: '12px',
+									padding: '8px',
+									backgroundColor: '#f6ffed',
+									borderRadius: '4px',
+									border: '1px solid #b7eb8f',
+								}}>
+									✅ Kết quả đã hoàn thành ({diagramGenerationResults.length}):
+								</div>
+								{diagramGenerationResults.map((result, index) => (
+									<div
+										key={result.id}
+										style={{
+											padding: '12px',
+											marginBottom: '8px',
+											borderRadius: '6px',
+											backgroundColor: result.status === 'success' ? '#f6ffed' : '#fff2f0',
+											border: `1px solid ${result.status === 'success' ? '#b7eb8f' : '#ffccc7'}`,
+										}}
+									>
+										<div style={{
+											display: 'flex',
+											alignItems: 'center',
+											gap: '8px',
+											marginBottom: '4px',
+										}}>
+											{result.status === 'success' ? (
+												<CheckCircleOutlined style={{ color: '#52c41a' }} />
+											) : (
+												<span style={{ color: '#ff4d4f' }}>❌</span>
+											)}
+											<span style={{ fontWeight: 'bold' }}>✅ Hoàn thành: {result.title}</span>
+											<span style={{
+												fontSize: '12px',
+												padding: '2px 6px',
+												borderRadius: '4px',
+												backgroundColor: result.type === 'html' ? '#e6f7ff' : '#fff7e6',
+												color: result.type === 'html' ? '#1890ff' : '#fa8c16',
+											}}>
                         {result.type === 'html' ? 'HTML' : 'Kroki'}
                       </span>
-                          </div>
-                          {result.status === 'success' ? (
-                              <div style={{ fontSize: '12px', color: '#666' }}>
-                                Tạo thành công {result.count} {result.type === 'html' ? 'HTML code' : 'diagram'}
-                              </div>
-                          ) : (
-                              <div style={{ fontSize: '12px', color: '#ff4d4f' }}>
-                                Lỗi: {result.error}
-                              </div>
-                          )}
-                        </div>
-                    ))}
-                  </>
-              )}
-            </div>
-          </div>
-        </Modal>
+										</div>
+										{result.status === 'success' ? (
+											<div style={{ fontSize: '12px', color: '#666' }}>
+												Tạo thành
+												công {result.count} {result.type === 'html' ? 'HTML code' : 'diagram'}
+											</div>
+										) : (
+											<div style={{ fontSize: '12px', color: '#ff4d4f' }}>
+												Lỗi: {result.error}
+											</div>
+										)}
+									</div>
+								))}
+							</>
+						)}
+					</div>
+				</div>
+			</Modal>
 
-        {/* Case From Learning Block Progress Modal */}
-        <Modal
-            title="Tiến trình tạo Case Training từ Learning Block"
-            open={caseFromLearningProgressModalVisible}
-            onCancel={() => setCaseFromLearningProgressModalVisible(false)}
-            footer={[
-              <Button key="close" onClick={() => setCaseFromLearningProgressModalVisible(false)}>
-                Đóng
-              </Button>
-            ]}
-            width={800}
-        >
-          <div style={{ marginBottom: '16px' }}>
-            <div style={{ display: 'flex', gap: '16px', marginBottom: '16px' }}>
-              <div style={{ flex: 1, textAlign: 'center', padding: '12px', backgroundColor: '#f0f0f0', borderRadius: '6px' }}>
-                <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#1890ff' }}>
-                  {caseFromLearningStats.total}
-                </div>
-                <div style={{ fontSize: '12px', color: '#666' }}>Tổng số Case dự kiến</div>
-              </div>
-              <div style={{ flex: 1, textAlign: 'center', padding: '12px', backgroundColor: '#f6ffed', borderRadius: '6px' }}>
-                <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#52c41a' }}>
-                  {caseFromLearningStats.success}
-                </div>
-                <div style={{ fontSize: '12px', color: '#666' }}>Tạo thành công</div>
-              </div>
-              <div style={{ flex: 1, textAlign: 'center', padding: '12px', backgroundColor: '#fff2f0', borderRadius: '6px' }}>
-                <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#ff4d4f' }}>
-                  {caseFromLearningStats.failed}
-                </div>
-                <div style={{ fontSize: '12px', color: '#666' }}>Thất bại</div>
-              </div>
-            </div>
-            {processingCaseFromLearningBlockQueue && (
-                <div style={{ marginBottom: '12px' }}>
-                  <Spin size="small" />{' '}
-                  <span style={{ marginLeft: 8 }}>Đang xử lý: {currentCaseFromLearningBlockProcessing?.title || '...'}</span>
-                </div>
-            )}
-          </div>
-          <div style={{ maxHeight: '400px', overflowY: 'auto', borderTop: '1px solid #f0f0f0', paddingTop: 12 }}>
-            {caseFromLearningResults.length === 0 ? (
-                <div style={{ textAlign: 'center', color: '#999' }}>Chưa có bản ghi nào được xử lý.</div>
-            ) : (
-                <Table
-                    size="small"
-                    pagination={false}
-                    rowKey="id"
-                    dataSource={caseFromLearningResults}
-                    columns={[
-                      {
-                        title: 'ID',
-                        dataIndex: 'recordId',
-                        key: 'recordId',
-                        width: 80
-                      },
-                      {
-                        title: 'Tiêu đề',
-                        dataIndex: 'title',
-                        key: 'title',
-                        render: (text) => <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'inline-block', maxWidth: 400 }}>{text}</span>
-                      },
-                      {
-                        title: 'Trạng thái',
-                        dataIndex: 'status',
-                        key: 'status',
-                        width: 120,
-                        render: (status) => {
-                          if (status === 'success') {
-                            return <Tag color="green">Thành công</Tag>;
-                          }
-                          if (status === 'failed') {
-                            return <Tag color="red">Thất bại</Tag>;
-                          }
-                          return <Tag>Khác</Tag>;
-                        }
-                      },
-                      {
-                        title: 'Lỗi',
-                        dataIndex: 'error',
-                        key: 'error',
-                        render: (error) => error ? <span style={{ color: '#ff4d4f' }}>{error}</span> : null
-                      }
-                    ]}
-                />
-            )}
-          </div>
-        </Modal>
+			{/* Case From Learning Block Progress Modal */}
+			<Modal
+				title='Tiến trình tạo Case Training từ Learning Block'
+				open={caseFromLearningProgressModalVisible}
+				onCancel={() => setCaseFromLearningProgressModalVisible(false)}
+				footer={[
+					<Button key='close' onClick={() => setCaseFromLearningProgressModalVisible(false)}>
+						Đóng
+					</Button>,
+				]}
+				width={800}
+			>
+				<div style={{ marginBottom: '16px' }}>
+					<div style={{ display: 'flex', gap: '16px', marginBottom: '16px' }}>
+						<div style={{
+							flex: 1,
+							textAlign: 'center',
+							padding: '12px',
+							backgroundColor: '#f0f0f0',
+							borderRadius: '6px',
+						}}>
+							<div style={{ fontSize: '24px', fontWeight: 'bold', color: '#1890ff' }}>
+								{caseFromLearningStats.total}
+							</div>
+							<div style={{ fontSize: '12px', color: '#666' }}>Tổng số Case dự kiến</div>
+						</div>
+						<div style={{
+							flex: 1,
+							textAlign: 'center',
+							padding: '12px',
+							backgroundColor: '#f6ffed',
+							borderRadius: '6px',
+						}}>
+							<div style={{ fontSize: '24px', fontWeight: 'bold', color: '#52c41a' }}>
+								{caseFromLearningStats.success}
+							</div>
+							<div style={{ fontSize: '12px', color: '#666' }}>Tạo thành công</div>
+						</div>
+						<div style={{
+							flex: 1,
+							textAlign: 'center',
+							padding: '12px',
+							backgroundColor: '#fff2f0',
+							borderRadius: '6px',
+						}}>
+							<div style={{ fontSize: '24px', fontWeight: 'bold', color: '#ff4d4f' }}>
+								{caseFromLearningStats.failed}
+							</div>
+							<div style={{ fontSize: '12px', color: '#666' }}>Thất bại</div>
+						</div>
+					</div>
+					{processingCaseFromLearningBlockQueue && (
+						<div style={{ marginBottom: '12px' }}>
+							<Spin size='small' />{' '}
+							<span
+								style={{ marginLeft: 8 }}>Đang xử lý: {currentCaseFromLearningBlockProcessing?.title || '...'}</span>
+						</div>
+					)}
+				</div>
+				<div style={{ maxHeight: '400px', overflowY: 'auto', borderTop: '1px solid #f0f0f0', paddingTop: 12 }}>
+					{caseFromLearningResults.length === 0 ? (
+						<div style={{ textAlign: 'center', color: '#999' }}>Chưa có bản ghi nào được xử lý.</div>
+					) : (
+						<Table
+							size='small'
+							pagination={false}
+							rowKey='id'
+							dataSource={caseFromLearningResults}
+							columns={[
+								{
+									title: 'ID',
+									dataIndex: 'recordId',
+									key: 'recordId',
+									width: 80,
+								},
+								{
+									title: 'Tiêu đề',
+									dataIndex: 'title',
+									key: 'title',
+									render: (text) => <span style={{
+										whiteSpace: 'nowrap',
+										overflow: 'hidden',
+										textOverflow: 'ellipsis',
+										display: 'inline-block',
+										maxWidth: 400,
+									}}>{text}</span>,
+								},
+								{
+									title: 'Trạng thái',
+									dataIndex: 'status',
+									key: 'status',
+									width: 120,
+									render: (status) => {
+										if (status === 'success') {
+											return <Tag color='green'>Thành công</Tag>;
+										}
+										if (status === 'failed') {
+											return <Tag color='red'>Thất bại</Tag>;
+										}
+										return <Tag>Khác</Tag>;
+									},
+								},
+								{
+									title: 'Lỗi',
+									dataIndex: 'error',
+									key: 'error',
+									render: (error) => error ? <span style={{ color: '#ff4d4f' }}>{error}</span> : null,
+								},
+							]}
+						/>
+					)}
+				</div>
+			</Modal>
 
-        {/* Voice Settings Modal */}
-        <VoiceSettingsModal
-            visible={voiceSettingsVisible}
-            onCancel={() => setVoiceSettingsVisible(false)}
-            settings={voiceSettings}
-            onSave={(updatedSettings) => {
-              setVoiceSettings(updatedSettings);
-              saveVoiceSettings(updatedSettings);
-            }}
-        />
+			{/* Voice Settings Modal */}
+			<VoiceSettingsModal
+				visible={voiceSettingsVisible}
+				onCancel={() => setVoiceSettingsVisible(false)}
+				settings={voiceSettings}
+				onSave={(updatedSettings) => {
+					setVoiceSettings(updatedSettings);
+					saveVoiceSettings(updatedSettings);
+				}}
+			/>
 
-        {/* Voice Queue Modal */}
-        <VoiceQueueModal
-            visible={voiceQueueModalVisible}
-            onCancel={() => setVoiceQueueModalVisible(false)}
-            voiceQueue={voiceQueue}
-            currentProcessing={currentProcessing}
-            onStopTask={handleStopVoiceTask}
-        />
-      </div>
+			{/* Voice Queue Modal */}
+			<VoiceQueueModal
+				visible={voiceQueueModalVisible}
+				onCancel={() => setVoiceQueueModalVisible(false)}
+				voiceQueue={voiceQueue}
+				currentProcessing={currentProcessing}
+				onStopTask={handleStopVoiceTask}
+			/>
+		</div>
 
-  );
+	);
 
 };
-
 
 
 export default K9Management;
