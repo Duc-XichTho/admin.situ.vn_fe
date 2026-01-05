@@ -10608,15 +10608,17 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
 		}
 
 
+
 		setUploadingJson(true);
 
 		let successCount = 0;
 
 		let errorCount = 0;
+		let successfulRecords = [];
 
-      let successfulRecords = [];
 
-      try {
+
+		try {
 
 			for (const record of jsonPreviewData.records) {
 
@@ -10652,7 +10654,7 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
 
 							tag1: record.tag1 || null,
 
-							tag2: record.tag2 || null,
+							tag2: record.tag2 || null
 
 						}),
 
@@ -10670,13 +10672,13 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
 
 							homeCategory: record.homeCategory || 'latest',
 
-							displayOrder: record.displayOrder || 1,
+							displayOrder: record.displayOrder || 1
 
 						}),
 
 						...(currentTab === 'library' && {
 
-							pages: record.pages || null,
+							pages: record.pages || null
 
 						}),
 
@@ -10686,19 +10688,21 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
 
 							storyType: record.storyType || 'Podcast',
 
-							audioText: record.audioText || '',
+							audioText: record.audioText || ''
 
-						}),
+						})
 
 					};
 
 
-					const data = await createK9(newRecord);
-                  const normalized = Array.isArray(data.data)
-                      ? data.data
-                      : [data.data];
 
-                  successfulRecords = normalized;
+					const data = await createK9(newRecord);
+					console.log(data);
+					const normalized = Array.isArray(data.data)
+						? data.data
+						: [data.data];
+
+					successfulRecords.push(...normalized);
 					successCount++;
 
 				} catch (error) {
@@ -10712,9 +10716,12 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
 			}
 
 
+
 			// Update local state instead of reloading all data
 			if (successCount > 0) {
-				const updater = (list) => [...(list || []), ...successfulRecords];
+				// Đảo ngược để record mới nhất (import cuối cùng) ở đầu
+				const reversedRecords = [...successfulRecords].reverse();
+				const updater = (list) => [...reversedRecords, ...(list || [])];
 				setAllData(prev => ({ ...prev, [currentTab]: updater(prev[currentTab] || []) }));
 				setFilteredData(prev => ({ ...prev, [currentTab]: updater(prev[currentTab] || []) }));
 				setData(prev => updater(prev));
@@ -10733,6 +10740,7 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
 				message.error('Không thể import bản ghi nào!');
 
 			}
+
 
 
 		} catch (error) {
