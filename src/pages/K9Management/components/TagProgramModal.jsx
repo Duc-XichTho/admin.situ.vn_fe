@@ -211,7 +211,7 @@ export default function TagProgramModal ({ visible, onClose, tag4Options, onSave
 			message.warning('Tên tag phải có ít nhất 2 ký tự!');
 			return;
 		}
-		if (newTag.trim().length > 50) {
+		if (newTag.trim().length > 100) {
 			message.warning('Tên tag không được quá 50 ký tự!');
 			return;
 		}
@@ -274,7 +274,7 @@ export default function TagProgramModal ({ visible, onClose, tag4Options, onSave
 			message.warning('Tên tag phải có ít nhất 2 ký tự!');
 			return;
 		}
-		if (editingTag.label.trim().length > 50) {
+		if (editingTag.label.trim().length > 100) {
 			message.warning('Tên tag không được quá 50 ký tự!');
 			return;
 		}
