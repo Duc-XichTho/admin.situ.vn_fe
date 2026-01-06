@@ -4,13 +4,14 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom';
 import { aiGen, aiGen2 } from '../../apis/aiGen/botService.jsx';
 import { uploadFiles } from '../../apis/aiGen/uploadImageWikiNoteService.jsx';
-import { getK9ByType, updateK9, updateK9Bulk } from '../../apis/k9Service.jsx';
+import { getK9ByType, updateK9, updateK9Bulk, getK9ByCidType } from '../../apis/k9Service.jsx';
 import { getSettingByType } from '../../apis/settingService.jsx';
 import EditDetailModal from '../K9/components/EditDetailModal.jsx';
 import EditSummaryDetailModal from '../K9/components/EditSummaryDetailModal.jsx';
 import DiagramPreviewModal from '../K9Management/components/DiagramPreviewModal.jsx';
 import PromptSettingsListModal from '../K9Management/components/PromptSettingsListModal.jsx';
 import SelectPromptModal from '../K9Management/components/SelectPromptModal.jsx';
+import RelatedCaseTrainingModal from '../K9/components/RelatedCaseTrainingModal.jsx';
 import { extractJsonFromMarkdown, normalizeExcalidrawJson, validateExcalidrawJson } from '../K9Management/utils/excalidrawHelpers.js';
 import styles from './AISummaryDetailGeneration.module.css';
 const { TextArea } = Input;
@@ -93,6 +94,12 @@ const AISummaryDetailGeneration = () => {
     const [editingDescriptions, setEditingDescriptions] = useState({}); // { index: description }
     const [savingDescription, setSavingDescription] = useState(false);
     const [uploadingImageIndex, setUploadingImageIndex] = useState(null); // Track which image is being uploaded
+    
+    // Related Case Training Modal states
+    const [relatedCaseTrainingModalVisible, setRelatedCaseTrainingModalVisible] = useState(false);
+    const [selectedNewsItemForCaseTraining, setSelectedNewsItemForCaseTraining] = useState(null);
+    const [relatedCaseTrainingList, setRelatedCaseTrainingList] = useState([]);
+    const [loadingRelatedCaseTraining, setLoadingRelatedCaseTraining] = useState(false);
 
     // Queue states for Image generation from SummaryDetail (tạo imageUrl JSON)
     const [imageGenerationQueue, setImageGenerationQueue] = useState([]);
@@ -2098,6 +2105,36 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
         loadK9Data();
     }, []);
 
+    // Get related case training count by cid
+    const getRelatedCaseTrainingCount = useCallback((record) => {
+        if (!record.cid || activeTab !== 'news') return 0;
+        const relatedCases = k9Data.caseTraining?.filter(item => item.cid === record.cid) || [];
+        return relatedCases.length;
+    }, [k9Data.caseTraining, activeTab]);
+
+    // Handle open related case training modal
+    const handleOpenRelatedCaseTrainingModal = async (record) => {
+        if (!record.cid) {
+            message.warning('Record này không có CID!');
+            return;
+        }
+
+        setLoadingRelatedCaseTraining(true);
+        setSelectedNewsItemForCaseTraining(record);
+        
+        try {
+            const relatedCases = await getK9ByCidType(record.cid, 'caseTraining');
+            const caseList = Array.isArray(relatedCases) ? relatedCases : (relatedCases?.data || []);
+            setRelatedCaseTrainingList(caseList);
+            setRelatedCaseTrainingModalVisible(true);
+        } catch (error) {
+            console.error('Error loading related case training:', error);
+            message.error('Lỗi khi tải danh sách case training liên quan!');
+        } finally {
+            setLoadingRelatedCaseTraining(false);
+        }
+    };
+
     // Memoize current tab data to avoid unnecessary recalculations
     const currentTabData = useMemo(() => {
         if (activeTab && k9Data[activeTab] && Array.isArray(k9Data[activeTab])) {
@@ -2399,6 +2436,29 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
             width: 100,
             render: (cid) => cid ? <Tag color="blue">{cid}</Tag> : '-',
         },
+        // Related Case Training column - only show in news tab
+        ...(activeTab === 'news' ? [{
+            title: 'Case liên quan',
+            key: 'relatedCaseTraining',
+            width: 120,
+            render: (_, record) => {
+                const count = getRelatedCaseTrainingCount(record);
+                return (
+                    <Button
+                        type="link"
+                        size="small"
+                        onClick={() => handleOpenRelatedCaseTrainingModal(record)}
+                        loading={loadingRelatedCaseTraining && selectedNewsItemForCaseTraining?.id === record.id}
+                        style={{
+                            color: count > 0 ? '#1890ff' : '#999',
+                            fontWeight: count > 0 ? '600' : 'normal'
+                        }}
+                    >
+                        {count > 0 ? `${count} bài` : '0 bài'}
+                    </Button>
+                );
+            },
+        }] : []),
         {
             title: 'Lesson Number',
             dataIndex: 'lessonNumber',
@@ -2948,7 +3008,7 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
             fixed: 'right',
             render: renderAction,
         },
-    ], [renderDetail, renderSummaryDetail, renderAction]);
+    ], [renderDetail, renderSummaryDetail, renderAction, activeTab, getRelatedCaseTrainingCount, handleOpenRelatedCaseTrainingModal, loadingRelatedCaseTraining, selectedNewsItemForCaseTraining]);
 
     return (
         <div style={{ padding: '24px', maxWidth: '100%', margin: '0 auto', }}>
@@ -4690,6 +4750,21 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
                     </div>
                 )}
             </Modal>
+
+            {/* Related Case Training Modal */}
+            <RelatedCaseTrainingModal
+                visible={relatedCaseTrainingModalVisible}
+                onClose={() => {
+                    setRelatedCaseTrainingModalVisible(false);
+                    setSelectedNewsItemForCaseTraining(null);
+                    setRelatedCaseTrainingList([]);
+                }}
+                selectedNewsItem={selectedNewsItemForCaseTraining}
+                relatedCaseTrainingList={relatedCaseTrainingList}
+                onRefresh={() => {
+                    loadK9Data();
+                }}
+            />
         </div>
     );
 };

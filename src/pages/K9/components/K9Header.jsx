@@ -1382,7 +1382,7 @@ const K9Header = ({
 				color: '#0958d9',
 				boxShadow: '0 2px 8px rgba(24, 144, 255, 0.3)'
 			};
-		} else if (accountType === 'Pro 365') {
+		} else if (accountType === 'Pro 365' || accountType === 'M12') {
 			tagStyle = {
 				...tagStyle,
 				border: '1px solid #13c2c2',
@@ -1390,7 +1390,7 @@ const K9Header = ({
 				color: '#08979c',
 				boxShadow: '0 2px 8px rgba(19, 194, 194, 0.3)'
 			};
-		} else if (accountType === 'Pro 730') {
+		} else if (accountType === 'Pro 730' || accountType === 'M24') {
 			tagStyle = {
 				...tagStyle,
 				border: '1px solid #722ed1',
@@ -1413,8 +1413,8 @@ const K9Header = ({
 		return (
 			<Tag style={tagStyle}>
 				{accountType === 'Pro 90' ? '⭐ Pro 90' :
-					accountType === 'Pro 365' ? '⭐ Pro 365' :
-						accountType === 'Pro 730' ? '⭐ Pro 730' :
+					(accountType === 'Pro 365' || accountType === 'M12') ? '⭐ M12' :
+						(accountType === 'Pro 730' || accountType === 'M24') ? '⭐ M24' :
 							accountType}
 			</Tag>
 		);

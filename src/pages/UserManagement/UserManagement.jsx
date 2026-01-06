@@ -28,7 +28,13 @@ import {
   StarOutlined,
   FireOutlined,
   SearchOutlined,
-  TagsOutlined
+  TagsOutlined,
+  CheckCircleOutlined,
+  ClockCircleOutlined,
+  CloseCircleOutlined,
+  DollarOutlined,
+  FileTextOutlined,
+  CalendarOutlined
 } from '@ant-design/icons';
 import { ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -62,6 +68,8 @@ const UserManagement = () => {
   const [userClassForm] = Form.useForm();
   const [selectedAccountType, setSelectedAccountType] = useState(null);
   const [accountTypeFilter, setAccountTypeFilter] = useState(null);
+  const [paymentHistoryModalVisible, setPaymentHistoryModalVisible] = useState(false);
+  const [selectedUserPaymentHistory, setSelectedUserPaymentHistory] = useState(null);
 
   // Hàm tìm kiếm users
   const handleSearch = (value) => {
@@ -169,6 +177,59 @@ const UserManagement = () => {
       console.warn('Error getting note:', error);
     }
     return '';
+  };
+
+  // Hàm lấy lịch sử thanh toán từ user
+  const getHistoryPayment = (user) => {
+    try {
+      // Kiểm tra trường historyPayment
+      if (user.historyPayment && Array.isArray(user.historyPayment)) {
+        return user.historyPayment;
+      }
+      
+      // Kiểm tra trong info object
+      if (user.info) {
+        let infoObj = {};
+        if (typeof user.info === 'string') {
+          infoObj = JSON.parse(user.info);
+        } else if (typeof user.info === 'object') {
+          infoObj = user.info;
+        }
+        
+        if (infoObj.historyPayment && Array.isArray(infoObj.historyPayment)) {
+          return infoObj.historyPayment;
+        }
+      }
+    } catch (error) {
+      console.warn('Error getting history payment:', error);
+    }
+    return [];
+  };
+
+  // Hàm format thời gian thanh toán
+  const formatPaidAt = (paidAt) => {
+    if (!paidAt) return 'N/A';
+    
+    try {
+      // Format: "2026-01-04 04:28:05.638000 +00:00"
+      // Chuyển sang Date object và format lại
+      const date = new Date(paidAt);
+      if (isNaN(date.getTime())) {
+        return paidAt; // Trả về nguyên bản nếu không parse được
+      }
+      
+      // Format: DD/MM/YYYY HH:mm
+      const day = String(date.getDate()).padStart(2, '0');
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const year = date.getFullYear();
+      const hours = String(date.getHours()).padStart(2, '0');
+      const minutes = String(date.getMinutes()).padStart(2, '0');
+      
+      return `${day}/${month}/${year} ${hours}:${minutes}`;
+    } catch (error) {
+      console.warn('Error formatting paidAt:', error);
+      return paidAt;
+    }
   };
 
   // Hàm kiểm tra user đã được setup thời gian chưa
@@ -724,23 +785,24 @@ const UserManagement = () => {
       render: (text, record) => (
         <div className={styles.userInfo}>
           <UserOutlined className={styles.userIcon} />
-          <span>{text || 'Chưa có tên'}</span>
+          <span title={text}>{text || 'Chưa có tên'}</span>
         </div>
       ),
-    }, {
-      title: 'Username',
-      dataIndex: 'username',
-      key: 'username',
-      render: (text) => (
-        <div className={styles.emailInfo}>
-          <span>{text}</span>
-        </div>
-      ),
-    },
+    }, 
+    // {
+    //   title: 'Username',
+    //   dataIndex: 'username',
+    //   key: 'username',
+    //   render: (text) => (
+    //     <div className={styles.emailInfo}>
+    //       <span>{text}</span>
+    //     </div>
+    //   ),
+    // },
     {
       title: 'Email',
       dataIndex: 'email',
-      width: 200,
+      width: 250,
       key: 'email',
       render: (text) => (
         <div className={styles.emailInfo}>
@@ -789,7 +851,9 @@ const UserManagement = () => {
           'Dùng thử': 'default',
           'Pro 90': 'blue',
           'Pro 365': 'cyan',
-          'Pro 730': 'purple'
+          'Pro 730': 'purple',
+          'M12': 'cyan',
+          'M24': 'purple'
         };
         return (
           <Tag color={colorMap[accountType] || 'default'}>
@@ -911,6 +975,35 @@ const UserManagement = () => {
               Hết hạn: {endDate.toLocaleDateString('vi-VN')} {daysLeft <= 1 ? endDate.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : ''}
             </small>
           </div>
+        );
+      },
+    },
+    {
+      title: 'Mã thanh toán',
+      key: 'historyPayment',
+      width: 150,
+      render: (_, record) => {
+        const historyPayment = getHistoryPayment(record);
+        if (!historyPayment || historyPayment.length === 0) {
+          return <span style={{ color: '#999', fontStyle: 'italic' }}>Không có</span>;
+        }
+        
+        return (
+          <Button
+            type="link"
+            onClick={() => {
+              setSelectedUserPaymentHistory({
+                user: record,
+                history: historyPayment
+              });
+              setPaymentHistoryModalVisible(true);
+            }}
+            style={{ padding: 0 }}
+          >
+            <Tag color="blue" style={{ cursor: 'pointer' }}>
+              {historyPayment.length} giao dịch
+            </Tag>
+          </Button>
         );
       },
     },
@@ -1511,6 +1604,197 @@ const UserManagement = () => {
           />
         </div>
 
+      </Modal>
+
+      {/* Payment History Modal */}
+      <Modal
+        title={
+          <div style={{ padding: '8px 0' }}>
+            <div style={{ fontSize: '18px', fontWeight: 600, marginBottom: '8px', color: '#1890ff' }}>
+              💳 Lịch sử thanh toán
+            </div>
+            {selectedUserPaymentHistory?.user && (
+              <div style={{ 
+                fontSize: '14px', 
+                color: '#666', 
+                fontWeight: 'normal',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}>
+                <UserOutlined />
+                <span>
+                  {selectedUserPaymentHistory.user.name || 'Chưa có tên'} 
+                  {selectedUserPaymentHistory.user.email && ` (${selectedUserPaymentHistory.user.email})`}
+                </span>
+              </div>
+            )}
+          </div>
+        }
+        open={paymentHistoryModalVisible}
+        onCancel={() => {
+          setPaymentHistoryModalVisible(false);
+          setSelectedUserPaymentHistory(null);
+        }}
+        footer={[
+          <Button 
+            key="close" 
+            type="primary"
+            onClick={() => {
+              setPaymentHistoryModalVisible(false);
+              setSelectedUserPaymentHistory(null);
+            }}
+          >
+            Đóng
+          </Button>
+        ]}
+        width={1200}
+      >
+        {selectedUserPaymentHistory?.history && selectedUserPaymentHistory.history.length > 0 ? (
+          <div>
+            <div style={{ 
+              marginBottom: '16px', 
+              padding: '12px', 
+              backgroundColor: '#f0f8ff', 
+              borderRadius: '6px',
+              border: '1px solid #91d5ff'
+            }}>
+              <div style={{ fontSize: '14px', color: '#1890ff', fontWeight: 500 }}>
+                Tổng số giao dịch: <strong>{selectedUserPaymentHistory.history.length}</strong>
+              </div>
+            </div>
+            <div style={{ maxHeight: '500px', overflowY: 'auto' }}>
+              <Table
+                dataSource={selectedUserPaymentHistory.history}
+                rowKey={(record, index) => index}
+                pagination={false}
+                size="middle"
+                columns={[
+                  {
+                    title: 'Mã đơn hàng',
+                    key: 'orderCode',
+                    width: 150,
+                    render: (_, record) => (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <Tag color="blue" style={{ fontSize: '13px', padding: '4px 10px', fontWeight: 600 }}>
+                          {record.orderCode || 'Không có mã'}
+                        </Tag>
+                      </div>
+                    ),
+                  },
+                  {
+                    title: 'Trạng thái',
+                    key: 'status',
+                    width: 120,
+                    render: (_, record) => {
+                      const statusConfig = {
+                        'success': { color: 'green', icon: <CheckCircleOutlined />, text: 'Thành công' },
+                        'paid': { color: 'green', icon: <CheckCircleOutlined />, text: 'Đã thanh toán' },
+                        'pending': { color: 'orange', icon: <ClockCircleOutlined />, text: 'Đang chờ' },
+                        'failed': { color: 'red', icon: <CloseCircleOutlined />, text: 'Thất bại' },
+                        'cancelled': { color: 'red', icon: <CloseCircleOutlined />, text: 'Đã hủy' },
+                      };
+                      const config = statusConfig[record.status] || { color: 'default', icon: null, text: record.status || 'Không xác định' };
+                      return (
+                        <Tag 
+                          color={config.color} 
+                          style={{ fontSize: '13px', padding: '4px 10px' }}
+                          icon={config.icon}
+                        >
+                          {config.text}
+                        </Tag>
+                      );
+                    },
+                  },
+                  {
+                    title: 'Số tiền',
+                    key: 'amount',
+                    width: 150,
+                    align: 'right',
+                    render: (_, record) => (
+                      <div style={{ 
+                        fontSize: '15px', 
+                        fontWeight: 600, 
+                        color: '#1890ff',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'flex-end',
+                        gap: '6px'
+                      }}>
+                        <DollarOutlined />
+                        <span>{new Intl.NumberFormat('vi-VN').format(record.amount || 0)} đ</span>
+                      </div>
+                    ),
+                  },
+                  {
+                    title: 'Mô tả',
+                    key: 'description',
+                    render: (_, record) => (
+                      <div style={{ 
+                        fontSize: '13px', 
+                        color: '#333',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px'
+                      }}>
+                        <FileTextOutlined style={{ color: '#999' }} />
+                        <span>{record.description || 'Không có mô tả'}</span>
+                      </div>
+                    ),
+                  },
+                  {
+                    title: 'Thời gian tạo',
+                    key: 'created_at',
+                    width: 180,
+                    render: (_, record) => (
+                      <div style={{ 
+                        fontSize: '13px', 
+                        color: '#666',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px'
+                      }}>
+                        <CalendarOutlined style={{ color: '#999' }} />
+                        <span>{record.created_at ? formatPaidAt(record.created_at) : 'Không có'}</span>
+                      </div>
+                    ),
+                  },
+                  {
+                    title: 'Thời gian thanh toán',
+                    key: 'paidAt',
+                    width: 180,
+                    render: (_, record) => (
+                      <div style={{ 
+                        fontSize: '13px', 
+                        color: '#666',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px'
+                      }}>
+                        <CalendarOutlined style={{ color: '#999' }} />
+                        <span>{record.paidAt ? formatPaidAt(record.paidAt) : 'Chưa thanh toán'}</span>
+                      </div>
+                    ),
+                  },
+                ]}
+              />
+            </div>
+          </div>
+        ) : (
+          <div style={{ 
+            textAlign: 'center', 
+            padding: '60px 20px', 
+            color: '#999' 
+          }}>
+            <div style={{ fontSize: '48px', marginBottom: '16px' }}>💳</div>
+            <div style={{ fontSize: '16px', fontWeight: 500, marginBottom: '8px' }}>
+              Không có lịch sử thanh toán
+            </div>
+            <div style={{ fontSize: '14px', color: '#bbb' }}>
+              Người dùng này chưa có giao dịch thanh toán nào
+            </div>
+          </div>
+        )}
       </Modal>
     </div>
   );
