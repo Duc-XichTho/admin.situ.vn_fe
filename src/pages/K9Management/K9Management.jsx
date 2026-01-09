@@ -5919,7 +5919,9 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
               tag4: caseItem.tag4 || currentRecord.tag4 || null,
               cid: caseItem.cid || currentRecord.cid || null,
               questionContent: caseItem.questionContent || null,
-              status: caseItem.status || 'published'
+              status: caseItem.status || 'published',
+              lessonNumber: caseItem.lessonNumber || null,
+
             };
 
             console.log('payload', payload);
