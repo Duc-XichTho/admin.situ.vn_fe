@@ -607,7 +607,7 @@ const K9Management = () => {
 
   const [promptSettingsModalVisible, setPromptSettingsModalVisible] = useState(false);
   const [promptSettingsListModalVisible, setPromptSettingsListModalVisible] = useState(false);
-  
+
   // Diagram prompt selection states
   const [selectDiagramPromptModalVisible, setSelectDiagramPromptModalVisible] = useState(false);
   const [pendingDiagramMode, setPendingDiagramMode] = useState(null);
@@ -2939,113 +2939,113 @@ Format your response as:
 
         home: allData.home.filter(item =>
 
-          item.id?.toString().toLowerCase().includes(searchLower) ||
+            item.id?.toString().toLowerCase().includes(searchLower) ||
 
-          item.cid?.toLowerCase().includes(searchLower) ||
+            item.cid?.toLowerCase().includes(searchLower) ||
 
-          item.title?.toLowerCase().includes(searchLower) ||
+            item.title?.toLowerCase().includes(searchLower) ||
 
-          item.summary?.toLowerCase().includes(searchLower) ||
+            item.summary?.toLowerCase().includes(searchLower) ||
 
-          item.detail?.toLowerCase().includes(searchLower) ||
+            item.detail?.toLowerCase().includes(searchLower) ||
 
-          item.category?.toLowerCase().includes(searchLower) ||
+            item.category?.toLowerCase().includes(searchLower) ||
 
-          item.source?.toLowerCase().includes(searchLower)
+            item.source?.toLowerCase().includes(searchLower)
 
         ),
 
         news: allData.news.filter(item =>
 
-          item.id?.toString().toLowerCase().includes(searchLower) ||
+            item.id?.toString().toLowerCase().includes(searchLower) ||
 
-          item.cid?.toLowerCase().includes(searchLower) ||
+            item.cid?.toLowerCase().includes(searchLower) ||
 
-          item.title?.toLowerCase().includes(searchLower) ||
+            item.title?.toLowerCase().includes(searchLower) ||
 
-          item.summary?.toLowerCase().includes(searchLower) ||
+            item.summary?.toLowerCase().includes(searchLower) ||
 
-          item.detail?.toLowerCase().includes(searchLower) ||
+            item.detail?.toLowerCase().includes(searchLower) ||
 
-          item.category?.toLowerCase().includes(searchLower) ||
+            item.category?.toLowerCase().includes(searchLower) ||
 
-          item.source?.toLowerCase().includes(searchLower)
+            item.source?.toLowerCase().includes(searchLower)
 
         ),
 
         caseTraining: allData.caseTraining.filter(item =>
 
-          item.id?.toString().toLowerCase().includes(searchLower) ||
+            item.id?.toString().toLowerCase().includes(searchLower) ||
 
-          item.cid?.toLowerCase().includes(searchLower) ||
+            item.cid?.toLowerCase().includes(searchLower) ||
 
-          item.title?.toLowerCase().includes(searchLower) ||
+            item.title?.toLowerCase().includes(searchLower) ||
 
-          item.summary?.toLowerCase().includes(searchLower) ||
+            item.summary?.toLowerCase().includes(searchLower) ||
 
-          item.detail?.toLowerCase().includes(searchLower) ||
+            item.detail?.toLowerCase().includes(searchLower) ||
 
-          item.category?.toLowerCase().includes(searchLower) ||
+            item.category?.toLowerCase().includes(searchLower) ||
 
-          item.source?.toLowerCase().includes(searchLower) ||
+            item.source?.toLowerCase().includes(searchLower) ||
 
-          item.tag1?.toLowerCase().includes(searchLower) ||
+            item.tag1?.toLowerCase().includes(searchLower) ||
 
-          item.tag2?.toLowerCase().includes(searchLower) ||
+            item.tag2?.toLowerCase().includes(searchLower) ||
 
-          item.tag3?.toLowerCase().includes(searchLower)
+            item.tag3?.toLowerCase().includes(searchLower)
 
         ),
 
         longForm: allData.longForm.filter(item =>
 
-          item.id?.toString().toLowerCase().includes(searchLower) ||
+            item.id?.toString().toLowerCase().includes(searchLower) ||
 
-          item.cid?.toLowerCase().includes(searchLower) ||
+            item.cid?.toLowerCase().includes(searchLower) ||
 
-          item.title?.toLowerCase().includes(searchLower) ||
+            item.title?.toLowerCase().includes(searchLower) ||
 
-          item.summary?.toLowerCase().includes(searchLower) ||
+            item.summary?.toLowerCase().includes(searchLower) ||
 
-          item.detail?.toLowerCase().includes(searchLower) ||
+            item.detail?.toLowerCase().includes(searchLower) ||
 
-          item.category?.toLowerCase().includes(searchLower) ||
+            item.category?.toLowerCase().includes(searchLower) ||
 
-          item.source?.toLowerCase().includes(searchLower)
+            item.source?.toLowerCase().includes(searchLower)
 
         ),
 
         library: allData.library.filter(item =>
 
-          item.id?.toString().toLowerCase().includes(searchLower) ||
+            item.id?.toString().toLowerCase().includes(searchLower) ||
 
-          item.cid?.toLowerCase().includes(searchLower) ||
+            item.cid?.toLowerCase().includes(searchLower) ||
 
-          item.title?.toLowerCase().includes(searchLower) ||
+            item.title?.toLowerCase().includes(searchLower) ||
 
-          item.summary?.toLowerCase().includes(searchLower) ||
+            item.summary?.toLowerCase().includes(searchLower) ||
 
-          item.detail?.toLowerCase().includes(searchLower) ||
+            item.detail?.toLowerCase().includes(searchLower) ||
 
-          item.category?.toLowerCase().includes(searchLower)
+            item.category?.toLowerCase().includes(searchLower)
 
         ),
 
         story: allData.story.filter(item =>
 
-          item.id?.toString().toLowerCase().includes(searchLower) ||
+            item.id?.toString().toLowerCase().includes(searchLower) ||
 
-          item.cid?.toLowerCase().includes(searchLower) ||
+            item.cid?.toLowerCase().includes(searchLower) ||
 
-          item.title?.toLowerCase().includes(searchLower) ||
+            item.title?.toLowerCase().includes(searchLower) ||
 
-          item.summary?.toLowerCase().includes(searchLower) ||
+            item.summary?.toLowerCase().includes(searchLower) ||
 
-          item.detail?.toLowerCase().includes(searchLower) ||
+            item.detail?.toLowerCase().includes(searchLower) ||
 
-          item.category?.toLowerCase().includes(searchLower) ||
+            item.category?.toLowerCase().includes(searchLower) ||
 
-          item.audioText?.toLowerCase().includes(searchLower)
+            item.audioText?.toLowerCase().includes(searchLower)
 
         )
 
@@ -3178,9 +3178,9 @@ Format your response as:
 
           return questionContent && (
 
-            (questionContent.questionQuiz && questionContent.questionQuiz.length > 0) ||
+              (questionContent.questionQuiz && questionContent.questionQuiz.length > 0) ||
 
-            (questionContent.questionEssay && questionContent.questionEssay.length > 0)
+              (questionContent.questionEssay && questionContent.questionEssay.length > 0)
 
           );
 
@@ -3194,9 +3194,9 @@ Format your response as:
 
           return !questionContent || (
 
-            (!questionContent.questionQuiz || questionContent.questionQuiz.length === 0) &&
+              (!questionContent.questionQuiz || questionContent.questionQuiz.length === 0) &&
 
-            (!questionContent.questionEssay || questionContent.questionEssay.length === 0)
+              (!questionContent.questionEssay || questionContent.questionEssay.length === 0)
 
           );
 
@@ -3218,7 +3218,7 @@ Format your response as:
 
         // Exact match: item's tag4 array must exactly match the selected filter values
         return tag4Filter.length === itemTag4Array.length &&
-          tag4Filter.every(program => itemTag4Array.includes(program));
+            tag4Filter.every(program => itemTag4Array.includes(program));
 
       });
 
@@ -3369,29 +3369,29 @@ Format your response as:
 
       filteredData = filteredData.filter(item =>
 
-        item.id?.toString().toLowerCase().includes(searchLower) ||
+          item.id?.toString().toLowerCase().includes(searchLower) ||
 
-        item.cid?.toLowerCase().includes(searchLower) ||
+          item.cid?.toLowerCase().includes(searchLower) ||
 
-        item.title?.toLowerCase().includes(searchLower) ||
+          item.title?.toLowerCase().includes(searchLower) ||
 
-        item.summary?.toLowerCase().includes(searchLower) ||
+          item.summary?.toLowerCase().includes(searchLower) ||
 
-        item.detail?.toLowerCase().includes(searchLower) ||
+          item.detail?.toLowerCase().includes(searchLower) ||
 
-        item.category?.toLowerCase().includes(searchLower) ||
+          item.category?.toLowerCase().includes(searchLower) ||
 
-        item.source?.toLowerCase().includes(searchLower) ||
+          item.source?.toLowerCase().includes(searchLower) ||
 
-        (currentTab === 'caseTraining' && (
+          (currentTab === 'caseTraining' && (
 
-          item.tag1?.toLowerCase().includes(searchLower) ||
+              item.tag1?.toLowerCase().includes(searchLower) ||
 
-          item.tag2?.toLowerCase().includes(searchLower) ||
+              item.tag2?.toLowerCase().includes(searchLower) ||
 
-          item.tag3?.toLowerCase().includes(searchLower)
+              item.tag3?.toLowerCase().includes(searchLower)
 
-        ))
+          ))
 
       );
 
@@ -3777,7 +3777,7 @@ Format your response as:
 
       const updatePromises = selectedRowKeys.map(id =>
 
-        updateK9({ id, hasTitle: toggleTo })
+          updateK9({ id, hasTitle: toggleTo })
 
       );
 
@@ -3787,7 +3787,7 @@ Format your response as:
 
       const updater = (list) => list.map(item =>
 
-        selectedRowKeys.includes(item.id) ? { ...item, hasTitle: toggleTo } : item
+          selectedRowKeys.includes(item.id) ? { ...item, hasTitle: toggleTo } : item
 
       );
 
@@ -3836,7 +3836,7 @@ Format your response as:
 
       // Cập nhật local state theo đúng pattern
       const updater = (list) => list.map(item =>
-        selectedRowKeys.includes(item.id) ? { ...item, isPublic: toggleTo } : item
+          selectedRowKeys.includes(item.id) ? { ...item, isPublic: toggleTo } : item
       );
 
       setAllData(prev => ({ ...prev, [currentTab]: updater(prev[currentTab] || []) }));
@@ -3873,7 +3873,7 @@ Format your response as:
       await updateK9Bulk(updateData);
 
       const updater = (list) => list.map(item =>
-        selectedRowKeys.includes(item.id) ? { ...item, allow_retake: toggleTo } : item
+          selectedRowKeys.includes(item.id) ? { ...item, allow_retake: toggleTo } : item
       );
 
       setAllData(prev => ({ ...prev, [currentTab]: updater(prev[currentTab] || []) }));
@@ -3911,7 +3911,7 @@ Format your response as:
 
       // Cập nhật local state theo đúng pattern
       const updater = (list) => list.map(item =>
-        selectedRowKeys.includes(item.id) ? { ...item, allowed_user_class: selectedUserClasses } : item
+          selectedRowKeys.includes(item.id) ? { ...item, allowed_user_class: selectedUserClasses } : item
       );
 
       setAllData(prev => ({ ...prev, [currentTab]: updater(prev[currentTab] || []) }));
@@ -3951,7 +3951,7 @@ Format your response as:
 
       // Cập nhật local state theo đúng pattern
       const updater = (list) => list.map(item =>
-        selectedRowKeys.includes(item.id) ? { ...item, allowed_user_class: [] } : item
+          selectedRowKeys.includes(item.id) ? { ...item, allowed_user_class: [] } : item
       );
 
       setAllData(prev => ({ ...prev, [currentTab]: updater(prev[currentTab] || []) }));
@@ -4661,7 +4661,7 @@ Format your response as:
       } else if (updatedData.type === 'excalidraw-react') {
         updateData.diagramExcalidrawJson = updatedData.data;
         updateData.diagramExcalidrawNote = updatedData.note;
-        
+
         // Convert Excalidraw JSON to images and upload
         if (updatedData.data && Array.isArray(updatedData.data) && updatedData.data.length > 0) {
           message.loading('Đang tạo ảnh từ Excalidraw...', 0);
@@ -4687,9 +4687,9 @@ Format your response as:
 
       // Update local state instead of reloading all data
       const updater = (list) => list.map(item =>
-        item.id === updatedData.recordId
-          ? { ...item, ...updateData }
-          : item
+          item.id === updatedData.recordId
+              ? { ...item, ...updateData }
+              : item
       );
 
       // Update allData
@@ -4762,7 +4762,7 @@ Format your response as:
     if (mode === 'excalidraw-react' && !record.summaryDetail) {
       message.warning('Không có nội dung để tạo diagram!');
       return;
-    } 
+    }
     if (mode === 'html' && !record.detail) {
       message.warning('Không có nội dung detail để tạo diagram!');
       return;
@@ -4784,7 +4784,7 @@ Format your response as:
 
     // Check if already in queue or processing
     if (diagramGenerationQueue.find(task => task.recordId === record.id) ||
-      (currentDiagramProcessing && currentDiagramProcessing.recordId === record.id)) {
+        (currentDiagramProcessing && currentDiagramProcessing.recordId === record.id)) {
       const modeText = mode === 'html' ? 'HTML code' : mode === 'excalidraw-react' ? 'Excalidraw React' : 'diagram';
       message.warning(`"${record.title}" đang được tạo ${modeText}!`);
       return;
@@ -4981,13 +4981,13 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
 
         const englishResponse = await aiGen(
 
-          englishPrompt,
+            englishPrompt,
 
-          imageConfig.descriptionSystemMessage,
+            imageConfig.descriptionSystemMessage,
 
-          imageConfig.descriptionModel,
+            imageConfig.descriptionModel,
 
-          'text'
+            'text'
 
         );
 
@@ -5035,15 +5035,15 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
 
           englishDescription = descriptionLines
 
-            .map(line => line.trim())
+              .map(line => line.trim())
 
-            .filter(line => line.length > 0)
+              .filter(line => line.length > 0)
 
-            .join(' ')
+              .join(' ')
 
-            .replace(/^\d+\.\s*/, '')
+              .replace(/^\d+\.\s*/, '')
 
-            .trim();
+              .trim();
 
         } else {
 
@@ -5073,13 +5073,13 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
 
         const imageResponse = await aiGen2(
 
-          finalPrompt,
+            finalPrompt,
 
-          imageConfig.imageSystemMessage || '',
+            imageConfig.imageSystemMessage || '',
 
-          imageConfig.imageModel,
+            imageConfig.imageModel,
 
-          'img'
+            'img'
 
         );
 
@@ -5179,7 +5179,7 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
         setCurrentDiagramProcessing(null);
         setDiagramGenerationQueue([]);
 
-        
+
         break;
       }
 
@@ -5226,20 +5226,20 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
         } else {
           // Kroki mode - still use diagramConfig for now
           if (!diagramConfig.kroki?.diagramType || !diagramConfig.kroki?.aiModel ||
-            !diagramConfig.kroki?.ai1Model || !diagramConfig.kroki?.ai1Prompt ||
-            !diagramConfig.kroki?.ai2Model || !diagramConfig.kroki?.ai2Prompt ||
-            !diagramConfig.kroki?.ai3Model || !diagramConfig.kroki?.ai3Prompt) {
+              !diagramConfig.kroki?.ai1Model || !diagramConfig.kroki?.ai1Prompt ||
+              !diagramConfig.kroki?.ai2Model || !diagramConfig.kroki?.ai2Prompt ||
+              !diagramConfig.kroki?.ai3Model || !diagramConfig.kroki?.ai3Prompt) {
             message.error(`Cấu hình diagram chưa được thiết lập đầy đủ. Vui lòng cấu hình AI1, AI2, AI3 và diagram type trước khi tạo diagram.`);
             continue;
           }
         }
 
         // Get quantity from prompt config or diagram config
-        const quantity = diagramMode === 'excalidraw-react' 
-          ? (promptConfig?.quantity || 1)
-          : diagramMode === 'kroki'
-          ? (diagramConfig.kroki?.quantity || 1)
-          : 1;
+        const quantity = diagramMode === 'excalidraw-react'
+            ? (promptConfig?.quantity || 1)
+            : diagramMode === 'kroki'
+                ? (diagramConfig.kroki?.quantity || 1)
+                : 1;
         const modeText = diagramMode === 'html' ? 'HTML code' : diagramMode === 'excalidraw-react' ? 'Excalidraw React diagram' : 'diagram';
         message.info(`🔄 Đang tạo ${quantity} ${modeText} cho: ${task.title}${diagramMode === 'kroki' ? ` - Loại: ${diagramConfig.kroki?.diagramType}` : ''}`);
 
@@ -5269,10 +5269,10 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
               // AI4: Tạo HTML code từ nội dung
               message.info(`🤖 AI4: Tạo HTML code ${j + 1}/${quantity} (Cài đặt: ${promptConfig?.name || 'N/A'})`);
               const aiResult = await callAIWithStopCheck(
-                aiGen,
-                currentRecord.detail, // Use record detail as prompt
-                promptConfig.ai4Prompt, // Use ai4Prompt from selected prompt
-                promptConfig.ai4Model // Use ai4Model from selected prompt
+                  aiGen,
+                  currentRecord.detail, // Use record detail as prompt
+                  promptConfig.ai4Prompt, // Use ai4Prompt from selected prompt
+                  promptConfig.ai4Model // Use ai4Model from selected prompt
               );
 
               console.log(`AI4 Result (HTML Code ${j + 1}):`, aiResult);
@@ -5313,10 +5313,10 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
               if (!contentForDiagram || contentForDiagram.trim() === '') {
                 throw new Error('Không có summaryDetail hoặc detail để tạo diagram');
               }
-              
+
               const contentSource = currentRecord.summaryDetail ? 'summaryDetail' : 'detail';
               message.info(`🤖 AI: Tạo Excalidraw JSON ${j + 1}/${quantity} (từ ${contentSource}, Cài đặt: ${promptConfig?.name || 'N/A'})`);
-              
+
               // Tạo prompt với tất cả thông tin (giống AISummaryDetailGeneration)
               const promptData = {
                 ID: currentRecord.id || '',
@@ -5326,15 +5326,15 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
                 Details: currentRecord.detail || '',
                 SummaryDetail: currentRecord.summaryDetail || ''
               };
-              
+
               // Chuyển thành JSON string để gửi cho AI
               const prompt = JSON.stringify(promptData, null, 2);
-              
+
               const aiResult = await callAIWithStopCheck(
-                aiGen,
-                prompt,
-                promptConfig.aiPrompt,  // System message from selected prompt
-                promptConfig.aiModel   // Model from selected prompt
+                  aiGen,
+                  prompt,
+                  promptConfig.aiPrompt,  // System message from selected prompt
+                  promptConfig.aiModel   // Model from selected prompt
               );
 
               console.log(`AI Result (Excalidraw JSON ${j + 1}):`, aiResult);
@@ -5365,17 +5365,17 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
               const contentForNote = currentRecord.summaryDetail || currentRecord.detail;
               const noteSource = currentRecord.summaryDetail ? 'summaryDetail' : 'detail';
               message.info(`📝 AI: Tạo ghi chú ${j + 1}/${quantity} (từ ${noteSource})`);
-              
+
               // Use note prompt from selected config if available, otherwise use aiModel
               const notePrompt = promptConfig?.notePrompt || 'Tạo ghi chú ngắn gọn (1-2 câu) mô tả diagram này dựa trên nội dung bài viết.';
               const noteModel = promptConfig?.noteModel || promptConfig?.aiModel;
-              
+
               if (noteModel) {
                 const noteResult = await callAIWithStopCheck(
-                  aiGen,
-                  contentForNote,
-                  notePrompt,
-                  noteModel
+                    aiGen,
+                    contentForNote,
+                    notePrompt,
+                    noteModel
                 );
 
                 console.log(`Note Result (Diagram Note ${j + 1}):`, noteResult);
@@ -5405,10 +5405,10 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
             // AI1: Phân tích nội dung và tạo yêu cầu diagram
             message.info(`🤖 AI1: Phân tích nội dung cho: ${task.title}`);
             const ai1Result = await callAIWithStopCheck(
-              aiGen,
-              `Nội dung cần phân tích: ${currentRecord.detail}\n\nLoại diagram cần tạo: ${diagramConfig.kroki.diagramType}`, // Include diagram type in prompt
-              diagramConfig.kroki.ai1Prompt, // Use ai1Prompt as systemMessage
-              diagramConfig.kroki.ai1Model // Use ai1Model
+                aiGen,
+                `Nội dung cần phân tích: ${currentRecord.detail}\n\nLoại diagram cần tạo: ${diagramConfig.kroki.diagramType}`, // Include diagram type in prompt
+                diagramConfig.kroki.ai1Prompt, // Use ai1Prompt as systemMessage
+                diagramConfig.kroki.ai1Model // Use ai1Model
             );
 
             const prompts = {
@@ -5439,10 +5439,10 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
               // AI2: Tạo diagram code từ kết quả AI1 (để gửi cho Kroki API)
               message.info(`🤖 AI2: Tạo diagram code ${j + 1}/${quantity}`);
               const ai2Result = await callAIWithStopCheck(
-                aiGen,
-                promptAI1Format, // Use AI1 output as prompt
-                diagramConfig.kroki.ai2Prompt, // Use ai2Prompt as systemMessage
-                diagramConfig.kroki.ai2Model // Use ai2Model
+                  aiGen,
+                  promptAI1Format, // Use AI1 output as prompt
+                  diagramConfig.kroki.ai2Prompt, // Use ai2Prompt as systemMessage
+                  diagramConfig.kroki.ai2Model // Use ai2Model
               );
 
               console.log(`AI2 Result (Diagram Code ${j + 1}):`, ai2Result);
@@ -5455,10 +5455,10 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
               // Tạo diagram từ code của AI2 (backend mới sẽ gửi trực tiếp cho Kroki)
               message.info(`🎨 Tạo diagram ${j + 1}/${quantity} từ diagram code`);
               const diagramResult = await callAIWithStopCheck(
-                aiGenImageDiagram,
-                ai2Result.result, // Use AI2 diagram code as request
-                diagramConfig.kroki.diagramType, // Use configured diagram type
-                diagramConfig.kroki.aiModel // Use configured model
+                  aiGenImageDiagram,
+                  ai2Result.result, // Use AI2 diagram code as request
+                  diagramConfig.kroki.diagramType, // Use configured diagram type
+                  diagramConfig.kroki.aiModel // Use configured model
               );
 
               console.log(`Diagram Generation Result ${j + 1}:`, diagramResult);
@@ -5471,10 +5471,10 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
               // AI3: Tạo ghi chú diagram từ nội dung gốc
               message.info(`🤖 AI3: Tạo ghi chú diagram ${j + 1}/${quantity}`);
               const ai3Result = await callAIWithStopCheck(
-                aiGen,
-                currentRecord.detail, // Use record detail as prompt
-                diagramConfig.kroki.ai3Prompt, // Use ai3Prompt as systemMessage
-                diagramConfig.kroki.ai3Model // Use ai3Model
+                  aiGen,
+                  currentRecord.detail, // Use record detail as prompt
+                  diagramConfig.kroki.ai3Prompt, // Use ai3Prompt as systemMessage
+                  diagramConfig.kroki.ai3Model // Use ai3Model
               );
 
               console.log(`AI3 Result (Diagram Note ${j + 1}):`, ai3Result);
@@ -5555,7 +5555,7 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
             updateData.diagramExcalidrawNote = allDiagramNotes;
             updateData.diagramExcalidrawImageUrls = allDiagramImageUrls;
           }
-          
+
           updateData.timeCreateDiagram = createTimestamp();
 
           // Convert Excalidraw JSON to images and upload if Excalidraw mode
@@ -5576,20 +5576,20 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
 
           // Update local data
           const updater = (list) => list.map(item =>
-            item.id === task.recordId
-              ? {
-                ...item,
-                ...(diagramMode === 'html' ? {
-                  diagramHtmlCode: allDiagramResults,
-                  diagramNote: allDiagramNotes
-                } : {}),
-                ...(diagramMode === 'excalidraw-react' ? {
-                  diagramExcalidrawJson: allDiagramResults,
-                  diagramExcalidrawNote: allDiagramNotes,
-                  diagramExcalidrawImageUrls: allDiagramImageUrls
-                } : {})
-              }
-              : item
+              item.id === task.recordId
+                  ? {
+                    ...item,
+                    ...(diagramMode === 'html' ? {
+                      diagramHtmlCode: allDiagramResults,
+                      diagramNote: allDiagramNotes
+                    } : {}),
+                    ...(diagramMode === 'excalidraw-react' ? {
+                      diagramExcalidrawJson: allDiagramResults,
+                      diagramExcalidrawNote: allDiagramNotes,
+                      diagramExcalidrawImageUrls: allDiagramImageUrls
+                    } : {})
+                  }
+                  : item
           );
 
           if (currentTab === 'report') {
@@ -5731,9 +5731,9 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
         console.log(`Creating summaryDetail for "${currentRecord.title}"`);
 
         const summaryResult = await aiGen(
-          currentRecord.detail,
-          summaryDetailConfig.aiPrompt,
-          summaryDetailConfig.aiModel
+            currentRecord.detail,
+            summaryDetailConfig.aiPrompt,
+            summaryDetailConfig.aiModel
         );
 
         if (summaryResult && summaryResult.result) {
@@ -5855,23 +5855,40 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
           }
 
           const aiResponse = await callAIWithStopCheck(
-            aiGen,
-            userContent,
-            systemMessage,
-            promptConfig.aiModel
+              aiGen,
+              userContent,
+              systemMessage,
+              promptConfig.aiModel
           );
-
           const rawResult = aiResponse?.result || aiResponse?.answer || aiResponse?.content || aiResponse;
+          console.log('rawResult', rawResult);
 
           let generatedCases = [];
           try {
-            const parsed = JSON.parse(rawResult);
+            // Loại bỏ markdown code block nếu có (```json ... ```)
+            let cleanedResult = rawResult.trim();
+
+            // Xóa markdown code block markers
+            cleanedResult = cleanedResult.replace(/^```json\s*/i, ''); // Xóa ```json ở đầu
+            cleanedResult = cleanedResult.replace(/^```\s*/i, ''); // Xóa ``` ở đầu (fallback)
+            cleanedResult = cleanedResult.replace(/\s*```$/i, ''); // Xóa ``` ở cuối
+            cleanedResult = cleanedResult.trim();
+
+            // Tìm JSON object/array trong string (nếu có text thừa)
+            const jsonMatch = cleanedResult.match(/\[[\s\S]*\]|{[\s\S]*}/);
+            if (jsonMatch) {
+              cleanedResult = jsonMatch[0];
+            }
+
+            const parsed = JSON.parse(cleanedResult);
             if (Array.isArray(parsed)) {
               generatedCases = parsed;
             } else if (parsed) {
               generatedCases = [parsed];
             }
           } catch (e) {
+            console.log('e', e);
+            console.log('rawResult that failed:', rawResult);
             message.error(`AI không trả về JSON hợp lệ khi tạo Case Training cho "${task.title}": ${e.message}`);
             // Ghi nhận thất bại ở mức Learning Block
             setCaseFromLearningStats(prev => ({
@@ -5898,14 +5915,14 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
               summary: caseItem.summary || currentRecord.summary || '',
               detail: caseItem.detail || currentRecord.detail || '',
               source: caseItem.source || currentRecord.source || '',
-            
+
               tag4: caseItem.tag4 || currentRecord.tag4 || null,
               cid: caseItem.cid || currentRecord.cid || null,
               questionContent: caseItem.questionContent || null,
               status: caseItem.status || 'published'
             };
 
-           console.log('payload', payload);
+            console.log('payload', payload);
 
             try {
               const created = await createK9(payload);
@@ -5914,11 +5931,11 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
               // Cập nhật vào allData/filteredData cho caseTraining
               setAllData(prev => ({
                 ...prev,
-                caseTraining: [createdRecord , ...(prev.caseTraining || []) ]
+                caseTraining: [createdRecord, ...(prev.caseTraining || [])]
               }));
               setFilteredData(prev => ({
                 ...prev,
-                caseTraining: [createdRecord , ...(prev.caseTraining || []) ]
+                caseTraining: [createdRecord, ...(prev.caseTraining || [])]
               }));
 
               // Cập nhật thống kê & log
@@ -5935,7 +5952,7 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
                   error: null
                 },
                 ...prev,
-              
+
               ]);
 
               message.success(`✅ Đã tạo Case Training mới (ID: ${createdRecord.id}) từ "${task.title}"`);
@@ -6149,9 +6166,9 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
 
           existingInfo = typeof selectedAISummary.info === 'string'
 
-            ? JSON.parse(selectedAISummary.info)
+              ? JSON.parse(selectedAISummary.info)
 
-            : selectedAISummary.info;
+              : selectedAISummary.info;
 
         } catch (e) {
 
@@ -6345,7 +6362,7 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
 
       setTables(prev => prev.map(table =>
 
-        table.id === editingTable.id ? { ...tableData, id: editingTable.id } : table
+          table.id === editingTable.id ? { ...tableData, id: editingTable.id } : table
 
       ));
 
@@ -6467,11 +6484,11 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
 
             return (
 
-              <Tooltip placement="topLeft" title={parsed.title || '-'}>
+                <Tooltip placement="topLeft" title={parsed.title || '-'}>
 
-                <span className={styles.titleCell}>{parsed.title || '-'}</span>
+                  <span className={styles.titleCell}>{parsed.title || '-'}</span>
 
-              </Tooltip>
+                </Tooltip>
 
             );
 
@@ -6513,15 +6530,15 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
 
               return (
 
-                <Tooltip placement="topLeft" title={parsed.URLReport}>
+                  <Tooltip placement="topLeft" title={parsed.URLReport}>
 
-                  <a href={parsed.URLReport} target="_blank" rel="noopener noreferrer" className={styles.urlCell}>
+                    <a href={parsed.URLReport} target="_blank" rel="noopener noreferrer" className={styles.urlCell}>
 
-                    {parsed.URLReport}
+                      {parsed.URLReport}
 
-                  </a>
+                    </a>
 
-                </Tooltip>
+                  </Tooltip>
 
               );
 
@@ -6803,11 +6820,11 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
 
             return (
 
-              <Tag color={count > 0 ? 'blue' : 'default'}>
+                <Tag color={count > 0 ? 'blue' : 'default'}>
 
-                📊 {count} bảng
+                  📊 {count} bảng
 
-              </Tag>
+                </Tag>
 
             );
 
@@ -6841,11 +6858,11 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
 
           return (
 
-            <Tag color="green">
+              <Tag color="green">
 
-              📎 {fileUrls.length} file
+                📎 {fileUrls.length} file
 
-            </Tag>
+              </Tag>
 
           );
 
@@ -6869,159 +6886,159 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
 
       render: (_, record) => (
 
-        <Space size="small">
+          <Space size="small">
 
-          {/* Embedding button - show different buttons based on embedding status */}
+            {/* Embedding button - show different buttons based on embedding status */}
 
-          {embeddedItems.has(record.id) ? (
+            {embeddedItems.has(record.id) ? (
 
-            // Item đã được embedding - hiển thị nút "Embed lại" với màu khác
+                // Item đã được embedding - hiển thị nút "Embed lại" với màu khác
 
-            <Tooltip title="Embed lại">
+                <Tooltip title="Embed lại">
+
+                  <Button
+
+                      type="link"
+
+                      onClick={(e) => {
+
+                        e.stopPropagation();
+
+                        handleEmbeding(record.id);
+
+                      }}
+
+                      size="small"
+
+                      loading={isEmbedding(record.id)}
+
+                      disabled={isEmbedding(record.id)}
+
+                      icon={isEmbedding(record.id) ? <LoadingOutlined /> : <ReloadOutlined />}
+
+                      style={{ color: '#1890ff' }} // Màu xanh cho nút embed lại
+
+                  >
+
+                    {isEmbedding(record.id) ? 'Đang Embedding...' : 'Embed lại'}
+
+                  </Button>
+
+                </Tooltip>
+
+            ) : (
+
+                // Item chưa được embedding - hiển thị nút "Embedding" bình thường
+
+                <Tooltip title="Embedding">
+
+                  <Button
+
+                      type="link"
+
+                      onClick={(e) => {
+
+                        e.stopPropagation();
+
+                        handleEmbeding(record.id);
+
+                      }}
+
+                      size="small"
+
+                      loading={isEmbedding(record.id)}
+
+                      disabled={isEmbedding(record.id)}
+
+                      icon={isEmbedding(record.id) ? <LoadingOutlined /> : null}
+
+                  >
+
+                    {isEmbedding(record.id) ? 'Đang Embedding...' : 'Embedding'}
+
+                  </Button>
+
+                </Tooltip>
+
+            )}
+
+            <Tooltip title="Xem chi tiết">
 
               <Button
 
-                type="link"
+                  type="link"
 
-                onClick={(e) => {
+                  icon={<EyeOutlined />}
 
-                  e.stopPropagation();
+                  onClick={e => {
 
-                  handleEmbeding(record.id);
+                    e.stopPropagation();
 
-                }}
+                    setSelectedAISummary(record);
 
-                size="small"
+                    setAISummaryDetailModalVisible(true);
 
-                loading={isEmbedding(record.id)}
+                  }}
 
-                disabled={isEmbedding(record.id)}
-
-                icon={isEmbedding(record.id) ? <LoadingOutlined /> : <ReloadOutlined />}
-
-                style={{ color: '#1890ff' }} // Màu xanh cho nút embed lại
-
-              >
-
-                {isEmbedding(record.id) ? 'Đang Embedding...' : 'Embed lại'}
-
-              </Button>
-
-            </Tooltip>
-
-          ) : (
-
-            // Item chưa được embedding - hiển thị nút "Embedding" bình thường
-
-            <Tooltip title="Embedding">
-
-              <Button
-
-                type="link"
-
-                onClick={(e) => {
-
-                  e.stopPropagation();
-
-                  handleEmbeding(record.id);
-
-                }}
-
-                size="small"
-
-                loading={isEmbedding(record.id)}
-
-                disabled={isEmbedding(record.id)}
-
-                icon={isEmbedding(record.id) ? <LoadingOutlined /> : null}
-
-              >
-
-                {isEmbedding(record.id) ? 'Đang Embedding...' : 'Embedding'}
-
-              </Button>
-
-            </Tooltip>
-
-          )}
-
-          <Tooltip title="Xem chi tiết">
-
-            <Button
-
-              type="link"
-
-              icon={<EyeOutlined />}
-
-              onClick={e => {
-
-                e.stopPropagation();
-
-                setSelectedAISummary(record);
-
-                setAISummaryDetailModalVisible(true);
-
-              }}
-
-              size="small"
-
-            />
-
-          </Tooltip>
-
-          <Tooltip title="Chỉnh sửa">
-
-            <Button
-
-              type="link"
-
-              icon={<EditOutlined />}
-
-              onClick={e => {
-
-                e.stopPropagation();
-
-                handleEditAISummary(record);
-
-              }}
-
-              size="small"
-
-            />
-
-          </Tooltip>
-
-          <Popconfirm
-
-            title="Bạn có chắc chắn muốn xóa AI Summary này?"
-
-            onConfirm={() => handleDeleteAISummary(record.id)}
-
-            okText="Có"
-
-            cancelText="Không"
-
-          >
-
-            <Tooltip title="Xóa">
-
-              <Button
-
-                type="link"
-
-                icon={<DeleteOutlined />}
-
-                size="small"
-
-                danger
+                  size="small"
 
               />
 
             </Tooltip>
 
-          </Popconfirm>
+            <Tooltip title="Chỉnh sửa">
 
-        </Space>
+              <Button
+
+                  type="link"
+
+                  icon={<EditOutlined />}
+
+                  onClick={e => {
+
+                    e.stopPropagation();
+
+                    handleEditAISummary(record);
+
+                  }}
+
+                  size="small"
+
+              />
+
+            </Tooltip>
+
+            <Popconfirm
+
+                title="Bạn có chắc chắn muốn xóa AI Summary này?"
+
+                onConfirm={() => handleDeleteAISummary(record.id)}
+
+                okText="Có"
+
+                cancelText="Không"
+
+            >
+
+              <Tooltip title="Xóa">
+
+                <Button
+
+                    type="link"
+
+                    icon={<DeleteOutlined />}
+
+                    size="small"
+
+                    danger
+
+                />
+
+              </Tooltip>
+
+            </Popconfirm>
+
+          </Space>
 
       )
 
@@ -7087,31 +7104,31 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
         key: 'isPublic',
         width: 120,
         render: (isPublic, record) => (
-          <Switch
-            checked={isPublic}
-            onChange={async (checked) => {
-              try {
-                // Call API để cập nhật isPublic
-                await updateK9({ id: record.id, isPublic: checked });
+            <Switch
+                checked={isPublic}
+                onChange={async (checked) => {
+                  try {
+                    // Call API để cập nhật isPublic
+                    await updateK9({ id: record.id, isPublic: checked });
 
-                // Cập nhật local state theo đúng pattern
-                const updater = (list) => list.map(item =>
-                  item.id === record.id ? { ...item, isPublic: checked } : item
-                );
+                    // Cập nhật local state theo đúng pattern
+                    const updater = (list) => list.map(item =>
+                        item.id === record.id ? { ...item, isPublic: checked } : item
+                    );
 
-                setAllData(prev => ({ ...prev, [currentTab]: updater(prev[currentTab] || []) }));
-                setFilteredData(prev => ({ ...prev, [currentTab]: updater(prev[currentTab] || []) }));
-                setData(prev => updater(prev));
+                    setAllData(prev => ({ ...prev, [currentTab]: updater(prev[currentTab] || []) }));
+                    setFilteredData(prev => ({ ...prev, [currentTab]: updater(prev[currentTab] || []) }));
+                    setData(prev => updater(prev));
 
-                message.success(`Đã ${checked ? 'bật' : 'tắt'} trạng thái public`);
-              } catch (error) {
-                console.error('Error updating isPublic:', error);
-                message.error('Cập nhật thất bại');
-              }
-            }}
-            checkedChildren="Công khai"
-            unCheckedChildren="Riêng tư"
-          />
+                    message.success(`Đã ${checked ? 'bật' : 'tắt'} trạng thái public`);
+                  } catch (error) {
+                    console.error('Error updating isPublic:', error);
+                    message.error('Cập nhật thất bại');
+                  }
+                }}
+                checkedChildren="Công khai"
+                unCheckedChildren="Riêng tư"
+            />
         ),
         filters: [
           { text: 'Công khai', value: true },
@@ -7125,26 +7142,26 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
         key: 'allow_retake',
         width: 150,
         render: (allowRetake, record) => (
-          <Switch
-            checked={Boolean(allowRetake)}
-            onChange={async (checked) => {
-              try {
-                await updateK9({ id: record.id, allow_retake: checked });
-                const updater = (list) => list.map(item =>
-                  item.id === record.id ? { ...item, allow_retake: checked } : item
-                );
-                setAllData(prev => ({ ...prev, [currentTab]: updater(prev[currentTab] || []) }));
-                setFilteredData(prev => ({ ...prev, [currentTab]: updater(prev[currentTab] || []) }));
-                setData(prev => updater(prev));
-                message.success(`Đã ${checked ? 'bật' : 'tắt'} cho phép làm lại`);
-              } catch (error) {
-                console.error('Error updating allow_retake:', error);
-                message.error('Cập nhật thất bại');
-              }
-            }}
-            checkedChildren="Cho phép"
-            unCheckedChildren="Khoá"
-          />
+            <Switch
+                checked={Boolean(allowRetake)}
+                onChange={async (checked) => {
+                  try {
+                    await updateK9({ id: record.id, allow_retake: checked });
+                    const updater = (list) => list.map(item =>
+                        item.id === record.id ? { ...item, allow_retake: checked } : item
+                    );
+                    setAllData(prev => ({ ...prev, [currentTab]: updater(prev[currentTab] || []) }));
+                    setFilteredData(prev => ({ ...prev, [currentTab]: updater(prev[currentTab] || []) }));
+                    setData(prev => updater(prev));
+                    message.success(`Đã ${checked ? 'bật' : 'tắt'} cho phép làm lại`);
+                  } catch (error) {
+                    console.error('Error updating allow_retake:', error);
+                    message.error('Cập nhật thất bại');
+                  }
+                }}
+                checkedChildren="Cho phép"
+                unCheckedChildren="Khoá"
+            />
         ),
         filters: [
           { text: 'Cho phép', value: true },
@@ -7183,11 +7200,11 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
 
         render: (title) => (
 
-          <Tooltip placement="topLeft" title={title}>
+            <Tooltip placement="topLeft" title={title}>
 
-            <span className={styles.titleCell}>{title}</span>
+              <span className={styles.titleCell}>{title}</span>
 
-          </Tooltip>
+            </Tooltip>
 
         )
 
@@ -7205,53 +7222,53 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
 
         render: (hasTitle, record) => (
 
-          <Switch
+            <Switch
 
-            checked={hasTitle}
+                checked={hasTitle}
 
-            onChange={async (checked) => {
+                onChange={async (checked) => {
 
-              try {
+                  try {
 
-                // Call API để cập nhật hasTitle
+                    // Call API để cập nhật hasTitle
 
-                await updateK9({ id: record.id, hasTitle: checked });
-
-
-
-                // Cập nhật local state theo đúng pattern
-
-                const updater = (list) => list.map(item =>
-
-                  item.id === record.id ? { ...item, hasTitle: checked } : item
-
-                );
-
-                setAllData(prev => ({ ...prev, [currentTab]: updater(prev[currentTab] || []) }));
-
-                setFilteredData(prev => ({ ...prev, [currentTab]: updater(prev[currentTab] || []) }));
-
-                setData(prev => updater(prev));
+                    await updateK9({ id: record.id, hasTitle: checked });
 
 
 
-                message.success(`Đã ${checked ? 'bật' : 'tắt'} trạng thái mục lục`);
+                    // Cập nhật local state theo đúng pattern
 
-              } catch (error) {
+                    const updater = (list) => list.map(item =>
 
-                console.error('Error updating hasTitle:', error);
+                        item.id === record.id ? { ...item, hasTitle: checked } : item
 
-                message.error('Cập nhật thất bại');
+                    );
 
-              }
+                    setAllData(prev => ({ ...prev, [currentTab]: updater(prev[currentTab] || []) }));
 
-            }}
+                    setFilteredData(prev => ({ ...prev, [currentTab]: updater(prev[currentTab] || []) }));
 
-            checkedChildren="Bật"
+                    setData(prev => updater(prev));
 
-            unCheckedChildren="Tắt"
 
-          />
+
+                    message.success(`Đã ${checked ? 'bật' : 'tắt'} trạng thái mục lục`);
+
+                  } catch (error) {
+
+                    console.error('Error updating hasTitle:', error);
+
+                    message.error('Cập nhật thất bại');
+
+                  }
+
+                }}
+
+                checkedChildren="Bật"
+
+                unCheckedChildren="Tắt"
+
+            />
 
         ),
 
@@ -7270,11 +7287,11 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
 
         render: (isImprove) => (
 
-          <Tag color={isImprove ? 'blue' : 'default'}>
+            <Tag color={isImprove ? 'blue' : 'default'}>
 
-            {isImprove ? 'Đã Improve' : 'Chưa'}
+              {isImprove ? 'Đã Improve' : 'Chưa'}
 
-          </Tag>
+            </Tag>
 
         ),
 
@@ -7303,11 +7320,11 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
 
         render: (improveTime) => (
 
-          <Tag color={improveTime ? 'blue' : 'default'}>
+            <Tag color={improveTime ? 'blue' : 'default'}>
 
-            {formatDateToDDMMYYYY(improveTime)}
+              {formatDateToDDMMYYYY(improveTime)}
 
-          </Tag>
+            </Tag>
 
         ),
 
@@ -7326,11 +7343,11 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
 
         render: (modelImprove) => (
 
-          <Tag color={modelImprove ? 'blue' : 'default'}>
+            <Tag color={modelImprove ? 'blue' : 'default'}>
 
-            {modelImprove}
+              {modelImprove}
 
-          </Tag>
+            </Tag>
 
         ),
 
@@ -7343,9 +7360,9 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
         render: (detail) => {
           const charCount = detail ? detail.length : 0;
           return (
-            <Tag color={charCount > 0 ? 'blue' : 'default'}>
-              {charCount.toLocaleString()}
-            </Tag>
+              <Tag color={charCount > 0 ? 'blue' : 'default'}>
+                {charCount.toLocaleString()}
+              </Tag>
           );
         },
         sorter: (a, b) => {
@@ -7401,11 +7418,11 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
 
         render: (summary) => (
 
-          <Tooltip placement="topLeft" title={summary}>
+            <Tooltip placement="topLeft" title={summary}>
 
-            <span className={styles.summaryCell}>{summary}</span>
+              <span className={styles.summaryCell}>{summary}</span>
 
-          </Tooltip>
+            </Tooltip>
 
         )
 
@@ -7444,125 +7461,125 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
 
       ...(currentTab == 'home' || currentTab == 'news' || currentTab == 'longForm' ?
 
-        [
+          [
 
-          {
+            {
 
 
 
-            title: 'Danh mục',
+              title: 'Danh mục',
 
-            dataIndex: 'category',
+              dataIndex: 'category',
 
-            key: 'category',
+              key: 'category',
 
-            width: 150,
+              width: 150,
 
-            render: (category) => {
+              render: (category) => {
 
-              const categoryMap = {
+                const categoryMap = {
 
-                'Case study': { color: 'blue', text: 'Case study' },
+                  'Case study': { color: 'blue', text: 'Case study' },
 
-                'Kinh tế - tài chính': { color: 'green', text: 'Kinh tế - tài chính' },
+                  'Kinh tế - tài chính': { color: 'green', text: 'Kinh tế - tài chính' },
 
-                'Thế giới': { color: 'default', text: 'Thế giới' },
+                  'Thế giới': { color: 'default', text: 'Thế giới' },
 
-                'Công nghệ': { color: 'cyan', text: 'Công nghệ' },
+                  'Công nghệ': { color: 'cyan', text: 'Công nghệ' },
 
-                'Đổi mới sáng tạo': { color: 'volcano', text: 'Đổi mới sáng tạo' },
+                  'Đổi mới sáng tạo': { color: 'volcano', text: 'Đổi mới sáng tạo' },
 
-                'Khác': { color: 'orange', text: 'Khác' },
+                  'Khác': { color: 'orange', text: 'Khác' },
 
-                'Lý thuyết (Theory)': { color: 'purple', text: 'Lý thuyết (Theory)' },
+                  'Lý thuyết (Theory)': { color: 'purple', text: 'Lý thuyết (Theory)' },
 
-                'Khái niệm (Concept)': { color: 'magenta', text: 'Khái niệm (Concept)' },
+                  'Khái niệm (Concept)': { color: 'magenta', text: 'Khái niệm (Concept)' },
 
-                'Nguyên tắc kinh doanh (Principle)': { color: 'geekblue', text: 'Nguyên tắc kinh doanh (Principle)' },
+                  'Nguyên tắc kinh doanh (Principle)': { color: 'geekblue', text: 'Nguyên tắc kinh doanh (Principle)' },
 
-                'Khung phân tích (Framework)': { color: 'gold', text: 'Khung phân tích (Framework)' },
+                  'Khung phân tích (Framework)': { color: 'gold', text: 'Khung phân tích (Framework)' },
 
-                'Mô hình (Business model)': { color: 'lime', text: 'Mô hình (Business model)' },
+                  'Mô hình (Business model)': { color: 'lime', text: 'Mô hình (Business model)' },
 
-                'Phương pháp luận (Methodology)': { color: 'processing', text: 'Phương pháp luận (Methodology)' },
+                  'Phương pháp luận (Methodology)': { color: 'processing', text: 'Phương pháp luận (Methodology)' },
 
-                'Công cụ & kỹ thuật (Tools & Technique)': { color: 'red', text: 'Công cụ & kỹ thuật (Tools & Technique)' },
+                  'Công cụ & kỹ thuật (Tools & Technique)': { color: 'red', text: 'Công cụ & kỹ thuật (Tools & Technique)' },
 
-                'Các báo cáo ngành - vĩ mô': { color: 'green', text: 'Các báo cáo ngành - vĩ mô' },
+                  'Các báo cáo ngành - vĩ mô': { color: 'green', text: 'Các báo cáo ngành - vĩ mô' },
 
-                'Best Practices': { color: 'blue', text: 'Best Practices' },
+                  'Best Practices': { color: 'blue', text: 'Best Practices' },
 
-                'Case Studies': { color: 'cyan', text: 'Case Studies' },
+                  'Case Studies': { color: 'cyan', text: 'Case Studies' },
 
-                'Tài nguyên khác': { color: 'default', text: 'Tài nguyên khác' },
+                  'Tài nguyên khác': { color: 'default', text: 'Tài nguyên khác' },
 
-                'Ý tưởng khởi nghiệp': { color: 'red', text: 'Ý tưởng khởi nghiệp' },
+                  'Ý tưởng khởi nghiệp': { color: 'red', text: 'Ý tưởng khởi nghiệp' },
 
-                'Tips khởi nghiệp': { color: 'green', text: 'Tips khởi nghiệp' },
+                  'Tips khởi nghiệp': { color: 'green', text: 'Tips khởi nghiệp' },
 
-                'Sáng tạo khác': { color: 'blue', text: 'Sáng tạo khác' }
+                  'Sáng tạo khác': { color: 'blue', text: 'Sáng tạo khác' }
 
-              };
+                };
 
-              const cat = categoryMap[category] || { color: 'default', text: category };
+                const cat = categoryMap[category] || { color: 'default', text: category };
 
-              return (<div>{cat.text}</div>
+                return (<div>{cat.text}</div>
 
-              );
+                );
 
-            },
+              },
 
-            filters: getCurrentTabCategoryFilters(),
+              filters: getCurrentTabCategoryFilters(),
 
-            //  [
+              //  [
 
-            //   { text: 'Case study', value: 'Case study' },
+              //   { text: 'Case study', value: 'Case study' },
 
-            //   { text: 'Kinh tế - tài chính', value: 'Kinh tế - tài chính' },
+              //   { text: 'Kinh tế - tài chính', value: 'Kinh tế - tài chính' },
 
-            //   { text: 'Thế giới', value: 'Thế giới' },
+              //   { text: 'Thế giới', value: 'Thế giới' },
 
-            //   { text: 'Công nghệ', value: 'Công nghệ' },
+              //   { text: 'Công nghệ', value: 'Công nghệ' },
 
-            //   { text: 'Đổi mới sáng tạo', value: 'Đổi mới sáng tạo' },
+              //   { text: 'Đổi mới sáng tạo', value: 'Đổi mới sáng tạo' },
 
-            //   { text: 'Khác', value: 'Khác' },
+              //   { text: 'Khác', value: 'Khác' },
 
-            //   { text: 'Lý thuyết (Theory)', value: 'Lý thuyết (Theory)' },
+              //   { text: 'Lý thuyết (Theory)', value: 'Lý thuyết (Theory)' },
 
-            //   { text: 'Khái niệm (Concept)', value: 'Khái niệm (Concept)' },
+              //   { text: 'Khái niệm (Concept)', value: 'Khái niệm (Concept)' },
 
-            //   { text: 'Nguyên tắc kinh doanh (Principle)', value: 'Nguyên tắc kinh doanh (Principle)' },
+              //   { text: 'Nguyên tắc kinh doanh (Principle)', value: 'Nguyên tắc kinh doanh (Principle)' },
 
-            //   { text: 'Khung phân tích (Framework)', value: 'Khung phân tích (Framework)' },
+              //   { text: 'Khung phân tích (Framework)', value: 'Khung phân tích (Framework)' },
 
-            //   { text: 'Mô hình (Business model)', value: 'Mô hình (Business model)' },
+              //   { text: 'Mô hình (Business model)', value: 'Mô hình (Business model)' },
 
-            //   { text: 'Phương pháp luận (Methodology)', value: 'Phương pháp luận (Methodology)' },
+              //   { text: 'Phương pháp luận (Methodology)', value: 'Phương pháp luận (Methodology)' },
 
-            //   { text: 'Công cụ & kỹ thuật (Tools & Technique)', value: 'Công cụ & kỹ thuật (Tools & Technique)' },
+              //   { text: 'Công cụ & kỹ thuật (Tools & Technique)', value: 'Công cụ & kỹ thuật (Tools & Technique)' },
 
-            //   { text: 'Các báo cáo ngành - vĩ mô', value: 'Các báo cáo ngành - vĩ mô' },
+              //   { text: 'Các báo cáo ngành - vĩ mô', value: 'Các báo cáo ngành - vĩ mô' },
 
-            //   { text: 'Best Practices', value: 'Best Practices' },
+              //   { text: 'Best Practices', value: 'Best Practices' },
 
-            //   { text: 'Case Studies', value: 'Case Studies' },
+              //   { text: 'Case Studies', value: 'Case Studies' },
 
-            //   { text: 'Tài nguyên khác', value: 'Tài nguyên khác' },
+              //   { text: 'Tài nguyên khác', value: 'Tài nguyên khác' },
 
-            //   { text: 'Ý tưởng khởi nghiệp', value: 'Ý tưởng khởi nghiệp' },
+              //   { text: 'Ý tưởng khởi nghiệp', value: 'Ý tưởng khởi nghiệp' },
 
-            //   { text: 'Tips khởi nghiệp', value: 'Tips khởi nghiệp' },
+              //   { text: 'Tips khởi nghiệp', value: 'Tips khởi nghiệp' },
 
-            //   { text: 'Sáng tạo khác', value: 'Sáng tạo khác' }
+              //   { text: 'Sáng tạo khác', value: 'Sáng tạo khác' }
 
-            // ],
+              // ],
 
-            onFilter: (value, record) => record.category === value
+              onFilter: (value, record) => record.category === value
 
-          }
+            }
 
-        ] : []),
+          ] : []),
 
       {
 
@@ -7616,626 +7633,626 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
 
       baseColumns.splice(5, 0,
 
-        {
-
-          title: 'Program',
-
-          dataIndex: 'tag4',
-
-          key: 'tag4',
-
-          width: 550,
-
-          render: (tag4) => {
-
-            if (!Array.isArray(tag4)) return null;
-
-            return (
-
-              <>
-
-                {
-
-                  tag4.map((val) => {
-
-                    const option = tag4Options.find((opt) => opt.value === val);
-
-                    return (
-
-                      <span className={styles.summaryCell}>{option?.label} , </span>
-
-                    );
-
-                  })}
-
-              </>
-
-            );
-
-          },
-
-        },
-
-        // {
-
-        //   title: 'Sentiment',
-
-        //   dataIndex: 'sentiment',
-
-        //   key: 'sentiment',
-
-        //   width: 120,
-
-        //   filters: [
-
-        //     { text: 'Tích cực', value: 'positive' },
-
-        //     { text: 'Tiêu cực', value: 'negative' },
-
-        //     { text: 'Trung tính', value: 'neutral' }
-
-        //   ],
-
-        //   onFilter: (value, record) => record.sentiment === value
-
-        // },
-
-        // {
-
-        //   title: 'Độ phức tạp',
-
-        //   dataIndex: 'impact',
-
-        //   key: 'impact',
-
-        //   width: 150,
-
-        //   filters: [
-
-        //     { text: 'Quan trọng', value: 'important' },
-
-        //     { text: 'Bình thường', value: 'normal' },
-
-        //     { text: 'Bỏ qua', value: 'skip' }
-
-        //   ],
-
-        //   render: (impact) => {
-
-        //     const impactMap = {
-
-        //       important: { color: 'red', text: 'Quan trọng' },
-
-        //       normal: { color: 'default', text: 'Bình thường' },
-
-        //       skip: { color: 'orange', text: 'Bỏ qua' }
-
-        //     };
-
-        //     const imp = impactMap[impact] || { color: 'default', text: impact };
-
-        //     return <Tag color={imp.color}>{imp.text}</Tag>;
-
-        //   },
-
-        //   onFilter: (value, record) => record.impact === value
-
-        // },
-
-
-
-        {
-
-          title: 'Nguồn',
-
-          dataIndex: 'source',
-
-          key: 'source',
-
-          width: 120,
-
-          ellipsis: {
-
-            showTitle: false,
-
-          },
-
-          render: (source) => (
-
-            <Tooltip placement="topLeft" title={source}>
-
-              <span className={styles.sourceCell}>{source}</span>
-
-            </Tooltip>
-
-          )
-
-        },
-
-        ...(currentTab === 'caseTraining' ? [
-
           {
 
-            title: 'Categories',
+            title: 'Program',
 
-            dataIndex: 'tag1',
+            dataIndex: 'tag4',
 
-            key: 'tag1',
+            key: 'tag4',
 
-            width: 120,
+            width: 550,
 
-            render: (tag1) => {
+            render: (tag4) => {
 
-              if (!tag1) return '';
-
-              return <div>{tag1}</div>;
-
-            },
-
-            filters: getCurrentTabTag1Filters(),
-
-            onFilter: (value, record) => {
-
-              if (value === null) {
-
-                return !record.tag1 || record.tag1 === '';
-
-              }
-
-              return record.tag1 === value;
-
-            }
-
-          },
-
-          {
-
-            title: 'Levels',
-
-            dataIndex: 'tag2',
-
-            key: 'tag2',
-
-            width: 120,
-
-            render: (tag2) => {
-
-              if (!tag2) return '';
-
-              return <div>{tag2}</div>;
-
-            },
-
-            filters: getCurrentTabTag2Filters(),
-
-            onFilter: (value, record) => {
-
-              if (value === null) {
-
-                return !record.tag2 || record.tag2 === '';
-
-              }
-
-              return record.tag2 === value;
-
-            }
-
-          },
-
-          {
-
-            title: 'Series',
-
-            dataIndex: 'tag3',
-
-            key: 'tag3',
-
-            width: 120,
-
-            render: (tag3) => {
-
-              if (!tag3) return '';
-
-              return <div>{tag3}</div>;
-
-            },
-
-            filters: getCurrentTabTag3Filters(),
-
-            onFilter: (value, record) => {
-
-              if (value === null) {
-
-                return !record.tag3 || record.tag3 === '';
-
-              }
-
-              return record.tag3 === value;
-
-            }
-
-          }
-
-        ] : []),
-
-
-
-        {
-
-          title: 'Thời gian',
-
-          dataIndex: 'createdAt',
-
-          key: 'createdAt',
-
-          width: 140,
-
-          render: (createdAt) => {
-
-            if (!createdAt) return '-';
-
-            const date = new Date(createdAt);
-
-            if (isNaN(date.getTime())) return '-';
-
-
-
-            const day = String(date.getDate()).padStart(2, '0');
-
-            const month = String(date.getMonth() + 1).padStart(2, '0');
-
-            const year = date.getFullYear();
-
-            const hours = String(date.getHours()).padStart(2, '0');
-
-            const minutes = String(date.getMinutes()).padStart(2, '0');
-
-
-
-            return `${day}/${month}/${year} ${hours}:${minutes}`;
-
-          },
-
-          sorter: (a, b) => new Date(a.createdAt) - new Date(b.createdAt)
-
-        },
-
-        {
-
-          title: 'Avatar',
-
-          key: 'avatar',
-
-          width: 80,
-
-          render: (_, record) => {
-
-            if (record.avatarUrl) {
+              if (!Array.isArray(tag4)) return null;
 
               return (
 
-                <Image
+                  <>
 
-                  width={40}
+                    {
 
-                  height={40}
+                      tag4.map((val) => {
 
-                  src={record.avatarUrl}
+                        const option = tag4Options.find((opt) => opt.value === val);
 
-                  style={{ objectFit: 'cover', borderRadius: '4px' }}
+                        return (
 
-                  placeholder={
+                            <span className={styles.summaryCell}>{option?.label} , </span>
 
-                    <div style={{
+                        );
 
-                      width: 40,
+                      })}
 
-                      height: 40,
-
-                      display: 'flex',
-
-                      alignItems: 'center',
-
-                      justifyContent: 'center',
-
-                      backgroundColor: '#f0f0f0',
-
-                      borderRadius: '4px'
-
-                    }}>
-
-                      <PictureOutlined style={{ fontSize: '16px', color: '#999' }} />
-
-                    </div>
-
-                  }
-
-                />
+                  </>
 
               );
 
-            }
+            },
 
-            return (
+          },
 
-              <div style={{
+          // {
 
-                width: 40,
+          //   title: 'Sentiment',
 
-                height: 40,
+          //   dataIndex: 'sentiment',
 
-                display: 'flex',
+          //   key: 'sentiment',
 
-                alignItems: 'center',
+          //   width: 120,
 
-                justifyContent: 'center',
+          //   filters: [
 
-                backgroundColor: '#f0f0f0',
+          //     { text: 'Tích cực', value: 'positive' },
 
-                borderRadius: '4px'
+          //     { text: 'Tiêu cực', value: 'negative' },
 
-              }}>
+          //     { text: 'Trung tính', value: 'neutral' }
 
-                <PictureOutlined style={{ fontSize: '16px', color: '#999' }} />
+          //   ],
 
-              </div>
+          //   onFilter: (value, record) => record.sentiment === value
 
-            );
+          // },
 
-          }
+          // {
 
-        },
+          //   title: 'Độ phức tạp',
 
-        {
-          title: <span style={{ color: 'green', fontWeight: 'bold' }}>Diagram HTML</span>,
-          key: 'diagramHtml',
-          width: 90,
-          render: (_, record) => {
-            // Hiển thị icon HTML nếu có diagramHtmlCode
-            if (record.diagramHtmlCode && record.diagramHtmlCode.length > 0) {
-              return (
-                <div
-                  onClick={() => handleDiagramPreview(record)}
-                  style={{
-                    width: 40,
-                    height: 40,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    backgroundColor: '#f6ffed',
-                    borderRadius: '4px',
-                    border: '1px solid #b7eb8f',
-                    cursor: 'pointer'
-                  }}
-                  title="Diagram HTML"
-                >
-                  <FileTextOutlined style={{ fontSize: '16px', color: '#52c41a' }} />
-                </div>
-              );
-            }
+          //   dataIndex: 'impact',
 
-            // Hiển thị icon trống nếu không có
-            return (
-              <div style={{
-                width: 40,
-                height: 40,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                backgroundColor: '#f0f0f0',
-                borderRadius: '4px'
-              }}
-                title="Chưa tạo diagram HTML"
-              >
-                <FileTextOutlined style={{ fontSize: '16px', color: '#999' }} />
-              </div>
-            );
-          }
-        },
-        {
-          title: <span style={{ color: '#722ed1', fontWeight: 'bold' }}>Diagram Excalidraw</span>,
-          key: 'diagramExcalidraw',
-          width: 90,
-          render: (_, record) => {
-            // Hiển thị icon Excalidraw React nếu có diagramExcalidrawJson
-            if (record.diagramExcalidrawJson && record.diagramExcalidrawJson.length > 0) {
-              return (
-                <div
-                  onClick={() => handleDiagramPreview(record)}
-                  style={{
-                    width: 40,
-                    height: 40,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    backgroundColor: '#f9f0ff',
-                    borderRadius: '4px',
-                    border: '1px solid #d3adf7',
-                    cursor: 'pointer'
-                  }}
-                  title="Diagram Excalidraw React"
-                >
-                  <PictureOutlined style={{ fontSize: '16px', color: '#722ed1' }} />
-                </div>
-              );
-            }
-            return (
-              <div style={{
-                width: 40,
-                height: 40,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                backgroundColor: '#f0f0f0',
-                borderRadius: '4px'
-              }}
-                title="Chưa tạo diagram Excalidraw"
-              >
-                <PictureOutlined style={{ fontSize: '16px', color: '#999' }} />
-              </div>
-            );
-          }
-        },
-        {
-          title: <span style={{ color: '#1890ff', fontWeight: 'bold' }}>Summary Detail</span>,
-          key: 'summaryDetail',
-          width: 200,
-          render: (_, record) => {
-            if (record.summaryDetail) {
-              return (
-                <Tooltip title={record.summaryDetail}>
-                  <div style={{
-                    maxWidth: '200px',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap',
-                    fontSize: '12px',
-                    color: '#1890ff'
-                  }}>
-                    {record.summaryDetail.substring(0, 50)}...
-                  </div>
+          //   key: 'impact',
+
+          //   width: 150,
+
+          //   filters: [
+
+          //     { text: 'Quan trọng', value: 'important' },
+
+          //     { text: 'Bình thường', value: 'normal' },
+
+          //     { text: 'Bỏ qua', value: 'skip' }
+
+          //   ],
+
+          //   render: (impact) => {
+
+          //     const impactMap = {
+
+          //       important: { color: 'red', text: 'Quan trọng' },
+
+          //       normal: { color: 'default', text: 'Bình thường' },
+
+          //       skip: { color: 'orange', text: 'Bỏ qua' }
+
+          //     };
+
+          //     const imp = impactMap[impact] || { color: 'default', text: impact };
+
+          //     return <Tag color={imp.color}>{imp.text}</Tag>;
+
+          //   },
+
+          //   onFilter: (value, record) => record.impact === value
+
+          // },
+
+
+
+          {
+
+            title: 'Nguồn',
+
+            dataIndex: 'source',
+
+            key: 'source',
+
+            width: 120,
+
+            ellipsis: {
+
+              showTitle: false,
+
+            },
+
+            render: (source) => (
+
+                <Tooltip placement="topLeft" title={source}>
+
+                  <span className={styles.sourceCell}>{source}</span>
+
                 </Tooltip>
+
+            )
+
+          },
+
+          ...(currentTab === 'caseTraining' ? [
+
+            {
+
+              title: 'Categories',
+
+              dataIndex: 'tag1',
+
+              key: 'tag1',
+
+              width: 120,
+
+              render: (tag1) => {
+
+                if (!tag1) return '';
+
+                return <div>{tag1}</div>;
+
+              },
+
+              filters: getCurrentTabTag1Filters(),
+
+              onFilter: (value, record) => {
+
+                if (value === null) {
+
+                  return !record.tag1 || record.tag1 === '';
+
+                }
+
+                return record.tag1 === value;
+
+              }
+
+            },
+
+            {
+
+              title: 'Levels',
+
+              dataIndex: 'tag2',
+
+              key: 'tag2',
+
+              width: 120,
+
+              render: (tag2) => {
+
+                if (!tag2) return '';
+
+                return <div>{tag2}</div>;
+
+              },
+
+              filters: getCurrentTabTag2Filters(),
+
+              onFilter: (value, record) => {
+
+                if (value === null) {
+
+                  return !record.tag2 || record.tag2 === '';
+
+                }
+
+                return record.tag2 === value;
+
+              }
+
+            },
+
+            {
+
+              title: 'Series',
+
+              dataIndex: 'tag3',
+
+              key: 'tag3',
+
+              width: 120,
+
+              render: (tag3) => {
+
+                if (!tag3) return '';
+
+                return <div>{tag3}</div>;
+
+              },
+
+              filters: getCurrentTabTag3Filters(),
+
+              onFilter: (value, record) => {
+
+                if (value === null) {
+
+                  return !record.tag3 || record.tag3 === '';
+
+                }
+
+                return record.tag3 === value;
+
+              }
+
+            }
+
+          ] : []),
+
+
+
+          {
+
+            title: 'Thời gian',
+
+            dataIndex: 'createdAt',
+
+            key: 'createdAt',
+
+            width: 140,
+
+            render: (createdAt) => {
+
+              if (!createdAt) return '-';
+
+              const date = new Date(createdAt);
+
+              if (isNaN(date.getTime())) return '-';
+
+
+
+              const day = String(date.getDate()).padStart(2, '0');
+
+              const month = String(date.getMonth() + 1).padStart(2, '0');
+
+              const year = date.getFullYear();
+
+              const hours = String(date.getHours()).padStart(2, '0');
+
+              const minutes = String(date.getMinutes()).padStart(2, '0');
+
+
+
+              return `${day}/${month}/${year} ${hours}:${minutes}`;
+
+            },
+
+            sorter: (a, b) => new Date(a.createdAt) - new Date(b.createdAt)
+
+          },
+
+          {
+
+            title: 'Avatar',
+
+            key: 'avatar',
+
+            width: 80,
+
+            render: (_, record) => {
+
+              if (record.avatarUrl) {
+
+                return (
+
+                    <Image
+
+                        width={40}
+
+                        height={40}
+
+                        src={record.avatarUrl}
+
+                        style={{ objectFit: 'cover', borderRadius: '4px' }}
+
+                        placeholder={
+
+                          <div style={{
+
+                            width: 40,
+
+                            height: 40,
+
+                            display: 'flex',
+
+                            alignItems: 'center',
+
+                            justifyContent: 'center',
+
+                            backgroundColor: '#f0f0f0',
+
+                            borderRadius: '4px'
+
+                          }}>
+
+                            <PictureOutlined style={{ fontSize: '16px', color: '#999' }} />
+
+                          </div>
+
+                        }
+
+                    />
+
+                );
+
+              }
+
+              return (
+
+                  <div style={{
+
+                    width: 40,
+
+                    height: 40,
+
+                    display: 'flex',
+
+                    alignItems: 'center',
+
+                    justifyContent: 'center',
+
+                    backgroundColor: '#f0f0f0',
+
+                    borderRadius: '4px'
+
+                  }}>
+
+                    <PictureOutlined style={{ fontSize: '16px', color: '#999' }} />
+
+                  </div>
+
+              );
+
+            }
+
+          },
+
+          {
+            title: <span style={{ color: 'green', fontWeight: 'bold' }}>Diagram HTML</span>,
+            key: 'diagramHtml',
+            width: 90,
+            render: (_, record) => {
+              // Hiển thị icon HTML nếu có diagramHtmlCode
+              if (record.diagramHtmlCode && record.diagramHtmlCode.length > 0) {
+                return (
+                    <div
+                        onClick={() => handleDiagramPreview(record)}
+                        style={{
+                          width: 40,
+                          height: 40,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          backgroundColor: '#f6ffed',
+                          borderRadius: '4px',
+                          border: '1px solid #b7eb8f',
+                          cursor: 'pointer'
+                        }}
+                        title="Diagram HTML"
+                    >
+                      <FileTextOutlined style={{ fontSize: '16px', color: '#52c41a' }} />
+                    </div>
+                );
+              }
+
+              // Hiển thị icon trống nếu không có
+              return (
+                  <div style={{
+                    width: 40,
+                    height: 40,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    backgroundColor: '#f0f0f0',
+                    borderRadius: '4px'
+                  }}
+                       title="Chưa tạo diagram HTML"
+                  >
+                    <FileTextOutlined style={{ fontSize: '16px', color: '#999' }} />
+                  </div>
               );
             }
-            return (
-              <span style={{ color: '#999', fontSize: '12px' }}>Chưa có</span>
-            );
-          }
-        },
-    
-        {
-
-          title: 'Media',
-
-          key: 'media',
-
-          width: 120,
-
-          render: (_, record) => {
-
-            const imageCount = record.imgUrls && Array.isArray(record.imgUrls) ? record.imgUrls.length : 0;
-
-            const hasVideo = !!record.videoUrl;
-
-            const fileCount = record.fileUrls && Array.isArray(record.fileUrls) ? record.fileUrls.length : 0;
-
-
-
-            return (
-
-              <Space size="small" wrap>
-
-                {imageCount > 0 && (
-
-                  <Tag color="blue" style={{ margin: 0 }}>
-
-                    🖼️ {imageCount}
-
-                  </Tag>
-
-                )}
-
-                {hasVideo && (
-
-                  <Tag color="purple" style={{ margin: 0 }}>
-
-                    🎥 1
-
-                  </Tag>
-
-                )}
-
-                {fileCount > 0 && (
-
-                  <Tag color="green" style={{ margin: 0 }}>
-
-                    📎 {fileCount}
-
-                  </Tag>
-
-                )}
-
-                {imageCount === 0 && !hasVideo && fileCount === 0 && (
-
-                  <Tag color="default" style={{ margin: 0 }}>
-
-                    Không có
-
-                  </Tag>
-
-                )}
-
-              </Space>
-
-            );
-
-          }
-
-        },
-
-        {
-
-          title: 'Quiz Content',
-
-          key: 'quizContent',
-
-          width: 120,
-
-          render: (_, record) => {
-
-            const questionContent = record.questionContent || record.quizContent || record.quizzContent;
-
-            const hasQuiz = questionContent && (
-
-              (questionContent.questionQuiz && questionContent.questionQuiz.length > 0) ||
-
-              (questionContent.questionEssay && questionContent.questionEssay.length > 0)
-
-            );
-
-
-
-            return (
-
-              <Space size="small" wrap>
-
-                {hasQuiz ? (
-
-                  <Button
-
-                    type="link"
-
-                    icon={<QuestionCircleOutlined />}
-
-                    onClick={() => handleViewQuestionContent(record)}
-
-                    size="small"
-
-                    style={{ color: '#1890ff' }}
-
+          },
+          {
+            title: <span style={{ color: '#722ed1', fontWeight: 'bold' }}>Diagram Excalidraw</span>,
+            key: 'diagramExcalidraw',
+            width: 90,
+            render: (_, record) => {
+              // Hiển thị icon Excalidraw React nếu có diagramExcalidrawJson
+              if (record.diagramExcalidrawJson && record.diagramExcalidrawJson.length > 0) {
+                return (
+                    <div
+                        onClick={() => handleDiagramPreview(record)}
+                        style={{
+                          width: 40,
+                          height: 40,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          backgroundColor: '#f9f0ff',
+                          borderRadius: '4px',
+                          border: '1px solid #d3adf7',
+                          cursor: 'pointer'
+                        }}
+                        title="Diagram Excalidraw React"
+                    >
+                      <PictureOutlined style={{ fontSize: '16px', color: '#722ed1' }} />
+                    </div>
+                );
+              }
+              return (
+                  <div style={{
+                    width: 40,
+                    height: 40,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    backgroundColor: '#f0f0f0',
+                    borderRadius: '4px'
+                  }}
+                       title="Chưa tạo diagram Excalidraw"
                   >
+                    <PictureOutlined style={{ fontSize: '16px', color: '#999' }} />
+                  </div>
+              );
+            }
+          },
+          {
+            title: <span style={{ color: '#1890ff', fontWeight: 'bold' }}>Summary Detail</span>,
+            key: 'summaryDetail',
+            width: 200,
+            render: (_, record) => {
+              if (record.summaryDetail) {
+                return (
+                    <Tooltip title={record.summaryDetail}>
+                      <div style={{
+                        maxWidth: '200px',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                        fontSize: '12px',
+                        color: '#1890ff'
+                      }}>
+                        {record.summaryDetail.substring(0, 50)}...
+                      </div>
+                    </Tooltip>
+                );
+              }
+              return (
+                  <span style={{ color: '#999', fontSize: '12px' }}>Chưa có</span>
+              );
+            }
+          },
 
-                    Xem Quiz
+          {
 
-                  </Button>
+            title: 'Media',
 
-                ) : (
+            key: 'media',
 
-                  <Tag color="default" style={{ margin: 0 }}>
+            width: 120,
 
-                    Không có
+            render: (_, record) => {
 
-                  </Tag>
+              const imageCount = record.imgUrls && Array.isArray(record.imgUrls) ? record.imgUrls.length : 0;
 
-                )}
+              const hasVideo = !!record.videoUrl;
 
-              </Space>
+              const fileCount = record.fileUrls && Array.isArray(record.fileUrls) ? record.fileUrls.length : 0;
 
-            );
+
+
+              return (
+
+                  <Space size="small" wrap>
+
+                    {imageCount > 0 && (
+
+                        <Tag color="blue" style={{ margin: 0 }}>
+
+                          🖼️ {imageCount}
+
+                        </Tag>
+
+                    )}
+
+                    {hasVideo && (
+
+                        <Tag color="purple" style={{ margin: 0 }}>
+
+                          🎥 1
+
+                        </Tag>
+
+                    )}
+
+                    {fileCount > 0 && (
+
+                        <Tag color="green" style={{ margin: 0 }}>
+
+                          📎 {fileCount}
+
+                        </Tag>
+
+                    )}
+
+                    {imageCount === 0 && !hasVideo && fileCount === 0 && (
+
+                        <Tag color="default" style={{ margin: 0 }}>
+
+                          Không có
+
+                        </Tag>
+
+                    )}
+
+                  </Space>
+
+              );
+
+            }
+
+          },
+
+          {
+
+            title: 'Quiz Content',
+
+            key: 'quizContent',
+
+            width: 120,
+
+            render: (_, record) => {
+
+              const questionContent = record.questionContent || record.quizContent || record.quizzContent;
+
+              const hasQuiz = questionContent && (
+
+                  (questionContent.questionQuiz && questionContent.questionQuiz.length > 0) ||
+
+                  (questionContent.questionEssay && questionContent.questionEssay.length > 0)
+
+              );
+
+
+
+              return (
+
+                  <Space size="small" wrap>
+
+                    {hasQuiz ? (
+
+                        <Button
+
+                            type="link"
+
+                            icon={<QuestionCircleOutlined />}
+
+                            onClick={() => handleViewQuestionContent(record)}
+
+                            size="small"
+
+                            style={{ color: '#1890ff' }}
+
+                        >
+
+                          Xem Quiz
+
+                        </Button>
+
+                    ) : (
+
+                        <Tag color="default" style={{ margin: 0 }}>
+
+                          Không có
+
+                        </Tag>
+
+                    )}
+
+                  </Space>
+
+              );
+
+            }
 
           }
-
-        }
 
       );
 
@@ -8243,75 +8260,75 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
 
       baseColumns.splice(5, 0,
 
-        // {
+          // {
 
-        //   title: 'Số trang',
+          //   title: 'Số trang',
 
-        //   dataIndex: 'pages',
+          //   dataIndex: 'pages',
 
-        //   key: 'pages',
+          //   key: 'pages',
 
-        //   width: 100
+          //   width: 100
 
-        // },
+          // },
 
-        {
+          {
 
-          title: 'Media',
+            title: 'Media',
 
-          key: 'media',
+            key: 'media',
 
-          width: 120,
+            width: 120,
 
-          render: (_, record) => {
+            render: (_, record) => {
 
-            const imageCount = record.imgUrls && Array.isArray(record.imgUrls) ? record.imgUrls.length : 0;
+              const imageCount = record.imgUrls && Array.isArray(record.imgUrls) ? record.imgUrls.length : 0;
 
-            const hasVideo = !!record.videoUrl;
+              const hasVideo = !!record.videoUrl;
 
 
 
-            return (
+              return (
 
-              <Space size="small" wrap>
+                  <Space size="small" wrap>
 
-                {imageCount > 0 && (
+                    {imageCount > 0 && (
 
-                  <Tag color="blue" style={{ margin: 0 }}>
+                        <Tag color="blue" style={{ margin: 0 }}>
 
-                    🖼️ {imageCount}
+                          🖼️ {imageCount}
 
-                  </Tag>
+                        </Tag>
 
-                )}
+                    )}
 
-                {hasVideo && (
+                    {hasVideo && (
 
-                  <Tag color="purple" style={{ margin: 0 }}>
+                        <Tag color="purple" style={{ margin: 0 }}>
 
-                    🎥 1
+                          🎥 1
 
-                  </Tag>
+                        </Tag>
 
-                )}
+                    )}
 
-                {imageCount === 0 && !hasVideo && (
+                    {imageCount === 0 && !hasVideo && (
 
-                  <Tag color="default" style={{ margin: 0 }}>
+                        <Tag color="default" style={{ margin: 0 }}>
 
-                    Không có
+                          Không có
 
-                  </Tag>
+                        </Tag>
 
-                )}
+                    )}
 
-              </Space>
+                  </Space>
 
-            );
+              );
 
-          }
+            }
 
-        },
+          },
 
       );
 
@@ -8319,29 +8336,29 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
 
       baseColumns.splice(5, 0,
 
-        {
+          {
 
-          title: 'Thời lượng',
+            title: 'Thời lượng',
 
-          dataIndex: 'duration',
+            dataIndex: 'duration',
 
-          key: 'duration',
+            key: 'duration',
 
-          width: 100
+            width: 100
 
-        },
+          },
 
-        {
+          {
 
-          title: 'Loại',
+            title: 'Loại',
 
-          dataIndex: 'storyType',
+            dataIndex: 'storyType',
 
-          key: 'storyType',
+            key: 'storyType',
 
-          width: 100
+            width: 100
 
-        }
+          }
 
       );
 
@@ -8362,439 +8379,439 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
 
       render: (_, record) => (
 
-        <Space size="small">
+          <Space size="small">
 
-          <Tooltip title="Xem chi tiết">
-
-            <Button
-
-              type="link"
-
-              icon={<EyeOutlined />}
-
-              onClick={() => handleView(record)}
-
-              size="small"
-
-            />
-
-          </Tooltip>
-
-          <Tooltip title="Chỉnh sửa">
-
-            <Button
-
-              type="link"
-
-              icon={<EditOutlined />}
-
-              onClick={() => handleEdit(record)}
-
-              size="small"
-
-            />
-
-          </Tooltip>
-
-          {currentTab === 'story' && (
-
-            <Tooltip title={
-
-              record.audioUrl ? `Đã có voice${record.audioText ? ' (có nội dung text)' : ''}` :
-
-                !record.audioText ? "Cần có nội dung audioText để tạo voice" :
-
-                  voiceQueue.find(task => task.recordId === record.id) ? "Đang trong hàng đợi" :
-
-                    currentProcessing && currentProcessing.recordId === record.id ? "Đang tạo voice" :
-
-                      "Tạo voice"
-
-            }>
+            <Tooltip title="Xem chi tiết">
 
               <Button
 
-                type="link"
+                  type="link"
 
-                icon={
+                  icon={<EyeOutlined />}
 
-                  (voiceQueue.find(task => task.recordId === record.id) ||
+                  onClick={() => handleView(record)}
 
-                    (currentProcessing && currentProcessing.recordId === record.id)) ?
-
-                    <LoadingOutlined /> : <SoundOutlined />
-
-                }
-
-                onClick={() => handleCreateVoice(record)}
-
-                size="small"
-
-                loading={
-
-                  !!record.audioText &&
-
-                  !!(voiceQueue.find(task => task.recordId === record.id) ||
-
-                    (currentProcessing && currentProcessing.recordId === record.id))
-
-                }
-
-                disabled={
-
-                  !record.audioText ||
-
-                  !!(voiceQueue.find(task => task.recordId === record.id) ||
-
-                    (currentProcessing && currentProcessing.recordId === record.id))
-
-                }
-
-                style={{
-
-                  color: !record.audioText ? '#d9d9d9' :
-
-                    record.audioUrl ? '#52c41a' :
-
-                      voiceQueue.find(task => task.recordId === record.id) ? '#faad14' :
-
-                        currentProcessing && currentProcessing.recordId === record.id ? '#1890ff' :
-
-                          '#262626'
-
-                }}
+                  size="small"
 
               />
 
             </Tooltip>
 
-          )}
-
-          {/* Create voice from detail - for all tabs */}
-
-
-          <Tooltip title={
-
-            record.audioUrl ? `Đã có voice${record.detail ? ' (có nội dung detail)' : ''}` :
-
-              !record.detail ? "Cần có nội dung detail để tạo voice" :
-
-                voiceQueue.find(task => task.recordId === record.id) ? "Đang trong hàng đợi" :
-
-                  currentProcessing && currentProcessing.recordId === record.id ? "Đang tạo voice" :
-
-                    "Tạo voice từ detail"
-
-          }>
-
-            <Button
-
-              type="link"
-
-              icon={
-
-                (voiceQueue.find(task => task.recordId === record.id) ||
-
-                  (currentProcessing && currentProcessing.recordId === record.id)) ?
-
-                  <LoadingOutlined /> : <SoundOutlined />
-
-              }
-
-              onClick={() => handleCreateVoiceFromDetail(record)}
-
-              size="small"
-
-              loading={
-
-                !!record.detail &&
-
-                !!(voiceQueue.find(task => task.recordId === record.id) ||
-
-                  (currentProcessing && currentProcessing.recordId === record.id))
-
-              }
-
-              disabled={
-
-                !record.detail ||
-
-                !!(voiceQueue.find(task => task.recordId === record.id) ||
-
-                  (currentProcessing && currentProcessing.recordId === record.id))
-
-              }
-
-              style={{
-
-                color: !record.detail ? '#d9d9d9' :
-
-                  record.audioUrl ? '#52c41a' :
-
-                    voiceQueue.find(task => task.recordId === record.id) ? '#faad14' :
-
-                      currentProcessing && currentProcessing.recordId === record.id ? '#1890ff' :
-
-                        '#262626'
-
-              }}
-
-            />
-
-          </Tooltip>
-
-
-          {/* Embedding button - show different buttons based on embedding status */}
-
-          {(currentTab === 'news' || currentTab === 'caseTraining' || currentTab === 'report') && (
-
-            embeddedItems.has(record.id) ? (
-
-              // Item đã được embedding - hiển thị nút "Embed lại" với màu khác
-
-              <Tooltip title="Embed lại">
-
-                <Button
-
-                  type="link"
-
-                  onClick={() => handleEmbeding(record.id)}
-
-                  size="small"
-
-                  loading={isEmbedding(record.id)}
-
-                  disabled={isEmbedding(record.id)}
-
-                  icon={isEmbedding(record.id) ? <LoadingOutlined /> : <ReloadOutlined />}
-
-                  style={{ color: '#1890ff' }} // Màu xanh cho nút embed lại
-
-                >
-
-                  {isEmbedding(record.id) ? 'Đang Embedding...' : 'Embed lại'}
-
-                </Button>
-
-              </Tooltip>
-
-            ) : (
-
-              // Item chưa được embedding - hiển thị nút "Embedding" bình thường
-
-              <Tooltip title="Embedding">
-
-                <Button
-
-                  type="link"
-
-                  onClick={() => handleEmbeding(record.id)}
-
-                  size="small"
-
-                  loading={isEmbedding(record.id)}
-
-                  disabled={isEmbedding(record.id)}
-
-                  icon={isEmbedding(record.id) ? <LoadingOutlined /> : null}
-
-                >
-
-                  {isEmbedding(record.id) ? 'Đang Embedding...' : 'Embedding'}
-
-                </Button>
-
-              </Tooltip>
-
-            )
-
-          )}
-
-          {(currentTab === 'home' || currentTab === 'news' || currentTab === 'caseTraining' || currentTab === 'longForm') && (
-
-            <>
-
-              <Tooltip title={
-
-                record.avatarUrl ? 'Đã có ảnh' :
-
-                  imageGenerationQueue.find(task => task.recordId === record.id) ? 'Đang trong hàng đợi' :
-
-                    currentImageProcessing && currentImageProcessing.recordId === record.id ? 'Đang tạo ảnh' :
-
-                      'Tạo ảnh'
-
-              }>
-
-                <Button
-
-                  type="link"
-
-                  icon={
-
-                    (imageGenerationQueue.find(task => task.recordId === record.id) ||
-
-                      (currentImageProcessing && currentImageProcessing.recordId === record.id)) ?
-
-                      <LoadingOutlined /> : <PictureOutlined />
-
-                  }
-
-                  onClick={() => handleCreateImage(record)}
-
-                  size="small"
-
-                  loading={
-
-                    !!(imageGenerationQueue.find(task => task.recordId === record.id) ||
-
-                      (currentImageProcessing && currentImageProcessing.recordId === record.id))
-
-                  }
-
-                  disabled={
-
-                    !!record.avatarUrl ||
-
-                    !!(imageGenerationQueue.find(task => task.recordId === record.id) ||
-
-                      (currentImageProcessing && currentImageProcessing.recordId === record.id))
-
-                  }
-
-                  style={{
-
-                    color: record.avatarUrl ? '#52c41a' :
-
-                      imageGenerationQueue.find(task => task.recordId === record.id) ? '#faad14' :
-
-                        currentImageProcessing && currentImageProcessing.recordId === record.id ? '#1890ff' :
-
-                          '#262626'
-
-                  }}
-
-                />
-
-              </Tooltip>
-
-
-
-              {/* Diagram Generation Button */}
-              <Tooltip title={
-                  diagramGenerationQueue.find(task => task.recordId === record.id) ? 'Đang trong hàng đợi' :
-                    currentDiagramProcessing && currentDiagramProcessing.recordId === record.id ? 'Đang tạo diagram' :
-                      'Tạo diagram'
-              }>
-                <Dropdown
-                  menu={{
-                    items: [
-                      {
-                        key: 'html',
-                        label: '💻 Tạo HTML code',
-                        icon: <FileTextOutlined />,
-                        onClick: () => handleCreateDiagram(record, 'html')
-                      },
-                      {
-                        key: 'excalidraw-react',
-                        label: '🎨 Tạo Excalidraw React',
-                        icon: <PictureOutlined />,
-                        onClick: () => handleCreateDiagram(record, 'excalidraw-react')
-                      }
-                    ]
-                  }}
-          
-                  trigger={['click']}
-                >
-                  <Button
-                    type="link"
-                    icon={
-                      (diagramGenerationQueue.find(task => task.recordId === record.id) ||
-                        (currentDiagramProcessing && currentDiagramProcessing.recordId === record.id)) ?
-                        <LoadingOutlined /> : <NodeIndexOutlined />
-                    }
-                    size="small"
-                    loading={
-                      !!(diagramGenerationQueue.find(task => task.recordId === record.id) ||
-                        (currentDiagramProcessing && currentDiagramProcessing.recordId === record.id))
-                    }
-                   
-                  
-                  />
-                </Dropdown>
-              </Tooltip>
-
-              {/* Create Summary Detail Button */}
-              <Tooltip title={
-                record.summaryDetail ? 'Đã có summaryDetail' :
-                  summaryDetailQueue.find(task => task.recordId === record.id) ? 'Đang trong hàng đợi' :
-                    currentSummaryDetailProcessing && currentSummaryDetailProcessing.recordId === record.id ? 'Đang tạo summaryDetail' :
-                      'Tạo summaryDetail'
-              }>
-                <Button
-                  type="link"
-                  icon={
-                    (summaryDetailQueue.find(task => task.recordId === record.id) ||
-                      (currentSummaryDetailProcessing && currentSummaryDetailProcessing.recordId === record.id)) ?
-                      <LoadingOutlined /> : <ThunderboltOutlined />
-                  }
-                  size="small"
-                  onClick={() => handleCreateSummaryDetail(record)}
-                  loading={
-                    !!(summaryDetailQueue.find(task => task.recordId === record.id) ||
-                      (currentSummaryDetailProcessing && currentSummaryDetailProcessing.recordId === record.id))
-                  }
-                  disabled={
-                    !!record.summaryDetail ||
-                    !!(summaryDetailQueue.find(task => task.recordId === record.id) ||
-                      (currentSummaryDetailProcessing && currentSummaryDetailProcessing.recordId === record.id))
-                  }
-                  style={{
-                    color: record.summaryDetail ? '#52c41a' :
-                      summaryDetailQueue.find(task => task.recordId === record.id) ? '#faad14' :
-                        currentSummaryDetailProcessing && currentSummaryDetailProcessing.recordId === record.id ? '#1890ff' :
-                          '#1890ff'
-                  }}
-                />
-              </Tooltip>
-
-            </>
-
-
-
-          )}
-
-          <Tooltip title="Xóa">
-
-            <Popconfirm
-
-              title="Bạn có chắc chắn muốn xóa?"
-
-              onConfirm={() => handleDelete(record.id)}
-
-              okText="Có"
-
-              cancelText="Không"
-
-            >
+            <Tooltip title="Chỉnh sửa">
 
               <Button
 
-                type="link"
+                  type="link"
 
-                danger
+                  icon={<EditOutlined />}
 
-                icon={<DeleteOutlined />}
+                  onClick={() => handleEdit(record)}
 
-                size="small"
+                  size="small"
 
               />
 
-            </Popconfirm>
+            </Tooltip>
 
-          </Tooltip>
+            {currentTab === 'story' && (
 
-        </Space>
+                <Tooltip title={
+
+                  record.audioUrl ? `Đã có voice${record.audioText ? ' (có nội dung text)' : ''}` :
+
+                      !record.audioText ? "Cần có nội dung audioText để tạo voice" :
+
+                          voiceQueue.find(task => task.recordId === record.id) ? "Đang trong hàng đợi" :
+
+                              currentProcessing && currentProcessing.recordId === record.id ? "Đang tạo voice" :
+
+                                  "Tạo voice"
+
+                }>
+
+                  <Button
+
+                      type="link"
+
+                      icon={
+
+                        (voiceQueue.find(task => task.recordId === record.id) ||
+
+                            (currentProcessing && currentProcessing.recordId === record.id)) ?
+
+                            <LoadingOutlined /> : <SoundOutlined />
+
+                      }
+
+                      onClick={() => handleCreateVoice(record)}
+
+                      size="small"
+
+                      loading={
+
+                          !!record.audioText &&
+
+                          !!(voiceQueue.find(task => task.recordId === record.id) ||
+
+                              (currentProcessing && currentProcessing.recordId === record.id))
+
+                      }
+
+                      disabled={
+
+                          !record.audioText ||
+
+                          !!(voiceQueue.find(task => task.recordId === record.id) ||
+
+                              (currentProcessing && currentProcessing.recordId === record.id))
+
+                      }
+
+                      style={{
+
+                        color: !record.audioText ? '#d9d9d9' :
+
+                            record.audioUrl ? '#52c41a' :
+
+                                voiceQueue.find(task => task.recordId === record.id) ? '#faad14' :
+
+                                    currentProcessing && currentProcessing.recordId === record.id ? '#1890ff' :
+
+                                        '#262626'
+
+                      }}
+
+                  />
+
+                </Tooltip>
+
+            )}
+
+            {/* Create voice from detail - for all tabs */}
+
+
+            <Tooltip title={
+
+              record.audioUrl ? `Đã có voice${record.detail ? ' (có nội dung detail)' : ''}` :
+
+                  !record.detail ? "Cần có nội dung detail để tạo voice" :
+
+                      voiceQueue.find(task => task.recordId === record.id) ? "Đang trong hàng đợi" :
+
+                          currentProcessing && currentProcessing.recordId === record.id ? "Đang tạo voice" :
+
+                              "Tạo voice từ detail"
+
+            }>
+
+              <Button
+
+                  type="link"
+
+                  icon={
+
+                    (voiceQueue.find(task => task.recordId === record.id) ||
+
+                        (currentProcessing && currentProcessing.recordId === record.id)) ?
+
+                        <LoadingOutlined /> : <SoundOutlined />
+
+                  }
+
+                  onClick={() => handleCreateVoiceFromDetail(record)}
+
+                  size="small"
+
+                  loading={
+
+                      !!record.detail &&
+
+                      !!(voiceQueue.find(task => task.recordId === record.id) ||
+
+                          (currentProcessing && currentProcessing.recordId === record.id))
+
+                  }
+
+                  disabled={
+
+                      !record.detail ||
+
+                      !!(voiceQueue.find(task => task.recordId === record.id) ||
+
+                          (currentProcessing && currentProcessing.recordId === record.id))
+
+                  }
+
+                  style={{
+
+                    color: !record.detail ? '#d9d9d9' :
+
+                        record.audioUrl ? '#52c41a' :
+
+                            voiceQueue.find(task => task.recordId === record.id) ? '#faad14' :
+
+                                currentProcessing && currentProcessing.recordId === record.id ? '#1890ff' :
+
+                                    '#262626'
+
+                  }}
+
+              />
+
+            </Tooltip>
+
+
+            {/* Embedding button - show different buttons based on embedding status */}
+
+            {(currentTab === 'news' || currentTab === 'caseTraining' || currentTab === 'report') && (
+
+                embeddedItems.has(record.id) ? (
+
+                    // Item đã được embedding - hiển thị nút "Embed lại" với màu khác
+
+                    <Tooltip title="Embed lại">
+
+                      <Button
+
+                          type="link"
+
+                          onClick={() => handleEmbeding(record.id)}
+
+                          size="small"
+
+                          loading={isEmbedding(record.id)}
+
+                          disabled={isEmbedding(record.id)}
+
+                          icon={isEmbedding(record.id) ? <LoadingOutlined /> : <ReloadOutlined />}
+
+                          style={{ color: '#1890ff' }} // Màu xanh cho nút embed lại
+
+                      >
+
+                        {isEmbedding(record.id) ? 'Đang Embedding...' : 'Embed lại'}
+
+                      </Button>
+
+                    </Tooltip>
+
+                ) : (
+
+                    // Item chưa được embedding - hiển thị nút "Embedding" bình thường
+
+                    <Tooltip title="Embedding">
+
+                      <Button
+
+                          type="link"
+
+                          onClick={() => handleEmbeding(record.id)}
+
+                          size="small"
+
+                          loading={isEmbedding(record.id)}
+
+                          disabled={isEmbedding(record.id)}
+
+                          icon={isEmbedding(record.id) ? <LoadingOutlined /> : null}
+
+                      >
+
+                        {isEmbedding(record.id) ? 'Đang Embedding...' : 'Embedding'}
+
+                      </Button>
+
+                    </Tooltip>
+
+                )
+
+            )}
+
+            {(currentTab === 'home' || currentTab === 'news' || currentTab === 'caseTraining' || currentTab === 'longForm') && (
+
+                <>
+
+                  <Tooltip title={
+
+                    record.avatarUrl ? 'Đã có ảnh' :
+
+                        imageGenerationQueue.find(task => task.recordId === record.id) ? 'Đang trong hàng đợi' :
+
+                            currentImageProcessing && currentImageProcessing.recordId === record.id ? 'Đang tạo ảnh' :
+
+                                'Tạo ảnh'
+
+                  }>
+
+                    <Button
+
+                        type="link"
+
+                        icon={
+
+                          (imageGenerationQueue.find(task => task.recordId === record.id) ||
+
+                              (currentImageProcessing && currentImageProcessing.recordId === record.id)) ?
+
+                              <LoadingOutlined /> : <PictureOutlined />
+
+                        }
+
+                        onClick={() => handleCreateImage(record)}
+
+                        size="small"
+
+                        loading={
+
+                          !!(imageGenerationQueue.find(task => task.recordId === record.id) ||
+
+                              (currentImageProcessing && currentImageProcessing.recordId === record.id))
+
+                        }
+
+                        disabled={
+
+                            !!record.avatarUrl ||
+
+                            !!(imageGenerationQueue.find(task => task.recordId === record.id) ||
+
+                                (currentImageProcessing && currentImageProcessing.recordId === record.id))
+
+                        }
+
+                        style={{
+
+                          color: record.avatarUrl ? '#52c41a' :
+
+                              imageGenerationQueue.find(task => task.recordId === record.id) ? '#faad14' :
+
+                                  currentImageProcessing && currentImageProcessing.recordId === record.id ? '#1890ff' :
+
+                                      '#262626'
+
+                        }}
+
+                    />
+
+                  </Tooltip>
+
+
+
+                  {/* Diagram Generation Button */}
+                  <Tooltip title={
+                    diagramGenerationQueue.find(task => task.recordId === record.id) ? 'Đang trong hàng đợi' :
+                        currentDiagramProcessing && currentDiagramProcessing.recordId === record.id ? 'Đang tạo diagram' :
+                            'Tạo diagram'
+                  }>
+                    <Dropdown
+                        menu={{
+                          items: [
+                            {
+                              key: 'html',
+                              label: '💻 Tạo HTML code',
+                              icon: <FileTextOutlined />,
+                              onClick: () => handleCreateDiagram(record, 'html')
+                            },
+                            {
+                              key: 'excalidraw-react',
+                              label: '🎨 Tạo Excalidraw React',
+                              icon: <PictureOutlined />,
+                              onClick: () => handleCreateDiagram(record, 'excalidraw-react')
+                            }
+                          ]
+                        }}
+
+                        trigger={['click']}
+                    >
+                      <Button
+                          type="link"
+                          icon={
+                            (diagramGenerationQueue.find(task => task.recordId === record.id) ||
+                                (currentDiagramProcessing && currentDiagramProcessing.recordId === record.id)) ?
+                                <LoadingOutlined /> : <NodeIndexOutlined />
+                          }
+                          size="small"
+                          loading={
+                            !!(diagramGenerationQueue.find(task => task.recordId === record.id) ||
+                                (currentDiagramProcessing && currentDiagramProcessing.recordId === record.id))
+                          }
+
+
+                      />
+                    </Dropdown>
+                  </Tooltip>
+
+                  {/* Create Summary Detail Button */}
+                  <Tooltip title={
+                    record.summaryDetail ? 'Đã có summaryDetail' :
+                        summaryDetailQueue.find(task => task.recordId === record.id) ? 'Đang trong hàng đợi' :
+                            currentSummaryDetailProcessing && currentSummaryDetailProcessing.recordId === record.id ? 'Đang tạo summaryDetail' :
+                                'Tạo summaryDetail'
+                  }>
+                    <Button
+                        type="link"
+                        icon={
+                          (summaryDetailQueue.find(task => task.recordId === record.id) ||
+                              (currentSummaryDetailProcessing && currentSummaryDetailProcessing.recordId === record.id)) ?
+                              <LoadingOutlined /> : <ThunderboltOutlined />
+                        }
+                        size="small"
+                        onClick={() => handleCreateSummaryDetail(record)}
+                        loading={
+                          !!(summaryDetailQueue.find(task => task.recordId === record.id) ||
+                              (currentSummaryDetailProcessing && currentSummaryDetailProcessing.recordId === record.id))
+                        }
+                        disabled={
+                            !!record.summaryDetail ||
+                            !!(summaryDetailQueue.find(task => task.recordId === record.id) ||
+                                (currentSummaryDetailProcessing && currentSummaryDetailProcessing.recordId === record.id))
+                        }
+                        style={{
+                          color: record.summaryDetail ? '#52c41a' :
+                              summaryDetailQueue.find(task => task.recordId === record.id) ? '#faad14' :
+                                  currentSummaryDetailProcessing && currentSummaryDetailProcessing.recordId === record.id ? '#1890ff' :
+                                      '#1890ff'
+                        }}
+                    />
+                  </Tooltip>
+
+                </>
+
+
+
+            )}
+
+            <Tooltip title="Xóa">
+
+              <Popconfirm
+
+                  title="Bạn có chắc chắn muốn xóa?"
+
+                  onConfirm={() => handleDelete(record.id)}
+
+                  okText="Có"
+
+                  cancelText="Không"
+
+              >
+
+                <Button
+
+                    type="link"
+
+                    danger
+
+                    icon={<DeleteOutlined />}
+
+                    size="small"
+
+                />
+
+              </Popconfirm>
+
+            </Tooltip>
+
+          </Space>
 
       )
 
@@ -11159,7 +11176,7 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
 
         const basicFields = !item.sentiment || !item.category || !item.impact ||
 
-          item.sentiment === '' || item.category === '' || item.impact === '';
+            item.sentiment === '' || item.category === '' || item.impact === '';
 
 
 
@@ -11247,13 +11264,13 @@ Chỉ trả về JSON, không thêm text khác.`;
 
           const languageResponse = await aiGen(
 
-            languageDetectionPrompt,
+              languageDetectionPrompt,
 
-            "Bạn là chuyên gia phân tích ngôn ngữ. Hãy xác định chính xác ngôn ngữ của văn bản.",
+              "Bạn là chuyên gia phân tích ngôn ngữ. Hãy xác định chính xác ngôn ngữ của văn bản.",
 
-            'gpt-4o-mini',
+              'gpt-4o-mini',
 
-            'text'
+              'text'
 
           );
 
@@ -11341,13 +11358,13 @@ Chỉ trả về JSON, không thêm text khác.`;
 
             const translationResponse = await aiGen(
 
-              translationPrompt,
+                translationPrompt,
 
-              "Bạn là chuyên gia dịch thuật English-Vietnamese. Hãy dịch chính xác và tự nhiên.",
+                "Bạn là chuyên gia dịch thuật English-Vietnamese. Hãy dịch chính xác và tự nhiên.",
 
-              'gpt-4o-mini',
+                'gpt-4o-mini',
 
-              'text'
+                'text'
 
             );
 
@@ -11461,13 +11478,13 @@ Chỉ trả về JSON, không thêm text khác.`;
 
           const response = await aiGen(
 
-            analysisPrompt,
+              analysisPrompt,
 
-            systemMessage,
+              systemMessage,
 
-            'gpt-4o-mini', // Model AI để sử dụng
+              'gpt-4o-mini', // Model AI để sử dụng
 
-            'text'
+              'text'
 
           );
 
@@ -11916,13 +11933,13 @@ Chỉ trả về JSON, không thêm text khác.`;
 
     addVoiceToQueue(
 
-      record.id,
+        record.id,
 
-      record.title,
+        record.title,
 
-      content,
+        content,
 
-      'single'
+        'single'
 
     );
 
@@ -11992,13 +12009,13 @@ Chỉ trả về JSON, không thêm text khác.`;
 
     addVoiceToQueue(
 
-      record.id,
+        record.id,
 
-      record.title,
+        record.title,
 
-      content,
+        content,
 
-      'detail-single'
+        'detail-single'
 
     );
 
@@ -12103,7 +12120,7 @@ Chỉ trả về JSON, không thêm text khác.`;
             // Fallback: convert to string
             urlString = String(item || '');
           }
-          
+
           return {
             uid: `-${index}`,
             name: `image-${index + 1}`,
@@ -12247,7 +12264,7 @@ Chỉ trả về JSON, không thêm text khác.`;
             // Fallback: convert to string
             urlString = String(item || '');
           }
-          
+
           return {
             uid: `-${index}`,
             name: `image-${index + 1}`,
@@ -12436,11 +12453,11 @@ Chỉ trả về JSON, không thêm text khác.`;
 
       const updater = (list) => list.map(item =>
 
-        item.id === selectedQuestionContentRecord.id
+          item.id === selectedQuestionContentRecord.id
 
-          ? { ...item, questionContent: newQuestionContent }
+              ? { ...item, questionContent: newQuestionContent }
 
-          : item
+              : item
 
       );
 
@@ -12649,9 +12666,9 @@ Chỉ trả về JSON, không thêm text khác.`;
         // Build info object with filedLabel fields
         info: {
           ...(selectedRecord?.info && (
-            typeof selectedRecord.info === 'string'
-              ? JSON.parse(selectedRecord.info)
-              : selectedRecord.info
+              typeof selectedRecord.info === 'string'
+                  ? JSON.parse(selectedRecord.info)
+                  : selectedRecord.info
           )),
           filedLabel_1: filedLabel_1,
           filedLabel_2: filedLabel_2
@@ -12959,9 +12976,9 @@ Chỉ trả về JSON, không thêm text khác.`;
 
     const contentType = modalMode === 'edit' && selectedRecord
 
-      ? selectedRecord.type
+        ? selectedRecord.type
 
-      : currentTab;
+        : currentTab;
 
 
 
@@ -12973,11 +12990,11 @@ Chỉ trả về JSON, không thêm text khác.`;
 
     fields.push(
 
-      <Form.Item key="title" name="title" label="Tiêu đề">
+        <Form.Item key="title" name="title" label="Tiêu đề">
 
-        <Input placeholder="Nhập tiêu đề" />
+          <Input placeholder="Nhập tiêu đề" />
 
-      </Form.Item>
+        </Form.Item>
 
     );
 
@@ -12985,11 +13002,11 @@ Chỉ trả về JSON, không thêm text khác.`;
 
     fields.push(
 
-      <Form.Item key="cid" name="cid" label="CID">
+        <Form.Item key="cid" name="cid" label="CID">
 
-        <Input placeholder="Nhập CID" />
+          <Input placeholder="Nhập CID" />
 
-      </Form.Item>
+        </Form.Item>
 
     );
 
@@ -12997,19 +13014,19 @@ Chỉ trả về JSON, không thêm text khác.`;
 
     fields.push(
 
-      <Form.Item key="lessonNumber" name="lessonNumber" label="Số bài">
+        <Form.Item key="lessonNumber" name="lessonNumber" label="Số bài">
 
-        <InputNumber
+          <InputNumber
 
-          placeholder="Nhập số bài"
+              placeholder="Nhập số bài"
 
-          min={1}
+              min={1}
 
-          style={{ width: '100%' }}
+              style={{ width: '100%' }}
 
-        />
+          />
 
-      </Form.Item>
+        </Form.Item>
 
     );
 
@@ -13051,23 +13068,23 @@ Chỉ trả về JSON, không thêm text khác.`;
 
       fields.push(
 
-        <Form.Item key="category" name="category" label="Danh mục">
+          <Form.Item key="category" name="category" label="Danh mục">
 
-          <Select placeholder="Chọn danh mục">
+            <Select placeholder="Chọn danh mục">
 
-            {categoryOptions.map(option => (
+              {categoryOptions.map(option => (
 
-              <Option key={option.value} value={option.value}>
+                  <Option key={option.value} value={option.value}>
 
-                {option.label}
+                    {option.label}
 
-              </Option>
+                  </Option>
 
-            ))}
+              ))}
 
-          </Select>
+            </Select>
 
-        </Form.Item>
+          </Form.Item>
 
       );
 
@@ -13077,14 +13094,14 @@ Chỉ trả về JSON, không thêm text khác.`;
 
     fields.push(
 
-      <Form.Item key="summary" name="summary" label="Tóm tắt">
+        <Form.Item key="summary" name="summary" label="Tóm tắt">
 
-        <TextArea
-          placeholder="Nhập tóm tắt"
-          autoSize={{ minRows: 2 }}
-          style={{ resize: 'none' }}
-        />
-      </Form.Item>
+          <TextArea
+              placeholder="Nhập tóm tắt"
+              autoSize={{ minRows: 2 }}
+              style={{ resize: 'none' }}
+          />
+        </Form.Item>
 
     );
 
@@ -13092,28 +13109,28 @@ Chỉ trả về JSON, không thêm text khác.`;
 
     fields.push(
 
-      <Form.Item key="detail" name="detail" label="Chi tiết">
+        <Form.Item key="detail" name="detail" label="Chi tiết">
 
-        <TextArea
-          placeholder="Nhập chi tiết"
-          autoSize={{ minRows: 3 }}
-          style={{ resize: 'none' }}
-        />
-      </Form.Item>
+          <TextArea
+              placeholder="Nhập chi tiết"
+              autoSize={{ minRows: 3 }}
+              style={{ resize: 'none' }}
+          />
+        </Form.Item>
 
     );
 
     // FiledLabel fields
     fields.push(
-      <Form.Item key="filedLabel_1" name="filedLabel_1" label="Filed Label 1">
-        <Input placeholder="Nhập filedLabel_1" />
-      </Form.Item>
+        <Form.Item key="filedLabel_1" name="filedLabel_1" label="Filed Label 1">
+          <Input placeholder="Nhập filedLabel_1" />
+        </Form.Item>
     );
 
     fields.push(
-      <Form.Item key="filedLabel_2" name="filedLabel_2" label="Filed Label 2">
-        <Input placeholder="Nhập filedLabel_2" />
-      </Form.Item>
+        <Form.Item key="filedLabel_2" name="filedLabel_2" label="Filed Label 2">
+          <Input placeholder="Nhập filedLabel_2" />
+        </Form.Item>
     );
 
 
@@ -13128,19 +13145,19 @@ Chỉ trả về JSON, không thêm text khác.`;
 
       fields.push(
 
-        <Form.Item key="sentiment" name="sentiment" label="Sentiment">
+          <Form.Item key="sentiment" name="sentiment" label="Sentiment">
 
-          <Select placeholder="Chọn sentiment">
+            <Select placeholder="Chọn sentiment">
 
-            <Option value="positive">Tích cực</Option>
+              <Option value="positive">Tích cực</Option>
 
-            <Option value="negative">Tiêu cực</Option>
+              <Option value="negative">Tiêu cực</Option>
 
-            <Option value="neutral">Trung tính</Option>
+              <Option value="neutral">Trung tính</Option>
 
-          </Select>
+            </Select>
 
-        </Form.Item>
+          </Form.Item>
 
       );
 
@@ -13150,23 +13167,23 @@ Chỉ trả về JSON, không thêm text khác.`;
 
 
 
-        <Form.Item key="tag4" name="tag4" label="Program">
+          <Form.Item key="tag4" name="tag4" label="Program">
 
-          <Select placeholder="Chọn program" mode="multiple" allowClear>
+            <Select placeholder="Chọn program" mode="multiple" allowClear>
 
-            {tag4Options.map(option => (
+              {tag4Options.map(option => (
 
-              <Option key={option.value} value={option.value}>
+                  <Option key={option.value} value={option.value}>
 
-                {option.label}
+                    {option.label}
 
-              </Option>
+                  </Option>
 
-            ))}
+              ))}
 
-          </Select>
+            </Select>
 
-        </Form.Item>
+          </Form.Item>
 
       );
 
@@ -13176,19 +13193,19 @@ Chỉ trả về JSON, không thêm text khác.`;
 
       fields.push(
 
-        <Form.Item key="impact" name="impact" label="Tầm quan trọng">
+          <Form.Item key="impact" name="impact" label="Tầm quan trọng">
 
-          <Select placeholder="Chọn tầm quan trọng">
+            <Select placeholder="Chọn tầm quan trọng">
 
-            <Option value="important">Quan trọng</Option>
+              <Option value="important">Quan trọng</Option>
 
-            <Option value="normal">Bình thường</Option>
+              <Option value="normal">Bình thường</Option>
 
-            <Option value="skip">Bỏ qua</Option>
+              <Option value="skip">Bỏ qua</Option>
 
-          </Select>
+            </Select>
 
-        </Form.Item>
+          </Form.Item>
 
       );
 
@@ -13198,11 +13215,11 @@ Chỉ trả về JSON, không thêm text khác.`;
 
       fields.push(
 
-        <Form.Item key="source" name="source" label="Nguồn">
+          <Form.Item key="source" name="source" label="Nguồn">
 
-          <Input placeholder="Nguồn tin tức" />
+            <Input placeholder="Nguồn tin tức" />
 
-        </Form.Item>
+          </Form.Item>
 
       );
 
@@ -13216,37 +13233,37 @@ Chỉ trả về JSON, không thêm text khác.`;
 
         fields.push(
 
-          <Form.Item key="tag1" name="tag1" label="Categories">
+            <Form.Item key="tag1" name="tag1" label="Categories">
 
-            <Select
+              <Select
 
-              placeholder="Chọn category"
+                  placeholder="Chọn category"
 
-              allowClear
+                  allowClear
 
-              showSearch
+                  showSearch
 
-              filterOption={(input, option) =>
+                  filterOption={(input, option) =>
 
-                (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+                      (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
 
-              }
+                  }
 
-            >
+              >
 
-              {tag1Options.map(option => (
+                {tag1Options.map(option => (
 
-                <Option key={option.value} value={option.value} label={option.label}>
+                    <Option key={option.value} value={option.value} label={option.label}>
 
-                  {option.label}
+                      {option.label}
 
-                </Option>
+                    </Option>
 
-              ))}
+                ))}
 
-            </Select>
+              </Select>
 
-          </Form.Item>
+            </Form.Item>
 
         );
 
@@ -13256,37 +13273,37 @@ Chỉ trả về JSON, không thêm text khác.`;
 
         fields.push(
 
-          <Form.Item key="tag2" name="tag2" label="Levels">
+            <Form.Item key="tag2" name="tag2" label="Levels">
 
-            <Select
+              <Select
 
-              placeholder="Chọn level"
+                  placeholder="Chọn level"
 
-              allowClear
+                  allowClear
 
-              showSearch
+                  showSearch
 
-              filterOption={(input, option) =>
+                  filterOption={(input, option) =>
 
-                (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+                      (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
 
-              }
+                  }
 
-            >
+              >
 
-              {tag2Options.map(option => (
+                {tag2Options.map(option => (
 
-                <Option key={option.value} value={option.value} label={option.label}>
+                    <Option key={option.value} value={option.value} label={option.label}>
 
-                  {option.label}
+                      {option.label}
 
-                </Option>
+                    </Option>
 
-              ))}
+                ))}
 
-            </Select>
+              </Select>
 
-          </Form.Item>
+            </Form.Item>
 
         );
 
@@ -13296,37 +13313,37 @@ Chỉ trả về JSON, không thêm text khác.`;
 
         fields.push(
 
-          <Form.Item key="tag3" name="tag3" label="Series">
+            <Form.Item key="tag3" name="tag3" label="Series">
 
-            <Select
+              <Select
 
-              placeholder="Chọn series"
+                  placeholder="Chọn series"
 
-              allowClear
+                  allowClear
 
-              showSearch
+                  showSearch
 
-              filterOption={(input, option) =>
+                  filterOption={(input, option) =>
 
-                (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+                      (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
 
-              }
+                  }
 
-            >
+              >
 
-              {tag3Options.map(option => (
+                {tag3Options.map(option => (
 
-                <Option key={option.value} value={option.value} label={option.label}>
+                    <Option key={option.value} value={option.value} label={option.label}>
 
-                  {option.label}
+                      {option.label}
 
-                </Option>
+                    </Option>
 
-              ))}
+                ))}
 
-            </Select>
+              </Select>
 
-          </Form.Item>
+            </Form.Item>
 
         );
 
@@ -13342,19 +13359,19 @@ Chỉ trả về JSON, không thêm text khác.`;
 
         fields.push(
 
-          <Form.Item key="priority" name="priority" label="Độ ưu tiên">
+            <Form.Item key="priority" name="priority" label="Độ ưu tiên">
 
-            <Select placeholder="Chọn độ ưu tiên">
+              <Select placeholder="Chọn độ ưu tiên">
 
-              <Option value="high">Cao</Option>
+                <Option value="high">Cao</Option>
 
-              <Option value="medium">Trung bình</Option>
+                <Option value="medium">Trung bình</Option>
 
-              <Option value="low">Thấp</Option>
+                <Option value="low">Thấp</Option>
 
-            </Select>
+              </Select>
 
-          </Form.Item>
+            </Form.Item>
 
         );
 
@@ -13364,11 +13381,11 @@ Chỉ trả về JSON, không thêm text khác.`;
 
         fields.push(
 
-          <Form.Item key="featured" name="featured" label="Nổi bật" valuePropName="checked">
+            <Form.Item key="featured" name="featured" label="Nổi bật" valuePropName="checked">
 
-            <Switch />
+              <Switch />
 
-          </Form.Item>
+            </Form.Item>
 
         );
 
@@ -13378,23 +13395,23 @@ Chỉ trả về JSON, không thêm text khác.`;
 
         fields.push(
 
-          <Form.Item key="homeCategory" name="homeCategory" label="Danh mục Home">
+            <Form.Item key="homeCategory" name="homeCategory" label="Danh mục Home">
 
-            <Select placeholder="Chọn danh mục Home">
+              <Select placeholder="Chọn danh mục Home">
 
-              <Option value="featured">Nổi bật</Option>
+                <Option value="featured">Nổi bật</Option>
 
-              <Option value="trending">Xu hướng</Option>
+                <Option value="trending">Xu hướng</Option>
 
-              <Option value="recommended">Đề xuất</Option>
+                <Option value="recommended">Đề xuất</Option>
 
-              <Option value="latest">Mới nhất</Option>
+                <Option value="latest">Mới nhất</Option>
 
-              <Option value="popular">Phổ biến</Option>
+                <Option value="popular">Phổ biến</Option>
 
-            </Select>
+              </Select>
 
-          </Form.Item>
+            </Form.Item>
 
         );
 
@@ -13404,21 +13421,21 @@ Chỉ trả về JSON, không thêm text khác.`;
 
         fields.push(
 
-          <Form.Item key="displayOrder" name="displayOrder" label="Thứ tự hiển thị">
+            <Form.Item key="displayOrder" name="displayOrder" label="Thứ tự hiển thị">
 
-            <InputNumber
+              <InputNumber
 
-              placeholder="Nhập số thứ tự"
+                  placeholder="Nhập số thứ tự"
 
-              min={1}
+                  min={1}
 
-              max={100}
+                  max={100}
 
-              style={{ width: '100%' }}
+                  style={{ width: '100%' }}
 
-            />
+              />
 
-          </Form.Item>
+            </Form.Item>
 
         );
 
@@ -13430,49 +13447,49 @@ Chỉ trả về JSON, không thêm text khác.`;
 
       fields.push(
 
-        <Form.Item key="status" name="status" label="Trạng thái">
+          <Form.Item key="status" name="status" label="Trạng thái">
 
-          <Select placeholder="Chọn trạng thái">
+            <Select placeholder="Chọn trạng thái">
 
-            <Option value="draft">Bản nháp</Option>
+              <Option value="draft">Bản nháp</Option>
 
-            <Option value="published">Đã xuất bản</Option>
+              <Option value="published">Đã xuất bản</Option>
 
-            <Option value="archived">Đã lưu trữ</Option>
+              <Option value="archived">Đã lưu trữ</Option>
 
-          </Select>
+            </Select>
 
-        </Form.Item>
+          </Form.Item>
 
       );
 
       // Avatar upload field
       fields.push(
-        <Form.Item key="avatarUrl" label="Avatar">
-          <Upload
-            listType="picture-card"
-            fileList={normalizeFileList(selectedAvatar ? [selectedAvatar] : [])}
-            beforeUpload={() => false} // Prevent auto upload
-            onChange={({ fileList }) => {
-              if (fileList.length > 0) {
-                handleAvatarUpload(fileList[0]);
-              } else {
-                handleAvatarUpload(null);
-              }
-            }}
-            onRemove={() => {
-              handleAvatarUpload(null);
-            }}
-            maxCount={1}
-          >
-            {selectedAvatar ? null : (
-              <div>
-                <UploadOutlined />
-                <div style={{ marginTop: 8 }}>Upload Avatar</div>
-              </div>
-            )}
-          </Upload>
-        </Form.Item>
+          <Form.Item key="avatarUrl" label="Avatar">
+            <Upload
+                listType="picture-card"
+                fileList={normalizeFileList(selectedAvatar ? [selectedAvatar] : [])}
+                beforeUpload={() => false} // Prevent auto upload
+                onChange={({ fileList }) => {
+                  if (fileList.length > 0) {
+                    handleAvatarUpload(fileList[0]);
+                  } else {
+                    handleAvatarUpload(null);
+                  }
+                }}
+                onRemove={() => {
+                  handleAvatarUpload(null);
+                }}
+                maxCount={1}
+            >
+              {selectedAvatar ? null : (
+                  <div>
+                    <UploadOutlined />
+                    <div style={{ marginTop: 8 }}>Upload Avatar</div>
+                  </div>
+              )}
+            </Upload>
+          </Form.Item>
       );
 
 
@@ -13481,93 +13498,93 @@ Chỉ trả về JSON, không thêm text khác.`;
 
       fields.push(
 
-        <Form.Item key="images" label="Hình ảnh">
+          <Form.Item key="images" label="Hình ảnh">
 
-          <Upload
+            <Upload
 
-            listType="picture-card"
+                listType="picture-card"
 
-            fileList={normalizeFileList(selectedImages)}
+                fileList={normalizeFileList(selectedImages)}
 
-            multiple
+                multiple
 
-            beforeUpload={() => false} // Prevent auto upload
+                beforeUpload={() => false} // Prevent auto upload
 
-            onChange={({ fileList }) => handleImageUpload(fileList)}
+                onChange={({ fileList }) => handleImageUpload(fileList)}
 
-            onRemove={(file) => {
+                onRemove={(file) => {
 
-              // Khi remove, filter ra file đó khỏi list
+                  // Khi remove, filter ra file đó khỏi list
 
-              const newFileList = selectedImages.filter(item => item.uid !== file.uid);
+                  const newFileList = selectedImages.filter(item => item.uid !== file.uid);
 
-              setSelectedImages(newFileList);
-
-
-
-              // Cập nhật uploadedImageUrls để loại bỏ URL của file bị xóa
-
-              if (file.url) {
-
-                const newUrls = uploadedImageUrls.filter(url => url !== file.url);
-
-                setUploadedImageUrls(newUrls);
-
-              }
+                  setSelectedImages(newFileList);
 
 
 
-              return false; // Prevent default remove behavior
+                  // Cập nhật uploadedImageUrls để loại bỏ URL của file bị xóa
 
-            }}
+                  if (file.url) {
 
-            accept="image/*"
+                    const newUrls = uploadedImageUrls.filter(url => url !== file.url);
 
-            showUploadList={{
+                    setUploadedImageUrls(newUrls);
 
-              showPreviewIcon: true,
+                  }
 
-              showRemoveIcon: true,
 
-            }}
 
-          >
+                  return false; // Prevent default remove behavior
 
-            {selectedImages.length >= 8 ? null : (
+                }}
 
-              <div>
+                accept="image/*"
 
-                <PlusOutlined />
+                showUploadList={{
 
-                <div style={{ marginTop: 8 }}>Upload</div>
+                  showPreviewIcon: true,
 
-              </div>
+                  showRemoveIcon: true,
+
+                }}
+
+            >
+
+              {selectedImages.length >= 8 ? null : (
+
+                  <div>
+
+                    <PlusOutlined />
+
+                    <div style={{ marginTop: 8 }}>Upload</div>
+
+                  </div>
+
+              )}
+
+            </Upload>
+
+            {uploadingImages && (
+
+                <Progress
+
+                    percent={uploadProgress.images}
+
+                    size="small"
+
+                    style={{ marginTop: 10 }}
+
+                />
 
             )}
 
-          </Upload>
+            <div style={{ marginTop: 8, fontSize: '12px', color: '#666' }}>
 
-          {uploadingImages && (
+              Hỗ trợ: JPG, PNG, GIF. Tối đa 8 ảnh.
 
-            <Progress
+            </div>
 
-              percent={uploadProgress.images}
-
-              size="small"
-
-              style={{ marginTop: 10 }}
-
-            />
-
-          )}
-
-          <div style={{ marginTop: 8, fontSize: '12px', color: '#666' }}>
-
-            Hỗ trợ: JPG, PNG, GIF. Tối đa 8 ảnh.
-
-          </div>
-
-        </Form.Item>
+          </Form.Item>
 
       );
 
@@ -13577,85 +13594,85 @@ Chỉ trả về JSON, không thêm text khác.`;
 
       fields.push(
 
-        <Form.Item key="video" label="Video">
+          <Form.Item key="video" label="Video">
 
-          <Dragger
+            <Dragger
 
-            fileList={normalizeFileList(selectedVideo ? [selectedVideo] : [])}
+                fileList={normalizeFileList(selectedVideo ? [selectedVideo] : [])}
 
-            beforeUpload={() => false} // Prevent auto upload
+                beforeUpload={() => false} // Prevent auto upload
 
-            onChange={({ fileList }) => {
+                onChange={({ fileList }) => {
 
-              if (fileList.length === 0) {
+                  if (fileList.length === 0) {
 
-                handleVideoUpload(null);
+                    handleVideoUpload(null);
 
-              } else {
+                  } else {
 
-                const file = fileList[fileList.length - 1];
+                    const file = fileList[fileList.length - 1];
 
-                handleVideoUpload(file);
+                    handleVideoUpload(file);
 
-              }
+                  }
 
-            }}
+                }}
 
-            onRemove={() => {
+                onRemove={() => {
 
-              setSelectedVideo(null);
+                  setSelectedVideo(null);
 
-              setUploadedVideoUrl('');
+                  setUploadedVideoUrl('');
 
-              return false; // Prevent default remove behavior
+                  return false; // Prevent default remove behavior
 
-            }}
+                }}
 
-            accept="video/*"
+                accept="video/*"
 
-            maxCount={1}
+                maxCount={1}
 
-            showUploadList={{
+                showUploadList={{
 
-              showPreviewIcon: true,
+                  showPreviewIcon: true,
 
-              showRemoveIcon: true,
+                  showRemoveIcon: true,
 
-            }}
+                }}
 
-          >
+            >
 
-            <p className="ant-upload-drag-icon">
+              <p className="ant-upload-drag-icon">
 
-              <InboxOutlined />
+                <InboxOutlined />
 
-            </p>
+              </p>
 
-            <p className="ant-upload-text">Click hoặc kéo thả file video vào đây</p>
+              <p className="ant-upload-text">Click hoặc kéo thả file video vào đây</p>
 
-            <p className="ant-upload-hint">
+              <p className="ant-upload-hint">
 
-              Hỗ trợ: MP4, WebM, OGG. Tối đa 1 video.
+                Hỗ trợ: MP4, WebM, OGG. Tối đa 1 video.
 
-            </p>
+              </p>
 
-          </Dragger>
+            </Dragger>
 
-          {uploadingVideo && (
+            {uploadingVideo && (
 
-            <Progress
+                <Progress
 
-              percent={uploadProgress.video}
+                    percent={uploadProgress.video}
 
-              size="small"
+                    size="small"
 
-              style={{ marginTop: 10 }}
+                    style={{ marginTop: 10 }}
 
-            />
+                />
 
-          )}
+            )}
 
-        </Form.Item>
+          </Form.Item>
 
       );
 
@@ -13665,89 +13682,89 @@ Chỉ trả về JSON, không thêm text khác.`;
 
       fields.push(
 
-        <Form.Item key="files" label="File đính kèm">
+          <Form.Item key="files" label="File đính kèm">
 
-          <Upload
+            <Upload
 
-            listType="text"
+                listType="text"
 
-            fileList={normalizeFileList(selectedFiles)}
+                fileList={normalizeFileList(selectedFiles)}
 
-            multiple
+                multiple
 
-            beforeUpload={() => false} // Prevent auto upload
+                beforeUpload={() => false} // Prevent auto upload
 
-            onChange={({ fileList }) => handleFileUpload(fileList)}
+                onChange={({ fileList }) => handleFileUpload(fileList)}
 
-            onRemove={(file) => {
+                onRemove={(file) => {
 
-              // Khi remove, filter ra file đó khỏi list
+                  // Khi remove, filter ra file đó khỏi list
 
-              const newFileList = selectedFiles.filter(item => item.uid !== file.uid);
+                  const newFileList = selectedFiles.filter(item => item.uid !== file.uid);
 
-              setSelectedFiles(newFileList);
-
-
-
-              // Cập nhật uploadedFileUrls để loại bỏ URL của file bị xóa
-
-              if (file.url) {
-
-                const newUrls = uploadedFileUrls.filter(url => url !== file.url);
-
-                setUploadedFileUrls(newUrls);
-
-              }
+                  setSelectedFiles(newFileList);
 
 
 
-              return false; // Prevent default remove behavior
+                  // Cập nhật uploadedFileUrls để loại bỏ URL của file bị xóa
 
-            }}
+                  if (file.url) {
 
-            accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip,.rar"
+                    const newUrls = uploadedFileUrls.filter(url => url !== file.url);
 
-            showUploadList={{
+                    setUploadedFileUrls(newUrls);
 
-              showPreviewIcon: true,
+                  }
 
-              showRemoveIcon: true,
 
-            }}
 
-            maxCount={10}
+                  return false; // Prevent default remove behavior
 
-          >
+                }}
 
-            <Button icon={<UploadOutlined />} disabled={selectedFiles.length >= 10}>
+                accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip,.rar"
 
-              Upload Files {selectedFiles.length > 0 ? `(${selectedFiles.length}/10)` : ''}
+                showUploadList={{
 
-            </Button>
+                  showPreviewIcon: true,
 
-          </Upload>
+                  showRemoveIcon: true,
 
-          {uploadingFiles && (
+                }}
 
-            <Progress
+                maxCount={10}
 
-              percent={uploadProgress.files}
+            >
 
-              size="small"
+              <Button icon={<UploadOutlined />} disabled={selectedFiles.length >= 10}>
 
-              style={{ marginTop: 10 }}
+                Upload Files {selectedFiles.length > 0 ? `(${selectedFiles.length}/10)` : ''}
 
-            />
+              </Button>
 
-          )}
+            </Upload>
 
-          <div style={{ marginTop: 8, fontSize: '12px', color: '#666' }}>
+            {uploadingFiles && (
 
-            Hỗ trợ: PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX, TXT, ZIP, RAR. Tối đa 10 file.
+                <Progress
 
-          </div>
+                    percent={uploadProgress.files}
 
-        </Form.Item>
+                    size="small"
+
+                    style={{ marginTop: 10 }}
+
+                />
+
+            )}
+
+            <div style={{ marginTop: 8, fontSize: '12px', color: '#666' }}>
+
+              Hỗ trợ: PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX, TXT, ZIP, RAR. Tối đa 10 file.
+
+            </div>
+
+          </Form.Item>
 
       );
 
@@ -13757,21 +13774,21 @@ Chỉ trả về JSON, không thêm text khác.`;
 
       fields.push(
 
-        <Form.Item key="quizContent" name="quizContent" label="Nội dung Quiz">
+          <Form.Item key="quizContent" name="quizContent" label="Nội dung Quiz">
 
-          <TextArea
+            <TextArea
 
-            rows={4}
+                rows={4}
 
-            placeholder="Nhập nội dung quiz (JSON format)"
+                placeholder="Nhập nội dung quiz (JSON format)"
 
-            value={quizContent}
+                value={quizContent}
 
-            onChange={(e) => setQuizContent(e.target.value)}
+                onChange={(e) => setQuizContent(e.target.value)}
 
-          />
+            />
 
-        </Form.Item>
+          </Form.Item>
 
       );
 
@@ -13781,31 +13798,31 @@ Chỉ trả về JSON, không thêm text khác.`;
 
       fields.push(
 
-        <Form.Item key="backgroundAudio" name="backgroundAudio" label="Âm thanh nền">
+          <Form.Item key="backgroundAudio" name="backgroundAudio" label="Âm thanh nền">
 
-          <Upload
+            <Upload
 
-            accept="audio/*"
+                accept="audio/*"
 
-            maxCount={1}
+                maxCount={1}
 
-            beforeUpload={() => false}
+                beforeUpload={() => false}
 
-            onChange={({ fileList }) => {
+                onChange={({ fileList }) => {
 
-              setAudioFileList(fileList);
+                  setAudioFileList(fileList);
 
-            }}
+                }}
 
-            fileList={audioFileList}
+                fileList={audioFileList}
 
-          >
+            >
 
-            <Button icon={<UploadOutlined />}>Tải lên âm thanh</Button>
+              <Button icon={<UploadOutlined />}>Tải lên âm thanh</Button>
 
-          </Upload>
+            </Upload>
 
-        </Form.Item>
+          </Form.Item>
 
       );
 
@@ -13815,21 +13832,21 @@ Chỉ trả về JSON, không thêm text khác.`;
 
       fields.push(
 
-        <Form.Item key="customVoiceText" name="customVoiceText" label="Văn bản tùy chỉnh cho Voice">
+          <Form.Item key="customVoiceText" name="customVoiceText" label="Văn bản tùy chỉnh cho Voice">
 
-          <TextArea
+            <TextArea
 
-            rows={3}
+                rows={3}
 
-            placeholder="Nhập văn bản để tạo voice tùy chỉnh"
+                placeholder="Nhập văn bản để tạo voice tùy chỉnh"
 
-            value={customVoiceText}
+                value={customVoiceText}
 
-            onChange={(e) => setCustomVoiceText(e.target.value)}
+                onChange={(e) => setCustomVoiceText(e.target.value)}
 
-          />
+            />
 
-        </Form.Item>
+          </Form.Item>
 
       );
 
@@ -13839,19 +13856,19 @@ Chỉ trả về JSON, không thêm text khác.`;
 
       fields.push(
 
-        <Form.Item key="aiSummary" name="aiSummary" label="Tóm tắt AI">
+          <Form.Item key="aiSummary" name="aiSummary" label="Tóm tắt AI">
 
-          <TextArea
+            <TextArea
 
-            rows={3}
+                rows={3}
 
-            placeholder="Tóm tắt được tạo bởi AI"
+                placeholder="Tóm tắt được tạo bởi AI"
 
-            readOnly
+                readOnly
 
-          />
+            />
 
-        </Form.Item>
+          </Form.Item>
 
       );
 
@@ -13861,19 +13878,19 @@ Chỉ trả về JSON, không thêm text khác.`;
 
       fields.push(
 
-        <Form.Item key="keywords" name="keywords" label="Từ khóa">
+          <Form.Item key="keywords" name="keywords" label="Từ khóa">
 
-          <Select
+            <Select
 
-            mode="tags"
+                mode="tags"
 
-            placeholder="Nhập từ khóa"
+                placeholder="Nhập từ khóa"
 
-            style={{ width: '100%' }}
+                style={{ width: '100%' }}
 
-          />
+            />
 
-        </Form.Item>
+          </Form.Item>
 
       );
 
@@ -13885,33 +13902,21 @@ Chỉ trả về JSON, không thêm text khác.`;
 
         fields.push(
 
-          <Form.Item key="difficultyLevel" name="difficultyLevel" label="Mức độ khó">
+            <Form.Item key="difficultyLevel" name="difficultyLevel" label="Mức độ khó">
 
-            <Select placeholder="Chọn mức độ khó">
+              <Select placeholder="Chọn mức độ khó">
 
-              <Option value="beginner">Người mới bắt đầu</Option>
+                <Option value="beginner">Người mới bắt đầu</Option>
 
-              <Option value="intermediate">Trung cấp</Option>
+                <Option value="intermediate">Trung cấp</Option>
 
-              <Option value="advanced">Nâng cao</Option>
+                <Option value="advanced">Nâng cao</Option>
 
-              <Option value="expert">Chuyên gia</Option>
+                <Option value="expert">Chuyên gia</Option>
 
-            </Select>
+              </Select>
 
-          </Form.Item>
-
-        );
-
-
-
-        fields.push(
-
-          <Form.Item key="estimatedTime" name="estimatedTime" label="Thời gian ước tính">
-
-            <Input placeholder="VD: 30 phút, 2 giờ" />
-
-          </Form.Item>
+            </Form.Item>
 
         );
 
@@ -13919,17 +13924,29 @@ Chỉ trả về JSON, không thêm text khác.`;
 
         fields.push(
 
-          <Form.Item key="learningObjectives" name="learningObjectives" label="Mục tiêu học tập">
+            <Form.Item key="estimatedTime" name="estimatedTime" label="Thời gian ước tính">
 
-            <TextArea
+              <Input placeholder="VD: 30 phút, 2 giờ" />
 
-              rows={3}
+            </Form.Item>
 
-              placeholder="Nhập các mục tiêu học tập"
+        );
 
-            />
 
-          </Form.Item>
+
+        fields.push(
+
+            <Form.Item key="learningObjectives" name="learningObjectives" label="Mục tiêu học tập">
+
+              <TextArea
+
+                  rows={3}
+
+                  placeholder="Nhập các mục tiêu học tập"
+
+              />
+
+            </Form.Item>
 
         );
 
@@ -13953,93 +13970,93 @@ Chỉ trả về JSON, không thêm text khác.`;
 
       fields.push(
 
-        <Form.Item key="images" label="Hình ảnh">
+          <Form.Item key="images" label="Hình ảnh">
 
-          <Upload
+            <Upload
 
-            listType="picture-card"
+                listType="picture-card"
 
-            fileList={normalizeFileList(selectedImages)}
+                fileList={normalizeFileList(selectedImages)}
 
-            multiple
+                multiple
 
-            beforeUpload={() => false} // Prevent auto upload
+                beforeUpload={() => false} // Prevent auto upload
 
-            onChange={({ fileList }) => handleImageUpload(fileList)}
+                onChange={({ fileList }) => handleImageUpload(fileList)}
 
-            onRemove={(file) => {
+                onRemove={(file) => {
 
-              // Khi remove, filter ra file đó khỏi list
+                  // Khi remove, filter ra file đó khỏi list
 
-              const newFileList = selectedImages.filter(item => item.uid !== file.uid);
+                  const newFileList = selectedImages.filter(item => item.uid !== file.uid);
 
-              setSelectedImages(newFileList);
-
-
-
-              // Cập nhật uploadedImageUrls để loại bỏ URL của file bị xóa
-
-              if (file.url) {
-
-                const newUrls = uploadedImageUrls.filter(url => url !== file.url);
-
-                setUploadedImageUrls(newUrls);
-
-              }
+                  setSelectedImages(newFileList);
 
 
 
-              return false; // Prevent default remove behavior
+                  // Cập nhật uploadedImageUrls để loại bỏ URL của file bị xóa
 
-            }}
+                  if (file.url) {
 
-            accept="image/*"
+                    const newUrls = uploadedImageUrls.filter(url => url !== file.url);
 
-            showUploadList={{
+                    setUploadedImageUrls(newUrls);
 
-              showPreviewIcon: true,
+                  }
 
-              showRemoveIcon: true,
 
-            }}
 
-          >
+                  return false; // Prevent default remove behavior
 
-            {selectedImages.length >= 8 ? null : (
+                }}
 
-              <div>
+                accept="image/*"
 
-                <PlusOutlined />
+                showUploadList={{
 
-                <div style={{ marginTop: 8 }}>Upload</div>
+                  showPreviewIcon: true,
 
-              </div>
+                  showRemoveIcon: true,
+
+                }}
+
+            >
+
+              {selectedImages.length >= 8 ? null : (
+
+                  <div>
+
+                    <PlusOutlined />
+
+                    <div style={{ marginTop: 8 }}>Upload</div>
+
+                  </div>
+
+              )}
+
+            </Upload>
+
+            {uploadingImages && (
+
+                <Progress
+
+                    percent={uploadProgress.images}
+
+                    size="small"
+
+                    style={{ marginTop: 10 }}
+
+                />
 
             )}
 
-          </Upload>
+            <div style={{ marginTop: 8, fontSize: '12px', color: '#666' }}>
 
-          {uploadingImages && (
+              Hỗ trợ: JPG, PNG, GIF. Tối đa 8 ảnh.
 
-            <Progress
+            </div>
 
-              percent={uploadProgress.images}
-
-              size="small"
-
-              style={{ marginTop: 10 }}
-
-            />
-
-          )}
-
-          <div style={{ marginTop: 8, fontSize: '12px', color: '#666' }}>
-
-            Hỗ trợ: JPG, PNG, GIF. Tối đa 8 ảnh.
-
-          </div>
-
-        </Form.Item>
+          </Form.Item>
 
       );
 
@@ -14049,89 +14066,89 @@ Chỉ trả về JSON, không thêm text khác.`;
 
       fields.push(
 
-        <Form.Item key="video" label="Video">
+          <Form.Item key="video" label="Video">
 
-          <Dragger
+            <Dragger
 
-            fileList={normalizeFileList(selectedVideo ? [selectedVideo] : [])}
+                fileList={normalizeFileList(selectedVideo ? [selectedVideo] : [])}
 
-            beforeUpload={() => false} // Prevent auto upload
+                beforeUpload={() => false} // Prevent auto upload
 
-            onChange={({ fileList }) => {
+                onChange={({ fileList }) => {
 
-              if (fileList.length === 0) {
+                  if (fileList.length === 0) {
 
-                handleVideoUpload(null);
+                    handleVideoUpload(null);
 
-              } else {
+                  } else {
 
-                const file = fileList[fileList.length - 1];
+                    const file = fileList[fileList.length - 1];
 
-                handleVideoUpload(file);
+                    handleVideoUpload(file);
 
-              }
+                  }
 
-            }}
+                }}
 
-            onRemove={() => {
+                onRemove={() => {
 
-              setSelectedVideo(null);
+                  setSelectedVideo(null);
 
-              setUploadedVideoUrl('');
+                  setUploadedVideoUrl('');
 
-              return false; // Prevent default remove behavior
+                  return false; // Prevent default remove behavior
 
-            }}
+                }}
 
-            accept="video/*"
+                accept="video/*"
 
-            maxCount={1}
+                maxCount={1}
 
-            showUploadList={{
+                showUploadList={{
 
-              showPreviewIcon: false,
+                  showPreviewIcon: false,
 
-              showRemoveIcon: true,
+                  showRemoveIcon: true,
 
-            }}
+                }}
 
-          >
+            >
 
-            <p className="ant-upload-drag-icon">
+              <p className="ant-upload-drag-icon">
 
-              <InboxOutlined />
+                <InboxOutlined />
 
-            </p>
+              </p>
 
-            <p className="ant-upload-text">
+              <p className="ant-upload-text">
 
-              Click hoặc kéo thả video vào đây để upload
+                Click hoặc kéo thả video vào đây để upload
 
-            </p>
+              </p>
 
-            <p className="ant-upload-hint">
+              <p className="ant-upload-hint">
 
-              Hỗ trợ: MP4, AVI, MOV, WMV. Tối đa 1 video.
+                Hỗ trợ: MP4, AVI, MOV, WMV. Tối đa 1 video.
 
-            </p>
+              </p>
 
-          </Dragger>
+            </Dragger>
 
-          {uploadingVideo && (
+            {uploadingVideo && (
 
-            <Progress
+                <Progress
 
-              percent={uploadProgress.video}
+                    percent={uploadProgress.video}
 
-              size="small"
+                    size="small"
 
-              style={{ marginTop: 10 }}
+                    style={{ marginTop: 10 }}
 
-            />
+                />
 
-          )}
+            )}
 
-        </Form.Item>
+          </Form.Item>
 
       );
 
@@ -14145,89 +14162,89 @@ Chỉ trả về JSON, không thêm text khác.`;
 
       fields.push(
 
-        <Form.Item key="files" label="File đính kèm">
+          <Form.Item key="files" label="File đính kèm">
 
-          <Upload
+            <Upload
 
-            listType="text"
+                listType="text"
 
-            fileList={normalizeFileList(selectedFiles)}
+                fileList={normalizeFileList(selectedFiles)}
 
-            multiple
+                multiple
 
-            beforeUpload={() => false} // Prevent auto upload
+                beforeUpload={() => false} // Prevent auto upload
 
-            onChange={({ fileList }) => handleFileUpload(fileList)}
+                onChange={({ fileList }) => handleFileUpload(fileList)}
 
-            onRemove={(file) => {
+                onRemove={(file) => {
 
-              // Khi remove, filter ra file đó khỏi list
+                  // Khi remove, filter ra file đó khỏi list
 
-              const newFileList = selectedFiles.filter(item => item.uid !== file.uid);
+                  const newFileList = selectedFiles.filter(item => item.uid !== file.uid);
 
-              setSelectedFiles(newFileList);
-
-
-
-              // Cập nhật uploadedFileUrls để loại bỏ URL của file bị xóa
-
-              if (file.url) {
-
-                const newUrls = uploadedFileUrls.filter(url => url !== file.url);
-
-                setUploadedFileUrls(newUrls);
-
-              }
+                  setSelectedFiles(newFileList);
 
 
 
-              return false; // Prevent default remove behavior
+                  // Cập nhật uploadedFileUrls để loại bỏ URL của file bị xóa
 
-            }}
+                  if (file.url) {
 
-            accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip,.rar"
+                    const newUrls = uploadedFileUrls.filter(url => url !== file.url);
 
-            showUploadList={{
+                    setUploadedFileUrls(newUrls);
 
-              showPreviewIcon: true,
+                  }
 
-              showRemoveIcon: true,
 
-            }}
 
-            maxCount={10}
+                  return false; // Prevent default remove behavior
 
-          >
+                }}
 
-            <Button icon={<UploadOutlined />} disabled={selectedFiles.length >= 10}>
+                accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip,.rar"
 
-              Upload Files {selectedFiles.length > 0 ? `(${selectedFiles.length}/10)` : ''}
+                showUploadList={{
 
-            </Button>
+                  showPreviewIcon: true,
 
-          </Upload>
+                  showRemoveIcon: true,
 
-          {uploadingFiles && (
+                }}
 
-            <Progress
+                maxCount={10}
 
-              percent={uploadProgress.files}
+            >
 
-              size="small"
+              <Button icon={<UploadOutlined />} disabled={selectedFiles.length >= 10}>
 
-              style={{ marginTop: 10 }}
+                Upload Files {selectedFiles.length > 0 ? `(${selectedFiles.length}/10)` : ''}
 
-            />
+              </Button>
 
-          )}
+            </Upload>
 
-          <div style={{ marginTop: 8, fontSize: '12px', color: '#666' }}>
+            {uploadingFiles && (
 
-            Hỗ trợ: PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX, TXT, ZIP, RAR. Tối đa 10 file.
+                <Progress
 
-          </div>
+                    percent={uploadProgress.files}
 
-        </Form.Item>
+                    size="small"
+
+                    style={{ marginTop: 10 }}
+
+                />
+
+            )}
+
+            <div style={{ marginTop: 8, fontSize: '12px', color: '#666' }}>
+
+              Hỗ trợ: PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX, TXT, ZIP, RAR. Tối đa 10 file.
+
+            </div>
+
+          </Form.Item>
 
       );
 
@@ -14235,11 +14252,11 @@ Chỉ trả về JSON, không thêm text khác.`;
 
       fields.push(
 
-        <Form.Item key="duration" name="duration" label="Thời lượng">
+          <Form.Item key="duration" name="duration" label="Thời lượng">
 
-          <Input placeholder="VD: 15 phút" />
+            <Input placeholder="VD: 15 phút" />
 
-        </Form.Item>
+          </Form.Item>
 
       );
 
@@ -14247,21 +14264,21 @@ Chỉ trả về JSON, không thêm text khác.`;
 
       fields.push(
 
-        <Form.Item key="storyType" name="storyType" label="Loại">
+          <Form.Item key="storyType" name="storyType" label="Loại">
 
-          <Select placeholder="Chọn loại">
+            <Select placeholder="Chọn loại">
 
-            <Option value="Podcast">Podcast</Option>
+              <Option value="Podcast">Podcast</Option>
 
-            <Option value="Video Story">Video Story</Option>
+              <Option value="Video Story">Video Story</Option>
 
-            <Option value="Interview">Interview</Option>
+              <Option value="Interview">Interview</Option>
 
-            <Option value="Documentary">Documentary</Option>
+              <Option value="Documentary">Documentary</Option>
 
-          </Select>
+            </Select>
 
-        </Form.Item>
+          </Form.Item>
 
       );
 
@@ -14271,41 +14288,41 @@ Chỉ trả về JSON, không thêm text khác.`;
 
       fields.push(
 
-        <Form.Item
+          <Form.Item
 
-          key="audioText"
+              key="audioText"
 
-          name="audioText"
+              name="audioText"
 
-          label="Nội dung Voice"
+              label="Nội dung Voice"
 
-          rules={[{ required: false, type: 'string' }]}
+              rules={[{ required: false, type: 'string' }]}
 
-        >
+          >
 
-          <TextArea
+            <TextArea
 
-            rows={6}
+                rows={6}
 
-            placeholder="Nhập nội dung để tạo voice cho story này..."
+                placeholder="Nhập nội dung để tạo voice cho story này..."
 
-            showCount
+                showCount
 
-            maxLength={50000}
+                maxLength={50000}
 
-            value={audioText}
+                value={audioText}
 
-            onChange={e => setAudioText(e.target.value)}
+                onChange={e => setAudioText(e.target.value)}
 
-          />
+            />
 
-          <div style={{ marginTop: 8, fontSize: '12px', color: '#666' }}>
+            <div style={{ marginTop: 8, fontSize: '12px', color: '#666' }}>
 
-            Nội dung này sẽ được sử dụng để tạo voice cho story. Tối đa 50000 ký tự.
+              Nội dung này sẽ được sử dụng để tạo voice cho story. Tối đa 50000 ký tự.
 
-          </div>
+            </div>
 
-        </Form.Item>
+          </Form.Item>
 
       );
 
@@ -14315,215 +14332,215 @@ Chỉ trả về JSON, không thêm text khác.`;
 
       fields.push(
 
-        <Form.Item key="audio" label="Audio">
+          <Form.Item key="audio" label="Audio">
 
-          {/* AI Voice Generation Section - Only show in edit mode */}
+            {/* AI Voice Generation Section - Only show in edit mode */}
 
-          {modalMode === 'edit' && (
+            {modalMode === 'edit' && (
 
-            <div style={{
+                <div style={{
 
-              marginBottom: '16px',
+                  marginBottom: '16px',
 
-              padding: '16px',
+                  padding: '16px',
 
-              border: '1px dashed #d9d9d9',
+                  border: '1px dashed #d9d9d9',
 
-              borderRadius: '6px',
+                  borderRadius: '6px',
 
-              backgroundColor: '#fafafa'
+                  backgroundColor: '#fafafa'
 
-            }}>
+                }}>
 
-              <div style={{ marginBottom: '12px', fontWeight: 'bold', color: '#1890ff' }}>
+                  <div style={{ marginBottom: '12px', fontWeight: 'bold', color: '#1890ff' }}>
 
-                Tạo Voice bằng AI
+                    Tạo Voice bằng AI
 
-              </div>
+                  </div>
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
 
-                <Button
+                    <Button
 
-                  type="primary"
+                        type="primary"
 
-                  icon={<SoundOutlined />}
+                        icon={<SoundOutlined />}
 
-                  onClick={() => {
+                        onClick={() => {
 
-                    // Thêm vào queue tạo voice từ audioText
+                          // Thêm vào queue tạo voice từ audioText
 
-                    if (!audioText) return;
+                          if (!audioText) return;
 
-                    if (selectedRecord) {
+                          if (selectedRecord) {
 
-                      // Không cho phép thêm nếu đã có trong queue hoặc đang xử lý
+                            // Không cho phép thêm nếu đã có trong queue hoặc đang xử lý
 
-                      if (
+                            if (
 
-                        voiceQueue.find(task => task.recordId === selectedRecord.id) ||
+                                voiceQueue.find(task => task.recordId === selectedRecord.id) ||
 
-                        (currentProcessing && currentProcessing.recordId === selectedRecord.id)
+                                (currentProcessing && currentProcessing.recordId === selectedRecord.id)
 
-                      ) return;
+                            ) return;
 
-                      addVoiceToQueue(
+                            addVoiceToQueue(
 
-                        selectedRecord.id,
+                                selectedRecord.id,
 
-                        selectedRecord.title,
+                                selectedRecord.title,
 
-                        audioText,
+                                audioText,
 
-                        'custom'
+                                'custom'
 
-                      );
+                            );
 
-                    }
+                          }
 
-                  }}
+                        }}
 
-                  disabled={
+                        disabled={
 
-                    !audioText ||
+                            !audioText ||
 
-                    (modalMode === 'edit' && selectedRecord &&
+                            (modalMode === 'edit' && selectedRecord &&
 
-                      voiceQueue.find(task => task.recordId === selectedRecord.id)) ||
+                                voiceQueue.find(task => task.recordId === selectedRecord.id)) ||
 
-                    (modalMode === 'edit' && selectedRecord &&
+                            (modalMode === 'edit' && selectedRecord &&
 
-                      currentProcessing && currentProcessing.recordId === selectedRecord.id)
+                                currentProcessing && currentProcessing.recordId === selectedRecord.id)
 
-                  }
+                        }
 
-                >
+                    >
 
-                  {modalMode === 'edit' && selectedRecord &&
+                      {modalMode === 'edit' && selectedRecord &&
 
-                    voiceQueue.find(task => task.recordId === selectedRecord.id) ?
+                      voiceQueue.find(task => task.recordId === selectedRecord.id) ?
 
-                    'Đã trong hàng đợi' :
+                          'Đã trong hàng đợi' :
 
-                    modalMode === 'edit' && selectedRecord &&
+                          modalMode === 'edit' && selectedRecord &&
 
-                      currentProcessing && currentProcessing.recordId === selectedRecord.id ?
+                          currentProcessing && currentProcessing.recordId === selectedRecord.id ?
 
-                      'Đang tạo voice...' :
+                              'Đang tạo voice...' :
 
-                      'Thêm vào hàng đợi'}
+                              'Thêm vào hàng đợi'}
 
-                </Button>
+                    </Button>
 
-                <span style={{ fontSize: '12px', color: '#666' }}>
+                    <span style={{ fontSize: '12px', color: '#666' }}>
 
                   Voice sẽ được thêm vào hàng đợi và tự động xử lý từ nội dung "Nội dung Voice" phía trên
 
                 </span>
 
-              </div>
+                  </div>
 
-            </div>
-
-          )}
-
-
-
-          <div style={{ marginBottom: '16px' }}>
-
-            <Dragger
-
-              fileList={normalizeFileList(selectedAudio ? [selectedAudio] : [])}
-
-              beforeUpload={() => false} // Prevent auto upload
-
-              onChange={({ fileList }) => {
-
-                if (fileList.length === 0) {
-
-                  handleAudioUpload(null);
-
-                } else {
-
-                  const file = fileList[fileList.length - 1];
-
-                  handleAudioUpload(file);
-
-                }
-
-              }}
-
-              onRemove={() => {
-
-                setSelectedAudio(null);
-
-                setUploadedAudioUrl('');
-
-                return false; // Prevent default remove behavior
-
-              }}
-
-              accept="audio/*"
-
-              maxCount={1}
-
-              showUploadList={{
-
-                showPreviewIcon: false,
-
-                showRemoveIcon: true,
-
-              }}
-
-            >
-
-              <p className="ant-upload-drag-icon">
-
-                <SoundOutlined />
-
-              </p>
-
-              <p className="ant-upload-text">
-
-                Click hoặc kéo thả audio vào đây để upload
-
-              </p>
-
-              <p className="ant-upload-hint">
-
-                Hỗ trợ: MP3, WAV, AAC, M4A. Hoặc có thể tạo bằng AI bên dưới.
-
-              </p>
-
-            </Dragger>
-
-            {uploadingAudio && (
-
-              <Progress
-
-                percent={uploadProgress.audio}
-
-                size="small"
-
-                style={{ marginTop: 10 }}
-
-              />
+                </div>
 
             )}
 
-          </div>
+
+
+            <div style={{ marginBottom: '16px' }}>
+
+              <Dragger
+
+                  fileList={normalizeFileList(selectedAudio ? [selectedAudio] : [])}
+
+                  beforeUpload={() => false} // Prevent auto upload
+
+                  onChange={({ fileList }) => {
+
+                    if (fileList.length === 0) {
+
+                      handleAudioUpload(null);
+
+                    } else {
+
+                      const file = fileList[fileList.length - 1];
+
+                      handleAudioUpload(file);
+
+                    }
+
+                  }}
+
+                  onRemove={() => {
+
+                    setSelectedAudio(null);
+
+                    setUploadedAudioUrl('');
+
+                    return false; // Prevent default remove behavior
+
+                  }}
+
+                  accept="audio/*"
+
+                  maxCount={1}
+
+                  showUploadList={{
+
+                    showPreviewIcon: false,
+
+                    showRemoveIcon: true,
+
+                  }}
+
+              >
+
+                <p className="ant-upload-drag-icon">
+
+                  <SoundOutlined />
+
+                </p>
+
+                <p className="ant-upload-text">
+
+                  Click hoặc kéo thả audio vào đây để upload
+
+                </p>
+
+                <p className="ant-upload-hint">
+
+                  Hỗ trợ: MP3, WAV, AAC, M4A. Hoặc có thể tạo bằng AI bên dưới.
+
+                </p>
+
+              </Dragger>
+
+              {uploadingAudio && (
+
+                  <Progress
+
+                      percent={uploadProgress.audio}
+
+                      size="small"
+
+                      style={{ marginTop: 10 }}
+
+                  />
+
+              )}
+
+            </div>
 
 
 
-          {/* Hidden field để lưu audioUrl vào form */}
+            {/* Hidden field để lưu audioUrl vào form */}
 
-          <Form.Item name="audioUrl" style={{ display: 'none' }}>
+            <Form.Item name="audioUrl" style={{ display: 'none' }}>
 
-            <Input />
+              <Input />
+
+            </Form.Item>
 
           </Form.Item>
-
-        </Form.Item>
 
       );
 
@@ -14533,19 +14550,19 @@ Chỉ trả về JSON, không thêm text khác.`;
 
     fields.push(
 
-      <Form.Item key="status" name="status" label="Trạng thái">
+        <Form.Item key="status" name="status" label="Trạng thái">
 
-        <Select placeholder="Chọn trạng thái">
+          <Select placeholder="Chọn trạng thái">
 
-          <Option value="draft">Nháp</Option>
+            <Option value="draft">Nháp</Option>
 
-          <Option value="published">Đã xuất bản</Option>
+            <Option value="published">Đã xuất bản</Option>
 
-          <Option value="archived">Lưu trữ</Option>
+            <Option value="archived">Lưu trữ</Option>
 
-        </Select>
+          </Select>
 
-      </Form.Item>
+        </Form.Item>
 
     );
 
@@ -14595,13 +14612,13 @@ Chỉ trả về JSON, không thêm text khác.`;
 
     const selectedStories = data.filter(item =>
 
-      selectedRowKeys.includes(item.id) &&
+        selectedRowKeys.includes(item.id) &&
 
-      item.type === 'story' &&
+        item.type === 'story' &&
 
-      !item.audioUrl &&
+        !item.audioUrl &&
 
-      item.audioText
+        item.audioText
 
     );
 
@@ -14655,13 +14672,13 @@ Chỉ trả về JSON, không thêm text khác.`;
 
         addVoiceToQueue(
 
-          story.id,
+            story.id,
 
-          story.title,
+            story.title,
 
-          content,
+            content,
 
-          'bulk'
+            'bulk'
 
         );
 
@@ -14711,11 +14728,11 @@ Chỉ trả về JSON, không thêm text khác.`;
 
     const selectedRecords = data.filter(item =>
 
-      selectedRowKeys.includes(item.id) &&
+        selectedRowKeys.includes(item.id) &&
 
-      !item.audioUrl &&
+        !item.audioUrl &&
 
-      item.detail
+        item.detail
 
     );
 
@@ -14769,13 +14786,13 @@ Chỉ trả về JSON, không thêm text khác.`;
 
         addVoiceToQueue(
 
-          record.id,
+            record.id,
 
-          record.title,
+            record.title,
 
-          content,
+            content,
 
-          'detail-bulk'
+            'detail-bulk'
 
         );
 
@@ -14820,9 +14837,9 @@ Chỉ trả về JSON, không thêm text khác.`;
 
     // Lọc ra những bản ghi chưa có summaryDetail và có detail
     const selectedRecords = data.filter(item =>
-      selectedRowKeys.includes(item.id) &&
-      !item.summaryDetail &&
-      item.detail
+        selectedRowKeys.includes(item.id) &&
+        !item.summaryDetail &&
+        item.detail
     );
 
     if (selectedRecords.length === 0) {
@@ -14878,11 +14895,11 @@ Chỉ trả về JSON, không thêm text khác.`;
 
     const selectedItems = data.filter(item =>
 
-      selectedRowKeys.includes(item.id) &&
+        selectedRowKeys.includes(item.id) &&
 
-      item.type === currentTab &&
+        item.type === currentTab &&
 
-      !item.avatarUrl
+        !item.avatarUrl
 
     );
 
@@ -15019,13 +15036,13 @@ Chỉ trả về JSON, không thêm text khác.`;
     // Kiểm tra và lọc ra những item chưa có trong queue với cùng mode
     const itemsNotInQueue = selectedItems.filter(item => {
       // Check if there's a task with same recordId AND same mode
-      const existingTask = diagramGenerationQueue.find(task => 
-        task.recordId === item.id && task.mode === mode
+      const existingTask = diagramGenerationQueue.find(task =>
+          task.recordId === item.id && task.mode === mode
       );
       // Check if currently processing with same recordId AND same mode
-      const isProcessing = currentDiagramProcessing && 
-        currentDiagramProcessing.recordId === item.id && 
-        currentDiagramProcessing.mode === mode;
+      const isProcessing = currentDiagramProcessing &&
+          currentDiagramProcessing.recordId === item.id &&
+          currentDiagramProcessing.mode === mode;
       return !existingTask && !isProcessing;
     });
 
@@ -15055,8 +15072,8 @@ Chỉ trả về JSON, không thêm text khác.`;
 
     // Chỉ lấy các bản ghi thuộc loại news (Learning Block)
     const selectedItems = data.filter(item =>
-      selectedRowKeys.includes(item.id) &&
-      item.type === 'news'
+        selectedRowKeys.includes(item.id) &&
+        item.type === 'news'
     );
 
     if (selectedItems.length === 0) {
@@ -15070,16 +15087,16 @@ Chỉ trả về JSON, không thêm text khác.`;
 
   const handleDiagramPromptSelected = (prompt) => {
     setSelectDiagramPromptModalVisible(false);
-    
+
     const mode = pendingDiagramMode;
     const itemsNotInQueue = pendingDiagramRecords;
-    
+
     // If single record (not from bulk), use single handler
     if (itemsNotInQueue.length === 1 && selectedRowKeys.length === 0) {
       handleSingleDiagramPromptSelected(prompt);
       return;
     }
-    
+
     let addedCount = 0;
 
     // Thêm tất cả vào queue với prompt đã chọn
@@ -15142,21 +15159,21 @@ Chỉ trả về JSON, không thêm text khác.`;
       try {
 
         const aiGenResult = await generateText(
-          task.content,
-          voiceSettings.systemMessage,
-          voiceSettings.textModel
+            task.content,
+            voiceSettings.systemMessage,
+            voiceSettings.textModel
         );
 
         const listeningContent = aiGenResult?.response || aiGenResult?.result || aiGenResult?.data || aiGenResult;
 
         // Gọi API để tạo voice
         const response = await generateAudio(
-          listeningContent,
-          '',
-          voiceSettings.audioModel,
-          voiceSettings.voiceType,
-          'mp3',
-          voiceSettings.speed,
+            listeningContent,
+            '',
+            voiceSettings.audioModel,
+            voiceSettings.voiceType,
+            'mp3',
+            voiceSettings.speed,
         );
 
         const aiResult = response?.data
@@ -15351,7 +15368,7 @@ Chỉ trả về JSON, không thêm text khác.`;
 
       const updatePromises = selectedRowKeys.map(id =>
 
-        updateK9({ id, avatarUrl: null })
+          updateK9({ id, avatarUrl: null })
 
       );
 
@@ -15392,7 +15409,7 @@ Chỉ trả về JSON, không thêm text khác.`;
     try {
       setLoading(true);
       const updatePromises = selectedRowKeys.map(id =>
-        updateK9({ id, diagramHtmlCode: null, diagramNote: null })
+          updateK9({ id, diagramHtmlCode: null, diagramNote: null })
       );
 
       await Promise.all(updatePromises);
@@ -15418,7 +15435,7 @@ Chỉ trả về JSON, không thêm text khác.`;
     try {
       setLoading(true);
       const updatePromises = selectedRowKeys.map(id =>
-        updateK9({ id, diagramExcalidrawJson: null, diagramExcalidrawNote: null, diagramExcalidrawImageUrls: null })
+          updateK9({ id, diagramExcalidrawJson: null, diagramExcalidrawNote: null, diagramExcalidrawImageUrls: null })
       );
 
       await Promise.all(updatePromises);
@@ -15455,9 +15472,9 @@ Chỉ trả về JSON, không thêm text khác.`;
       setAllData(prev => ({
         ...prev,
         [currentTab]: prev[currentTab].map(item =>
-          selectedRowKeys.includes(item.id)
-            ? { ...item, audioUrl: null } // chỉ xóa audio
-            : item
+            selectedRowKeys.includes(item.id)
+                ? { ...item, audioUrl: null } // chỉ xóa audio
+                : item
         ),
       }));
     } catch (error) {
@@ -15572,7 +15589,7 @@ Chỉ trả về JSON, không thêm text khác.`;
 
       const companyInfo = companyInfoData.find(item =>
 
-        (item['Mã CK'] || '').toLowerCase() === searchLower
+          (item['Mã CK'] || '').toLowerCase() === searchLower
 
       );
 
@@ -15872,128 +15889,128 @@ Chỉ trả về nội dung theo đúng định dạng trên, không thêm phầ
 
   return (
 
-    <div className={styles.container}>
+      <div className={styles.container}>
 
-      <Card>
+        <Card>
 
-        <div className={styles.header}>
+          <div className={styles.header}>
 
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap' }}>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-
-              <Button
-
-                type="text"
-
-                icon={<ArrowLeftOutlined />}
-
-                onClick={handleBackToK9}
-
-                className={styles.backButton}
-
-              >
-
-              </Button>
-
-              <Tooltip title="Cài đặt Voice">
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
 
                 <Button
 
-                  type="text"
+                    type="text"
 
-                  icon={<SoundOutlined />}
+                    icon={<ArrowLeftOutlined />}
 
-                  onClick={() => setVoiceSettingsVisible(true)}
+                    onClick={handleBackToK9}
 
-                  style={{ color: '#52c41a' }}
+                    className={styles.backButton}
 
-                />
-
-              </Tooltip>
-
-              <Tooltip title={`Voice Queue (${voiceQueue.length + (currentProcessing ? 1 : 0)} tasks)`}>
-                <Button
-                  type="text"
-                  icon={<InboxOutlined />}
-                  onClick={() => setVoiceQueueModalVisible(true)}
-                  style={{
-                    color: '#1890ff',
-                    position: 'relative'
-                  }}
                 >
-                  {(voiceQueue.length > 0 || currentProcessing) && (
-                    <Badge
-                      count={voiceQueue.length + (currentProcessing ? 1 : 0)}
-                      offset={[-8, 8]}
-                      style={{ backgroundColor: '#52c41a' }}
-                    />
-                  )}
+
                 </Button>
-              </Tooltip>
 
-              <Tooltip title="Cài đặt nhạc nền">
+                <Tooltip title="Cài đặt Voice">
 
-                <Button
-
-                  type="text"
-
-                  icon={<SettingOutlined />}
-
-                  onClick={() => setBgAudioSettingsVisible(true)}
-
-                  style={{ color: bgAudioSettings.enabled ? '#1890ff' : undefined }}
-
-                />
-
-              </Tooltip>
-
-              <Tooltip title="Cài đặt Guideline">
-
-                <Button
-
-                  type="text"
-
-                  icon={<FileTextOutlined />}
-
-                  onClick={() => setGuidelineSettingsVisible(true)}
-
-                  style={{ color: guidelineSettings.imageUrl || guidelineSettings.markdownText ? '#1890ff' : undefined }}
-
-                />
-
-              </Tooltip>
-
-              {(currentTab === 'home' || currentTab === 'news' || currentTab === 'caseTraining' || currentTab === 'longForm') && (
-
-                <>
-
-                  <Tooltip title="Cấu hình tạo ảnh">
-
-                    <Button
+                  <Button
 
                       type="text"
 
-                      icon={<PictureOutlined />}
+                      icon={<SoundOutlined />}
 
-                      onClick={() => setImageConfigModalVisible(true)}
+                      onClick={() => setVoiceSettingsVisible(true)}
 
-                      style={{ color: '#1890ff' }}
+                      style={{ color: '#52c41a' }}
 
-                    />
+                  />
 
-                  </Tooltip>
+                </Tooltip>
 
-                  <Tooltip title="Cấu hình tạo diagram">
-                    <Button
+                <Tooltip title={`Voice Queue (${voiceQueue.length + (currentProcessing ? 1 : 0)} tasks)`}>
+                  <Button
                       type="text"
-                      icon={<NodeIndexOutlined />}
-                      onClick={() => setDiagramConfigModalVisible(true)}
-                      style={{ color: '#1890ff' }}
-                    />
-                  </Tooltip>
+                      icon={<InboxOutlined />}
+                      onClick={() => setVoiceQueueModalVisible(true)}
+                      style={{
+                        color: '#1890ff',
+                        position: 'relative'
+                      }}
+                  >
+                    {(voiceQueue.length > 0 || currentProcessing) && (
+                        <Badge
+                            count={voiceQueue.length + (currentProcessing ? 1 : 0)}
+                            offset={[-8, 8]}
+                            style={{ backgroundColor: '#52c41a' }}
+                        />
+                    )}
+                  </Button>
+                </Tooltip>
 
-                  {/* <Tooltip title="Cấu hình tóm tắt Detail">
+                <Tooltip title="Cài đặt nhạc nền">
+
+                  <Button
+
+                      type="text"
+
+                      icon={<SettingOutlined />}
+
+                      onClick={() => setBgAudioSettingsVisible(true)}
+
+                      style={{ color: bgAudioSettings.enabled ? '#1890ff' : undefined }}
+
+                  />
+
+                </Tooltip>
+
+                <Tooltip title="Cài đặt Guideline">
+
+                  <Button
+
+                      type="text"
+
+                      icon={<FileTextOutlined />}
+
+                      onClick={() => setGuidelineSettingsVisible(true)}
+
+                      style={{ color: guidelineSettings.imageUrl || guidelineSettings.markdownText ? '#1890ff' : undefined }}
+
+                  />
+
+                </Tooltip>
+
+                {(currentTab === 'home' || currentTab === 'news' || currentTab === 'caseTraining' || currentTab === 'longForm') && (
+
+                    <>
+
+                      <Tooltip title="Cấu hình tạo ảnh">
+
+                        <Button
+
+                            type="text"
+
+                            icon={<PictureOutlined />}
+
+                            onClick={() => setImageConfigModalVisible(true)}
+
+                            style={{ color: '#1890ff' }}
+
+                        />
+
+                      </Tooltip>
+
+                      <Tooltip title="Cấu hình tạo diagram">
+                        <Button
+                            type="text"
+                            icon={<NodeIndexOutlined />}
+                            onClick={() => setDiagramConfigModalVisible(true)}
+                            style={{ color: '#1890ff' }}
+                        />
+                      </Tooltip>
+
+                      {/* <Tooltip title="Cấu hình tóm tắt Detail">
                     <Button
                       type="text"
                       icon={<ThunderboltOutlined />}
@@ -16002,56 +16019,56 @@ Chỉ trả về nội dung theo đúng định dạng trên, không thêm phầ
                     />
                   </Tooltip> */}
 
-                  <Tooltip title="Quản lý Tag">
+                      <Tooltip title="Quản lý Tag">
 
-                    <Button
+                        <Button
 
-                      type="text"
+                            type="text"
 
-                      icon={<TagsOutlined />}
+                            icon={<TagsOutlined />}
 
-                      onClick={() => setTagManagementModalVisible(true)}
+                            onClick={() => setTagManagementModalVisible(true)}
 
-                      style={{ color: '#1890ff' }}
+                            style={{ color: '#1890ff' }}
 
-                    />
+                        />
 
-                  </Tooltip>
+                      </Tooltip>
 
-                  <Tooltip title="Quản lý Categories">
+                      <Tooltip title="Quản lý Categories">
 
-                    <Button
+                        <Button
 
-                      type="text"
+                            type="text"
 
-                      icon={<AppstoreOutlined />}
+                            icon={<AppstoreOutlined />}
 
-                      onClick={() => setCategoriesManagementModalVisible(true)}
+                            onClick={() => setCategoriesManagementModalVisible(true)}
 
-                      style={{ color: '#52c41a' }}
+                            style={{ color: '#52c41a' }}
 
-                    />
+                        />
 
-                  </Tooltip>
+                      </Tooltip>
 
-                  <Tooltip title="Quản lý Program">
+                      <Tooltip title="Quản lý Program">
 
-                    <Button
+                        <Button
 
-                      type="text"
+                            type="text"
 
-                      icon={<ThunderboltOutlined />}
+                            icon={<ThunderboltOutlined />}
 
-                      onClick={() => setProgramManagementModalVisible(true)}
+                            onClick={() => setProgramManagementModalVisible(true)}
 
-                      style={{ color: '#1890ff' }}
+                            style={{ color: '#1890ff' }}
 
-                    />
+                        />
 
-                  </Tooltip>
+                      </Tooltip>
 
 
-                  {/* <Tooltip title="Cài đặt Prompt AI Update Quiz & Content">
+                      {/* <Tooltip title="Cài đặt Prompt AI Update Quiz & Content">
 
                     <Button
 
@@ -16067,507 +16084,507 @@ Chỉ trả về nội dung theo đúng định dạng trên, không thêm phầ
 
                   </Tooltip> */}
 
-                  <Tooltip title="Cài đặt Prompt AI (Danh sách)">
+                      <Tooltip title="Cài đặt Prompt AI (Danh sách)">
 
-                    <Button
+                        <Button
 
-                      type="text"
+                            type="text"
 
-                      icon={<SettingOutlined />}
+                            icon={<SettingOutlined />}
 
-                      onClick={() => setPromptSettingsListModalVisible(true)}
+                            onClick={() => setPromptSettingsListModalVisible(true)}
 
-                      style={{ color: '#fa8c16' }}
+                            style={{ color: '#fa8c16' }}
 
-                    />
+                        />
 
-                  </Tooltip>
+                      </Tooltip>
 
-                </>
+                    </>
 
-              )}
+                )}
 
-            </div>
+              </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
 
-              <AutoComplete
+                <AutoComplete
 
-                placeholder="Tìm kiếm theo tiêu đề, tóm tắt, chi tiết..."
+                    placeholder="Tìm kiếm theo tiêu đề, tóm tắt, chi tiết..."
 
-                value={searchText}
+                    value={searchText}
 
-                onChange={(value) => handleLocalSearch(value)}
+                    onChange={(value) => handleLocalSearch(value)}
 
-                onSearch={handleSearchSubmit}
+                    onSearch={handleSearchSubmit}
 
-                style={{ width: 250 }}
+                    style={{ width: 250 }}
 
-                allowClear
+                    allowClear
 
-                loading={searchLoading}
+                    loading={searchLoading}
 
-                options={searchHistory[currentTab]?.map(term => ({
+                    options={searchHistory[currentTab]?.map(term => ({
 
-                  value: term,
+                      value: term,
 
-                  label: (
+                      label: (
 
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
 
-                      <HistoryOutlined style={{ color: '#999' }} />
+                            <HistoryOutlined style={{ color: '#999' }} />
 
-                      <span>{term}</span>
+                            <span>{term}</span>
 
-                    </div>
+                          </div>
 
-                  )
+                      )
 
-                })) || []}
+                    })) || []}
 
-                onSelect={(value) => handleSearchSubmit(value)}
+                    onSelect={(value) => handleSearchSubmit(value)}
 
-              />
+                />
 
-              {processingImageQueue && (
+                {processingImageQueue && (
 
-                <div style={{
+                    <div style={{
 
-                  display: 'flex',
+                      display: 'flex',
 
-                  alignItems: 'center',
+                      alignItems: 'center',
 
-                  gap: 4,
+                      gap: 4,
 
-                  padding: '4px 8px',
+                      padding: '4px 8px',
 
-                  backgroundColor: '#e6f7ff',
+                      backgroundColor: '#e6f7ff',
 
-                  borderRadius: '4px',
+                      borderRadius: '4px',
 
-                  border: '1px solid #91d5ff'
+                      border: '1px solid #91d5ff'
 
-                }}>
+                    }}>
 
-                  <LoadingOutlined style={{ color: '#1890ff' }} />
+                      <LoadingOutlined style={{ color: '#1890ff' }} />
 
-                  <span style={{ fontSize: '12px', color: '#1890ff' }}>
+                      <span style={{ fontSize: '12px', color: '#1890ff' }}>
 
                     Đang tạo ảnh: {imageGenerationQueue.length + 1}
 
                   </span>
 
-                </div>
+                    </div>
 
-              )}
+                )}
 
-              {processingDiagramQueue && (
+                {processingDiagramQueue && (
 
-                <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 4,
-                    padding: '4px 8px',
-                    backgroundColor: '#fff7e6',
-                    borderRadius: '4px',
-                    border: '1px solid #ffd591'
-                  }}
-                >
-                  <div
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 4,
-                      flex: 1,
-                      cursor: 'pointer'
-                    }}
-                    onClick={() => setDiagramProgressModalVisible(true)}
-                  >
-                    <LoadingOutlined style={{ color: '#fa8c16' }} />
-                    <span style={{ fontSize: '12px', color: '#fa8c16' }}>
+                    <div
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 4,
+                          padding: '4px 8px',
+                          backgroundColor: '#fff7e6',
+                          borderRadius: '4px',
+                          border: '1px solid #ffd591'
+                        }}
+                    >
+                      <div
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 4,
+                            flex: 1,
+                            cursor: 'pointer'
+                          }}
+                          onClick={() => setDiagramProgressModalVisible(true)}
+                      >
+                        <LoadingOutlined style={{ color: '#fa8c16' }} />
+                        <span style={{ fontSize: '12px', color: '#fa8c16' }}>
                       Đang tạo: {currentDiagramProcessing?.title}
-                      {diagramGenerationQueue.length > 0 && (
-                        <span style={{ color: '#666', marginLeft: '4px' }}>
+                          {diagramGenerationQueue.length > 0 && (
+                              <span style={{ color: '#666', marginLeft: '4px' }}>
                           (+{diagramGenerationQueue.length} chờ)
                         </span>
-                      )}
+                          )}
                     </span>
-                  </div>
-                  <Button
-                    size="small"
-                    danger
-                    onClick={handleStopDiagramGeneration}
-                    style={{ fontSize: '10px', height: '20px', padding: '0 6px' }}
-                  >
-                    Dừng
-                  </Button>
-                </div>
+                      </div>
+                      <Button
+                          size="small"
+                          danger
+                          onClick={handleStopDiagramGeneration}
+                          style={{ fontSize: '10px', height: '20px', padding: '0 6px' }}
+                      >
+                        Dừng
+                      </Button>
+                    </div>
 
-              )}
+                )}
 
-              {diagramGenerationResults.length > 0 && !processingDiagramQueue && (
+                {diagramGenerationResults.length > 0 && !processingDiagramQueue && (
 
-                <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 4,
-                    padding: '4px 8px',
-                    backgroundColor: '#f6ffed',
-                    borderRadius: '4px',
-                    border: '1px solid #b7eb8f',
-                    cursor: 'pointer'
-                  }}
-                  onClick={() => setDiagramProgressModalVisible(true)}
-                >
-                  <CheckCircleOutlined style={{ color: '#52c41a' }} />
-                  <span style={{ fontSize: '12px', color: '#52c41a' }}>
+                    <div
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 4,
+                          padding: '4px 8px',
+                          backgroundColor: '#f6ffed',
+                          borderRadius: '4px',
+                          border: '1px solid #b7eb8f',
+                          cursor: 'pointer'
+                        }}
+                        onClick={() => setDiagramProgressModalVisible(true)}
+                    >
+                      <CheckCircleOutlined style={{ color: '#52c41a' }} />
+                      <span style={{ fontSize: '12px', color: '#52c41a' }}>
                     Hoàn thành: {diagramGenerationStats.success}/{diagramGenerationStats.total} {diagramGenerationStats.type === 'html' ? 'HTML code' : 'diagram'}
 
-                    {diagramGenerationStats.failed > 0 && (
-                      <span style={{ color: '#ff4d4f', marginLeft: '8px' }}>
+                        {diagramGenerationStats.failed > 0 && (
+                            <span style={{ color: '#ff4d4f', marginLeft: '8px' }}>
                         ({diagramGenerationStats.failed} thất bại)
                       </span>
-                    )}
+                        )}
                   </span>
-                </div>
+                    </div>
 
-              )}
+                )}
 
-              {processingCaseFromLearningBlockQueue && (
+                {processingCaseFromLearningBlockQueue && (
 
-                <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 4,
-                    padding: '4px 8px',
-                    backgroundColor: '#fff7e6',
-                    borderRadius: '4px',
-                    border: '1px solid #ffd591'
-                  }}
-                >
-                  <div
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 4,
-                      flex: 1,
-                      cursor: 'pointer'
-                    }}
-                    onClick={() => setCaseFromLearningProgressModalVisible(true)}
-                  >
-                    <LoadingOutlined style={{ color: '#fa8c16' }} />
-                    <span style={{ fontSize: '12px', color: '#fa8c16' }}>
+                    <div
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 4,
+                          padding: '4px 8px',
+                          backgroundColor: '#fff7e6',
+                          borderRadius: '4px',
+                          border: '1px solid #ffd591'
+                        }}
+                    >
+                      <div
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 4,
+                            flex: 1,
+                            cursor: 'pointer'
+                          }}
+                          onClick={() => setCaseFromLearningProgressModalVisible(true)}
+                      >
+                        <LoadingOutlined style={{ color: '#fa8c16' }} />
+                        <span style={{ fontSize: '12px', color: '#fa8c16' }}>
                       Đang tạo Case: {currentCaseFromLearningBlockProcessing?.title}
-                      {caseFromLearningBlockQueue.length > 0 && (
-                        <span style={{ color: '#666', marginLeft: '4px' }}>
+                          {caseFromLearningBlockQueue.length > 0 && (
+                              <span style={{ color: '#666', marginLeft: '4px' }}>
                           (+{caseFromLearningBlockQueue.length} chờ)
                         </span>
-                      )}
+                          )}
                     </span>
-                  </div>
-                </div>
+                      </div>
+                    </div>
 
-              )}
+                )}
 
-              {caseFromLearningResults.length > 0 && !processingCaseFromLearningBlockQueue && (
+                {caseFromLearningResults.length > 0 && !processingCaseFromLearningBlockQueue && (
 
-                <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 4,
-                    padding: '4px 8px',
-                    backgroundColor: '#f6ffed',
-                    borderRadius: '4px',
-                    border: '1px solid #b7eb8f',
-                    cursor: 'pointer'
-                  }}
-                  onClick={() => setCaseFromLearningProgressModalVisible(true)}
-                >
-                  <CheckCircleOutlined style={{ color: '#52c41a' }} />
-                  <span style={{ fontSize: '12px', color: '#52c41a' }}>
+                    <div
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 4,
+                          padding: '4px 8px',
+                          backgroundColor: '#f6ffed',
+                          borderRadius: '4px',
+                          border: '1px solid #b7eb8f',
+                          cursor: 'pointer'
+                        }}
+                        onClick={() => setCaseFromLearningProgressModalVisible(true)}
+                    >
+                      <CheckCircleOutlined style={{ color: '#52c41a' }} />
+                      <span style={{ fontSize: '12px', color: '#52c41a' }}>
                     Hoàn thành Case: {caseFromLearningStats.success}/{caseFromLearningStats.total}
-                    {caseFromLearningStats.failed > 0 && (
-                      <span style={{ color: '#ff4d4f', marginLeft: '8px' }}>
+                        {caseFromLearningStats.failed > 0 && (
+                            <span style={{ color: '#ff4d4f', marginLeft: '8px' }}>
                         ({caseFromLearningStats.failed} thất bại)
                       </span>
-                    )}
+                        )}
                   </span>
-                </div>
+                    </div>
 
-              )}
+                )}
 
-              {companySummaryQueue.length > 0 && (
+                {companySummaryQueue.length > 0 && (
 
-                <div style={{
+                    <div style={{
 
-                  display: 'flex',
+                      display: 'flex',
 
-                  alignItems: 'center',
+                      alignItems: 'center',
 
-                  gap: 4,
+                      gap: 4,
 
-                  padding: '4px 8px',
+                      padding: '4px 8px',
 
-                  backgroundColor: '#f6ffed',
+                      backgroundColor: '#f6ffed',
 
-                  borderRadius: '4px',
+                      borderRadius: '4px',
 
-                  border: '1px solid #b7eb8f'
+                      border: '1px solid #b7eb8f'
 
-                }}>
+                    }}>
 
-                  <LoadingOutlined style={{ color: '#52c41a' }} />
+                      <LoadingOutlined style={{ color: '#52c41a' }} />
 
-                  <span style={{ fontSize: '12px', color: '#52c41a' }}>
+                      <span style={{ fontSize: '12px', color: '#52c41a' }}>
 
                     Đang tạo tổng quan: {currentCompanySummaryProcessing?.searchTerm} ({companySummaryQueue.length} bản ghi)
 
                   </span>
 
-                </div>
+                    </div>
 
-              )}
+                )}
+
+              </div>
 
             </div>
 
-          </div>
+            {/* Thanh menu các nút chức năng */}
 
-          {/* Thanh menu các nút chức năng */}
-
-          <Space style={{ flexWrap: 'wrap' }}>
-
-            <Button
-
-              type="primary"
-
-              icon={<PlusOutlined />}
-
-              onClick={handleCreate}
-
-            >
-
-            </Button>
-
-
-
-            {(currentTab === 'news' || currentTab === 'report' || currentTab === 'reportDN') &&
+            <Space style={{ flexWrap: 'wrap' }}>
 
               <Button
 
-                icon={<ThunderboltOutlined />}
+                  type="primary"
 
-                onClick={handleEmbedingAll}
+                  icon={<PlusOutlined />}
 
-                loading={embeddingAllLoading}
-
-                disabled={embeddingAllLoading}
+                  onClick={handleCreate}
 
               >
 
-                {embeddingAllLoading
-
-                  ? `Đang Embedding... (${embeddingProgress.current}/${embeddingProgress.total})`
-
-                  : selectedRowKeys.length > 0
-
-                    ? `Embedding selected (${selectedRowKeys.length})`
-
-                    : 'Embedding all'
-
-                }
-
               </Button>
 
-            }
-
-            {currentTab !== 'report' && currentTab !== 'reportDN' && (
-
-              <>
-
-                <Button
-
-                  icon={<FileExcelOutlined />}
-
-                  onClick={handleBulkImport}
-
-                  style={{ color: '#52c41a', borderColor: '#52c41a' }}
-
-                >
-
-                  Import Excel
-
-                </Button>
-
-                <Button
-
-                  icon={<FileExcelOutlined />}
-
-                  onClick={handleJsonImport}
-
-                  style={{ color: '#722ed1', borderColor: '#722ed1' }}
-
-                >
-
-                  Import JSON
-
-                </Button>
-
-              </>
-
-            )}
-
-            <Button
-
-              icon={<SettingOutlined />}
-
-              onClick={handleReportOverviewSettings}
-
-              style={{ color: '#1890ff', borderColor: '#1890ff' }}
-
-            >
-
-              Cài đặt tổng quan
-
-            </Button>
-
-            {(currentTab === 'news' || currentTab === 'caseTraining') && (
-
-              <>
-
-                {/*<Button*/}
-
-                {/*  type="primary"*/}
-
-                {/*  onClick={handleGetFeed}*/}
-
-                {/*  loading={loadingGetFeeds}*/}
-
-                {/*>*/}
-
-                {/*  Lấy tin mới*/}
-
-                {/*</Button>*/}
-
-                <Button
-
-                  type="primary"
-
-                  onClick={handleClassifyNews}
-
-                  loading={loadingClassify}
-
-                >
-
-                  Phân loại AI
-
-                </Button>
 
 
+              {(currentTab === 'news' || currentTab === 'report' || currentTab === 'reportDN') &&
 
-              </>
+                  <Button
 
-            )}
+                      icon={<ThunderboltOutlined />}
 
-            {currentTab === 'reportDN' && (
+                      onClick={handleEmbedingAll}
+
+                      loading={embeddingAllLoading}
+
+                      disabled={embeddingAllLoading}
+
+                  >
+
+                    {embeddingAllLoading
+
+                        ? `Đang Embedding... (${embeddingProgress.current}/${embeddingProgress.total})`
+
+                        : selectedRowKeys.length > 0
+
+                            ? `Embedding selected (${selectedRowKeys.length})`
+
+                            : 'Embedding all'
+
+                    }
+
+                  </Button>
+
+              }
+
+              {currentTab !== 'report' && currentTab !== 'reportDN' && (
+
+                  <>
+
+                    <Button
+
+                        icon={<FileExcelOutlined />}
+
+                        onClick={handleBulkImport}
+
+                        style={{ color: '#52c41a', borderColor: '#52c41a' }}
+
+                    >
+
+                      Import Excel
+
+                    </Button>
+
+                    <Button
+
+                        icon={<FileExcelOutlined />}
+
+                        onClick={handleJsonImport}
+
+                        style={{ color: '#722ed1', borderColor: '#722ed1' }}
+
+                    >
+
+                      Import JSON
+
+                    </Button>
+
+                  </>
+
+              )}
 
               <Button
 
-                type="primary"
+                  icon={<SettingOutlined />}
 
-                icon={<PlusOutlined />}
+                  onClick={handleReportOverviewSettings}
 
-                onClick={handleCreateCompanySummary}
+                  style={{ color: '#1890ff', borderColor: '#1890ff' }}
 
               >
 
-                Tạo mới
+                Cài đặt tổng quan
 
               </Button>
 
-            )}
+              {(currentTab === 'news' || currentTab === 'caseTraining') && (
 
-            {selectedRowKeys.length > 0 && (
+                  <>
 
-              <>
+                    {/*<Button*/}
 
-                <Button
+                    {/*  type="primary"*/}
 
-                  danger
+                    {/*  onClick={handleGetFeed}*/}
 
-                  icon={<DeleteOutlined />}
+                    {/*  loading={loadingGetFeeds}*/}
 
-                  onClick={handleBulkDelete}
+                    {/*>*/}
 
-                >
+                    {/*  Lấy tin mới*/}
 
-                  Xóa ({selectedRowKeys.length})
+                    {/*</Button>*/}
 
-                </Button>
+                    <Button
 
-                <Button
+                        type="primary"
 
-                  type="primary"
+                        onClick={handleClassifyNews}
 
-                  icon={<CheckCircleOutlined />}
+                        loading={loadingClassify}
 
-                  onClick={() => handleBulkToggleHasTitle(true)}
+                    >
 
-                  disabled={loading}
+                      Phân loại AI
 
-                >
+                    </Button>
 
-                  Bật mục lục ({selectedRowKeys.length})
 
-                </Button>
 
-                <Button
+                  </>
 
-                  onClick={() => handleBulkToggleHasTitle(false)}
+              )}
 
-                  disabled={loading}
+              {currentTab === 'reportDN' && (
 
-                >
+                  <Button
 
-                  Tắt mục lục ({selectedRowKeys.length})
+                      type="primary"
 
-                </Button>
+                      icon={<PlusOutlined />}
 
-                <Button
-                  type="primary"
-                  icon={<CheckCircleOutlined />}
-                  onClick={() => handleBulkToggleIsPublic(true)}
-                  disabled={loading}
-                >
-                  Bật Public ({selectedRowKeys.length})
-                </Button>
+                      onClick={handleCreateCompanySummary}
 
-                <Button
-                  onClick={() => handleBulkToggleIsPublic(false)}
-                  disabled={loading}
-                >
-                  Tắt Public ({selectedRowKeys.length})
-                </Button>
+                  >
 
-                <Button
-                  type="primary"
-                  onClick={() => handleBulkToggleAllowRetake(true)}
-                  disabled={loading}
-                >
-                  Bật làm lại Quiz ({selectedRowKeys.length})
-                </Button>
+                    Tạo mới
 
-                <Button
-                  onClick={() => handleBulkToggleAllowRetake(false)}
-                  disabled={loading}
-                >
-                  Tắt làm lại Quiz ({selectedRowKeys.length})
-                </Button>
+                  </Button>
 
-                {/* <Button
+              )}
+
+              {selectedRowKeys.length > 0 && (
+
+                  <>
+
+                    <Button
+
+                        danger
+
+                        icon={<DeleteOutlined />}
+
+                        onClick={handleBulkDelete}
+
+                    >
+
+                      Xóa ({selectedRowKeys.length})
+
+                    </Button>
+
+                    <Button
+
+                        type="primary"
+
+                        icon={<CheckCircleOutlined />}
+
+                        onClick={() => handleBulkToggleHasTitle(true)}
+
+                        disabled={loading}
+
+                    >
+
+                      Bật mục lục ({selectedRowKeys.length})
+
+                    </Button>
+
+                    <Button
+
+                        onClick={() => handleBulkToggleHasTitle(false)}
+
+                        disabled={loading}
+
+                    >
+
+                      Tắt mục lục ({selectedRowKeys.length})
+
+                    </Button>
+
+                    <Button
+                        type="primary"
+                        icon={<CheckCircleOutlined />}
+                        onClick={() => handleBulkToggleIsPublic(true)}
+                        disabled={loading}
+                    >
+                      Bật Public ({selectedRowKeys.length})
+                    </Button>
+
+                    <Button
+                        onClick={() => handleBulkToggleIsPublic(false)}
+                        disabled={loading}
+                    >
+                      Tắt Public ({selectedRowKeys.length})
+                    </Button>
+
+                    <Button
+                        type="primary"
+                        onClick={() => handleBulkToggleAllowRetake(true)}
+                        disabled={loading}
+                    >
+                      Bật làm lại Quiz ({selectedRowKeys.length})
+                    </Button>
+
+                    <Button
+                        onClick={() => handleBulkToggleAllowRetake(false)}
+                        disabled={loading}
+                    >
+                      Tắt làm lại Quiz ({selectedRowKeys.length})
+                    </Button>
+
+                    {/* <Button
                   icon={<TagsOutlined />}
                   onClick={() => {
                     // Nếu chỉ chọn 1 bản ghi, load allowed_user_class hiện tại
@@ -16603,246 +16620,438 @@ Chỉ trả về nội dung theo đúng định dạng trên, không thêm phầ
                   </Button>
                 </Popconfirm> */}
 
-                {(currentTab === 'home' || currentTab === 'news' || currentTab === 'caseTraining' || currentTab === 'longForm') && (
+                    {(currentTab === 'home' || currentTab === 'news' || currentTab === 'caseTraining' || currentTab === 'longForm') && (
 
-                  <>
+                        <>
+                          <Popconfirm
+                              title="Xác nhận xóa avatar"
+                              description={`Bạn có chắc chắn muốn xóa avatar cho ${selectedRowKeys.length} bản ghi đã chọn?`}
+                              onConfirm={handleBulkDeleteAvatar}
+                              okText="Xác nhận"
+                              cancelText="Hủy"
+                              okButtonProps={{ danger: true }}
+                          >
+                            <Button
+                                danger
+                                icon={<PictureOutlined />}
+                                disabled={loading}
+                            >
+                              Xóa avatar ({selectedRowKeys.length})
+                            </Button>
+                          </Popconfirm>
+
+                          <Popconfirm
+                              title="Xác nhận xóa diagram HTML"
+                              description={`Bạn có chắc chắn muốn xóa diagram HTML cho ${selectedRowKeys.length} bản ghi đã chọn?`}
+                              onConfirm={handleBulkDeleteHtmlDiagram}
+                              okText="Xác nhận"
+                              cancelText="Hủy"
+                              okButtonProps={{ danger: true }}
+                          >
+                            <Button
+                                danger
+                                icon={<FileTextOutlined />}
+                                disabled={loading}
+                                style={{ marginRight: '8px' }}
+                            >
+                              Xóa diagram HTML ({selectedRowKeys.length})
+                            </Button>
+                          </Popconfirm>
+                          <Popconfirm
+                              title="Xác nhận xóa diagram Excalidraw"
+                              description={`Bạn có chắc chắn muốn xóa diagram Excalidraw cho ${selectedRowKeys.length} bản ghi đã chọn?`}
+                              onConfirm={handleBulkDeleteExcalidrawDiagram}
+                              okText="Xác nhận"
+                              cancelText="Hủy"
+                              okButtonProps={{ danger: true }}
+                          >
+                            <Button
+                                danger
+                                icon={<PictureOutlined />}
+                                disabled={loading}
+                            >
+                              Xóa diagram Excalidraw ({selectedRowKeys.length})
+                            </Button>
+                          </Popconfirm>
+                        </>
+                    )}
+
                     <Popconfirm
-                      title="Xác nhận xóa avatar"
-                      description={`Bạn có chắc chắn muốn xóa avatar cho ${selectedRowKeys.length} bản ghi đã chọn?`}
-                      onConfirm={handleBulkDeleteAvatar}
-                      okText="Xác nhận"
-                      cancelText="Hủy"
-                      okButtonProps={{ danger: true }}
+                        title="Xác nhận xóa audio"
+                        description={`Bạn có chắc chắn muốn xóa audio cho ${selectedRowKeys.length} bản ghi đã chọn?`}
+                        onConfirm={handleBulkDeleteAudio}
+                        okText="Xác nhận"
+                        cancelText="Hủy"
+                        okButtonProps={{ danger: true }}
                     >
                       <Button
-                        danger
-                        icon={<PictureOutlined />}
-                        disabled={loading}
+                          danger
+                          icon={<SoundOutlined />}
+                          disabled={loading}
                       >
-                        Xóa avatar ({selectedRowKeys.length})
+                        Xóa audio ({selectedRowKeys.length})
                       </Button>
                     </Popconfirm>
 
-                    <Popconfirm
-                      title="Xác nhận xóa diagram HTML"
-                      description={`Bạn có chắc chắn muốn xóa diagram HTML cho ${selectedRowKeys.length} bản ghi đã chọn?`}
-                      onConfirm={handleBulkDeleteHtmlDiagram}
-                      okText="Xác nhận"
-                      cancelText="Hủy"
-                      okButtonProps={{ danger: true }}
-                    >
-                      <Button
-                        danger
-                        icon={<FileTextOutlined />}
-                        disabled={loading}
-                        style={{ marginRight: '8px' }}
-                      >
-                        Xóa diagram HTML ({selectedRowKeys.length})
-                      </Button>
-                    </Popconfirm>
-                    <Popconfirm
-                      title="Xác nhận xóa diagram Excalidraw"
-                      description={`Bạn có chắc chắn muốn xóa diagram Excalidraw cho ${selectedRowKeys.length} bản ghi đã chọn?`}
-                      onConfirm={handleBulkDeleteExcalidrawDiagram}
-                      okText="Xác nhận"
-                      cancelText="Hủy"
-                      okButtonProps={{ danger: true }}
-                    >
-                      <Button
-                        danger
-                        icon={<PictureOutlined />}
-                        disabled={loading}
-                      >
-                        Xóa diagram Excalidraw ({selectedRowKeys.length})
-                      </Button>
-                    </Popconfirm>
-                  </>
-                )}
 
-                <Popconfirm
-                  title="Xác nhận xóa audio"
-                  description={`Bạn có chắc chắn muốn xóa audio cho ${selectedRowKeys.length} bản ghi đã chọn?`}
-                  onConfirm={handleBulkDeleteAudio}
-                  okText="Xác nhận"
-                  cancelText="Hủy"
-                  okButtonProps={{ danger: true }}
-                >
-                  <Button
-                    danger
-                    icon={<SoundOutlined />}
-                    disabled={loading}
-                  >
-                    Xóa audio ({selectedRowKeys.length})
-                  </Button>
-                </Popconfirm>
+                    {currentTab === 'story' && (
 
-
-                {currentTab === 'story' && (
-
-                  <Button
-
-                    type="primary"
-
-                    icon={<ThunderboltOutlined />}
-
-                    onClick={handleBulkCreateVoice}
-
-                    disabled={processingQueue}
-
-                  >
-
-                    Thêm vào hàng đợi ({selectedRowKeys.length})
-
-                  </Button>
-
-                )}
-
-
-
-                <Button
-                  type="primary"
-                  icon={<ThunderboltOutlined />}
-                  onClick={handleBulkCreateVoiceFromDetail}
-                  disabled={processingQueue}
-                >
-                  Tạo voice từ detail ({selectedRowKeys.length})
-                </Button>
-
-
-                {(currentTab === 'home' || currentTab === 'news' || currentTab === 'caseTraining' || currentTab === 'longForm') && (
-
-                  <>
-
-                    <Button
-                      type="primary"
-                      icon={<ThunderboltOutlined />}
-                      onClick={handleBulkCreateSummaryDetail}
-                      disabled={processingSummaryDetailQueue}
-                      style={{ backgroundColor: '#722ed1', borderColor: '#722ed1' }}
-                    >
-                      Tạo Summary Detail ({selectedRowKeys.length})
-                    </Button>
-
-                    <Button
-
-                      type="primary"
-
-                      icon={<PictureOutlined />}
-
-                      onClick={handleBulkCreateImage}
-
-                      disabled={processingImageQueue}
-
-                    >
-
-                      Tạo ảnh ({selectedRowKeys.length})
-
-                    </Button>
-
-                    {currentTab === 'news' && (
-                      <Space>
                         <Button
-                          type="primary"
-                          icon={<AppstoreOutlined />}
-                          onClick={handleBulkCreateCaseFromLearningBlock}
-                          disabled={processingCaseFromLearningBlockQueue}
-                          loading={processingCaseFromLearningBlockQueue}
+
+                            type="primary"
+
+                            icon={<ThunderboltOutlined />}
+
+                            onClick={handleBulkCreateVoice}
+
+                            disabled={processingQueue}
+
                         >
-                          Tạo Case từ Learning Block ({selectedRowKeys.length})
+
+                          Thêm vào hàng đợi ({selectedRowKeys.length})
+
                         </Button>
-                        {/* <Button
+
+                    )}
+
+
+
+                    <Button
+                        type="primary"
+                        icon={<ThunderboltOutlined />}
+                        onClick={handleBulkCreateVoiceFromDetail}
+                        disabled={processingQueue}
+                    >
+                      Tạo voice từ detail ({selectedRowKeys.length})
+                    </Button>
+
+
+                    {(currentTab === 'home' || currentTab === 'news' || currentTab === 'caseTraining' || currentTab === 'longForm') && (
+
+                        <>
+
+                          <Button
+                              type="primary"
+                              icon={<ThunderboltOutlined />}
+                              onClick={handleBulkCreateSummaryDetail}
+                              disabled={processingSummaryDetailQueue}
+                              style={{ backgroundColor: '#722ed1', borderColor: '#722ed1' }}
+                          >
+                            Tạo Summary Detail ({selectedRowKeys.length})
+                          </Button>
+
+                          <Button
+
+                              type="primary"
+
+                              icon={<PictureOutlined />}
+
+                              onClick={handleBulkCreateImage}
+
+                              disabled={processingImageQueue}
+
+                          >
+
+                            Tạo ảnh ({selectedRowKeys.length})
+
+                          </Button>
+
+                          {currentTab === 'news' && (
+                              <Space>
+                                <Button
+                                    type="primary"
+                                    icon={<AppstoreOutlined />}
+                                    onClick={handleBulkCreateCaseFromLearningBlock}
+                                    disabled={processingCaseFromLearningBlockQueue}
+                                    loading={processingCaseFromLearningBlockQueue}
+                                >
+                                  Tạo Case từ Learning Block ({selectedRowKeys.length})
+                                </Button>
+                                {/* <Button
                           type="default"
                           onClick={() => setCaseFromLearningProgressModalVisible(true)}
                         >
                           Xem tiến trình Case
                         </Button> */}
-                      </Space>
+                              </Space>
+                          )}
+
+                          <Dropdown
+                              menu={{
+                                items: [
+
+                                  {
+                                    key: 'html',
+                                    label: '💻 Tạo HTML code',
+                                    icon: <FileTextOutlined />,
+                                    onClick: () => handleBulkCreateDiagram('html')
+                                  },
+                                  {
+                                    key: 'excalidraw-react',
+                                    label: '🎨 Tạo Excalidraw React',
+                                    icon: <PictureOutlined />,
+                                    onClick: () => handleBulkCreateDiagram('excalidraw-react')
+                                  }
+                                ]
+                              }}
+                              disabled={processingDiagramQueue}
+                              trigger={['click']}
+                          >
+                            <Button
+                                type="primary"
+                                icon={<NodeIndexOutlined />}
+                                disabled={processingDiagramQueue}
+                            >
+                              Tạo diagram ({selectedRowKeys.length}) <DownOutlined />
+                            </Button>
+                          </Dropdown>
+                          <Button
+
+                              disabled={false}
+
+                              type="primary"
+
+                              onClick={() => {
+
+                                setShowImproveDetail(true)
+
+                              }}
+
+                          >
+
+                            {improveDetailLoading ? <Spin size="small" className={styles.spinDotItem} /> : null}
+
+
+
+                            Improve Detail ({selectedRowKeys.length})
+
+                          </Button>
+
+                          <Button
+
+                              type="primary"
+
+                              disabled={false}
+
+                              onClick={() => {
+
+                                if (selectedRowKeys.length === 0) {
+
+                                  message.warning('Vui lòng chọn ít nhất một bản ghi!');
+
+                                  return;
+
+                                }
+
+                                setShowCreateQuiz(true);
+
+                              }}
+
+                              // loading={createQuizzLoading}
+
+                          >
+
+                            {createQuizzLoading ? <Spin size="small" className={styles.spinDotItem} /> : null}
+
+                            Create Quizz ({selectedRowKeys.length})
+
+                          </Button>
+
+                          {currentTab === 'caseTraining' && (
+                              <>
+                                <Button
+
+                                    type="primary"
+
+                                    disabled={false}
+
+                                    onClick={() => {
+
+                                      if (selectedRowKeys.length === 0) {
+
+                                        message.warning('Vui lòng chọn ít nhất một bản ghi!');
+
+                                        return;
+
+                                      }
+                                      setShowUpdateQuiz(true);
+                                    }}
+                                >
+                                  Cập nhật Quiz & Nội dung theo CID ({selectedRowKeys.length})
+                                </Button>
+                              </>
+                          )}
+                          <Button
+
+                              type="primary"
+
+                              icon={<ThunderboltOutlined />}
+
+                              onClick={handleEmbedingAll}
+
+                              loading={embeddingAllLoading}
+
+                              disabled={embeddingAllLoading}
+
+                          >
+
+                            {embeddingAllLoading
+
+                                ? `Đang Embedding... (${embeddingProgress.current}/${embeddingProgress.total})`
+
+                                : selectedRowKeys.length > 0
+
+                                    ? `Embedding selected (${selectedRowKeys.length})`
+
+                                    : 'Embedding all'
+
+                            }
+
+                          </Button>
+
+                        </>
+
                     )}
 
-                    <Dropdown
-                      menu={{
-                        items: [
-                     
-                          {
-                            key: 'html',
-                            label: '💻 Tạo HTML code',
-                            icon: <FileTextOutlined />,
-                            onClick: () => handleBulkCreateDiagram('html')
-                          },
-                          {
-                            key: 'excalidraw-react',
-                            label: '🎨 Tạo Excalidraw React',
-                            icon: <PictureOutlined />,
-                            onClick: () => handleBulkCreateDiagram('excalidraw-react')
-                          }
-                        ]
-                      }}
-                      disabled={processingDiagramQueue}
-                      trigger={['click']}
-                    >
-                      <Button
-                        type="primary"
-                        icon={<NodeIndexOutlined />}
-                        disabled={processingDiagramQueue}
-                      >
-                        Tạo diagram ({selectedRowKeys.length}) <DownOutlined />
-                      </Button>
-                    </Dropdown>
-                    <Button
+                    {/* Bulk Update Buttons for different tabs */}
 
-                      disabled={false}
+                    {(currentTab === 'news' || currentTab === 'longForm' || currentTab === 'home' || currentTab === 'report' || currentTab === 'reportDN') && (
 
-                      type="primary"
+                        <>
 
-                      onClick={() => {
+                          <Button
 
-                        setShowImproveDetail(true)
+                              type="primary"
 
-                      }}
+                              disabled={false}
 
-                    >
+                              onClick={() => {
 
-                      {improveDetailLoading ? <Spin size="small" className={styles.spinDotItem} /> : null}
+                                if (selectedRowKeys.length === 0) {
+
+                                  message.warning('Vui lòng chọn ít nhất một bản ghi!');
+
+                                  return;
+
+                                }
+
+                                handleBulkUpdate('category');
+
+                              }}
+
+                          >
+
+                            {updateCategoryLoading ? <Spin size="small" className={styles.spinDotItem} /> : null}
+
+                            Update Danh mục ({selectedRowKeys.length})
+
+                          </Button>
 
 
 
-                      Improve Detail ({selectedRowKeys.length})
+                        </>
 
-                    </Button>
+                    )}
 
-                    <Button
 
-                      type="primary"
 
-                      disabled={false}
-
-                      onClick={() => {
-
-                        if (selectedRowKeys.length === 0) {
-
-                          message.warning('Vui lòng chọn ít nhất một bản ghi!');
-
-                          return;
-
-                        }
-
-                        setShowCreateQuiz(true);
-
-                      }}
-
-                    // loading={createQuizzLoading}
-
-                    >
-
-                      {createQuizzLoading ? <Spin size="small" className={styles.spinDotItem} /> : null}
-
-                      Create Quizz ({selectedRowKeys.length})
-
-                    </Button>
+                    {/* Special buttons for caseTraining tab */}
 
                     {currentTab === 'caseTraining' && (
-                      <>
-                        <Button
+
+                        <>
+
+                          <Button
+
+                              type="primary"
+
+                              disabled={false}
+
+                              onClick={() => {
+
+                                if (selectedRowKeys.length === 0) {
+
+                                  message.warning('Vui lòng chọn ít nhất một bản ghi!');
+
+                                  return;
+
+                                }
+
+                                handleBulkUpdate('tag1');
+
+                              }}
+
+                          >
+
+                            Update Category ({selectedRowKeys.length})
+
+                          </Button>
+
+                          <Button
+
+                              type="primary"
+
+                              disabled={false}
+
+                              onClick={() => {
+
+                                if (selectedRowKeys.length === 0) {
+
+                                  message.warning('Vui lòng chọn ít nhất một bản ghi!');
+
+                                  return;
+
+                                }
+
+                                handleBulkUpdate('tag2');
+
+                              }}
+
+                          >
+
+                            Update Level ({selectedRowKeys.length})
+
+                          </Button>
+
+                          <Button
+
+                              type="primary"
+
+                              disabled={false}
+
+                              onClick={() => {
+
+                                if (selectedRowKeys.length === 0) {
+
+                                  message.warning('Vui lòng chọn ít nhất một bản ghi!');
+
+                                  return;
+
+                                }
+
+                                handleBulkUpdate('tag3');
+
+                              }}
+
+                          >
+
+                            Update Series ({selectedRowKeys.length})
+
+                          </Button>
+
+
+
+                        </>
+
+                    )}
+
+                  </>
+
+              )}
+
+              {
+                  selectedRowKeys.length > 0 && (
+                      <Button
 
                           type="primary"
 
@@ -16857,721 +17066,93 @@ Chỉ trả về nội dung theo đúng định dạng trên, không thêm phầ
                               return;
 
                             }
-                            setShowUpdateQuiz(true);
+
+                            handleBulkUpdate('tag4');
+
                           }}
-                        >
-                          Cập nhật Quiz & Nội dung theo CID ({selectedRowKeys.length})
-                        </Button>
-                      </>
-                    )}
-                    <Button
 
-                      type="primary"
+                      >
 
-                      icon={<ThunderboltOutlined />}
+                        Update Program ({selectedRowKeys.length})
 
-                      onClick={handleEmbedingAll}
+                      </Button>
 
-                      loading={embeddingAllLoading}
+                  )
+              }
 
-                      disabled={embeddingAllLoading}
+            </Space>
 
-                    >
+            {/* ... phần còn lại ... */}
 
-                      {embeddingAllLoading
+          </div>
 
-                        ? `Đang Embedding... (${embeddingProgress.current}/${embeddingProgress.total})`
 
-                        : selectedRowKeys.length > 0
 
-                          ? `Embedding selected (${selectedRowKeys.length})`
+          <div className={styles.tabsContainer}>
 
-                          : 'Embedding all'
+            {tabOptions.map(tab => (
 
-                      }
+                <button
 
-                    </Button>
+                    key={tab.key}
 
-                  </>
+                    className={`${styles.tabButton} ${currentTab === tab.key ? styles.active : ''}`}
 
-                )}
-
-                {/* Bulk Update Buttons for different tabs */}
-
-                {(currentTab === 'news' || currentTab === 'longForm' || currentTab === 'home' || currentTab === 'report' || currentTab === 'reportDN') && (
-
-                  <>
-
-                    <Button
-
-                      type="primary"
-
-                      disabled={false}
-
-                      onClick={() => {
-
-                        if (selectedRowKeys.length === 0) {
-
-                          message.warning('Vui lòng chọn ít nhất một bản ghi!');
-
-                          return;
-
-                        }
-
-                        handleBulkUpdate('category');
-
-                      }}
-
-                    >
-
-                      {updateCategoryLoading ? <Spin size="small" className={styles.spinDotItem} /> : null}
-
-                      Update Danh mục ({selectedRowKeys.length})
-
-                    </Button>
-
-
-
-                  </>
-
-                )}
-
-
-
-                {/* Special buttons for caseTraining tab */}
-
-                {currentTab === 'caseTraining' && (
-
-                  <>
-
-                    <Button
-
-                      type="primary"
-
-                      disabled={false}
-
-                      onClick={() => {
-
-                        if (selectedRowKeys.length === 0) {
-
-                          message.warning('Vui lòng chọn ít nhất một bản ghi!');
-
-                          return;
-
-                        }
-
-                        handleBulkUpdate('tag1');
-
-                      }}
-
-                    >
-
-                      Update Category ({selectedRowKeys.length})
-
-                    </Button>
-
-                    <Button
-
-                      type="primary"
-
-                      disabled={false}
-
-                      onClick={() => {
-
-                        if (selectedRowKeys.length === 0) {
-
-                          message.warning('Vui lòng chọn ít nhất một bản ghi!');
-
-                          return;
-
-                        }
-
-                        handleBulkUpdate('tag2');
-
-                      }}
-
-                    >
-
-                      Update Level ({selectedRowKeys.length})
-
-                    </Button>
-
-                    <Button
-
-                      type="primary"
-
-                      disabled={false}
-
-                      onClick={() => {
-
-                        if (selectedRowKeys.length === 0) {
-
-                          message.warning('Vui lòng chọn ít nhất một bản ghi!');
-
-                          return;
-
-                        }
-
-                        handleBulkUpdate('tag3');
-
-                      }}
-
-                    >
-
-                      Update Series ({selectedRowKeys.length})
-
-                    </Button>
-
-
-
-                  </>
-
-                )}
-
-              </>
-
-            )}
-
-            {
-              selectedRowKeys.length > 0 && (
-                <Button
-
-                  type="primary"
-
-                  disabled={false}
-
-                  onClick={() => {
-
-                    if (selectedRowKeys.length === 0) {
-
-                      message.warning('Vui lòng chọn ít nhất một bản ghi!');
-
-                      return;
-
-                    }
-
-                    handleBulkUpdate('tag4');
-
-                  }}
+                    onClick={() => handleTabChange(tab.key)}
 
                 >
 
-                  Update Program ({selectedRowKeys.length})
+                  {tab.label}
 
-                </Button>
+                  <Badge count={tab.count} size="small" className={styles.tabBadge} />
 
-              )
-            }
+                </button>
 
-          </Space>
+            ))}
 
-          {/* ... phần còn lại ... */}
-
-        </div>
+          </div>
 
 
 
-        <div className={styles.tabsContainer}>
+          {/* Filter section for home, news, caseTraining, and longForm tabs */}
 
-          {tabOptions.map(tab => (
-
-            <button
-
-              key={tab.key}
-
-              className={`${styles.tabButton} ${currentTab === tab.key ? styles.active : ''}`}
-
-              onClick={() => handleTabChange(tab.key)}
-
-            >
-
-              {tab.label}
-
-              <Badge count={tab.count} size="small" className={styles.tabBadge} />
-
-            </button>
-
-          ))}
-
-        </div>
-
-
-
-        {/* Filter section for home, news, caseTraining, and longForm tabs */}
-
-        {(currentTab === 'home' || currentTab === 'news' || currentTab === 'caseTraining' || currentTab === 'longForm') && (
-
-          <div style={{
-
-            marginBottom: '16px',
-
-            padding: '16px',
-
-            backgroundColor: '#fafafa',
-
-            borderRadius: '8px',
-
-            border: '1px solid #e8e8e8'
-
-          }}>
-
-            <div style={{
-
-              display: 'flex',
-
-              alignItems: 'center',
-
-              gap: '16px',
-
-              flexWrap: 'wrap'
-
-            }}>
-
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-
-                <span style={{ fontWeight: 'bold', fontSize: '14px' }}>Lọc theo:</span>
-
-              </div>
-
-
-
-              {/* Filter Count Display */}
+          {(currentTab === 'home' || currentTab === 'news' || currentTab === 'caseTraining' || currentTab === 'longForm') && (
 
               <div style={{
 
-                display: 'flex',
+                marginBottom: '16px',
 
-                alignItems: 'center',
+                padding: '16px',
 
-                gap: '8px',
+                backgroundColor: '#fafafa',
 
-                marginLeft: 'auto',
+                borderRadius: '8px',
 
-                fontSize: '12px',
-
-                color: '#666'
+                border: '1px solid #e8e8e8'
 
               }}>
 
-                <span>
+                <div style={{
 
-                  Hiển thị {filteredData[currentTab]?.length || 0} / {allData[currentTab]?.length || 0} bản ghi
+                  display: 'flex',
 
-                </span>
+                  alignItems: 'center',
 
-              </div>
+                  gap: '16px',
 
+                  flexWrap: 'wrap'
 
+                }}>
 
-              {/* Category Filter */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ fontWeight: 'bold', fontSize: '14px' }}>Lọc theo:</span>
 
-                {
+                  </div>
 
-                  currentTab !== 'caseTraining' && <>
 
-                    <span style={{ fontSize: '14px' }}>Danh mục:</span>
 
-                    <Select
-
-                      value={categoryFilter}
-
-                      onChange={(value) => handleCategoryFilterChange(value)}
-
-                      style={{ width: 200 }}
-
-                      placeholder="Chọn danh mục"
-
-                    >
-
-
-                      <Option value="">Trống</Option>
-
-                      {categoriesOptions.map(option => (
-
-                        <Option key={option.key} value={option.key}>
-
-                          {option.label}
-
-                        </Option>
-
-                      ))}
-
-
-
-
-
-                    </Select>
-
-                  </>
-
-                }
-
-
-
-              </div>
-
-              {/* Program Filter */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span style={{ fontSize: '14px' }}>Program:</span>
-                <Select
-                  value={programFilter}
-                  onChange={handleProgramFilterChange}
-                  style={{ width: 200 }}
-                  placeholder="Chọn program"
-                  showSearch
-                  filterOption={(input, option) =>
-                    (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
-                  }
-                >
-                  <Option value="all">Tất cả</Option>
-                  <Option value="">Trống</Option>
-                  {programOptions.map(option => (
-                    <Option key={option.value} value={option.value}>
-                      {option.label}
-                    </Option>
-                  ))}
-                </Select>
-              </div>
-
-
-
-              {/* Image Filter */}
-
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-
-                <span style={{ fontSize: '14px' }}>Ảnh:</span>
-
-                <Select
-
-                  value={imageFilter}
-
-                  onChange={handleImageFilterChange}
-
-                  style={{ width: 120 }}
-
-                  placeholder="Chọn trạng thái ảnh"
-
-                >
-
-                  <Option value="all">Tất cả</Option>
-
-                  <Option value="has">Có ảnh</Option>
-
-                  <Option value="no">Không có ảnh</Option>
-
-                </Select>
-
-              </div>
-
-              {/* Voice Filter */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span style={{ fontSize: '14px' }}>Voice:</span>
-                <Select
-                  value={voiceFilter}
-                  onChange={handleVoiceFilterChange}
-                  style={{
-                    width: 150,
-                  }}
-                  className={styles.voiceFilter}
-                  placeholder="Chọn trạng thái voice"
-                >
-                  <Option value="all">Tất cả</Option>
-                  <Option value="hasVoice">Có voice</Option>
-                  <Option value="noVoice">Không có voice</Option>
-                </Select>
-              </div>
-
-              {/* Diagram Filter */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span style={{ fontSize: '14px' }}>Diagram:</span>
-                <Select
-                  value={diagramFilter}
-                  onChange={handleDiagramFilterChange}
-                  placeholder="Chọn loại diagram"
-                  style={{ width: 180 }}
-                >
-                  <Option value="all">Tất cả</Option>
-                  <Option value="not_created">Chưa tạo</Option>
-                  <Option value="html">Đã tạo bằng HTML</Option>
-                  <Option value="excalidraw">Đã tạo bằng Excalidraw</Option>
-                </Select>
-              </div>
-
-
-              {/* Quiz Filter */}
-
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-
-                <span style={{ fontSize: '14px' }}>Quiz:</span>
-
-                <Select
-
-                  value={quizFilter}
-
-                  onChange={handleQuizFilterChange}
-
-                  style={{ width: 120 }}
-
-                  placeholder="Chọn trạng thái quiz"
-
-                >
-
-                  <Option value="all">Tất cả</Option>
-
-                  <Option value="has">Có quiz</Option>
-
-                  <Option value="no">Không có quiz</Option>
-
-                </Select>
-
-              </div>
-
-
-
-              {/* Tag1 Filter - Only for caseTraining */}
-
-              {currentTab === 'caseTraining' && (
-
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-
-                  <span style={{ fontSize: '14px' }}>Categories:</span>
-
-                  <Select
-
-                    value={tag1Filter}
-
-                    onChange={handleTag1FilterChange}
-
-                    style={{ width: 150 }}
-
-                    placeholder="Chọn category"
-
-                  >
-
-                    <Option value="all">Tất cả</Option>
-
-                    {tag1Options.map(option => (
-
-                      <Option key={option.value} value={option.value}>
-
-                        {option.label}
-
-                      </Option>
-
-                    ))}
-
-                  </Select>
-
-                </div>
-
-              )}
-
-
-
-              {/* Tag2 Filter - Only for caseTraining */}
-
-              {currentTab === 'caseTraining' && (
-
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-
-                  <span style={{ fontSize: '14px' }}>Levels:</span>
-
-                  <Select
-
-                    value={tag2Filter}
-
-                    onChange={handleTag2FilterChange}
-
-                    style={{ width: 150 }}
-
-                    placeholder="Chọn level"
-
-                  >
-
-                    <Option value="all">Tất cả</Option>
-
-                    {tag2Options.map(option => (
-
-                      <Option key={option.value} value={option.value}>
-
-                        {option.label}
-
-                      </Option>
-
-                    ))}
-
-                  </Select>
-
-                </div>
-
-              )}
-
-
-
-              {/* Tag3 Filter - Only for caseTraining */}
-
-              {currentTab === 'caseTraining' && (
-
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-
-                  <span style={{ fontSize: '14px' }}>Series:</span>
-
-                  <Select
-
-                    value={tag3Filter}
-
-                    onChange={handleTag3FilterChange}
-
-                    style={{ width: 150 }}
-
-                    placeholder="Chọn series"
-
-                  >
-
-                    <Option value="all">Tất cả</Option>
-
-                    {tag3Options.map(option => (
-
-                      <Option key={option.value} value={option.value}>
-
-                        {option.label}
-
-                      </Option>
-
-                    ))}
-
-                  </Select>
-
-                </div>
-
-              )}
-
-
-
-              {/* Tag4 Filter (Program) - For all tabs */}
-
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-
-                <span style={{ fontSize: '14px' }}>Program:</span>
-
-                <Select
-
-                  mode="multiple"
-
-                  value={tag4Filter}
-
-                  onChange={handleTag4FilterChange}
-
-                  style={{ width: 300 }}
-
-                  placeholder="Chọn program"
-
-                  maxTagCount="responsive"
-
-                  showSearch
-
-                  filterOption={(input, option) =>
-
-                    (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
-
-                  }
-
-                >
-
-                  {tag4Options.map(option => (
-
-                    <Option key={option.value} value={option.value} label={option.label}>
-
-                      {option.label}
-
-                    </Option>
-
-                  ))}
-
-                </Select>
-
-              </div>
-
-
-
-              {/* Chapter Filter - For all tabs */}
-
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-
-                <span style={{ fontSize: '14px' }}>Số program:</span>
-
-                <Select
-
-                  value={chapterFilter}
-
-                  onChange={handleChapterFilterChange}
-
-                  style={{ width: 150 }}
-
-                  placeholder="Chọn số program"
-
-                >
-
-                  <Option value="all">Tất cả</Option>
-
-                  <Option value="has">Có program</Option>
-
-                  <Option value="no">Không có program</Option>
-
-                  <Option value="1">1 program</Option>
-
-                  <Option value="2">2 programs</Option>
-
-                  <Option value="3">3 programs</Option>
-
-                  <Option value="4">4 programs</Option>
-
-                  <Option value="5">5 programs</Option>
-
-                  <Option value="6">6 programs</Option>
-
-                  <Option value="7">7 programs</Option>
-                  <Option value="8">8 programs</Option>
-                  <Option value="9">9 programs</Option>
-                  <Option value="10+">10+ programs</Option>
-
-                </Select>
-
-              </div>
-
-
-
-              {/* Reset Filters Button */}
-
-              <Button
-
-                onClick={resetFilters}
-
-                style={{ marginLeft: '8px' }}
-
-                disabled={categoryFilter === 'all' && imageFilter === 'all' && diagramFilter === 'all' && quizFilter === 'all' && tag4Filter.length === 0 && chapterFilter === 'all' && programFilter === 'all' &&
-                  (currentTab === 'caseTraining' ? (tag1Filter === 'all' && tag2Filter === 'all' && tag3Filter === 'all') : true) &&
-
-                  !searchText.trim()}
-
-              >
-
-                Xóa bộ lọc
-
-              </Button>
-
-
-
-
-
-
-
-              {/* Active Filters Display */}
-
-              {(categoryFilter !== 'all' || imageFilter !== 'all' || voiceFilter !== 'all' || diagramFilter !== 'all' || quizFilter !== 'all' || tag4Filter.length > 0 || chapterFilter !== 'all' ||
-                (currentTab === 'caseTraining' && (tag1Filter !== 'all' || tag2Filter !== 'all' || tag3Filter !== 'all'))) && (
+                  {/* Filter Count Display */}
 
                   <div style={{
 
@@ -17581,1395 +17162,1831 @@ Chỉ trả về nội dung theo đúng định dạng trên, không thêm phầ
 
                     gap: '8px',
 
-                    marginTop: '8px',
+                    marginLeft: 'auto',
 
-                    flexWrap: 'wrap'
+                    fontSize: '12px',
+
+                    color: '#666'
 
                   }}>
 
-                    <span style={{ fontSize: '12px', color: '#666' }}>Bộ lọc đang hoạt động:</span>
+                <span>
 
-                    {categoryFilter !== 'all' && (
+                  Hiển thị {filteredData[currentTab]?.length || 0} / {allData[currentTab]?.length || 0} bản ghi
 
-                      <Tag color="blue" closable onClose={() => handleCategoryFilterChange('all')}>
-
-                        Danh mục: {categoryFilter}
-
-                      </Tag>
-
-                    )}
-
-                    {imageFilter !== 'all' && (
-
-                      <Tag color="green" closable onClose={() => handleImageFilterChange('all')}>
-
-                        Ảnh: {imageFilter === 'has' ? 'Có ảnh' : 'Không có ảnh'}
-
-                      </Tag>
-
-                    )}
-
-                    {voiceFilter !== 'all' && (
-
-                      <Tag color="orange" closable onClose={() => handleVoiceFilterChange('all')}>
-
-                        Voice: {voiceFilter === 'hasVoice' ? 'Có voice' : 'Không có voice'}
-
-                      </Tag>
-
-                    )}
-
-                    {diagramFilter !== 'all' && (
-                      <Tag color="purple" closable onClose={() => handleDiagramFilterChange('all')}>
-                        Diagram: {
-                          diagramFilter === 'not_created' ? 'Chưa tạo' :
-                            diagramFilter === 'html' ? 'Đã tạo bằng HTML' :
-                              diagramFilter === 'excalidraw' ? 'Đã tạo bằng Excalidraw' : ''
-                        }
-                      </Tag>
-                    )}
-                    {quizFilter !== 'all' && (
-
-                      <Tag color="orange" closable onClose={() => handleQuizFilterChange('all')}>
-
-                        Quiz: {quizFilter === 'has' ? 'Có quiz' : 'Không có quiz'}
-
-                      </Tag>
-
-                    )}
-
-                    {tag4Filter.length > 0 && (
-
-                      <Tag color="magenta" closable onClose={() => handleTag4FilterChange([])}>
-
-                        Program: {tag4Filter.length} đã chọn
-
-                      </Tag>
-
-                    )}
-
-                    {chapterFilter !== 'all' && (
-
-                      <Tag color="geekblue" closable onClose={() => handleChapterFilterChange('all')}>
-
-                        Số program: {
-
-                          chapterFilter === 'has' ? 'Có program' :
-
-                            chapterFilter === 'no' ? 'Không có program' :
-
-                              chapterFilter === '1' ? '1 program' :
-
-                                chapterFilter === '2' ? '2 programs' :
-
-                                  chapterFilter === '3' ? '3 programs' :
-
-                                    chapterFilter === '4+' ? '4+ programs' : ''
-
-                        }
-
-                      </Tag>
-
-                    )}
-
-                    {programFilter !== 'all' && (
-                      <Tag color="lime" closable onClose={() => handleProgramFilterChange('all')}>
-                        Program: {programFilter}
-                      </Tag>
-                    )}
-
-                    {currentTab === 'caseTraining' && tag1Filter !== 'all' && (
-
-                      <Tag color="purple" closable onClose={() => handleTag1FilterChange('all')}>
-
-                        Categories: {tag1Filter}
-
-                      </Tag>
-
-                    )}
-
-                    {currentTab === 'caseTraining' && tag2Filter !== 'all' && (
-
-                      <Tag color="cyan" closable onClose={() => handleTag2FilterChange('all')}>
-
-                        Levels: {tag2Filter}
-
-                      </Tag>
-
-                    )}
-
-                    {currentTab === 'caseTraining' && tag3Filter !== 'all' && (
-
-                      <Tag color="red" closable onClose={() => handleTag3FilterChange('all')}>
-
-                        Series: {tag3Filter}
-
-                      </Tag>
-
-                    )}
+                </span>
 
                   </div>
 
-                )}
 
-            </div>
 
-          </div>
+                  {/* Category Filter */}
 
-        )}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
 
+                    {
 
+                        currentTab !== 'caseTraining' && <>
 
-        {/* Render different content based on current tab */}
+                          <span style={{ fontSize: '14px' }}>Danh mục:</span>
 
-        {currentTab === 'report' ? (
+                          <Select
 
-          <Table
+                              value={categoryFilter}
 
-            key="ai-summary-table"
+                              onChange={(value) => handleCategoryFilterChange(value)}
 
-            virtual
+                              style={{ width: 200 }}
 
-            columns={getAISummaryColumns()}
+                              placeholder="Chọn danh mục"
 
-            dataSource={aiSummaryData}
+                          >
 
-            rowKey="id"
 
-            loading={aiSummaryLoading}
+                            <Option value="">Trống</Option>
 
-            pagination={{
+                            {categoriesOptions.map(option => (
 
-              total: aiSummaryData.length,
+                                <Option key={option.key} value={option.key}>
 
-              pageSize: 500,
+                                  {option.label}
 
-              showSizeChanger: true,
+                                </Option>
 
-              showQuickJumper: true,
+                            ))}
 
-              showTotal: (total, range) =>
 
-                `${range[0]}-${range[1]} của ${total} mục`
 
-            }}
 
-            scroll={{ x: 800, y: '60vh' }}
 
-            className={styles.table}
+                          </Select>
 
-            rowSelection={{
+                        </>
 
-              type: 'checkbox',
+                    }
 
-              columnWidth: 48, // chỉnh size của cột checkbox
 
-              selectedRowKeys,
 
-              onChange: (newSelectedRowKeys) => {
+                  </div>
 
-                setSelectedRowKeys(newSelectedRowKeys);
+                  {/* Program Filter */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ fontSize: '14px' }}>Program:</span>
+                    <Select
+                        value={programFilter}
+                        onChange={handleProgramFilterChange}
+                        style={{ width: 200 }}
+                        placeholder="Chọn program"
+                        showSearch
+                        filterOption={(input, option) =>
+                            (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+                        }
+                    >
+                      <Option value="all">Tất cả</Option>
+                      <Option value="">Trống</Option>
+                      {programOptions.map(option => (
+                          <Option key={option.value} value={option.value}>
+                            {option.label}
+                          </Option>
+                      ))}
+                    </Select>
+                  </div>
 
-              },
 
-            }}
 
-          />
+                  {/* Image Filter */}
 
-        ) : currentTab === 'reportDN' ? (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
 
-          <Table
+                    <span style={{ fontSize: '14px' }}>Ảnh:</span>
 
-            key="report-dn-table"
+                    <Select
 
-            virtual
+                        value={imageFilter}
 
-            columns={getAISummaryColumns()}
+                        onChange={handleImageFilterChange}
 
-            dataSource={reportDNData}
+                        style={{ width: 120 }}
 
-            rowKey="id"
+                        placeholder="Chọn trạng thái ảnh"
 
-            loading={reportDNLoading}
+                    >
 
-            pagination={{
+                      <Option value="all">Tất cả</Option>
 
-              total: reportDNData.length,
+                      <Option value="has">Có ảnh</Option>
 
-              pageSize: 500,
+                      <Option value="no">Không có ảnh</Option>
 
-              showSizeChanger: true,
+                    </Select>
 
-              showQuickJumper: true,
+                  </div>
 
-              showTotal: (total, range) =>
+                  {/* Voice Filter */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ fontSize: '14px' }}>Voice:</span>
+                    <Select
+                        value={voiceFilter}
+                        onChange={handleVoiceFilterChange}
+                        style={{
+                          width: 150,
+                        }}
+                        className={styles.voiceFilter}
+                        placeholder="Chọn trạng thái voice"
+                    >
+                      <Option value="all">Tất cả</Option>
+                      <Option value="hasVoice">Có voice</Option>
+                      <Option value="noVoice">Không có voice</Option>
+                    </Select>
+                  </div>
 
-                `${range[0]}-${range[1]} của ${total} mục`
+                  {/* Diagram Filter */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ fontSize: '14px' }}>Diagram:</span>
+                    <Select
+                        value={diagramFilter}
+                        onChange={handleDiagramFilterChange}
+                        placeholder="Chọn loại diagram"
+                        style={{ width: 180 }}
+                    >
+                      <Option value="all">Tất cả</Option>
+                      <Option value="not_created">Chưa tạo</Option>
+                      <Option value="html">Đã tạo bằng HTML</Option>
+                      <Option value="excalidraw">Đã tạo bằng Excalidraw</Option>
+                    </Select>
+                  </div>
 
-            }}
 
-            scroll={{ x: 800, y: '60vh' }}
+                  {/* Quiz Filter */}
 
-            className={styles.table}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
 
-            rowSelection={{
+                    <span style={{ fontSize: '14px' }}>Quiz:</span>
 
-              type: 'checkbox',
+                    <Select
 
-              columnWidth: 48, // chỉnh size của cột checkbox
+                        value={quizFilter}
 
-              selectedRowKeys,
+                        onChange={handleQuizFilterChange}
 
-              onChange: (newSelectedRowKeys) => {
+                        style={{ width: 120 }}
 
-                setSelectedRowKeys(newSelectedRowKeys);
+                        placeholder="Chọn trạng thái quiz"
 
-              },
+                    >
 
-            }}
+                      <Option value="all">Tất cả</Option>
 
-          />
+                      <Option value="has">Có quiz</Option>
 
-        ) : (
+                      <Option value="no">Không có quiz</Option>
 
-          <Table
+                    </Select>
 
-            key={tableKey}
+                  </div>
 
-            virtual
 
-            columns={getColumns()}
 
-            dataSource={data}
+                  {/* Tag1 Filter - Only for caseTraining */}
 
-            rowKey="id"
+                  {currentTab === 'caseTraining' && (
 
-            loading={loading}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
 
-            pagination={{
+                        <span style={{ fontSize: '14px' }}>Categories:</span>
 
-              total: data.length,
+                        <Select
 
-              pageSize: pageSize,
+                            value={tag1Filter}
 
-              pageSizeOptions: ['100', '500', '1000', '2000', '5000'],
+                            onChange={handleTag1FilterChange}
 
-              showSizeChanger: true,
+                            style={{ width: 150 }}
 
-              showQuickJumper: true,
+                            placeholder="Chọn category"
 
-              onShowSizeChange: (current, size) => {
+                        >
 
-                console.log('Page size changed to:', size);
+                          <Option value="all">Tất cả</Option>
 
-                setPageSize(size);
+                          {tag1Options.map(option => (
 
-              },
+                              <Option key={option.value} value={option.value}>
 
-              showTotal: (total, range) =>
+                                {option.label}
 
-                `${range[0]}-${range[1]} của ${total} mục`
+                              </Option>
 
-            }}
+                          ))}
 
-            scroll={{ x: 3000, y: '50vh' }}
+                        </Select>
 
-            className={styles.table}
+                      </div>
 
-            rowSelection={{
+                  )}
 
-              type: 'checkbox',
 
-              columnWidth: 48, // chỉnh size của cột checkbox
 
-              selectedRowKeys,
+                  {/* Tag2 Filter - Only for caseTraining */}
 
-              onChange: (newSelectedRowKeys) => {
+                  {currentTab === 'caseTraining' && (
 
-                setSelectedRowKeys(newSelectedRowKeys);
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
 
-              },
+                        <span style={{ fontSize: '14px' }}>Levels:</span>
 
-            }}
+                        <Select
 
-          />
+                            value={tag2Filter}
 
-        )}
+                            onChange={handleTag2FilterChange}
 
-      </Card>
+                            style={{ width: 150 }}
 
+                            placeholder="Chọn level"
 
+                        >
 
-      {/* Create/Edit Modal */}
+                          <Option value="all">Tất cả</Option>
 
-      {
+                          {tag2Options.map(option => (
 
-        modalVisible && <CreateEditModal
+                              <Option key={option.value} value={option.value}>
 
-          visible={modalVisible}
+                                {option.label}
 
-          onOk={handleModalOk}
+                              </Option>
 
-          onCancel={handleModalCancel}
+                          ))}
 
-          modalMode={modalMode}
+                        </Select>
 
-          formKey={formKey}
+                      </div>
 
-          form={form}
+                  )}
 
-          getFormFields={getFormFields}
 
-        />
 
-      }
+                  {/* Tag3 Filter - Only for caseTraining */}
 
+                  {currentTab === 'caseTraining' && (
 
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
 
+                        <span style={{ fontSize: '14px' }}>Series:</span>
 
+                        <Select
 
-      {/* View Detail Modal */}
+                            value={tag3Filter}
 
-      {
+                            onChange={handleTag3FilterChange}
 
-        viewModalVisible && <ViewDetailModal
+                            style={{ width: 150 }}
 
-          visible={viewModalVisible}
+                            placeholder="Chọn series"
 
-          onCancel={() => {
+                        >
 
-            // Dừng audio khi đóng modal
+                          <Option value="all">Tất cả</Option>
 
-            if (audioRef.current) {
+                          {tag3Options.map(option => (
 
-              audioRef.current.pause();
+                              <Option key={option.value} value={option.value}>
 
-              setIsAudioPlaying(false);
+                                {option.label}
 
-              setIsAudioLoading(false);
+                              </Option>
 
-            }
+                          ))}
 
-            setViewModalVisible(false);
+                        </Select>
 
-          }}
+                      </div>
 
-          selectedRecord={selectedRecord}
+                  )}
 
-          isAudioPlaying={isAudioPlaying}
 
-          isAudioLoading={isAudioLoading}
 
-          handlePlayAudio={handlePlayAudio}
+                  {/* Tag4 Filter (Program) - For all tabs */}
 
-        />
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
 
-      }
+                    <span style={{ fontSize: '14px' }}>Program:</span>
 
+                    <Select
 
+                        mode="multiple"
 
+                        value={tag4Filter}
 
+                        onChange={handleTag4FilterChange}
 
-      {/* Import Excel Modal */}
+                        style={{ width: 300 }}
 
-      <ImportDataExcel
-        handleImportExcel={handleImportExcel}
+                        placeholder="Chọn program"
 
-        importModalVisible={importModalVisible}
+                        maxTagCount="responsive"
 
-        setImportPreviewData={setImportPreviewData}
+                        showSearch
 
-        setImportModalVisible={setImportModalVisible}
+                        filterOption={(input, option) =>
 
-        importPreviewData={importPreviewData}
+                            (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
 
-        uploadingImport={uploadingImport}
+                        }
 
-        handleConfirmImport={handleConfirmImport}
+                    >
 
-        handleDownloadTemplate={handleDownloadTemplate}
+                      {tag4Options.map(option => (
 
-        currentTab={currentTab}
+                          <Option key={option.value} value={option.value} label={option.label}>
 
-      />
+                            {option.label}
 
+                          </Option>
 
+                      ))}
 
-      {/* Background Audio Settings Modal */}
+                    </Select>
 
-      <BackgroundAudio
+                  </div>
 
-        visible={bgAudioSettingsVisible}
 
-        onCancel={() => setBgAudioSettingsVisible(false)}
 
-        onOk={saveBgAudioSettings}
+                  {/* Chapter Filter - For all tabs */}
 
-        bgAudioSettings={bgAudioSettings}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
 
-        setBgAudioSettings={setBgAudioSettings}
+                    <span style={{ fontSize: '14px' }}>Số program:</span>
 
-        bgAudioFile={bgAudioFile}
+                    <Select
 
-        bgAudioUploading={bgAudioUploading}
+                        value={chapterFilter}
 
-        handleBackgroundAudioUpload={handleBackgroundAudioUpload}
+                        onChange={handleChapterFilterChange}
 
-      />
+                        style={{ width: 150 }}
 
+                        placeholder="Chọn số program"
 
+                    >
 
-      {/* Guideline Settings Modal */}
+                      <Option value="all">Tất cả</Option>
 
-      <GuidelineSettingModal
+                      <Option value="has">Có program</Option>
 
-        visible={guidelineSettingsVisible}
+                      <Option value="no">Không có program</Option>
 
-        onCancel={() => setGuidelineSettingsVisible(false)}
+                      <Option value="1">1 program</Option>
 
-        onOk={saveGuidelineSettings}
+                      <Option value="2">2 programs</Option>
 
-        guidelineSettings={guidelineSettings}
+                      <Option value="3">3 programs</Option>
 
-        setGuidelineSettings={setGuidelineSettings}
+                      <Option value="4">4 programs</Option>
 
-        guidelineImageFile={guidelineImageFile}
+                      <Option value="5">5 programs</Option>
 
-        guidelineImageUploading={guidelineImageUploading}
+                      <Option value="6">6 programs</Option>
 
-        handleGuidelineImageUpload={handleGuidelineImageUpload}
+                      <Option value="7">7 programs</Option>
+                      <Option value="8">8 programs</Option>
+                      <Option value="9">9 programs</Option>
+                      <Option value="10+">10+ programs</Option>
 
-      />
+                    </Select>
 
+                  </div>
 
 
-      {/* JSON Import Modal */}
 
-      {
+                  {/* Reset Filters Button */}
 
-        jsonImportModalVisible && <ImportDataJson
+                  <Button
 
-          setJsonInput={setJsonInput}
+                      onClick={resetFilters}
 
-          setJsonPreviewData={setJsonPreviewData}
+                      style={{ marginLeft: '8px' }}
 
-          jsonImportModalVisible={jsonImportModalVisible}
+                      disabled={categoryFilter === 'all' && imageFilter === 'all' && diagramFilter === 'all' && quizFilter === 'all' && tag4Filter.length === 0 && chapterFilter === 'all' && programFilter === 'all' &&
+                          (currentTab === 'caseTraining' ? (tag1Filter === 'all' && tag2Filter === 'all' && tag3Filter === 'all') : true) &&
 
-          setJsonImportModalVisible={setJsonImportModalVisible}
+                          !searchText.trim()}
 
-          jsonInput={jsonInput}
+                  >
 
-          jsonPreviewData={jsonPreviewData}
+                    Xóa bộ lọc
 
-          uploadingJson={uploadingJson}
+                  </Button>
 
-          currentTab={currentTab}
 
-          handleJsonInputChange={handleJsonInputChange}
 
-          handleJsonPreview={handleJsonPreview}
 
-          handleConfirmJsonImport={handleConfirmJsonImport}
 
-          handleLoadJsonTemplate={handleLoadJsonTemplate}
 
-        />
 
-      }
+                  {/* Active Filters Display */}
 
+                  {(categoryFilter !== 'all' || imageFilter !== 'all' || voiceFilter !== 'all' || diagramFilter !== 'all' || quizFilter !== 'all' || tag4Filter.length > 0 || chapterFilter !== 'all' ||
+                      (currentTab === 'caseTraining' && (tag1Filter !== 'all' || tag2Filter !== 'all' || tag3Filter !== 'all'))) && (
 
+                      <div style={{
 
+                        display: 'flex',
 
+                        alignItems: 'center',
 
-      {/* AI Summary Modal */}
+                        gap: '8px',
 
-      {
+                        marginTop: '8px',
 
-        aiSummaryModalVisible && <AISummaryTable
+                        flexWrap: 'wrap'
 
-          aiSummaryModalVisible={aiSummaryModalVisible}
+                      }}>
 
-          setAiSummaryModalVisible={setAiSummaryModalVisible}
+                        <span style={{ fontSize: '12px', color: '#666' }}>Bộ lọc đang hoạt động:</span>
 
-          aiSummaryData={aiSummaryData}
+                        {categoryFilter !== 'all' && (
 
-          aiSummaryLoading={aiSummaryLoading}
+                            <Tag color="blue" closable onClose={() => handleCategoryFilterChange('all')}>
 
-          getAISummaryColumns={getAISummaryColumns}
+                              Danh mục: {categoryFilter}
 
-          setSelectedAISummary={setSelectedAISummary}
+                            </Tag>
 
-          setAISummaryDetailModalVisible={setAISummaryDetailModalVisible}
+                        )}
 
-        />
+                        {imageFilter !== 'all' && (
 
-      }
+                            <Tag color="green" closable onClose={() => handleImageFilterChange('all')}>
 
+                              Ảnh: {imageFilter === 'has' ? 'Có ảnh' : 'Không có ảnh'}
 
+                            </Tag>
 
+                        )}
 
+                        {voiceFilter !== 'all' && (
 
-      {/* AI Summary Detail Modal */}
+                            <Tag color="orange" closable onClose={() => handleVoiceFilterChange('all')}>
 
-      {
+                              Voice: {voiceFilter === 'hasVoice' ? 'Có voice' : 'Không có voice'}
 
-        aiSummaryDetailModalVisible && <AISummaryDetailModal
+                            </Tag>
 
-          visible={aiSummaryDetailModalVisible}
+                        )}
 
-          onCancel={() => setAISummaryDetailModalVisible(false)}
+                        {diagramFilter !== 'all' && (
+                            <Tag color="purple" closable onClose={() => handleDiagramFilterChange('all')}>
+                              Diagram: {
+                              diagramFilter === 'not_created' ? 'Chưa tạo' :
+                                  diagramFilter === 'html' ? 'Đã tạo bằng HTML' :
+                                      diagramFilter === 'excalidraw' ? 'Đã tạo bằng Excalidraw' : ''
+                            }
+                            </Tag>
+                        )}
+                        {quizFilter !== 'all' && (
 
-          selectedAISummary={selectedAISummary}
+                            <Tag color="orange" closable onClose={() => handleQuizFilterChange('all')}>
 
-        />
+                              Quiz: {quizFilter === 'has' ? 'Có quiz' : 'Không có quiz'}
 
-      }
+                            </Tag>
 
+                        )}
 
+                        {tag4Filter.length > 0 && (
 
-      {/* AI Summary Edit Modal */}
+                            <Tag color="magenta" closable onClose={() => handleTag4FilterChange([])}>
 
-      {
+                              Program: {tag4Filter.length} đã chọn
 
-        aiSummaryEditModalVisible && <AISummaryEditModal
+                            </Tag>
 
-          visible={aiSummaryEditModalVisible}
+                        )}
 
-          onCancel={() => {
+                        {chapterFilter !== 'all' && (
 
-            setAISummaryEditModalVisible(false);
+                            <Tag color="geekblue" closable onClose={() => handleChapterFilterChange('all')}>
 
-            setSelectedAISummary(null);
+                              Số program: {
 
-            aiSummaryEditForm.resetFields();
+                              chapterFilter === 'has' ? 'Có program' :
 
-            setTables([]); // Reset tables when closing modal
+                                  chapterFilter === 'no' ? 'Không có program' :
 
-            setUploadedFileUrls([]); // Reset file URLs
+                                      chapterFilter === '1' ? '1 program' :
 
-            setSelectedFiles([]); // Reset selected files
+                                          chapterFilter === '2' ? '2 programs' :
 
-          }}
+                                              chapterFilter === '3' ? '3 programs' :
 
-          onOk={handleUpdateAISummary}
+                                                  chapterFilter === '4+' ? '4+ programs' : ''
 
-          aiSummaryEditForm={aiSummaryEditForm}
+                            }
 
-          selectedFiles={selectedFiles}
+                            </Tag>
 
-          uploadingFiles={uploadingFiles}
+                        )}
 
-          uploadProgress={uploadProgress}
+                        {programFilter !== 'all' && (
+                            <Tag color="lime" closable onClose={() => handleProgramFilterChange('all')}>
+                              Program: {programFilter}
+                            </Tag>
+                        )}
 
-          tables={tables}
+                        {currentTab === 'caseTraining' && tag1Filter !== 'all' && (
 
-          handleFileUpload={handleFileUpload}
+                            <Tag color="purple" closable onClose={() => handleTag1FilterChange('all')}>
 
-          handleAddTable={handleAddTable}
+                              Categories: {tag1Filter}
 
-          handleEditTable={handleEditTable}
+                            </Tag>
 
-          handleDeleteTable={handleDeleteTable}
+                        )}
 
-        />
+                        {currentTab === 'caseTraining' && tag2Filter !== 'all' && (
 
-      }
+                            <Tag color="cyan" closable onClose={() => handleTag2FilterChange('all')}>
 
+                              Levels: {tag2Filter}
 
+                            </Tag>
 
+                        )}
 
+                        {currentTab === 'caseTraining' && tag3Filter !== 'all' && (
 
-      {imageConfigModalVisible &&
+                            <Tag color="red" closable onClose={() => handleTag3FilterChange('all')}>
 
-        <CreateConfigImage
+                              Series: {tag3Filter}
 
-          imageConfigModalVisible={imageConfigModalVisible}
+                            </Tag>
 
-          setImageConfigModalVisible={setImageConfigModalVisible}
+                        )}
 
-          imageConfig={imageConfig}
+                      </div>
 
-          setImageConfig={setImageConfig}
+                  )}
 
-          saveImageConfig={saveImageConfig}
+                </div>
 
-        />
-
-      }
-
-
-
-
-
-
-
-      {/* Table Edit Modal */}
-
-      {
-
-        tableModalVisible && <TableEditModal
-
-          visible={tableModalVisible}
-
-          onCancel={() => {
-
-            setTableModalVisible(false);
-
-            setEditingTable(null);
-
-          }}
-
-          editingTable={editingTable}
-
-          onSave={handleSaveTable}
-
-          generateTableDataStructure={generateTableDataStructure}
-
-        />
-
-      }
-
-
-
-      {/* Report Overview Modal */}
-
-      {
-
-        reportOverviewModalVisible && <ReportOverviewModal
-
-          visible={reportOverviewModalVisible}
-
-          onCancel={() => setReportOverviewModalVisible(false)}
-
-          onSave={handleReportOverviewSave}
-
-          currentOverview={reportOverviewData}
-
-        />
-
-      }
-
-
-
-
-
-      {/* Company Summary Modal */}
-
-      {
-
-        companySummaryModalVisible && <CreateCompanyOverview
-
-          companySummaryModalVisible={companySummaryModalVisible}
-
-          setCompanySummaryModalVisible={setCompanySummaryModalVisible}
-
-          companySummarySearchTerm={companySummarySearchTerm}
-
-          setCompanySummarySearchTerm={setCompanySummarySearchTerm}
-
-          companySummaryLoading={companySummaryLoading}
-
-          companySummaryData={companySummaryData}
-
-          handleCompanySummarySearch={handleCompanySummarySearch}
-
-          handleCreateCompanySummaryReport={handleCreateCompanySummaryReport}
-
-        />
-
-      }
-
-
-
-      <ImproveDetailModal
-
-        visible={showImproveDetail}
-
-        onCancel={() => setShowImproveDetail(false)}
-
-        selectedRecords={
-
-          currentTab === 'report'
-
-            ? aiSummaryData.filter(item => selectedRowKeys.includes(item.id))
-
-            : currentTab === 'reportDN'
-
-              ? reportDNData.filter(item => selectedRowKeys.includes(item.id))
-
-              : data.filter(item => selectedRowKeys.includes(item.id))
-
-        }
-
-        onSuccess={(updatedRecords = []) => {
-
-          // Cập nhật cục bộ chỉ các phần tử đã thay đổi
-
-          if (Array.isArray(updatedRecords) && updatedRecords.length > 0) {
-
-            if (currentTab === 'report') {
-
-              setAiSummaryData(prev => prev.map(item => {
-
-                const u = updatedRecords.find(r => r.id === item.id);
-
-                return u ? { ...item, ...u } : item;
-
-              }));
-
-            } else if (currentTab === 'reportDN') {
-
-              setReportDNData(prev => prev.map(item => {
-
-                const u = updatedRecords.find(r => r.id === item.id);
-
-                return u ? { ...item, ...u } : item;
-
-              }));
-
-            } else {
-
-              // news/library/story dataset
-
-              setAllData(prev => ({
-
-                ...prev,
-
-                [currentTab]: (prev[currentTab] || []).map(item => {
-
-                  const u = updatedRecords.find(r => r.id === item.id);
-
-                  return u ? { ...item, ...u } : item;
-
-                })
-
-              }));
-
-              setFilteredData(prev => ({
-
-                ...prev,
-
-                [currentTab]: (prev[currentTab] || []).map(item => {
-
-                  const u = updatedRecords.find(r => r.id === item.id);
-
-                  return u ? { ...item, ...u } : item;
-
-                })
-
-              }));
-
-              setData(prev => prev.map(item => {
-
-                const u = updatedRecords.find(r => r.id === item.id);
-
-                return u ? { ...item, ...u } : item;
-
-              }));
-
-            }
-
-          }
-
-          setShowImproveDetail(false);
-
-          setImproveDetailLoading(false);
-
-          setSelectedRowKeys([]);
-
-        }}
-
-        setImproveDetailLoading={setImproveDetailLoading}
-
-      />
-
-
-
-      <CreateQuizModal
-
-        visible={showCreateQuiz}
-
-        onCancel={() => setShowCreateQuiz(false)}
-
-        selectedRecords={
-
-          currentTab === 'report'
-
-            ? aiSummaryData.filter(item => selectedRowKeys.includes(item.id))
-
-            : currentTab === 'reportDN'
-
-              ? reportDNData.filter(item => selectedRowKeys.includes(item.id))
-
-              : data.filter(item => selectedRowKeys.includes(item.id))
-
-        }
-
-        setCreateQuizzLoading={setCreateQuizzLoading}
-
-        onSuccess={(updatedRecords = []) => {
-
-          if (Array.isArray(updatedRecords) && updatedRecords.length > 0) {
-
-            if (currentTab === 'report') {
-
-              setAiSummaryData(prev => prev.map(item => {
-
-                const u = updatedRecords.find(r => r.id === item.id);
-
-                return u ? { ...item, ...u } : item;
-
-              }));
-
-            } else if (currentTab === 'reportDN') {
-
-              setReportDNData(prev => prev.map(item => {
-
-                const u = updatedRecords.find(r => r.id === item.id);
-
-                return u ? { ...item, ...u } : item;
-
-              }));
-
-            } else {
-
-              setAllData(prev => ({
-
-                ...prev,
-
-                [currentTab]: (prev[currentTab] || []).map(item => {
-
-                  const u = updatedRecords.find(r => r.id === item.id);
-
-                  return u ? { ...item, ...u } : item;
-
-                })
-
-              }));
-
-              setFilteredData(prev => ({
-
-                ...prev,
-
-                [currentTab]: (prev[currentTab] || []).map(item => {
-
-                  const u = updatedRecords.find(r => r.id === item.id);
-
-                  return u ? { ...item, ...u } : item;
-
-                })
-
-              }));
-
-              setData(prev => prev.map(item => {
-
-                const u = updatedRecords.find(r => r.id === item.id);
-
-                return u ? { ...item, ...u } : item;
-
-              }));
-
-            }
-
-          }
-
-          setShowCreateQuiz(false);
-
-          setCreateQuizzLoading(false);
-
-          setSelectedRowKeys([]);
-
-        }}
-
-      />
-
-      <UpdateQuizContentModal
-        visible={showUpdateQuiz}
-        onCancel={() => setShowUpdateQuiz(false)}
-        selectedRowKeys={selectedRowKeys}
-        data={data}
-        onUpdate={async (recordsData) => {
-          try {
-            console.log('Updating quiz and content for:', recordsData);
-
-            // Cập nhật data trong state
-            if (recordsData) {
-              await updateK9({
-                id: recordsData.id,
-                title: recordsData.title,
-                summary: recordsData.summary,
-                detail: recordsData.detail,
-                questionContent: recordsData.questionContent
-              });
-              // Cập nhật trong data chính
-              setData(prev => prev.map(item =>
-                item.id === recordsData.id
-                  ? { ...item, ...recordsData }
-                  : item
-              ));
-
-              // Cập nhật trong filteredData nếu có
-              setFilteredData(prev => ({
-                ...prev,
-                [currentTab]: (prev[currentTab] || []).map(item =>
-                  item.id === recordsData.id
-                    ? { ...item, ...recordsData }
-                    : item
-                )
-              }));
-
-              console.log(`Successfully updated record ${recordsData.id}`);
-            }
-          } catch (error) {
-            console.error('Error updating record:', error);
-            throw error;
-          }
-        }}
-      />
-
-      {/* Prompt Settings Modal */}
-      <PromptSettingsModal
-        visible={promptSettingsModalVisible}
-        onCancel={() => setPromptSettingsModalVisible(false)}
-        onSuccess={(settings) => {
-          console.log('Prompt settings updated:', settings);
-          message.success('Cài đặt prompt đã được cập nhật!');
-        }}
-      />
-
-      <PromptSettingsListModal
-        visible={promptSettingsListModalVisible}
-        onCancel={() => setPromptSettingsListModalVisible(false)}
-        onSuccess={() => {
-          message.success('Cài đặt prompt danh sách đã được cập nhật!');
-        }}
-      />
-
-      <SelectPromptModal
-        visible={selectDiagramPromptModalVisible}
-        onCancel={() => {
-          setSelectDiagramPromptModalVisible(false);
-          setPendingDiagramMode(null);
-          setPendingDiagramRecords([]);
-        }}
-        onSelect={handleDiagramPromptSelected}
-        promptType={pendingDiagramMode === 'html' ? 'HTML_FROM_DETAIL_PROMPTS' : pendingDiagramMode === 'excalidraw-react' ? 'EXCALIDRAW_REACT_PROMPTS' : null}
-        title={pendingDiagramMode === 'html' ? 'Chọn cài đặt Prompt - HTML từ Detail' : pendingDiagramMode === 'excalidraw-react' ? 'Chọn cài đặt Prompt - Excalidraw React' : 'Chọn cài đặt Prompt'}
-      />
-
-      <SelectPromptModal
-        visible={selectCaseFromLearningPromptModalVisible}
-        onCancel={() => {
-          setSelectCaseFromLearningPromptModalVisible(false);
-          setPendingCaseFromLearningRecords([]);
-        }}
-        onSelect={handleCaseFromLearningPromptSelected}
-        promptType="CASE_FROM_LEARNING_BLOCK_PROMPTS"
-        title="Chọn cài đặt Prompt - Tạo Case từ Learning Block"
-      />
-
-      {/* User Class Modal */}
-      <Modal
-        title={`Gán User Class cho ${selectedRowKeys.length} bản ghi`}
-        open={userClassModalVisible}
-        onCancel={() => {
-          setUserClassModalVisible(false);
-          setSelectedUserClasses([]);
-        }}
-        onOk={handleBulkUpdateUserClasses}
-        okText="Cập nhật"
-        cancelText="Hủy"
-        width={600}
-        loading={loading}
-      >
-        <div style={{ marginTop: 20 }}>
-          <Space direction="vertical" style={{ width: '100%' }}>
-            <Select
-              mode="multiple"
-              placeholder="Chọn nhóm user class"
-              value={selectedUserClasses}
-              onChange={setSelectedUserClasses}
-              style={{ width: '100%' }}
-              showSearch
-              filterOption={(input, option) =>
-                (option?.children ?? '').toLowerCase().includes(input.toLowerCase())
-              }
-              allowClear
-            >
-              {userClasses.map(cls => (
-                <Option key={cls.id} value={cls.id}>
-                  {cls.name || `Class #${cls.id}`}
-                </Option>
-              ))}
-            </Select>
-            <div style={{ fontSize: '12px', color: '#999', marginTop: 8 }}>
-              Chọn các nhóm user class được phép xem. Để trống nếu muốn xóa giới hạn.
-            </div>
-          </Space>
-        </div>
-      </Modal>
-
-      {/* Tag Management Modal */}
-
-      {
-
-        tagManagementModalVisible && (
-
-          <TagManagementModal
-
-            visible={tagManagementModalVisible}
-
-            onClose={() => setTagManagementModalVisible(false)}
-
-            tag1Options={tag1Options}
-
-            tag2Options={tag2Options}
-
-            tag3Options={tag3Options}
-
-            onSave={saveTagOptions}
-
-          />
-
-        )
-
-      }
-
-      {/* Categories Management Modal */}
-
-      {
-
-        categoriesManagementModalVisible && (
-
-          <CategoriesManagementModal
-
-            visible={categoriesManagementModalVisible}
-
-            onClose={() => setCategoriesManagementModalVisible(false)}
-
-            categoriesOptions={categoriesOptions}
-
-            onSave={saveCategoriesOptions}
-
-          />
-
-        )
-
-      }
-
-
-
-      {
-
-        programManagementModalVisible && (
-
-          <TagProgramModal
-
-            visible={programManagementModalVisible}
-
-            onClose={() => setProgramManagementModalVisible(false)}
-
-            tag4Options={tag4Options}
-
-            onSave={handleSaveTags}
-
-            coursesOptions={coursesOptions}
-
-            onSaveCourses={handleSaveCourses}
-
-          />
-
-        )
-
-      }
-
-
-
-
-
-      {
-
-        quizEditorVisible && <QuizEditorModal
-
-          visible={quizEditorVisible}
-
-          onCancel={() => { setQuizEditorVisible(false); setQuizEditorRecord(null); }}
-
-          record={quizEditorRecord}
-
-          confirmLoading={savingQuiz}
-
-          onSave={async (questionContent) => {
-
-            if (!quizEditorRecord) return;
-
-            try {
-
-              setSavingQuiz(true);
-
-              await updateK9({ id: quizEditorRecord.id, questionContent });
-
-              message.success('Lưu quiz/essay thành công');
-
-              // Update local datasets
-
-              const updater = (list) => list.map(item => item.id === quizEditorRecord.id ? { ...item, questionContent } : item);
-
-              if (currentTab === 'report') {
-
-                setAiSummaryData(prev => updater(prev));
-
-              } else if (currentTab === 'reportDN') {
-
-                setReportDNData(prev => updater(prev));
-
-              } else {
-
-                setAllData(prev => ({ ...prev, [currentTab]: updater(prev[currentTab] || []) }));
-
-                setFilteredData(prev => ({ ...prev, [currentTab]: updater(prev[currentTab] || []) }));
-
-                setData(prev => updater(prev));
-
-              }
-
-              setQuizEditorVisible(false);
-
-              setQuizEditorRecord(null);
-
-            } catch (e) {
-
-              console.error(e);
-
-              message.error('Lưu quiz/essay thất bại');
-
-            } finally {
-
-              setSavingQuiz(false);
-
-            }
-
-          }}
-
-        />
-
-      }
-
-
-
-      {/* QuestionContent Modal */}
-
-      {
-
-        questionContentModalVisible && <QuestionContentModal
-
-          visible={questionContentModalVisible}
-
-          onCancel={() => {
-
-            setQuestionContentModalVisible(false);
-
-            setSelectedQuestionContent(null);
-
-            setSelectedQuestionContentTitle('');
-
-            setSelectedQuestionContentRecord(null);
-
-          }}
-
-          questionContent={selectedQuestionContent}
-
-          recordTitle={selectedQuestionContentTitle}
-
-          onUpdateQuestionContent={handleUpdateQuestionContent}
-
-        />
-
-      }
-
-
-
-      {/* Bulk Update Modal */}
-
-      <BulkUpdateModal
-
-        visible={bulkUpdateModalVisible}
-
-        onClose={() => setBulkUpdateModalVisible(false)}
-
-        selectedIds={selectedRowKeys}
-
-        fieldToUpdate={fieldToUpdate}
-
-        currentTab={currentTab}
-
-        onSuccess={handleBulkUpdateSuccess}
-
-        categoryOptions={categoriesOptions}
-
-        tagOptions={tag1Options}
-
-        levelOptions={tag2Options}
-
-        seriesOptions={tag3Options}
-
-        programOptions={programOptions}
-
-        setUpdateCategoryLoading={setUpdateCategoryLoading}
-
-      />
-
-
-
-      {/* Diagram Config Modal */}
-      <CreateConfigDiagram
-        diagramConfigModalVisible={diagramConfigModalVisible}
-        setDiagramConfigModalVisible={setDiagramConfigModalVisible}
-        diagramConfig={diagramConfig}
-        setDiagramConfig={setDiagramConfig}
-        saveDiagramConfig={saveDiagramConfig}
-      />
-
-      {/* Summary Detail Config Modal */}
-      <CreateConfigSummaryDetail
-        summaryDetailConfigModalVisible={summaryDetailConfigModalVisible}
-        setSummaryDetailConfigModalVisible={setSummaryDetailConfigModalVisible}
-        summaryDetailConfig={summaryDetailConfig}
-        setSummaryDetailConfig={setSummaryDetailConfig}
-        saveSummaryDetailConfig={saveSummaryDetailConfig}
-      />
-
-      {/* Diagram Preview Modal */}
-      {
-        diagramPreviewModalVisible && (
-          <DiagramPreviewModal
-            visible={diagramPreviewModalVisible}
-            onClose={() => setDiagramPreviewModalVisible(false)}
-            diagramData={selectedDiagramData}
-            onSave={handleDiagramSave}
-          />
-        )
-      }
-
-      {/* Diagram Progress Modal */}
-      <Modal
-        title={
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span>Tiến trình tạo {
-              diagramGenerationStats.type === 'html' ? 'HTML Code' : 
-              diagramGenerationStats.type === 'excalidraw-react' ? 'Excalidraw React' : 
-              'Diagram'
-            }</span>
-          </div>
-        }
-        open={diagramProgressModalVisible}
-        onCancel={() => setDiagramProgressModalVisible(false)}
-        footer={[
-          processingDiagramQueue && (
-            <Button
-              key="stop"
-              danger
-              onClick={handleStopDiagramGeneration}
-              style={{ marginRight: '8px' }}
-            >
-              Dừng quá trình
-            </Button>
-          ),
-          <Button key="close" onClick={() => setDiagramProgressModalVisible(false)}>
-            Đóng
-          </Button>
-        ]}
-        width={800}
-      >
-        <div style={{ marginBottom: '16px' }}>
-          <div style={{ display: 'flex', gap: '16px', marginBottom: '16px' }}>
-            <div style={{ flex: 1, textAlign: 'center', padding: '12px', backgroundColor: '#f0f0f0', borderRadius: '6px' }}>
-              <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#1890ff' }}>
-                {diagramGenerationStats.total}
               </div>
-              <div style={{ fontSize: '12px', color: '#666' }}>Tổng số</div>
-            </div>
-            <div style={{ flex: 1, textAlign: 'center', padding: '12px', backgroundColor: '#f6ffed', borderRadius: '6px' }}>
-              <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#52c41a' }}>
-                {diagramGenerationStats.success}
-              </div>
-              <div style={{ fontSize: '12px', color: '#666' }}>Thành công</div>
-            </div>
-            <div style={{ flex: 1, textAlign: 'center', padding: '12px', backgroundColor: '#fff2f0', borderRadius: '6px' }}>
-              <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#ff4d4f' }}>
-                {diagramGenerationStats.failed}
-              </div>
-              <div style={{ fontSize: '12px', color: '#666' }}>Thất bại</div>
-            </div>
-          </div>
 
-          {processingDiagramQueue && currentDiagramProcessing && (
-            <div style={{
-              padding: '12px',
-              backgroundColor: '#fff7e6',
-              borderRadius: '6px',
-              border: '1px solid #ffd591',
-              marginBottom: '16px'
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                <LoadingOutlined style={{ color: '#fa8c16' }} />
-                <span style={{ fontWeight: 'bold' }}>Đang xử lý:</span>
-              </div>
-              <div style={{ fontSize: '14px', color: '#666' }}>
-                {currentDiagramProcessing.title}
-              </div>
-            </div>
           )}
 
-        </div>
 
-        <div>
-          <div style={{ fontWeight: 'bold', marginBottom: '12px' }}>Danh sách tất cả task:</div>
-          <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
 
-            {/* Task đang xử lý */}
-            {processingDiagramQueue && currentDiagramProcessing && (
-              <div
-                style={{
-                  padding: '12px',
-                  marginBottom: '8px',
-                  borderRadius: '6px',
-                  backgroundColor: '#fff7e6',
-                  border: '1px solid #ffd591'
+          {/* Render different content based on current tab */}
+
+          {currentTab === 'report' ? (
+
+              <Table
+
+                  key="ai-summary-table"
+
+                  virtual
+
+                  columns={getAISummaryColumns()}
+
+                  dataSource={aiSummaryData}
+
+                  rowKey="id"
+
+                  loading={aiSummaryLoading}
+
+                  pagination={{
+
+                    total: aiSummaryData.length,
+
+                    pageSize: 500,
+
+                    showSizeChanger: true,
+
+                    showQuickJumper: true,
+
+                    showTotal: (total, range) =>
+
+                        `${range[0]}-${range[1]} của ${total} mục`
+
+                  }}
+
+                  scroll={{ x: 800, y: '60vh' }}
+
+                  className={styles.table}
+
+                  rowSelection={{
+
+                    type: 'checkbox',
+
+                    columnWidth: 48, // chỉnh size của cột checkbox
+
+                    selectedRowKeys,
+
+                    onChange: (newSelectedRowKeys) => {
+
+                      setSelectedRowKeys(newSelectedRowKeys);
+
+                    },
+
+                  }}
+
+              />
+
+          ) : currentTab === 'reportDN' ? (
+
+              <Table
+
+                  key="report-dn-table"
+
+                  virtual
+
+                  columns={getAISummaryColumns()}
+
+                  dataSource={reportDNData}
+
+                  rowKey="id"
+
+                  loading={reportDNLoading}
+
+                  pagination={{
+
+                    total: reportDNData.length,
+
+                    pageSize: 500,
+
+                    showSizeChanger: true,
+
+                    showQuickJumper: true,
+
+                    showTotal: (total, range) =>
+
+                        `${range[0]}-${range[1]} của ${total} mục`
+
+                  }}
+
+                  scroll={{ x: 800, y: '60vh' }}
+
+                  className={styles.table}
+
+                  rowSelection={{
+
+                    type: 'checkbox',
+
+                    columnWidth: 48, // chỉnh size của cột checkbox
+
+                    selectedRowKeys,
+
+                    onChange: (newSelectedRowKeys) => {
+
+                      setSelectedRowKeys(newSelectedRowKeys);
+
+                    },
+
+                  }}
+
+              />
+
+          ) : (
+
+              <Table
+
+                  key={tableKey}
+
+                  virtual
+
+                  columns={getColumns()}
+
+                  dataSource={data}
+
+                  rowKey="id"
+
+                  loading={loading}
+
+                  pagination={{
+
+                    total: data.length,
+
+                    pageSize: pageSize,
+
+                    pageSizeOptions: ['100', '500', '1000', '2000', '5000'],
+
+                    showSizeChanger: true,
+
+                    showQuickJumper: true,
+
+                    onShowSizeChange: (current, size) => {
+
+                      console.log('Page size changed to:', size);
+
+                      setPageSize(size);
+
+                    },
+
+                    showTotal: (total, range) =>
+
+                        `${range[0]}-${range[1]} của ${total} mục`
+
+                  }}
+
+                  scroll={{ x: 3000, y: '50vh' }}
+
+                  className={styles.table}
+
+                  rowSelection={{
+
+                    type: 'checkbox',
+
+                    columnWidth: 48, // chỉnh size của cột checkbox
+
+                    selectedRowKeys,
+
+                    onChange: (newSelectedRowKeys) => {
+
+                      setSelectedRowKeys(newSelectedRowKeys);
+
+                    },
+
+                  }}
+
+              />
+
+          )}
+
+        </Card>
+
+
+
+        {/* Create/Edit Modal */}
+
+        {
+
+            modalVisible && <CreateEditModal
+
+                visible={modalVisible}
+
+                onOk={handleModalOk}
+
+                onCancel={handleModalCancel}
+
+                modalMode={modalMode}
+
+                formKey={formKey}
+
+                form={form}
+
+                getFormFields={getFormFields}
+
+            />
+
+        }
+
+
+
+
+
+        {/* View Detail Modal */}
+
+        {
+
+            viewModalVisible && <ViewDetailModal
+
+                visible={viewModalVisible}
+
+                onCancel={() => {
+
+                  // Dừng audio khi đóng modal
+
+                  if (audioRef.current) {
+
+                    audioRef.current.pause();
+
+                    setIsAudioPlaying(false);
+
+                    setIsAudioLoading(false);
+
+                  }
+
+                  setViewModalVisible(false);
+
                 }}
+
+                selectedRecord={selectedRecord}
+
+                isAudioPlaying={isAudioPlaying}
+
+                isAudioLoading={isAudioLoading}
+
+                handlePlayAudio={handlePlayAudio}
+
+            />
+
+        }
+
+
+
+
+
+        {/* Import Excel Modal */}
+
+        <ImportDataExcel
+            handleImportExcel={handleImportExcel}
+
+            importModalVisible={importModalVisible}
+
+            setImportPreviewData={setImportPreviewData}
+
+            setImportModalVisible={setImportModalVisible}
+
+            importPreviewData={importPreviewData}
+
+            uploadingImport={uploadingImport}
+
+            handleConfirmImport={handleConfirmImport}
+
+            handleDownloadTemplate={handleDownloadTemplate}
+
+            currentTab={currentTab}
+
+        />
+
+
+
+        {/* Background Audio Settings Modal */}
+
+        <BackgroundAudio
+
+            visible={bgAudioSettingsVisible}
+
+            onCancel={() => setBgAudioSettingsVisible(false)}
+
+            onOk={saveBgAudioSettings}
+
+            bgAudioSettings={bgAudioSettings}
+
+            setBgAudioSettings={setBgAudioSettings}
+
+            bgAudioFile={bgAudioFile}
+
+            bgAudioUploading={bgAudioUploading}
+
+            handleBackgroundAudioUpload={handleBackgroundAudioUpload}
+
+        />
+
+
+
+        {/* Guideline Settings Modal */}
+
+        <GuidelineSettingModal
+
+            visible={guidelineSettingsVisible}
+
+            onCancel={() => setGuidelineSettingsVisible(false)}
+
+            onOk={saveGuidelineSettings}
+
+            guidelineSettings={guidelineSettings}
+
+            setGuidelineSettings={setGuidelineSettings}
+
+            guidelineImageFile={guidelineImageFile}
+
+            guidelineImageUploading={guidelineImageUploading}
+
+            handleGuidelineImageUpload={handleGuidelineImageUpload}
+
+        />
+
+
+
+        {/* JSON Import Modal */}
+
+        {
+
+            jsonImportModalVisible && <ImportDataJson
+
+                setJsonInput={setJsonInput}
+
+                setJsonPreviewData={setJsonPreviewData}
+
+                jsonImportModalVisible={jsonImportModalVisible}
+
+                setJsonImportModalVisible={setJsonImportModalVisible}
+
+                jsonInput={jsonInput}
+
+                jsonPreviewData={jsonPreviewData}
+
+                uploadingJson={uploadingJson}
+
+                currentTab={currentTab}
+
+                handleJsonInputChange={handleJsonInputChange}
+
+                handleJsonPreview={handleJsonPreview}
+
+                handleConfirmJsonImport={handleConfirmJsonImport}
+
+                handleLoadJsonTemplate={handleLoadJsonTemplate}
+
+            />
+
+        }
+
+
+
+
+
+        {/* AI Summary Modal */}
+
+        {
+
+            aiSummaryModalVisible && <AISummaryTable
+
+                aiSummaryModalVisible={aiSummaryModalVisible}
+
+                setAiSummaryModalVisible={setAiSummaryModalVisible}
+
+                aiSummaryData={aiSummaryData}
+
+                aiSummaryLoading={aiSummaryLoading}
+
+                getAISummaryColumns={getAISummaryColumns}
+
+                setSelectedAISummary={setSelectedAISummary}
+
+                setAISummaryDetailModalVisible={setAISummaryDetailModalVisible}
+
+            />
+
+        }
+
+
+
+
+
+        {/* AI Summary Detail Modal */}
+
+        {
+
+            aiSummaryDetailModalVisible && <AISummaryDetailModal
+
+                visible={aiSummaryDetailModalVisible}
+
+                onCancel={() => setAISummaryDetailModalVisible(false)}
+
+                selectedAISummary={selectedAISummary}
+
+            />
+
+        }
+
+
+
+        {/* AI Summary Edit Modal */}
+
+        {
+
+            aiSummaryEditModalVisible && <AISummaryEditModal
+
+                visible={aiSummaryEditModalVisible}
+
+                onCancel={() => {
+
+                  setAISummaryEditModalVisible(false);
+
+                  setSelectedAISummary(null);
+
+                  aiSummaryEditForm.resetFields();
+
+                  setTables([]); // Reset tables when closing modal
+
+                  setUploadedFileUrls([]); // Reset file URLs
+
+                  setSelectedFiles([]); // Reset selected files
+
+                }}
+
+                onOk={handleUpdateAISummary}
+
+                aiSummaryEditForm={aiSummaryEditForm}
+
+                selectedFiles={selectedFiles}
+
+                uploadingFiles={uploadingFiles}
+
+                uploadProgress={uploadProgress}
+
+                tables={tables}
+
+                handleFileUpload={handleFileUpload}
+
+                handleAddTable={handleAddTable}
+
+                handleEditTable={handleEditTable}
+
+                handleDeleteTable={handleDeleteTable}
+
+            />
+
+        }
+
+
+
+
+
+        {imageConfigModalVisible &&
+
+            <CreateConfigImage
+
+                imageConfigModalVisible={imageConfigModalVisible}
+
+                setImageConfigModalVisible={setImageConfigModalVisible}
+
+                imageConfig={imageConfig}
+
+                setImageConfig={setImageConfig}
+
+                saveImageConfig={saveImageConfig}
+
+            />
+
+        }
+
+
+
+
+
+
+
+        {/* Table Edit Modal */}
+
+        {
+
+            tableModalVisible && <TableEditModal
+
+                visible={tableModalVisible}
+
+                onCancel={() => {
+
+                  setTableModalVisible(false);
+
+                  setEditingTable(null);
+
+                }}
+
+                editingTable={editingTable}
+
+                onSave={handleSaveTable}
+
+                generateTableDataStructure={generateTableDataStructure}
+
+            />
+
+        }
+
+
+
+        {/* Report Overview Modal */}
+
+        {
+
+            reportOverviewModalVisible && <ReportOverviewModal
+
+                visible={reportOverviewModalVisible}
+
+                onCancel={() => setReportOverviewModalVisible(false)}
+
+                onSave={handleReportOverviewSave}
+
+                currentOverview={reportOverviewData}
+
+            />
+
+        }
+
+
+
+
+
+        {/* Company Summary Modal */}
+
+        {
+
+            companySummaryModalVisible && <CreateCompanyOverview
+
+                companySummaryModalVisible={companySummaryModalVisible}
+
+                setCompanySummaryModalVisible={setCompanySummaryModalVisible}
+
+                companySummarySearchTerm={companySummarySearchTerm}
+
+                setCompanySummarySearchTerm={setCompanySummarySearchTerm}
+
+                companySummaryLoading={companySummaryLoading}
+
+                companySummaryData={companySummaryData}
+
+                handleCompanySummarySearch={handleCompanySummarySearch}
+
+                handleCreateCompanySummaryReport={handleCreateCompanySummaryReport}
+
+            />
+
+        }
+
+
+
+        <ImproveDetailModal
+
+            visible={showImproveDetail}
+
+            onCancel={() => setShowImproveDetail(false)}
+
+            selectedRecords={
+
+              currentTab === 'report'
+
+                  ? aiSummaryData.filter(item => selectedRowKeys.includes(item.id))
+
+                  : currentTab === 'reportDN'
+
+                      ? reportDNData.filter(item => selectedRowKeys.includes(item.id))
+
+                      : data.filter(item => selectedRowKeys.includes(item.id))
+
+            }
+
+            onSuccess={(updatedRecords = []) => {
+
+              // Cập nhật cục bộ chỉ các phần tử đã thay đổi
+
+              if (Array.isArray(updatedRecords) && updatedRecords.length > 0) {
+
+                if (currentTab === 'report') {
+
+                  setAiSummaryData(prev => prev.map(item => {
+
+                    const u = updatedRecords.find(r => r.id === item.id);
+
+                    return u ? { ...item, ...u } : item;
+
+                  }));
+
+                } else if (currentTab === 'reportDN') {
+
+                  setReportDNData(prev => prev.map(item => {
+
+                    const u = updatedRecords.find(r => r.id === item.id);
+
+                    return u ? { ...item, ...u } : item;
+
+                  }));
+
+                } else {
+
+                  // news/library/story dataset
+
+                  setAllData(prev => ({
+
+                    ...prev,
+
+                    [currentTab]: (prev[currentTab] || []).map(item => {
+
+                      const u = updatedRecords.find(r => r.id === item.id);
+
+                      return u ? { ...item, ...u } : item;
+
+                    })
+
+                  }));
+
+                  setFilteredData(prev => ({
+
+                    ...prev,
+
+                    [currentTab]: (prev[currentTab] || []).map(item => {
+
+                      const u = updatedRecords.find(r => r.id === item.id);
+
+                      return u ? { ...item, ...u } : item;
+
+                    })
+
+                  }));
+
+                  setData(prev => prev.map(item => {
+
+                    const u = updatedRecords.find(r => r.id === item.id);
+
+                    return u ? { ...item, ...u } : item;
+
+                  }));
+
+                }
+
+              }
+
+              setShowImproveDetail(false);
+
+              setImproveDetailLoading(false);
+
+              setSelectedRowKeys([]);
+
+            }}
+
+            setImproveDetailLoading={setImproveDetailLoading}
+
+        />
+
+
+
+        <CreateQuizModal
+
+            visible={showCreateQuiz}
+
+            onCancel={() => setShowCreateQuiz(false)}
+
+            selectedRecords={
+
+              currentTab === 'report'
+
+                  ? aiSummaryData.filter(item => selectedRowKeys.includes(item.id))
+
+                  : currentTab === 'reportDN'
+
+                      ? reportDNData.filter(item => selectedRowKeys.includes(item.id))
+
+                      : data.filter(item => selectedRowKeys.includes(item.id))
+
+            }
+
+            setCreateQuizzLoading={setCreateQuizzLoading}
+
+            onSuccess={(updatedRecords = []) => {
+
+              if (Array.isArray(updatedRecords) && updatedRecords.length > 0) {
+
+                if (currentTab === 'report') {
+
+                  setAiSummaryData(prev => prev.map(item => {
+
+                    const u = updatedRecords.find(r => r.id === item.id);
+
+                    return u ? { ...item, ...u } : item;
+
+                  }));
+
+                } else if (currentTab === 'reportDN') {
+
+                  setReportDNData(prev => prev.map(item => {
+
+                    const u = updatedRecords.find(r => r.id === item.id);
+
+                    return u ? { ...item, ...u } : item;
+
+                  }));
+
+                } else {
+
+                  setAllData(prev => ({
+
+                    ...prev,
+
+                    [currentTab]: (prev[currentTab] || []).map(item => {
+
+                      const u = updatedRecords.find(r => r.id === item.id);
+
+                      return u ? { ...item, ...u } : item;
+
+                    })
+
+                  }));
+
+                  setFilteredData(prev => ({
+
+                    ...prev,
+
+                    [currentTab]: (prev[currentTab] || []).map(item => {
+
+                      const u = updatedRecords.find(r => r.id === item.id);
+
+                      return u ? { ...item, ...u } : item;
+
+                    })
+
+                  }));
+
+                  setData(prev => prev.map(item => {
+
+                    const u = updatedRecords.find(r => r.id === item.id);
+
+                    return u ? { ...item, ...u } : item;
+
+                  }));
+
+                }
+
+              }
+
+              setShowCreateQuiz(false);
+
+              setCreateQuizzLoading(false);
+
+              setSelectedRowKeys([]);
+
+            }}
+
+        />
+
+        <UpdateQuizContentModal
+            visible={showUpdateQuiz}
+            onCancel={() => setShowUpdateQuiz(false)}
+            selectedRowKeys={selectedRowKeys}
+            data={data}
+            onUpdate={async (recordsData) => {
+              try {
+                console.log('Updating quiz and content for:', recordsData);
+
+                // Cập nhật data trong state
+                if (recordsData) {
+                  await updateK9({
+                    id: recordsData.id,
+                    title: recordsData.title,
+                    summary: recordsData.summary,
+                    detail: recordsData.detail,
+                    questionContent: recordsData.questionContent
+                  });
+                  // Cập nhật trong data chính
+                  setData(prev => prev.map(item =>
+                      item.id === recordsData.id
+                          ? { ...item, ...recordsData }
+                          : item
+                  ));
+
+                  // Cập nhật trong filteredData nếu có
+                  setFilteredData(prev => ({
+                    ...prev,
+                    [currentTab]: (prev[currentTab] || []).map(item =>
+                        item.id === recordsData.id
+                            ? { ...item, ...recordsData }
+                            : item
+                    )
+                  }));
+
+                  console.log(`Successfully updated record ${recordsData.id}`);
+                }
+              } catch (error) {
+                console.error('Error updating record:', error);
+                throw error;
+              }
+            }}
+        />
+
+        {/* Prompt Settings Modal */}
+        <PromptSettingsModal
+            visible={promptSettingsModalVisible}
+            onCancel={() => setPromptSettingsModalVisible(false)}
+            onSuccess={(settings) => {
+              console.log('Prompt settings updated:', settings);
+              message.success('Cài đặt prompt đã được cập nhật!');
+            }}
+        />
+
+        <PromptSettingsListModal
+            visible={promptSettingsListModalVisible}
+            onCancel={() => setPromptSettingsListModalVisible(false)}
+            onSuccess={() => {
+              message.success('Cài đặt prompt danh sách đã được cập nhật!');
+            }}
+        />
+
+        <SelectPromptModal
+            visible={selectDiagramPromptModalVisible}
+            onCancel={() => {
+              setSelectDiagramPromptModalVisible(false);
+              setPendingDiagramMode(null);
+              setPendingDiagramRecords([]);
+            }}
+            onSelect={handleDiagramPromptSelected}
+            promptType={pendingDiagramMode === 'html' ? 'HTML_FROM_DETAIL_PROMPTS' : pendingDiagramMode === 'excalidraw-react' ? 'EXCALIDRAW_REACT_PROMPTS' : null}
+            title={pendingDiagramMode === 'html' ? 'Chọn cài đặt Prompt - HTML từ Detail' : pendingDiagramMode === 'excalidraw-react' ? 'Chọn cài đặt Prompt - Excalidraw React' : 'Chọn cài đặt Prompt'}
+        />
+
+        <SelectPromptModal
+            visible={selectCaseFromLearningPromptModalVisible}
+            onCancel={() => {
+              setSelectCaseFromLearningPromptModalVisible(false);
+              setPendingCaseFromLearningRecords([]);
+            }}
+            onSelect={handleCaseFromLearningPromptSelected}
+            promptType="CASE_FROM_LEARNING_BLOCK_PROMPTS"
+            title="Chọn cài đặt Prompt - Tạo Case từ Learning Block"
+        />
+
+        {/* User Class Modal */}
+        <Modal
+            title={`Gán User Class cho ${selectedRowKeys.length} bản ghi`}
+            open={userClassModalVisible}
+            onCancel={() => {
+              setUserClassModalVisible(false);
+              setSelectedUserClasses([]);
+            }}
+            onOk={handleBulkUpdateUserClasses}
+            okText="Cập nhật"
+            cancelText="Hủy"
+            width={600}
+            loading={loading}
+        >
+          <div style={{ marginTop: 20 }}>
+            <Space direction="vertical" style={{ width: '100%' }}>
+              <Select
+                  mode="multiple"
+                  placeholder="Chọn nhóm user class"
+                  value={selectedUserClasses}
+                  onChange={setSelectedUserClasses}
+                  style={{ width: '100%' }}
+                  showSearch
+                  filterOption={(input, option) =>
+                      (option?.children ?? '').toLowerCase().includes(input.toLowerCase())
+                  }
+                  allowClear
               >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                  <LoadingOutlined style={{ color: '#fa8c16' }} />
-                  <span style={{ fontWeight: 'bold' }}>Đang xử lý: {currentDiagramProcessing.title}</span>
-                  <span style={{
-                    fontSize: '12px',
-                    padding: '2px 6px',
-                    borderRadius: '4px',
-                    backgroundColor: currentDiagramProcessing.mode === 'html' ? '#e6f7ff' : '#fff7e6',
-                    color: currentDiagramProcessing.mode === 'html' ? '#1890ff' : '#fa8c16'
-                  }}>
-                    {currentDiagramProcessing.mode === 'html' ? 'HTML' : 'Kroki'}
-                  </span>
-                </div>
-                <div style={{ fontSize: '12px', color: '#666' }}>
-                  Đang tạo {currentDiagramProcessing.mode === 'html' ? 'HTML code' : 'diagram'}...
-                </div>
+                {userClasses.map(cls => (
+                    <Option key={cls.id} value={cls.id}>
+                      {cls.name || `Class #${cls.id}`}
+                    </Option>
+                ))}
+              </Select>
+              <div style={{ fontSize: '12px', color: '#999', marginTop: 8 }}>
+                Chọn các nhóm user class được phép xem. Để trống nếu muốn xóa giới hạn.
               </div>
+            </Space>
+          </div>
+        </Modal>
+
+        {/* Tag Management Modal */}
+
+        {
+
+            tagManagementModalVisible && (
+
+                <TagManagementModal
+
+                    visible={tagManagementModalVisible}
+
+                    onClose={() => setTagManagementModalVisible(false)}
+
+                    tag1Options={tag1Options}
+
+                    tag2Options={tag2Options}
+
+                    tag3Options={tag3Options}
+
+                    onSave={saveTagOptions}
+
+                />
+
+            )
+
+        }
+
+        {/* Categories Management Modal */}
+
+        {
+
+            categoriesManagementModalVisible && (
+
+                <CategoriesManagementModal
+
+                    visible={categoriesManagementModalVisible}
+
+                    onClose={() => setCategoriesManagementModalVisible(false)}
+
+                    categoriesOptions={categoriesOptions}
+
+                    onSave={saveCategoriesOptions}
+
+                />
+
+            )
+
+        }
+
+
+
+        {
+
+            programManagementModalVisible && (
+
+                <TagProgramModal
+
+                    visible={programManagementModalVisible}
+
+                    onClose={() => setProgramManagementModalVisible(false)}
+
+                    tag4Options={tag4Options}
+
+                    onSave={handleSaveTags}
+
+                    coursesOptions={coursesOptions}
+
+                    onSaveCourses={handleSaveCourses}
+
+                />
+
+            )
+
+        }
+
+
+
+
+
+        {
+
+            quizEditorVisible && <QuizEditorModal
+
+                visible={quizEditorVisible}
+
+                onCancel={() => { setQuizEditorVisible(false); setQuizEditorRecord(null); }}
+
+                record={quizEditorRecord}
+
+                confirmLoading={savingQuiz}
+
+                onSave={async (questionContent) => {
+
+                  if (!quizEditorRecord) return;
+
+                  try {
+
+                    setSavingQuiz(true);
+
+                    await updateK9({ id: quizEditorRecord.id, questionContent });
+
+                    message.success('Lưu quiz/essay thành công');
+
+                    // Update local datasets
+
+                    const updater = (list) => list.map(item => item.id === quizEditorRecord.id ? { ...item, questionContent } : item);
+
+                    if (currentTab === 'report') {
+
+                      setAiSummaryData(prev => updater(prev));
+
+                    } else if (currentTab === 'reportDN') {
+
+                      setReportDNData(prev => updater(prev));
+
+                    } else {
+
+                      setAllData(prev => ({ ...prev, [currentTab]: updater(prev[currentTab] || []) }));
+
+                      setFilteredData(prev => ({ ...prev, [currentTab]: updater(prev[currentTab] || []) }));
+
+                      setData(prev => updater(prev));
+
+                    }
+
+                    setQuizEditorVisible(false);
+
+                    setQuizEditorRecord(null);
+
+                  } catch (e) {
+
+                    console.error(e);
+
+                    message.error('Lưu quiz/essay thất bại');
+
+                  } finally {
+
+                    setSavingQuiz(false);
+
+                  }
+
+                }}
+
+            />
+
+        }
+
+
+
+        {/* QuestionContent Modal */}
+
+        {
+
+            questionContentModalVisible && <QuestionContentModal
+
+                visible={questionContentModalVisible}
+
+                onCancel={() => {
+
+                  setQuestionContentModalVisible(false);
+
+                  setSelectedQuestionContent(null);
+
+                  setSelectedQuestionContentTitle('');
+
+                  setSelectedQuestionContentRecord(null);
+
+                }}
+
+                questionContent={selectedQuestionContent}
+
+                recordTitle={selectedQuestionContentTitle}
+
+                onUpdateQuestionContent={handleUpdateQuestionContent}
+
+            />
+
+        }
+
+
+
+        {/* Bulk Update Modal */}
+
+        <BulkUpdateModal
+
+            visible={bulkUpdateModalVisible}
+
+            onClose={() => setBulkUpdateModalVisible(false)}
+
+            selectedIds={selectedRowKeys}
+
+            fieldToUpdate={fieldToUpdate}
+
+            currentTab={currentTab}
+
+            onSuccess={handleBulkUpdateSuccess}
+
+            categoryOptions={categoriesOptions}
+
+            tagOptions={tag1Options}
+
+            levelOptions={tag2Options}
+
+            seriesOptions={tag3Options}
+
+            programOptions={programOptions}
+
+            setUpdateCategoryLoading={setUpdateCategoryLoading}
+
+        />
+
+
+
+        {/* Diagram Config Modal */}
+        <CreateConfigDiagram
+            diagramConfigModalVisible={diagramConfigModalVisible}
+            setDiagramConfigModalVisible={setDiagramConfigModalVisible}
+            diagramConfig={diagramConfig}
+            setDiagramConfig={setDiagramConfig}
+            saveDiagramConfig={saveDiagramConfig}
+        />
+
+        {/* Summary Detail Config Modal */}
+        <CreateConfigSummaryDetail
+            summaryDetailConfigModalVisible={summaryDetailConfigModalVisible}
+            setSummaryDetailConfigModalVisible={setSummaryDetailConfigModalVisible}
+            summaryDetailConfig={summaryDetailConfig}
+            setSummaryDetailConfig={setSummaryDetailConfig}
+            saveSummaryDetailConfig={saveSummaryDetailConfig}
+        />
+
+        {/* Diagram Preview Modal */}
+        {
+            diagramPreviewModalVisible && (
+                <DiagramPreviewModal
+                    visible={diagramPreviewModalVisible}
+                    onClose={() => setDiagramPreviewModalVisible(false)}
+                    diagramData={selectedDiagramData}
+                    onSave={handleDiagramSave}
+                />
+            )
+        }
+
+        {/* Diagram Progress Modal */}
+        <Modal
+            title={
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span>Tiến trình tạo {
+              diagramGenerationStats.type === 'html' ? 'HTML Code' :
+                  diagramGenerationStats.type === 'excalidraw-react' ? 'Excalidraw React' :
+                      'Diagram'
+            }</span>
+              </div>
+            }
+            open={diagramProgressModalVisible}
+            onCancel={() => setDiagramProgressModalVisible(false)}
+            footer={[
+              processingDiagramQueue && (
+                  <Button
+                      key="stop"
+                      danger
+                      onClick={handleStopDiagramGeneration}
+                      style={{ marginRight: '8px' }}
+                  >
+                    Dừng quá trình
+                  </Button>
+              ),
+              <Button key="close" onClick={() => setDiagramProgressModalVisible(false)}>
+                Đóng
+              </Button>
+            ]}
+            width={800}
+        >
+          <div style={{ marginBottom: '16px' }}>
+            <div style={{ display: 'flex', gap: '16px', marginBottom: '16px' }}>
+              <div style={{ flex: 1, textAlign: 'center', padding: '12px', backgroundColor: '#f0f0f0', borderRadius: '6px' }}>
+                <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#1890ff' }}>
+                  {diagramGenerationStats.total}
+                </div>
+                <div style={{ fontSize: '12px', color: '#666' }}>Tổng số</div>
+              </div>
+              <div style={{ flex: 1, textAlign: 'center', padding: '12px', backgroundColor: '#f6ffed', borderRadius: '6px' }}>
+                <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#52c41a' }}>
+                  {diagramGenerationStats.success}
+                </div>
+                <div style={{ fontSize: '12px', color: '#666' }}>Thành công</div>
+              </div>
+              <div style={{ flex: 1, textAlign: 'center', padding: '12px', backgroundColor: '#fff2f0', borderRadius: '6px' }}>
+                <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#ff4d4f' }}>
+                  {diagramGenerationStats.failed}
+                </div>
+                <div style={{ fontSize: '12px', color: '#666' }}>Thất bại</div>
+              </div>
+            </div>
+
+            {processingDiagramQueue && currentDiagramProcessing && (
+                <div style={{
+                  padding: '12px',
+                  backgroundColor: '#fff7e6',
+                  borderRadius: '6px',
+                  border: '1px solid #ffd591',
+                  marginBottom: '16px'
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                    <LoadingOutlined style={{ color: '#fa8c16' }} />
+                    <span style={{ fontWeight: 'bold' }}>Đang xử lý:</span>
+                  </div>
+                  <div style={{ fontSize: '14px', color: '#666' }}>
+                    {currentDiagramProcessing.title}
+                  </div>
+                </div>
             )}
 
-            {/* Tasks trong queue */}
-            {diagramGenerationQueue.map((task, index) => (
-              <div
-                key={task.id}
-                style={{
-                  padding: '12px',
-                  marginBottom: '8px',
-                  borderRadius: '6px',
-                  backgroundColor: '#f0f0f0',
-                  border: '1px solid #d9d9d9'
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+          </div>
+
+          <div>
+            <div style={{ fontWeight: 'bold', marginBottom: '12px' }}>Danh sách tất cả task:</div>
+            <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
+
+              {/* Task đang xử lý */}
+              {processingDiagramQueue && currentDiagramProcessing && (
+                  <div
+                      style={{
+                        padding: '12px',
+                        marginBottom: '8px',
+                        borderRadius: '6px',
+                        backgroundColor: '#fff7e6',
+                        border: '1px solid #ffd591'
+                      }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                      <LoadingOutlined style={{ color: '#fa8c16' }} />
+                      <span style={{ fontWeight: 'bold' }}>Đang xử lý: {currentDiagramProcessing.title}</span>
+                      <span style={{
+                        fontSize: '12px',
+                        padding: '2px 6px',
+                        borderRadius: '4px',
+                        backgroundColor: currentDiagramProcessing.mode === 'html' ? '#e6f7ff' : '#fff7e6',
+                        color: currentDiagramProcessing.mode === 'html' ? '#1890ff' : '#fa8c16'
+                      }}>
+                    {currentDiagramProcessing.mode === 'html' ? 'HTML' : 'Kroki'}
+                  </span>
+                    </div>
+                    <div style={{ fontSize: '12px', color: '#666' }}>
+                      Đang tạo {currentDiagramProcessing.mode === 'html' ? 'HTML code' : 'diagram'}...
+                    </div>
+                  </div>
+              )}
+
+              {/* Tasks trong queue */}
+              {diagramGenerationQueue.map((task, index) => (
+                  <div
+                      key={task.id}
+                      style={{
+                        padding: '12px',
+                        marginBottom: '8px',
+                        borderRadius: '6px',
+                        backgroundColor: '#f0f0f0',
+                        border: '1px solid #d9d9d9'
+                      }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
                   <span style={{
                     fontSize: '12px',
                     padding: '2px 6px',
@@ -18980,191 +18997,191 @@ Chỉ trả về nội dung theo đúng định dạng trên, không thêm phầ
                   }}>
                     #{index + 1}
                   </span>
-                  <span style={{ fontWeight: 'bold' }}>Chờ xử lý: {task.title}</span>
-                  <span style={{
-                    fontSize: '12px',
-                    padding: '2px 6px',
-                    borderRadius: '4px',
-                    backgroundColor: task.mode === 'html' ? '#e6f7ff' : '#fff7e6',
-                    color: task.mode === 'html' ? '#1890ff' : '#fa8c16'
-                  }}>
-                    {task.mode === 'html' ? 'HTML' : 'Kroki'}
-                  </span>
-                </div>
-                <div style={{ fontSize: '12px', color: '#666' }}>
-                  Sẽ tạo {task.mode === 'html' ? 'HTML code' : 'diagram'} sau khi hoàn thành task trước
-                </div>
-              </div>
-            ))}
-
-            {/* Kết quả đã hoàn thành */}
-            {diagramGenerationResults.length > 0 && (
-              <>
-                <div style={{
-                  fontWeight: 'bold',
-                  marginTop: '16px',
-                  marginBottom: '12px',
-                  padding: '8px',
-                  backgroundColor: '#f6ffed',
-                  borderRadius: '4px',
-                  border: '1px solid #b7eb8f'
-                }}>
-                  ✅ Kết quả đã hoàn thành ({diagramGenerationResults.length}):
-                </div>
-                {diagramGenerationResults.map((result, index) => (
-                  <div
-                    key={result.id}
-                    style={{
-                      padding: '12px',
-                      marginBottom: '8px',
-                      borderRadius: '6px',
-                      backgroundColor: result.status === 'success' ? '#f6ffed' : '#fff2f0',
-                      border: `1px solid ${result.status === 'success' ? '#b7eb8f' : '#ffccc7'}`
-                    }}
-                  >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                      {result.status === 'success' ? (
-                        <CheckCircleOutlined style={{ color: '#52c41a' }} />
-                      ) : (
-                        <span style={{ color: '#ff4d4f' }}>❌</span>
-                      )}
-                      <span style={{ fontWeight: 'bold' }}>✅ Hoàn thành: {result.title}</span>
+                      <span style={{ fontWeight: 'bold' }}>Chờ xử lý: {task.title}</span>
                       <span style={{
                         fontSize: '12px',
                         padding: '2px 6px',
                         borderRadius: '4px',
-                        backgroundColor: result.type === 'html' ? '#e6f7ff' : '#fff7e6',
-                        color: result.type === 'html' ? '#1890ff' : '#fa8c16'
+                        backgroundColor: task.mode === 'html' ? '#e6f7ff' : '#fff7e6',
+                        color: task.mode === 'html' ? '#1890ff' : '#fa8c16'
                       }}>
+                    {task.mode === 'html' ? 'HTML' : 'Kroki'}
+                  </span>
+                    </div>
+                    <div style={{ fontSize: '12px', color: '#666' }}>
+                      Sẽ tạo {task.mode === 'html' ? 'HTML code' : 'diagram'} sau khi hoàn thành task trước
+                    </div>
+                  </div>
+              ))}
+
+              {/* Kết quả đã hoàn thành */}
+              {diagramGenerationResults.length > 0 && (
+                  <>
+                    <div style={{
+                      fontWeight: 'bold',
+                      marginTop: '16px',
+                      marginBottom: '12px',
+                      padding: '8px',
+                      backgroundColor: '#f6ffed',
+                      borderRadius: '4px',
+                      border: '1px solid #b7eb8f'
+                    }}>
+                      ✅ Kết quả đã hoàn thành ({diagramGenerationResults.length}):
+                    </div>
+                    {diagramGenerationResults.map((result, index) => (
+                        <div
+                            key={result.id}
+                            style={{
+                              padding: '12px',
+                              marginBottom: '8px',
+                              borderRadius: '6px',
+                              backgroundColor: result.status === 'success' ? '#f6ffed' : '#fff2f0',
+                              border: `1px solid ${result.status === 'success' ? '#b7eb8f' : '#ffccc7'}`
+                            }}
+                        >
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                            {result.status === 'success' ? (
+                                <CheckCircleOutlined style={{ color: '#52c41a' }} />
+                            ) : (
+                                <span style={{ color: '#ff4d4f' }}>❌</span>
+                            )}
+                            <span style={{ fontWeight: 'bold' }}>✅ Hoàn thành: {result.title}</span>
+                            <span style={{
+                              fontSize: '12px',
+                              padding: '2px 6px',
+                              borderRadius: '4px',
+                              backgroundColor: result.type === 'html' ? '#e6f7ff' : '#fff7e6',
+                              color: result.type === 'html' ? '#1890ff' : '#fa8c16'
+                            }}>
                         {result.type === 'html' ? 'HTML' : 'Kroki'}
                       </span>
-                    </div>
-                    {result.status === 'success' ? (
-                      <div style={{ fontSize: '12px', color: '#666' }}>
-                        Tạo thành công {result.count} {result.type === 'html' ? 'HTML code' : 'diagram'}
-                      </div>
-                    ) : (
-                      <div style={{ fontSize: '12px', color: '#ff4d4f' }}>
-                        Lỗi: {result.error}
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </>
+                          </div>
+                          {result.status === 'success' ? (
+                              <div style={{ fontSize: '12px', color: '#666' }}>
+                                Tạo thành công {result.count} {result.type === 'html' ? 'HTML code' : 'diagram'}
+                              </div>
+                          ) : (
+                              <div style={{ fontSize: '12px', color: '#ff4d4f' }}>
+                                Lỗi: {result.error}
+                              </div>
+                          )}
+                        </div>
+                    ))}
+                  </>
+              )}
+            </div>
+          </div>
+        </Modal>
+
+        {/* Case From Learning Block Progress Modal */}
+        <Modal
+            title="Tiến trình tạo Case Training từ Learning Block"
+            open={caseFromLearningProgressModalVisible}
+            onCancel={() => setCaseFromLearningProgressModalVisible(false)}
+            footer={[
+              <Button key="close" onClick={() => setCaseFromLearningProgressModalVisible(false)}>
+                Đóng
+              </Button>
+            ]}
+            width={800}
+        >
+          <div style={{ marginBottom: '16px' }}>
+            <div style={{ display: 'flex', gap: '16px', marginBottom: '16px' }}>
+              <div style={{ flex: 1, textAlign: 'center', padding: '12px', backgroundColor: '#f0f0f0', borderRadius: '6px' }}>
+                <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#1890ff' }}>
+                  {caseFromLearningStats.total}
+                </div>
+                <div style={{ fontSize: '12px', color: '#666' }}>Tổng số Case dự kiến</div>
+              </div>
+              <div style={{ flex: 1, textAlign: 'center', padding: '12px', backgroundColor: '#f6ffed', borderRadius: '6px' }}>
+                <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#52c41a' }}>
+                  {caseFromLearningStats.success}
+                </div>
+                <div style={{ fontSize: '12px', color: '#666' }}>Tạo thành công</div>
+              </div>
+              <div style={{ flex: 1, textAlign: 'center', padding: '12px', backgroundColor: '#fff2f0', borderRadius: '6px' }}>
+                <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#ff4d4f' }}>
+                  {caseFromLearningStats.failed}
+                </div>
+                <div style={{ fontSize: '12px', color: '#666' }}>Thất bại</div>
+              </div>
+            </div>
+            {processingCaseFromLearningBlockQueue && (
+                <div style={{ marginBottom: '12px' }}>
+                  <Spin size="small" />{' '}
+                  <span style={{ marginLeft: 8 }}>Đang xử lý: {currentCaseFromLearningBlockProcessing?.title || '...'}</span>
+                </div>
             )}
           </div>
-        </div>
-      </Modal>
-
-      {/* Case From Learning Block Progress Modal */}
-      <Modal
-        title="Tiến trình tạo Case Training từ Learning Block"
-        open={caseFromLearningProgressModalVisible}
-        onCancel={() => setCaseFromLearningProgressModalVisible(false)}
-        footer={[
-          <Button key="close" onClick={() => setCaseFromLearningProgressModalVisible(false)}>
-            Đóng
-          </Button>
-        ]}
-        width={800}
-      >
-        <div style={{ marginBottom: '16px' }}>
-          <div style={{ display: 'flex', gap: '16px', marginBottom: '16px' }}>
-            <div style={{ flex: 1, textAlign: 'center', padding: '12px', backgroundColor: '#f0f0f0', borderRadius: '6px' }}>
-              <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#1890ff' }}>
-                {caseFromLearningStats.total}
-              </div>
-              <div style={{ fontSize: '12px', color: '#666' }}>Tổng số Case dự kiến</div>
-            </div>
-            <div style={{ flex: 1, textAlign: 'center', padding: '12px', backgroundColor: '#f6ffed', borderRadius: '6px' }}>
-              <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#52c41a' }}>
-                {caseFromLearningStats.success}
-              </div>
-              <div style={{ fontSize: '12px', color: '#666' }}>Tạo thành công</div>
-            </div>
-            <div style={{ flex: 1, textAlign: 'center', padding: '12px', backgroundColor: '#fff2f0', borderRadius: '6px' }}>
-              <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#ff4d4f' }}>
-                {caseFromLearningStats.failed}
-              </div>
-              <div style={{ fontSize: '12px', color: '#666' }}>Thất bại</div>
-            </div>
+          <div style={{ maxHeight: '400px', overflowY: 'auto', borderTop: '1px solid #f0f0f0', paddingTop: 12 }}>
+            {caseFromLearningResults.length === 0 ? (
+                <div style={{ textAlign: 'center', color: '#999' }}>Chưa có bản ghi nào được xử lý.</div>
+            ) : (
+                <Table
+                    size="small"
+                    pagination={false}
+                    rowKey="id"
+                    dataSource={caseFromLearningResults}
+                    columns={[
+                      {
+                        title: 'ID',
+                        dataIndex: 'recordId',
+                        key: 'recordId',
+                        width: 80
+                      },
+                      {
+                        title: 'Tiêu đề',
+                        dataIndex: 'title',
+                        key: 'title',
+                        render: (text) => <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'inline-block', maxWidth: 400 }}>{text}</span>
+                      },
+                      {
+                        title: 'Trạng thái',
+                        dataIndex: 'status',
+                        key: 'status',
+                        width: 120,
+                        render: (status) => {
+                          if (status === 'success') {
+                            return <Tag color="green">Thành công</Tag>;
+                          }
+                          if (status === 'failed') {
+                            return <Tag color="red">Thất bại</Tag>;
+                          }
+                          return <Tag>Khác</Tag>;
+                        }
+                      },
+                      {
+                        title: 'Lỗi',
+                        dataIndex: 'error',
+                        key: 'error',
+                        render: (error) => error ? <span style={{ color: '#ff4d4f' }}>{error}</span> : null
+                      }
+                    ]}
+                />
+            )}
           </div>
-          {processingCaseFromLearningBlockQueue && (
-            <div style={{ marginBottom: '12px' }}>
-              <Spin size="small" />{' '}
-              <span style={{ marginLeft: 8 }}>Đang xử lý: {currentCaseFromLearningBlockProcessing?.title || '...'}</span>
-            </div>
-          )}
-        </div>
-        <div style={{ maxHeight: '400px', overflowY: 'auto', borderTop: '1px solid #f0f0f0', paddingTop: 12 }}>
-          {caseFromLearningResults.length === 0 ? (
-            <div style={{ textAlign: 'center', color: '#999' }}>Chưa có bản ghi nào được xử lý.</div>
-          ) : (
-            <Table
-              size="small"
-              pagination={false}
-              rowKey="id"
-              dataSource={caseFromLearningResults}
-              columns={[
-                {
-                  title: 'ID',
-                  dataIndex: 'recordId',
-                  key: 'recordId',
-                  width: 80
-                },
-                {
-                  title: 'Tiêu đề',
-                  dataIndex: 'title',
-                  key: 'title',
-                  render: (text) => <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'inline-block', maxWidth: 400 }}>{text}</span>
-                },
-                {
-                  title: 'Trạng thái',
-                  dataIndex: 'status',
-                  key: 'status',
-                  width: 120,
-                  render: (status) => {
-                    if (status === 'success') {
-                      return <Tag color="green">Thành công</Tag>;
-                    }
-                    if (status === 'failed') {
-                      return <Tag color="red">Thất bại</Tag>;
-                    }
-                    return <Tag>Khác</Tag>;
-                  }
-                },
-                {
-                  title: 'Lỗi',
-                  dataIndex: 'error',
-                  key: 'error',
-                  render: (error) => error ? <span style={{ color: '#ff4d4f' }}>{error}</span> : null
-                }
-              ]}
-            />
-          )}
-        </div>
-      </Modal>
+        </Modal>
 
-      {/* Voice Settings Modal */}
-      <VoiceSettingsModal
-        visible={voiceSettingsVisible}
-        onCancel={() => setVoiceSettingsVisible(false)}
-        settings={voiceSettings}
-        onSave={(updatedSettings) => {
-          setVoiceSettings(updatedSettings);
-          saveVoiceSettings(updatedSettings);
-        }}
-      />
+        {/* Voice Settings Modal */}
+        <VoiceSettingsModal
+            visible={voiceSettingsVisible}
+            onCancel={() => setVoiceSettingsVisible(false)}
+            settings={voiceSettings}
+            onSave={(updatedSettings) => {
+              setVoiceSettings(updatedSettings);
+              saveVoiceSettings(updatedSettings);
+            }}
+        />
 
-      {/* Voice Queue Modal */}
-      <VoiceQueueModal
-        visible={voiceQueueModalVisible}
-        onCancel={() => setVoiceQueueModalVisible(false)}
-        voiceQueue={voiceQueue}
-        currentProcessing={currentProcessing}
-        onStopTask={handleStopVoiceTask}
-      />
-    </div>
+        {/* Voice Queue Modal */}
+        <VoiceQueueModal
+            visible={voiceQueueModalVisible}
+            onCancel={() => setVoiceQueueModalVisible(false)}
+            voiceQueue={voiceQueue}
+            currentProcessing={currentProcessing}
+            onStopTask={handleStopVoiceTask}
+        />
+      </div>
 
   );
 
