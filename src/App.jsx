@@ -25,6 +25,7 @@ import React from 'react';
 import Homepage2 from './pages/Homepage/Homepage2.jsx';
 import LandingPage from './pages/LandingPage/LandingPage.jsx';
 import LandingPageEditor from './pages/LandingPage/LandingPageEditor.jsx';
+import ImageSpellCheck from './pages/Admin/ImageSpellCheck/ImageSpellCheck.jsx';
 
 // Wrapper component to route between PublicHistory and PublicCertificate
 const PublicK9Route = () => {
@@ -32,7 +33,7 @@ const PublicK9Route = () => {
     const params = new URLSearchParams(location.search);
     const shareCertificate = params.get('share_certificate');
     const certificateUser = params.get('certificate_user');
-    
+
     if (shareCertificate === 'true' && certificateUser) {
         return <PublicCertificate />;
     }
@@ -62,6 +63,7 @@ const App = () => {
 
             {/* Admin routes - yêu cầu quyền Admin */}
             <Route element={<AuthRouteAdmin />}>
+                <Route path="/ai-image-spell-check" element={<ImageSpellCheck />} />
                 <Route path="/ai-question-evaluation" element={<AIQuestionEvaluation />} />
                 <Route path="/ai-summary-detail-generation" element={<AISummaryDetailGeneration />} />
                 <Route path="/landing-page-editor" element={<LandingPageEditor />} />

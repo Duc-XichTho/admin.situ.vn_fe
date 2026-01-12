@@ -10,6 +10,59 @@ const DATA_ANALYSIS_URL = '/api/data-analysis';
 const DIAGRAM_GENERATE_URL = '/api/diagram/generate';
 
 
+export const ocrFile = async (file) => {
+	try {
+		// Nếu file là FormData, cần set headers
+		if (file instanceof FormData) {
+			const response = await instance.post(`${BASE_URL2}/api/pdf/upload`, file, {
+				headers: {
+					'Content-Type': 'multipart/form-data',
+				},
+			});
+			return response.data;
+		} else {
+			// Nếu là File object, tạo FormData
+			const formData = new FormData();
+			formData.append('file', file);
+			const response = await instance.post(`${BASE_URL2}/api/pdf/upload`, formData, {
+				headers: {
+					'Content-Type': 'multipart/form-data',
+				},
+			});
+			return response.data;
+		}
+	} catch (error) {
+		console.error('Lỗi khi tải lên file PDF: ', error);
+		throw error;
+	}
+};
+
+export const ocrFileInstruction = async (file, options = {}) => {
+	try {
+		const { model, instructions, system_message } = options;
+
+		const formData = file instanceof FormData ? file : new FormData();
+		if (!(file instanceof FormData)) {
+			formData.append('file', file);
+		}
+
+		if (model) formData.append('model', model);
+		if (instructions) formData.append('instructions', instructions);
+		if (system_message) formData.append('system_message', system_message);
+
+		const response = await instance.post(`${BASE_URL2}/api/pdf/analyze-ai`, formData, {
+			headers: {
+				'Content-Type': 'multipart/form-data',
+			},
+		});
+		return response.data;
+	} catch (error) {
+		console.error('Lỗi khi tải lên file PDF: ', error);
+		throw error;
+	}
+};
+
+
 export const generateAudio = async (text, system_message = null, model = null, voice = null, response_format = null, speed = null) => {
 
 	try {

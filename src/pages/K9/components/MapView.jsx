@@ -1,32 +1,23 @@
-import React, { useEffect, useState, useMemo, useRef } from 'react';
-import { Modal, Image, Input, Switch, Button, Typography, Space, Tag, Dropdown } from 'antd';
-import { SearchOutlined, CloseOutlined, ClearOutlined, MoreOutlined } from '@ant-design/icons';
-import { getK9ByIdPublic, getK9ByCidTypePublic } from '../../../apis/public/publicService.jsx';
-import { getListQuestionHistoryByUser } from '../../../apis/questionHistoryService';
-import { getCurrentUserLogin, updateUser } from '../../../apis/userService';
-import DOMPurify from 'dompurify';
-import { marked } from 'marked';
-import markedKatex from 'marked-katex-extension';
+import { ClearOutlined, CloseOutlined, MoreOutlined, SearchOutlined } from '@ant-design/icons';
+import { Button, Dropdown, Image, Input, Modal, Switch, Tag, Typography } from 'antd';
 import katex from 'katex';
 import 'katex/dist/katex.min.css';
-import styles from './MapView.module.css';
-import newsTabStyles from './NewsTab.module.css';
-import k9Styles from '../K9.module.css';
-import MapViewConnectionLines from './MapViewConnectionLines';
-import AudioPlayer from '../../../components/AudioPlayer/AudioPlayer.jsx';
-import QuizComponent from './QuizComponent.jsx';
-import ExcalidrawViewer from '../../K9Management/components/ExcalidrawViewer';
-import PreviewFileModal from '../../../components/PreviewFile/PreviewFileModal';
-import FeedbackModal from './FeedbackModal.jsx';
-import ShareButton from './ShareButton.jsx';
-import { Customize_Icon, Document_Icon, FeedBack_Icon, Expand_Icon, Close_Icon, Icon_View_Modal, Clock_Icon } from '../../../icon/IconSvg.jsx';
-import { IconButton } from '@mui/material';
-import caseTrainingStyles from './CaseTrainingTab.module.css';
-import { formatDateFromTimestamp } from '../../../generalFunction/format.js';
-import AccessDenied from './AccessDenied.jsx';
+import { marked } from 'marked';
+import markedKatex from 'marked-katex-extension';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { getK9ByCidTypePublic, getK9ByIdPublic } from '../../../apis/public/publicService.jsx';
+import { getListQuestionHistoryByUser } from '../../../apis/questionHistoryService';
+import { getCurrentUserLogin, updateUser } from '../../../apis/userService';
 import PaymentModal from '../../../components/PaymentModal/PaymentModal';
-import ContentPanel from './ContentPanel.jsx';
+import PreviewFileModal from '../../../components/PreviewFile/PreviewFileModal';
+import { Icon_View_Modal } from '../../../icon/IconSvg.jsx';
+import k9Styles from '../K9.module.css';
 import CaseTrainingContentPanel from './CaseTrainingContentPanel.jsx';
+import ContentPanel from './ContentPanel.jsx';
+import FeedbackModal from './FeedbackModal.jsx';
+import styles from './MapView.module.css';
+import MapViewConnectionLines from './MapViewConnectionLines';
+import newsTabStyles from './NewsTab.module.css';
 
 const { Text } = Typography;
 
@@ -48,8 +39,12 @@ const MapView = ({
 	selectedProgram,
 	tag4Filter,
 	currentUser,
-	tag4Options
+	tag4Options,
+	expandedItem,
+	showDetailId
 }) => {
+
+	console.log('expandedItem', expandedItem);
 	const [historyData, setHistoryData] = useState([]);
 	const [loading, setLoading] = useState(false);
 	const [selectedLongFormItem, setSelectedLongFormItem] = useState(null);
@@ -127,7 +122,64 @@ const MapView = ({
 	const [visibleTagCount, setVisibleTagCount] = useState(Infinity); // Number of visible tags (2 rows)
 	const tagListRef = useRef(null); // Ref for tag list container
 	const hiddenTagListRef = useRef(null); // Ref for hidden container to measure
+	const [relatedQuizScores, setRelatedQuizScores] = useState({});
+	const [relatedCaseTrainingItems, setRelatedCaseTrainingItems] = useState([]);
 
+	const fetchRelatedCaseTrainingItems = async (cid) => {
+		if (!cid) {
+		  setRelatedCaseTrainingItems([]);
+		  setRelatedQuizScores({});
+		  return;
+		}
+		try {
+		  const data = await getK9ByCidTypePublic(cid, 'caseTraining' , currentUser?.id);
+		  if (data && Array.isArray(data)) {
+			// Filter only items with questionContent (quiz items)
+			const quizItems = data.filter(item => 
+			  item.status === 'published'  
+			);
+			setRelatedCaseTrainingItems(quizItems);
+			
+			// Fetch quiz scores for these items
+			if (currentUser?.id && quizItems.length > 0) {
+			  try {
+				const histories = await getListQuestionHistoryByUser({ where: { user_id: currentUser.id } });
+				if (Array.isArray(histories?.data)) {
+				  const scoreMap = {};
+				  quizItems.forEach(item => {
+					const history = histories.data.find(h => {
+					  const qid = h.question_id ?? h.questionId ?? h.idQuestion;
+					  return qid === item.id;
+					});
+					if (history) {
+					  const raw = history.score;
+					  const num = typeof raw === 'number' ? raw : parseFloat(raw);
+					  scoreMap[item.id] = isNaN(num) ? null : num;
+					} else {
+					  scoreMap[item.id] = null;
+					}
+				  });
+				  setRelatedQuizScores(scoreMap);
+				} else {
+				  setRelatedQuizScores({});
+				}
+			  } catch (err) {
+				console.error('Error fetching quiz scores:', err);
+				setRelatedQuizScores({});
+			  }
+			} else {
+			  setRelatedQuizScores({});
+			}
+		  } else {
+			setRelatedCaseTrainingItems([]);
+			setRelatedQuizScores({});
+		  }
+		} catch (error) {
+		  console.error('Error fetching related caseTraining items:', error);
+		  setRelatedCaseTrainingItems([]);
+		  setRelatedQuizScores({});
+		}
+	  };
 
 	// Load history data and build quiz scores map (for all items: newsItems, caseTrainingItems, longFormItems)
 	useEffect(() => {
@@ -195,6 +247,84 @@ const MapView = ({
 		};
 		loadReadItems();
 	}, [currentUser?.id]);
+
+	// Fetch item by ID and determine its type, then open appropriate modal
+	const fetchItem = async (id) => {
+		if (!id) return;
+
+		try {
+			const itemData = await getK9ByIdPublic(id);
+			if (!itemData) return;
+
+			// Determine item type by checking which array contains this item
+			const isTheory = newsItems.some(item => item.id == id);
+			const isCase = caseTrainingItems.some(item => item.id == id);
+			const isLongForm = longFormItems.some(item => item.id == id);
+
+			if (isTheory) {
+				// Open theory modal
+				setTheoryModalLoading(true);
+				setTheoryModalVisible(true);
+				setTheoryModalItem(itemData);
+				setSelectedTheoryItem(itemData);
+				setTheoryModalLoading(false);
+				
+				// Fetch related case training items if has CID
+				if (itemData.cid) {
+					fetchRelatedCaseTrainingItems(itemData.cid);
+				}
+			} else if (isCase) {
+				// Open case modal
+				setCaseModalLoading(true);
+				setCaseModalVisible(true);
+				setCaseModalItem(itemData);
+				setSelectedCaseItem(itemData);
+				setSelectedTheoryItem(null); // Clear theory selection
+				setShowSummaryDetail(false);
+				
+				// Fetch CID source info if has CID
+				if (itemData.cid) {
+					await fetchCidSourceInfo(itemData.cid);
+				}
+				setCaseModalLoading(false);
+			} else if (isLongForm) {
+				// Open long form modal
+				setModalLoading(true);
+				setIsModalVisible(true);
+				setSelectedLongFormItem(itemData);
+				setModalLoading(false);
+			}
+
+			// Scroll to item if it's visible in the list
+			setTimeout(() => {
+				const targetElement = document.querySelector(`[data-item-id="${id}"]`);
+				if (targetElement) {
+					targetElement.scrollIntoView({
+						behavior: 'smooth',
+						block: 'center',
+						inline: 'nearest'
+					});
+					// Add highlight effect
+					targetElement.style.backgroundColor = '#e6f7ff';
+					targetElement.style.border = '2px solid #1890ff';
+					setTimeout(() => {
+						targetElement.style.backgroundColor = '';
+						targetElement.style.border = '';
+					}, 3000);
+				}
+			}, 500);
+		} catch (error) {
+			console.error('Error fetching item:', error);
+		}
+	};
+
+	// Handle expandedItem from URL params
+	useEffect(() => {
+		if (expandedItem) {
+			fetchItem(expandedItem);
+
+		}
+	}, [expandedItem, newsItems, caseTrainingItems, longFormItems]);
 
 
 	// Get current program name
@@ -1559,7 +1689,8 @@ const MapView = ({
 			getFileIcon,
 			openFilePreview,
 			handleEditClick: undefined,
-			renderQuizPopoverContent: undefined,
+			relatedCaseTrainingItems: relatedCaseTrainingItems,
+			relatedQuizScores: relatedQuizScores,
 			onShare: () => {},
 			setShowSummaryDetail,
 			setSelectedDetailImageIndex: (index) => setSelectedDetailImageIndex(prev => ({ ...prev, [item.id]: index })),
@@ -1821,13 +1952,17 @@ const MapView = ({
 											filteredTheoryItems.map((item) => (
 												<div
 													key={item.id}
-													ref={(el) => {
+													ref={(el) => {	
 														theoryItemRefs.current[item.id] = el;
 														panel1ItemRefs.current[item.id] = el;
 													}}
 													onClick={() => {
 														setSelectedTheoryItem(item);
 														setSelectedCaseItem(null);
+														setRelatedCaseTrainingItems([]);
+														setRelatedQuizScores({});
+														fetchRelatedCaseTrainingItems(item.cid);
+
 													}}
 													className={`${styles.itemCard} ${selectedTheoryItem?.id === item.id ? styles.itemCardSelected : ''}`}
 												>

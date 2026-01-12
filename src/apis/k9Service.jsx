@@ -137,3 +137,14 @@ export const updateK9Bulk = async (updateData) => {
     }
 };
 
+
+export const getAllImages = async (queryParams = {}) => {
+    try {
+        const { data } = await instance.get(`${URL}/images`, { params: queryParams });
+        return data.data || [];
+    } catch (error) {
+        console.error('Error fetching images:', error);
+        throw error;
+    }
+};
+

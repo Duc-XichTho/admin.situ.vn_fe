@@ -1,12 +1,10 @@
+import { Modal, message } from 'antd';
 import React, { useContext, useEffect, useState } from 'react';
 import { MyContext } from '../../MyContext.jsx';
-import { registerAccountPublic, updateAccountTrial } from '../../apis/public/publicService.jsx';
 import { createPaymentLink } from '../../apis/paymentService';
-import { updateUser } from '../../apis/userService';
-import { Modal, message } from 'antd';
+import { getSettingByTypePublic, registerAccountPublic, updateAccountTrial } from '../../apis/public/publicService.jsx';
 import PackageGrid from '../../components/PaymentModal/PackageGrid';
 import { createLandingPageConfig } from './landingPageConfig.js';
-import { getSettingByTypePublic } from '../../apis/public/publicService.jsx';
 
 const LandingPage = () => {
     const { currentUser } = useContext(MyContext);

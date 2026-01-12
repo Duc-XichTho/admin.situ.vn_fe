@@ -14,7 +14,8 @@ export const MODEL_AI_LIST = [
     { name: 'Gemini 3 Pro Preview (Google + Search)', value: 'gemini-3-pro-preview:search' },
     { name: 'Gemini 3 Pro Preview (Google)', value: 'gemini-3-pro-preview' },
     { name: 'Gemini 3 Flash Preview (Google)', value: 'gemini-3-flash-preview' },
-
+    { name: 'Gemini 3 Flash Preview (OpenRouter)', value: 'google/gemini-3-flash-preview' },
+    { name: 'Gemini 3 Pro Preview (Open Router)', value: 'google/gemini-3-pro-preview' },
 ];
 
 export const MODEL_IMG_AI_LIST = [

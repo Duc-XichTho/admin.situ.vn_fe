@@ -1104,6 +1104,13 @@ const K9 = () => {
 				},
 			});
 			items.push({
+				key: 'aiQuestionEvaluation',
+				label: 'AI Đánh giá chính tả ảnh',
+				onClick: () => {
+					navigate('/ai-image-spell-check');
+				},
+			});
+			items.push({
 				type: 'divider',
 			});
 			items.push({
@@ -1295,6 +1302,7 @@ const K9 = () => {
 					tag4Filter={tag4Filter}
 					currentUser={currentUser}
 					tag4Options={tag4Options}
+					expandedItem={expandedItem}
 				/>
 			) : (
 				<>

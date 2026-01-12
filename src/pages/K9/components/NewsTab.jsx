@@ -1,26 +1,22 @@
-import { Button, Image, Input, Modal, Popover } from 'antd';
-import { SearchOutlined, CloseOutlined, LeftOutlined, RightOutlined } from '@ant-design/icons';
-import { IconButton } from '@mui/material';
-import DOMPurify from 'dompurify';
+import { CloseOutlined, SearchOutlined } from '@ant-design/icons';
+import { Button, Input, Modal } from 'antd';
 import katex from 'katex';
 import 'katex/dist/katex.min.css';
 import { marked } from 'marked';
 import markedKatex from 'marked-katex-extension';
 import React, { useContext, useEffect, useMemo, useRef, useState } from 'react';
-import { getK9ByIdPublic, getSettingByTypePublic, getK9ByCidTypePublic } from '../../../apis/public/publicService.jsx';
+import { getK9ByCidTypePublic, getK9ByIdPublic, getSettingByTypePublic } from '../../../apis/public/publicService.jsx';
 import { getListQuestionHistoryByUser } from '../../../apis/questionHistoryService.jsx';
 import { getAllUserClass } from '../../../apis/userClassService';
 import { getCurrentUserLogin, updateUser } from '../../../apis/userService';
+import PaymentModal from '../../../components/PaymentModal/PaymentModal';
 import { MyContext } from '../../../MyContext';
 import styles from '../K9.module.css';
+import EditDetailModal from './EditDetailModal.jsx';
+import FeedbackModal from './FeedbackModal.jsx';
 import K9Filters from './K9Filters';
 import NewsItem from './NewsItem';
 import newsTabStyles from './NewsTab.module.css';
-import QuizComponent from './QuizComponent.jsx';
-import ShareButton from './ShareButton.jsx';
-import PaymentModal from '../../../components/PaymentModal/PaymentModal';
-import EditDetailModal from './EditDetailModal.jsx';
-import FeedbackModal from './FeedbackModal.jsx';
 
 
 // Cấu hình marked với KaTeX extension
@@ -30,12 +26,7 @@ marked.use(markedKatex({
   trust: true
 }));
 
-import AudioPlayer from '../../../components/AudioPlayer/AudioPlayer.jsx';
 import PreviewFileModal from '../../../components/PreviewFile/PreviewFileModal';
-import { formatDateFromTimestamp } from '../../../generalFunction/format.js';
-import { Clock_Icon, Customize_Icon, Document_Icon, FeedBack_Icon, Expand_Icon, Close_Icon } from '../../../icon/IconSvg.jsx';
-import AccessDenied from './AccessDenied.jsx';
-import ExcalidrawViewer from '../../K9Management/components/ExcalidrawViewer';
 import ContentPanel from './ContentPanel.jsx';
 const NewsTab = ({
   currentTab,
@@ -157,8 +148,7 @@ const NewsTab = ({
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
 
   // Quiz/Practice popover state
-  const [quizPopoverVisible, setQuizPopoverVisible] = useState(false);
-  const [relatedCaseTrainingItems, setRelatedCaseTrainingItems] = useState([]);
+ const [relatedCaseTrainingItems, setRelatedCaseTrainingItems] = useState([]);
   const [relatedQuizScores, setRelatedQuizScores] = useState({});
 
   // Package purchase modal states
@@ -929,161 +919,6 @@ const NewsTab = ({
     }
   }, [selectedItem?.cid , activeTab , currentUser?.id]);
 
-  // Handle quiz item click - open in new tab (caseTraining tab)
-  const handleQuizItemClick = (quizItem) => {
-    const url = new URL(`${window.location.origin}/home`);
-    url.searchParams.set('tab', 'caseTraining');
-    url.searchParams.set('item', quizItem.id);
-    if (selectedProgram && selectedProgram !== 'all') {
-      url.searchParams.set('program', selectedProgram);
-    }
-    window.open(url.toString(), '_blank');
-    setQuizPopoverVisible(false);
-  };
-
-  // Render quiz popover content
-  const renderQuizPopoverContent = () => {
-    const quizItems = relatedCaseTrainingItems;
-    
-    if (quizItems.length === 0) {
-      return (
-        <div style={{ padding: '12px', textAlign: 'center', color: '#999' }}>
-          Không có quiz nào
-        </div>
-      );
-    }
-
-    return (
-      <div style={{ 
-        maxWidth:  isMobile ? '350px' : '500px'  , 
-        maxHeight: '400px', 
-        overflowY: 'auto',
-        padding: '8px 0'
-      }}>
-        <div style={{ 
-          padding: '8px 12px', 
-          borderBottom: '1px solid #f0f0f0',
-          fontWeight: '600',
-          fontSize: '14px',
-          color: '#262626',
-          marginBottom: '4px'
-        }}>
-          Quiz / Practice ({quizItems.length})
-        </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-          {quizItems.map((quizItem) => {
-            const quizScore = relatedQuizScores[quizItem.id];
-            const hasScore = quizScore !== undefined && quizScore !== null;
-            const numeric = hasScore ? Number(quizScore) : null;
-            const pass = numeric !== null && !isNaN(numeric) && numeric >= 70;
-            
-            return (
-              <div
-                key={quizItem.id}
-                onClick={() => handleQuizItemClick(quizItem)}
-                style={{
-                  padding: '10px 12px',
-                  cursor: 'pointer',
-                  borderRadius: '4px',
-                  transition: 'all 0.2s',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '10px'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = '#f5f5f5';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = 'transparent';
-                }}
-              >
-                {quizItem.avatarUrl && (
-                  <Image
-                    src={quizItem.avatarUrl}
-                    alt={quizItem.title}
-                    width={70}
-                    height={70}
-                    style={{
-                      objectFit: 'cover',
-                      borderRadius: '4px',
-                      flexShrink: 0
-                    }}
-                    preview={false}
-                  />
-                )}
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{
-                    fontSize: '13px',
-                    fontWeight: '500',
-                    color: '#262626',
-                    marginBottom: '4px',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap'
-                  }}>
-                    {quizItem.title}
-                  </div>
-                  {quizItem.summary && (
-                    <div style={{
-                      fontSize: '11px',
-                      color: '#8c8c8c',
-                      marginBottom: '6px',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap'
-                    }}>
-                      {quizItem.summary}
-                    </div>
-                  )}
-                  {/* ID and Quiz Status Row */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                    <span style={{
-                      fontSize: '10px',
-                      color: '#8c8c8c',
-                      fontWeight: '500'
-                    }}>
-                      ID: {quizItem.id}
-                    </span>
-                    {hasScore ? (
-                      <span
-                        style={{
-                          padding: '2px 8px',
-                          borderRadius: '6px',
-                          fontSize: '12px',
-                          fontWeight: '600',
-                          backgroundColor: pass ? '#E5F6DD' : '#E9EEFF',
-                          color: pass ? '#75C341' : '#7A8ED7',
-                          border: pass ? '1px solid #9FDE7D' : '1px solid #B9C4F7',
-                        }}
-                        title={`Đạt ${numeric}/100`}
-                      >
-                        {numeric}/100
-                      </span>
-                    ) : (
-                      <span
-                        style={{
-                          padding: '2px 8px',
-                          borderRadius: '6px',
-                          fontSize: '12px',
-                          fontWeight: '600',
-                          backgroundColor: '#FFE9ED',
-                          color: '#E39191',
-                          border: '1px solid #F3B2B2',
-                        }}
-                        title='Chưa làm'
-                      >
-                        Chưa làm
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-    );
-  };
 
 
   // Render content panel
@@ -1751,8 +1586,6 @@ const NewsTab = ({
         searchText={searchText}
         activeTab={activeTab}
         viewMode={viewMode}
-        quizPopoverVisible={quizPopoverVisible}
-
         contentPanelRef={contentPanelRef}
         markdownContentRef={markdownContentRef}
         hasAccess={hasAccess}
@@ -1761,12 +1594,13 @@ const NewsTab = ({
         getFileIcon={getFileIcon}
         openFilePreview={openFilePreview}
         handleEditClick={handleEditClick}
-        renderQuizPopoverContent={renderQuizPopoverContent}
+        relatedCaseTrainingItems={relatedCaseTrainingItems}
+        relatedQuizScores={relatedQuizScores}
+        selectedProgram={selectedProgram}
         onShare={onShare}
         setShowSummaryDetail={setShowSummaryDetail}
         setSelectedDetailImageIndex={setSelectedDetailImageIndex}
         setShowFeedbackModal={setShowFeedbackModal}
-        setQuizPopoverVisible={setQuizPopoverVisible}
         setIsPackageModalOpen={setIsPackageModalOpen}
         setQuestionScoreMap={setQuestionScoreMap}
         preprocessLatex={preprocessLatex}
