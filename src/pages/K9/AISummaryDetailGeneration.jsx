@@ -1,11 +1,12 @@
 import { CheckCircleOutlined, CloseCircleOutlined, DeleteOutlined, FileImageOutlined, FileTextOutlined, HomeOutlined, LoadingOutlined, PictureOutlined, SearchOutlined, SettingOutlined, ThunderboltOutlined, UploadOutlined } from '@ant-design/icons';
-import { Badge, Button, Card, Empty, Image, Input, message, Modal, Popconfirm, Select, Space, Switch, Table, Tabs, Tag, Tooltip } from 'antd';
+import { Badge, Button, Card, Dropdown, Empty, Image, Input, message, Modal, Popconfirm, Select, Space, Switch, Table, Tabs, Tag, Tooltip } from 'antd';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { aiGen, aiGen2 } from '../../apis/aiGen/botService.jsx';
 import { uploadFiles } from '../../apis/aiGen/uploadImageWikiNoteService.jsx';
 import { getK9ByType, updateK9, updateK9Bulk, getK9ByCidType } from '../../apis/k9Service.jsx';
 import { getSettingByType } from '../../apis/settingService.jsx';
+import { getSettingByTypePublic } from '../../apis/public/publicService.jsx';
 import EditDetailModal from '../K9/components/EditDetailModal.jsx';
 import EditSummaryDetailModal from '../K9/components/EditSummaryDetailModal.jsx';
 import DiagramPreviewModal from '../K9Management/components/DiagramPreviewModal.jsx';
@@ -72,6 +73,10 @@ const AISummaryDetailGeneration = () => {
     const [detailImageUrlsFilter, setDetailImageUrlsFilter] = useState('all'); // 'all', 'has', 'none'
     const [showDetailFilter, setShowDetailFilter] = useState('all'); // 'all', 'has', 'none'
     const [lessonNumberFilter, setLessonNumberFilter] = useState(''); // Text search for lessonNumber
+    const [programFilter, setProgramFilter] = useState([]); // Array of selected program values
+    const [tag4Options, setTag4Options] = useState([]); // List of available programs
+    const programTagsContainerRef = useRef(null); // Ref for tags container
+    const [visibleTagsCount, setVisibleTagsCount] = useState(tag4Options.length); // Count of visible tags
 
     // Queue states for SummaryDetail
     const [summaryDetailQueue, setSummaryDetailQueue] = useState([]);
@@ -2101,8 +2106,25 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
         }
     };
 
+    // Load TAG4_OPTIONS (Programs)
+    const loadTag4Options = async () => {
+        try {
+            const tag4Setting = await getSettingByTypePublic('TAG4_OPTIONS');
+            if (tag4Setting?.setting) {
+                // TAG4_OPTIONS can be an array or an object with options property
+                const options = Array.isArray(tag4Setting.setting) 
+                    ? tag4Setting.setting 
+                    : (tag4Setting.setting.options || []);
+                setTag4Options(options);
+            }
+        } catch (error) {
+            console.error('Error loading TAG4_OPTIONS:', error);
+        }
+    };
+
     useEffect(() => {
         loadK9Data();
+        loadTag4Options();
     }, []);
 
     // Get related case training count by cid
@@ -2146,7 +2168,160 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
     // Reset to page 1 when tab, search, or filters change
     useEffect(() => {
         setCurrentPage(1);
-    }, [activeTab, searchText, summaryDetailFilter, diagramHtmlFilter, diagramExcalidrawFilter, imgUrlsFilter, detailImageUrlsFilter, showDetailFilter, lessonNumberFilter]);
+    }, [activeTab, searchText, summaryDetailFilter, diagramHtmlFilter, diagramExcalidrawFilter, imgUrlsFilter, detailImageUrlsFilter, showDetailFilter, lessonNumberFilter, programFilter]);
+
+    // Calculate how many tags can fit in the container
+    useEffect(() => {
+        if (!programTagsContainerRef.current || tag4Options.length === 0) {
+            setVisibleTagsCount(tag4Options.length);
+            return;
+        }
+
+        const checkVisibleCount = () => {
+            const container = programTagsContainerRef.current;
+            if (!container) return;
+
+            // Get container width
+            const containerRect = container.getBoundingClientRect();
+            const containerWidth = containerRect.width;
+            
+            // Get all tags (including hidden ones)
+            const tags = container.querySelectorAll('.program-filter-tag:not(.ellipsis-tag)');
+            
+            if (tags.length === 0) {
+                setVisibleTagsCount(tag4Options.length);
+                return;
+            }
+
+            // Get parent container to check available width
+            const parentContainer = container.parentElement;
+            if (!parentContainer) {
+                setVisibleTagsCount(tag4Options.length);
+                return;
+            }
+
+            const parentRect = parentContainer.getBoundingClientRect();
+            const label = parentContainer.querySelector('span');
+            const clearButton = parentContainer.querySelector('button');
+            
+            const labelWidth = label ? label.offsetWidth + 8 : 0; // + gap
+            const clearButtonWidth = (clearButton && programFilter.length > 0) ? clearButton.offsetWidth + 8 : 0; // + gap
+            const gap = 8;
+            const ellipsisTagWidth = 100; // Approximate width for "... (X)" tag
+            
+            // Available width for tags
+            const availableWidth = parentRect.width - labelWidth - clearButtonWidth - gap;
+            
+            // Measure actual tag widths by creating a temporary measurement container
+            const measureTag = (text) => {
+                const measureEl = document.createElement('span');
+                measureEl.style.position = 'absolute';
+                measureEl.style.visibility = 'hidden';
+                measureEl.style.whiteSpace = 'nowrap';
+                measureEl.style.padding = '4px 12px';
+                measureEl.style.fontSize = '13px';
+                measureEl.textContent = text;
+                document.body.appendChild(measureEl);
+                const width = measureEl.offsetWidth;
+                document.body.removeChild(measureEl);
+                return width;
+            };
+            
+            // First, try to fit all tags without ellipsis
+            let totalWidth = 0;
+            let count = 0;
+            
+            for (let i = 0; i < tag4Options.length; i++) {
+                const option = tag4Options[i];
+                const tagText = option.label || option.displayName || option.value;
+                const tagWidth = measureTag(tagText) + gap;
+                
+                if (totalWidth + tagWidth <= availableWidth) {
+                    totalWidth += tagWidth;
+                    count++;
+                } else {
+                    break;
+                }
+            }
+            
+            // If we can't fit all tags, check if we can fit more with ellipsis
+            if (count < tag4Options.length) {
+                // Reserve space for ellipsis
+                const availableWithEllipsis = availableWidth - ellipsisTagWidth - gap;
+                totalWidth = 0;
+                count = 0;
+                
+                for (let i = 0; i < tag4Options.length; i++) {
+                    const option = tag4Options[i];
+                    const tagText = option.label || option.displayName || option.value;
+                    const tagWidth = measureTag(tagText) + gap;
+                    
+                    if (totalWidth + tagWidth <= availableWithEllipsis) {
+                        totalWidth += tagWidth;
+                        count++;
+                    } else {
+                        break;
+                    }
+                }
+            }
+
+            // Ensure at least 1 tag is shown
+            const finalCount = Math.max(1, Math.min(count, tag4Options.length));
+            setVisibleTagsCount(finalCount);
+        };
+
+        // Use multiple strategies to ensure recalculation
+        let timeoutId1 = setTimeout(checkVisibleCount, 50);
+        let timeoutId2 = setTimeout(checkVisibleCount, 200);
+
+        // Use ResizeObserver for container
+        let resizeObserver;
+        if (window.ResizeObserver && programTagsContainerRef.current) {
+            resizeObserver = new ResizeObserver(() => {
+                clearTimeout(timeoutId1);
+                clearTimeout(timeoutId2);
+                timeoutId1 = setTimeout(checkVisibleCount, 50);
+                timeoutId2 = setTimeout(checkVisibleCount, 200);
+            });
+            resizeObserver.observe(programTagsContainerRef.current);
+            
+            // Also observe parent container
+            const parent = programTagsContainerRef.current.parentElement;
+            if (parent) {
+                resizeObserver.observe(parent);
+            }
+        }
+
+        // Listen to window resize and zoom
+        const handleResize = () => {
+            clearTimeout(timeoutId1);
+            clearTimeout(timeoutId2);
+            timeoutId1 = setTimeout(checkVisibleCount, 50);
+            timeoutId2 = setTimeout(checkVisibleCount, 200);
+        };
+        
+        window.addEventListener('resize', handleResize);
+        // Also listen to zoom changes
+        let lastZoom = window.devicePixelRatio;
+        const checkZoom = () => {
+            const currentZoom = window.devicePixelRatio;
+            if (Math.abs(currentZoom - lastZoom) > 0.01) {
+                lastZoom = currentZoom;
+                handleResize();
+            }
+        };
+        const zoomInterval = setInterval(checkZoom, 100);
+
+        return () => {
+            clearTimeout(timeoutId1);
+            clearTimeout(timeoutId2);
+            if (resizeObserver) {
+                resizeObserver.disconnect();
+            }
+            window.removeEventListener('resize', handleResize);
+            clearInterval(zoomInterval);
+        };
+    }, [tag4Options.length, programFilter.length]);
 
     // Optimize filter with useMemo
     const filteredData = useMemo(() => {
@@ -2208,6 +2383,24 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
             });
         }
 
+        // Filter by program (tag4) - OR logic: record matches if it has ANY of the selected programs
+        if (programFilter.length > 0) {
+            data = data.filter(item => {
+                const itemTag4 = item.tag4;
+                if (!itemTag4) return false;
+                
+                // Handle both array and string formats for tag4
+                const itemTag4Array = Array.isArray(itemTag4) 
+                    ? itemTag4 
+                    : (itemTag4 ? [itemTag4] : []);
+                
+                // Check if any of the selected programs match any of the item's programs
+                return programFilter.some(selectedProgram => 
+                    itemTag4Array.includes(selectedProgram)
+                );
+            });
+        }
+
         // Filter by general search text
         if (searchText.trim()) {
             const searchLower = searchText.toLowerCase();
@@ -2227,7 +2420,7 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
         }
 
         return data;
-    }, [searchText, summaryDetailFilter, diagramHtmlFilter, diagramExcalidrawFilter, imgUrlsFilter, detailImageUrlsFilter, showDetailFilter, lessonNumberFilter, currentTabData]);
+    }, [searchText, summaryDetailFilter, diagramHtmlFilter, diagramExcalidrawFilter, imgUrlsFilter, detailImageUrlsFilter, showDetailFilter, lessonNumberFilter, programFilter, currentTabData]);
 
     const renderDetail = useCallback((text, record) => {
         if (!text) return '-';
@@ -2463,11 +2656,54 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
             title: 'Lesson Number',
             dataIndex: 'lessonNumber',
             key: 'lessonNumber',
-            width: 120,
-            render: (lessonNumber) => lessonNumber ? <Tag color="purple">{lessonNumber}</Tag> : '-',
+            width: 160,
+            render: (lessonNumber) => {
+                if (!lessonNumber) return '-';
+                const lessonNumberStr = String(lessonNumber);
+                return (
+                    <Tooltip title={lessonNumberStr}>
+                        <Tag 
+                            color="purple"
+                            style={{
+                                maxWidth: '140px',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                whiteSpace: 'nowrap',
+                                display: 'inline-block'
+                            }}
+                        >
+                            {lessonNumberStr}
+                        </Tag>
+                    </Tooltip>
+                );
+            },
             sorter: (a, b) => {
                 const aVal = String(a.lessonNumber || '').toLowerCase();
                 const bVal = String(b.lessonNumber || '').toLowerCase();
+                return aVal.localeCompare(bVal);
+            },
+        },
+        {
+            title: 'Program',
+            dataIndex: 'tag4',
+            key: 'tag4',
+            width: 400,
+            render: (tag4) => {
+                if (!tag4) return '-';
+                const text = Array.isArray(tag4) ? tag4.join(', ') : String(tag4);
+                return (
+                    <div style={{ 
+                        whiteSpace: 'normal', 
+                        wordBreak: 'break-word',
+                        lineHeight: '1.5'
+                    }}>
+                        {text}
+                    </div>
+                );
+            },
+            sorter: (a, b) => {
+                const aVal = Array.isArray(a.tag4) ? a.tag4.join(', ') : (a.tag4 || '');
+                const bVal = Array.isArray(b.tag4) ? b.tag4.join(', ') : (b.tag4 || '');
                 return aVal.localeCompare(bVal);
             },
         },
@@ -3125,6 +3361,153 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
                     </div>
                 </div>
 
+                {/* Row 2: Program Filter Tags */}
+                {tag4Options.length > 0 && (
+                        <div 
+                            style={{ 
+                                marginBottom: '12px', 
+                                display: 'flex', 
+                                gap: '8px', 
+                                alignItems: 'center', 
+                                flexWrap: 'nowrap', 
+                                width: '100%', 
+                                overflow: 'hidden',
+                                boxSizing: 'border-box'
+                            }}
+                        >
+                            <span style={{ fontSize: '13px', fontWeight: 500, flexShrink: 0 }}>Lọc Program:</span>
+                            <div 
+                                ref={programTagsContainerRef}
+                                style={{ 
+                                    display: 'flex', 
+                                    gap: '8px', 
+                                    alignItems: 'center', 
+                                    flexWrap: 'nowrap', 
+                                    overflow: 'hidden', 
+                                    flex: 1, 
+                                    minWidth: 0,
+                                    boxSizing: 'border-box',
+                                    position: 'relative'
+                                }}
+                            >
+                                {tag4Options.map((option, index) => {
+                                    const isSelected = programFilter.includes(option.value);
+                                    const isVisible = index < visibleTagsCount;
+                                    
+                                    return (
+                                        <Tag
+                                            key={option.value}
+                                            className="program-filter-tag"
+                                            onClick={() => {
+                                                if (isSelected) {
+                                                    setProgramFilter(prev => prev.filter(p => p !== option.value));
+                                                } else {
+                                                    setProgramFilter(prev => [...prev, option.value]);
+                                                }
+                                            }}
+                                            style={{
+                                                cursor: 'pointer',
+                                                padding: '4px 12px',
+                                                fontSize: '13px',
+                                                border: isSelected ? '2px solid #1890ff' : '1px solid #d9d9d9',
+                                                backgroundColor: isSelected ? '#e6f7ff' : '#fafafa',
+                                                color: isSelected ? '#1890ff' : '#595959',
+                                                fontWeight: isSelected ? 600 : 400,
+                                                transition: 'all 0.2s ease',
+                                                userSelect: 'none',
+                                                flexShrink: 0,
+                                                whiteSpace: 'nowrap',
+                                                display: isVisible ? 'inline-flex' : 'none'
+                                            }}
+                                            onMouseEnter={(e) => {
+                                                if (!isSelected) {
+                                                    e.currentTarget.style.backgroundColor = '#f0f0f0';
+                                                    e.currentTarget.style.borderColor = '#40a9ff';
+                                                }
+                                            }}
+                                            onMouseLeave={(e) => {
+                                                if (!isSelected) {
+                                                    e.currentTarget.style.backgroundColor = '#fafafa';
+                                                    e.currentTarget.style.borderColor = '#d9d9d9';
+                                                }
+                                            }}
+                                        >
+                                            {option.label || option.displayName || option.value}
+                                        </Tag>
+                                    );
+                                })}
+                                {visibleTagsCount < tag4Options.length && (
+                                    <Dropdown
+                                        menu={{
+                                            items: tag4Options.slice(visibleTagsCount).map(option => {
+                                                const isSelected = programFilter.includes(option.value);
+                                                return {
+                                                    key: option.value,
+                                                    label: (
+                                                        <div
+                                                            style={{
+                                                                padding: '4px 8px',
+                                                                backgroundColor: isSelected ? '#e6f7ff' : 'transparent',
+                                                                borderRadius: '4px',
+                                                                color: isSelected ? '#1890ff' : '#595959',
+                                                                fontWeight: isSelected ? 600 : 400
+                                                            }}
+                                                        >
+                                                            {isSelected && '✓ '}
+                                                            {option.label || option.displayName || option.value}
+                                                        </div>
+                                                    ),
+                                                    onClick: () => {
+                                                        if (isSelected) {
+                                                            setProgramFilter(prev => prev.filter(p => p !== option.value));
+                                                        } else {
+                                                            setProgramFilter(prev => [...prev, option.value]);
+                                                        }
+                                                    }
+                                                };
+                                            })
+                                        }}
+                                        trigger={['click']}
+                                    >
+                                        <Tag
+                                            className="ellipsis-tag"
+                                            style={{
+                                                cursor: 'pointer',
+                                                padding: '4px 12px',
+                                                fontSize: '13px',
+                                                border: '1px solid #d9d9d9',
+                                                backgroundColor: '#fafafa',
+                                                color: '#595959',
+                                                flexShrink: 0,
+                                                whiteSpace: 'nowrap'
+                                            }}
+                                            onMouseEnter={(e) => {
+                                                e.currentTarget.style.backgroundColor = '#f0f0f0';
+                                                e.currentTarget.style.borderColor = '#40a9ff';
+                                            }}
+                                            onMouseLeave={(e) => {
+                                                e.currentTarget.style.backgroundColor = '#fafafa';
+                                                e.currentTarget.style.borderColor = '#d9d9d9';
+                                            }}
+                                        >
+                                            ... ({tag4Options.length - visibleTagsCount})
+                                        </Tag>
+                                    </Dropdown>
+                                )}
+                            </div>
+                            {programFilter.length > 0 && (
+                                <Button
+                                    type="link"
+                                    size="small"
+                                    onClick={() => setProgramFilter([])}
+                                    style={{ fontSize: '12px', padding: '0 4px', height: 'auto', flexShrink: 0 }}
+                                >
+                                    Xóa tất cả
+                                </Button>
+                            )}
+                        </div>
+                )}
+
                 {/* Row 3: Generation Buttons */}
                 <div style={{ marginBottom: '12px', display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
                     <Button
@@ -3453,19 +3836,19 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
                 {/* Tabs */}
                 <Tabs activeKey={activeTab} onChange={setActiveTab} style={{ marginBottom: '16px' }}>
                     <TabPane
-                        tab={<span>Lý thuyết <Badge count={k9Data.news?.length || 0} size="small" /></span>}
+                        tab={<span>Lý thuyết <Badge count={k9Data.news?.length || 0} size="small" overflowCount={999999} /></span>}
                         key="news"
                     />
                     <TabPane
-                        tab={<span>Case Training <Badge count={k9Data.caseTraining?.length || 0} size="small" /></span>}
+                        tab={<span>Case Training <Badge count={k9Data.caseTraining?.length || 0} size="small" overflowCount={999999} /></span>}
                         key="caseTraining"
                     />
                     <TabPane
-                        tab={<span>Kho tài nguyên <Badge count={k9Data.longForm?.length || 0} size="small" /></span>}
+                        tab={<span>Kho tài nguyên <Badge count={k9Data.longForm?.length || 0} size="small" overflowCount={999999} /></span>}
                         key="longForm"
                     />
                     <TabPane
-                        tab={<span>Về AiMBA <Badge count={k9Data.home?.length || 0} size="small" /></span>}
+                        tab={<span>Về AiMBA <Badge count={k9Data.home?.length || 0} size="small" overflowCount={999999} /></span>}
                         key="home"
                     />
                 </Tabs>

@@ -41,6 +41,10 @@ const ImageSpellCheck = () => {
     const [selectedRowKeys, setSelectedRowKeys] = useState([]);
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize, setPageSize] = useState(1000);
+    const [approvedFilter, setApprovedFilter] = useState('all'); // 'all', 'approved', 'notApproved'
+    const [ocrFilter, setOcrFilter] = useState('all'); // 'all', 'hasOcr', 'noOcr'
+    const [scoreFilter, setScoreFilter] = useState('all'); // 'all', 'hasScore', 'noScore'
+    const [needsReviewFilter, setNeedsReviewFilter] = useState('all'); // 'all', 'needsReview', 'noReview'
     const [detailModalVisible, setDetailModalVisible] = useState(false);
     const [detailContent, setDetailContent] = useState('');
     const [detailTitle, setDetailTitle] = useState('');
@@ -106,9 +110,47 @@ const ImageSpellCheck = () => {
             'longForm': 'longForm'
         };
         filtered = filtered.filter(img => img.type === typeMap[activeTab]);
+
+        // Filter by approved status
+        if (approvedFilter === 'approved') {
+            filtered = filtered.filter(img => img.isOk === true);
+        } else if (approvedFilter === 'notApproved') {
+            filtered = filtered.filter(img => img.isOk !== true);
+        }
+
+        // Filter by OCR status
+        if (ocrFilter === 'hasOcr') {
+            filtered = filtered.filter(img => 
+                img.ocrText && 
+                typeof img.ocrText === 'string' && 
+                img.ocrText.trim() && 
+                img.ocrText !== 'Đang xử lý...' &&
+                !img.ocrText.startsWith('Lỗi OCR')
+            );
+        } else if (ocrFilter === 'noOcr') {
+            filtered = filtered.filter(img => 
+                !img.ocrText || 
+                (typeof img.ocrText === 'string' && (!img.ocrText.trim() || img.ocrText === 'Đang xử lý...' || img.ocrText.startsWith('Lỗi OCR')))
+            );
+        }
+
+        // Filter by Score status
+        if (scoreFilter === 'hasScore') {
+            filtered = filtered.filter(img => img.score && img.scoreStatus !== 'failed');
+        } else if (scoreFilter === 'noScore') {
+            filtered = filtered.filter(img => !img.score || img.scoreStatus === 'failed');
+        }
+
+        // Filter by needsReview
+        if (needsReviewFilter === 'needsReview') {
+            filtered = filtered.filter(img => img.needsReview === true);
+        } else if (needsReviewFilter === 'noReview') {
+            filtered = filtered.filter(img => img.needsReview !== true);
+        }
+
         setFilteredImageData(filtered);
         setCurrentPage(1); // Reset to first page when filter changes
-    }, [searchText, activeTab, imageData]);
+    }, [searchText, activeTab, imageData, approvedFilter, ocrFilter, scoreFilter, needsReviewFilter]);
 
     // Helper function để cập nhật Score vào mảng image URLs (imgUrls hoặc detailImageUrls)
     const updateImageArrayWithScore = async (recordId, imageUrl, score, arrayFieldName) => {
@@ -1209,6 +1251,15 @@ const ImageSpellCheck = () => {
             title: 'Average Confidence',
             key: 'averageConfidence',
             width: 150,
+            sorter: (a, b) => {
+                const aVal = a.averageConfidence !== undefined && a.averageConfidence !== null
+                    ? (typeof a.averageConfidence === 'number' ? a.averageConfidence : parseFloat(a.averageConfidence))
+                    : -1;
+                const bVal = b.averageConfidence !== undefined && b.averageConfidence !== null
+                    ? (typeof b.averageConfidence === 'number' ? b.averageConfidence : parseFloat(b.averageConfidence))
+                    : -1;
+                return aVal - bVal;
+            },
             render: (_, record) => {
                 if (record.averageConfidence === undefined || record.averageConfidence === null) {
                     return <Text type="secondary">-</Text>;
@@ -1255,6 +1306,17 @@ const ImageSpellCheck = () => {
             title: 'Score',
             key: 'score',
             width: 300,
+            sorter: (a, b) => {
+                const aHasScore = a.score && a.scoreStatus !== 'failed';
+                const bHasScore = b.score && b.scoreStatus !== 'failed';
+                if (aHasScore && !bHasScore) return 1;
+                if (!aHasScore && bHasScore) return -1;
+                if (!aHasScore && !bHasScore) return 0;
+                // If both have score, compare by score text length or content
+                const aScore = String(a.score || '');
+                const bScore = String(b.score || '');
+                return aScore.localeCompare(bScore);
+            },
             render: (_, record) => {
                 const isScoringProcessing = scoringProcessingImages.has(record.id) || record.scoreStatus === 'processing';
                 if (isScoringProcessing) {
@@ -1314,7 +1376,7 @@ const ImageSpellCheck = () => {
         {
             title: 'Thao tác',
             key: 'actions',
-            width: 250,
+            width: 300,
             fixed: 'right',
             render: (_, record) => {
                 const isProcessing = processingImages.has(record.id);
@@ -1391,6 +1453,46 @@ const ImageSpellCheck = () => {
                             allowClear
                             size="small"
                         />
+                        <Select
+                            value={approvedFilter}
+                            onChange={setApprovedFilter}
+                            style={{ width: 150 }}
+                            size="small"
+                        >
+                            <Select.Option value="all">Tất cả duyệt</Select.Option>
+                            <Select.Option value="approved">Đã duyệt</Select.Option>
+                            <Select.Option value="notApproved">Chưa duyệt</Select.Option>
+                        </Select>
+                        <Select
+                            value={ocrFilter}
+                            onChange={setOcrFilter}
+                            style={{ width: 150 }}
+                            size="small"
+                        >
+                            <Select.Option value="all">Tất cả OCR</Select.Option>
+                            <Select.Option value="hasOcr">Đã OCR</Select.Option>
+                            <Select.Option value="noOcr">Chưa OCR</Select.Option>
+                        </Select>
+                        <Select
+                            value={scoreFilter}
+                            onChange={setScoreFilter}
+                            style={{ width: 150 }}
+                            size="small"
+                        >
+                            <Select.Option value="all">Tất cả Score</Select.Option>
+                            <Select.Option value="hasScore">Đã chấm điểm</Select.Option>
+                            <Select.Option value="noScore">Chưa chấm điểm</Select.Option>
+                        </Select>
+                        <Select
+                            value={needsReviewFilter}
+                            onChange={setNeedsReviewFilter}
+                            style={{ width: 150 }}
+                            size="small"
+                        >
+                            <Select.Option value="all">Tất cả Review</Select.Option>
+                            <Select.Option value="needsReview">Cần review</Select.Option>
+                            <Select.Option value="noReview">Không cần review</Select.Option>
+                        </Select>
                         {processLogs.length > 0 && (
                             <Button
                                 icon={<FileTextOutlined />}
