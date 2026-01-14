@@ -28,7 +28,7 @@ const QuizComponent = ({ quizData, questionId, onScoreUpdate, allowRetake }) => 
 
   // Hàm xử lý LaTeX trước khi parse với marked
   const preprocessLatex = (text) => {
-    if (!text) return text;
+    if (!text) return { processedText: '', latexBlocks: [] };
 
     // Thay thế $$...$$ bằng placeholder để tránh double processing
     let processedText = text;
@@ -579,8 +579,9 @@ LƯU Ý: Chỉ dùng số nguyên từ 1-10, không dùng 7.5, 8.3, v.v.`;
                     style={{ flex: 1 }}
                     dangerouslySetInnerHTML={{
                       __html: (() => {
-                        const { processedText, latexBlocks } = preprocessLatex(question.question || '');
-                        const html = marked.parse(processedText, {
+                        const result = preprocessLatex(question.question || '');
+                        const { processedText = '', latexBlocks = [] } = result && typeof result === 'object' ? result : { processedText: result || '', latexBlocks: [] };
+                        const html = marked.parse(processedText || '', {
                           headerIds: true,
                           mangle: false,
                           headerPrefix: '',
@@ -634,8 +635,9 @@ LƯU Ý: Chỉ dùng số nguyên từ 1-10, không dùng 7.5, 8.3, v.v.`;
                               style={{ flex: 1 }}
                               dangerouslySetInnerHTML={{
                                 __html: (() => {
-                                  const { processedText, latexBlocks } = preprocessLatex(value || '');
-                                  const html = marked.parse(processedText, {
+                                  const result = preprocessLatex(value || '');
+                                  const { processedText = '', latexBlocks = [] } = result && typeof result === 'object' ? result : { processedText: result || '', latexBlocks: [] };
+                                  const html = marked.parse(processedText || '', {
                                     headerIds: true,
                                     mangle: false,
                                     headerPrefix: '',
@@ -689,8 +691,9 @@ LƯU Ý: Chỉ dùng số nguyên từ 1-10, không dùng 7.5, 8.3, v.v.`;
                           className={styles.markdownContent}
                           dangerouslySetInnerHTML={{
                             __html: (() => {
-                              const { processedText, latexBlocks } = preprocessLatex(question.explanation || '');
-                              const html = marked.parse(processedText, {
+                              const result = preprocessLatex(question.explanation || '');
+                              const { processedText = '', latexBlocks = [] } = result && typeof result === 'object' ? result : { processedText: result || '', latexBlocks: [] };
+                              const html = marked.parse(processedText || '', {
                                 headerIds: true,
                                 mangle: false,
                                 headerPrefix: '',
@@ -738,8 +741,9 @@ LƯU Ý: Chỉ dùng số nguyên từ 1-10, không dùng 7.5, 8.3, v.v.`;
                     style={{ flex: 1 }}
                     dangerouslySetInnerHTML={{
                       __html: (() => {
-                        const { processedText, latexBlocks } = preprocessLatex(question.question || '');
-                        const html = marked.parse(processedText, {
+                        const result = preprocessLatex(question.question || '');
+                        const { processedText = '', latexBlocks = [] } = result && typeof result === 'object' ? result : { processedText: result || '', latexBlocks: [] };
+                        const html = marked.parse(processedText || '', {
                           headerIds: true,
                           mangle: false,
                           headerPrefix: '',
