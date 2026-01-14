@@ -24,3 +24,15 @@ export const getFeedback = async () => {
     throw error;
   }
 };
+
+
+export const getFeedbackByIdUserAndIdContent = async (idUser, idContent) => {
+  try {
+    const { data } = await instance.get(URL + `/idUser/${idUser}/content/${idContent}`);
+    return data;
+  } catch (error) {
+    console.error('Error getting feedback:', error);
+    throw error;
+  }
+};
+

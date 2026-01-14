@@ -1895,6 +1895,8 @@ const CaseTrainingTab = ({
         setQuizScores={setQuizScores}
         preprocessLatex={preprocessLatex}
         postprocessLatex={postprocessLatex}
+        activeTab={activeTab}
+        fetchItem={fetchItem}
                 />
     );
   };

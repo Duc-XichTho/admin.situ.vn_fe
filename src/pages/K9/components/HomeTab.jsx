@@ -1381,14 +1381,14 @@ const HomeTab = ({
                     {item.info?.filedLabel_1}
                   </span>
                 )}
-                {item.info?.filedLabel_1 && item.info?.filedLabel_2 && (
-                  <span style={{ color: '#C4C4C4' }}>|</span>
-                )}
-                {item.info?.filedLabel_2 && (
-                  <span style={{ display: 'flex', alignItems: 'center' }}>
-                    {item.info?.filedLabel_2}
-                  </span>
-                )}
+                {/*{item.info?.filedLabel_1 && item.info?.filedLabel_2 && (*/}
+                {/*  <span style={{ color: '#C4C4C4' }}>|</span>*/}
+                {/*)}*/}
+                {/*{item.info?.filedLabel_2 && (*/}
+                {/*  <span style={{ display: 'flex', alignItems: 'center' }}>*/}
+                {/*    {item.info?.filedLabel_2}*/}
+                {/*  </span>*/}
+                {/*)}*/}
               </div>
             </div>
             <div className={styles.audioPlayerContainer}>

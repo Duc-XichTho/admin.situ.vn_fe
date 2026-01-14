@@ -1577,6 +1577,7 @@ const NewsTab = ({
     
     return (
       <ContentPanel
+        fetchItem={fetchItem}
         item={item}
         currentUser={currentUser}
         isMobile={isMobile}

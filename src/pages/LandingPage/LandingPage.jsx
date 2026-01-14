@@ -106,7 +106,7 @@ const LandingPage = () => {
                 userId: createdUserId,
                 amount: packageData.price,
                 description: `Thanh toán ${packageData.name}`,
-                returnUrl: `${window.location.origin}/payment-success?payment_success=true&orderCode=${orderCode}&package=${encodeURIComponent(packageData.name)}`,
+                returnUrl: `${window.location.origin}/payment-success?payment_success=true&orderCode=${orderCode}&package=${encodeURIComponent(packageData.name)}&amount=${packageData.price}`,
                 cancelUrl: `${window.location.origin}/landing`,
                 serviceDomain: 'aimba',
                 paymentType: 'improve-account',

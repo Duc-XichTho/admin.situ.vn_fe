@@ -545,471 +545,471 @@ LƯU Ý: Chỉ dùng số nguyên từ 1-10, không dùng 7.5, 8.3, v.v.`;
   };
 
   return (
-    <div className={styles.quizContainer}>
-      <div
-        style={{ margin: '10px 0', borderRadius: '10px', border: '1px solid #DDDEDFFF', padding: 10 }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <BookOutlined style={{ color: '#dddedf' }} />
-          <span>Bài Quiz</span>
-        </div>
-        {/* Quiz Questions */}
-        {hasQuizQuestions && (
-          <div style={{ marginBottom: '24px' }}>
-            <h4 style={{ marginBottom: '16px', color: '#1890ff' }}>
-              📝 Câu hỏi trắc nghiệm ({quizData.questionQuiz.length} câu)
-            </h4>
+      <div className={styles.quizContainer}>
+        <div
+            style={{ margin: '10px 0', borderRadius: '10px', border: '1px solid #DDDEDFFF', padding: 10 }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <BookOutlined style={{ color: '#dddedf' }} />
+            <span>Bài Quiz</span>
+          </div>
+          {/* Quiz Questions */}
+          {hasQuizQuestions && (
+              <div style={{ marginBottom: '24px' }}>
+                <h4 style={{ marginBottom: '16px', color: '#1890ff' }}>
+                  📝 Câu hỏi trắc nghiệm ({quizData.questionQuiz.length} câu)
+                </h4>
 
-            {quizData.questionQuiz.map((question, index) => (
-              <div key={index} style={{ marginBottom: '20px' }}>
-                <div style={{
-                  fontWeight: '500',
-                  marginBottom: '12px',
-                  fontSize: '15px',
-                  color: '#262626',
-                  display: 'flex',
-                  alignItems: 'flex-start',
-                  gap: '8px'
-                }}>
+                {quizData.questionQuiz.map((question, index) => (
+                    <div key={index} style={{ marginBottom: '20px' }}>
+                      <div style={{
+                        fontWeight: '500',
+                        marginBottom: '12px',
+                        fontSize: '15px',
+                        color: '#262626',
+                        display: 'flex',
+                        alignItems: 'flex-start',
+                        gap: '8px'
+                      }}>
                   <span style={{ color: '#1890ff', flexShrink: 0 }}>
                     Câu {index + 1}:
                   </span>
-                  <div
-                    className={`${styles.markdownContent} ${styles.markdownInline}`}
-                    style={{ flex: 1 }}
-                    dangerouslySetInnerHTML={{
-                      __html: (() => {
-                        const result = preprocessLatex(question.question || '');
-                        const { processedText = '', latexBlocks = [] } = result && typeof result === 'object' ? result : { processedText: result || '', latexBlocks: [] };
-                        const html = marked.parse(processedText || '', {
-                          headerIds: true,
-                          mangle: false,
-                          headerPrefix: '',
-                          breaks: false,
-                          gfm: true
-                        });
-                        const finalHtml = postprocessLatex(html, latexBlocks);
-                        return DOMPurify.sanitize(finalHtml);
-                      })(),
-                    }}
-                  />
-                </div>
-
-                <Radio.Group
-                  value={selectedAnswers[index]}
-                  onChange={(e) => handleQuizAnswerChange(index, e.target.value)}
-                  disabled={showResults}
-                >
-                  <Space direction="vertical" style={{ width: '100%' }}>
-                    {Object.entries(question.options).map(([key, value]) => (
-                      <Radio
-                        key={key}
-                        value={key}
-                        style={{
-                          padding: '8px 12px',
-                          borderRadius: '6px',
-                          border: '1px solid #d9d9d9',
-                          width: '100%',
-                          margin: '4px 0',
-                          backgroundColor: showResults
-                            ? (key === question?.correct_answer
-                              ? '#f6ffed'
-                              : (selectedAnswers[index] === key && key !== question?.correct_answer
-                                ? '#fff2f0'
-                                : '#fafafa'))
-                            : '#fff',
-                          borderColor: showResults
-                            ? (key === question?.correct_answer
-                              ? '#52c41a'
-                              : (selectedAnswers[index] === key && key !== question?.correct_answer
-                                ? '#ff4d4f'
-                                : '#d9d9d9'))
-                            : '#d9d9d9'
-                        }}
-                      >
-                        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', width: '100%', gap: '8px' }}>
-                          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '4px', flex: 1 }}>
-                            <span style={{ flexShrink: 0 }}>{key}.</span>
-                            <div
-                              className={`${styles.markdownContent} ${styles.markdownInline}`}
-                              style={{ flex: 1 }}
-                              dangerouslySetInnerHTML={{
-                                __html: (() => {
-                                  const result = preprocessLatex(value || '');
-                                  const { processedText = '', latexBlocks = [] } = result && typeof result === 'object' ? result : { processedText: result || '', latexBlocks: [] };
-                                  const html = marked.parse(processedText || '', {
-                                    headerIds: true,
-                                    mangle: false,
-                                    headerPrefix: '',
-                                    breaks: false,
-                                    gfm: true
-                                  });
-                                  const finalHtml = postprocessLatex(html, latexBlocks);
-                                  return DOMPurify.sanitize(finalHtml);
-                                })(),
-                              }}
-                            />
-                          </div>
-                          {showResults && (
-                            <span style={{ flexShrink: 0 }}>
-                              {key === question?.correct_answer ? (
-                                <CheckCircleOutlined style={{ color: '#52c41a', fontSize: '16px' }} />
-                              ) : (selectedAnswers[index] === key && key !== question?.correct_answer) ? (
-                                <CloseCircleOutlined style={{ color: '#ff4d4f', fontSize: '16px' }} />
-                              ) : null}
-                            </span>
-                          )}
-                        </div>
-                      </Radio>
-                    ))}
-                  </Space>
-                </Radio.Group>
-
-                {/* Explanation */}
-                {showResults && question.explanation && (
-                  <div style={{ marginTop: '12px' }}>
-                    <Button
-                      type="text"
-                      size="small"
-                      onClick={() => toggleExplanation(index)}
-                      style={{ padding: 0, height: 'auto', color: '#1890ff' }}
-                    >
-                      {showExplanations[index] ? 'Ẩn giải thích' : 'Xem giải thích'}
-                    </Button>
-                    {showExplanations[index] && (
-                      <div style={{
-                        marginTop: '8px',
-                        padding: '12px',
-                        backgroundColor: '#f0f9ff',
-                        border: '1px solid #91d5ff',
-                        borderRadius: '6px',
-                        fontSize: '14px',
-                        color: '#262626'
-                      }}>
-                        <strong>💡 Giải thích:</strong>
                         <div
-                          className={styles.markdownContent}
-                          dangerouslySetInnerHTML={{
-                            __html: (() => {
-                              const result = preprocessLatex(question.explanation || '');
-                              const { processedText = '', latexBlocks = [] } = result && typeof result === 'object' ? result : { processedText: result || '', latexBlocks: [] };
-                              const html = marked.parse(processedText || '', {
-                                headerIds: true,
-                                mangle: false,
-                                headerPrefix: '',
-                                breaks: false,
-                                gfm: true
-                              });
-                              const finalHtml = postprocessLatex(html, latexBlocks);
-                              return DOMPurify.sanitize(finalHtml);
-                            })(),
-                          }}
+                            className={`${styles.markdownContent} ${styles.markdownInline}`}
+                            style={{ flex: 1 }}
+                            dangerouslySetInnerHTML={{
+                              __html: (() => {
+                                const result = preprocessLatex(question.question || '');
+                                const { processedText = '', latexBlocks = [] } = result && typeof result === 'object' ? result : { processedText: result || '', latexBlocks: [] };
+                                const html = marked.parse(processedText || '', {
+                                  headerIds: true,
+                                  mangle: false,
+                                  headerPrefix: '',
+                                  breaks: false,
+                                  gfm: true
+                                });
+                                const finalHtml = postprocessLatex(html, latexBlocks);
+                                return DOMPurify.sanitize(finalHtml);
+                              })(),
+                            }}
                         />
                       </div>
-                    )}
-                  </div>
-                )}
+
+                      <Radio.Group
+                          value={selectedAnswers[index]}
+                          onChange={(e) => handleQuizAnswerChange(index, e.target.value)}
+                          disabled={showResults}
+                      >
+                        <Space direction="vertical" style={{ width: '100%' }}>
+                          {Object.entries(question.options).map(([key, value]) => (
+                              <Radio
+                                  key={key}
+                                  value={key}
+                                  style={{
+                                    padding: '8px 12px',
+                                    borderRadius: '6px',
+                                    border: '1px solid #d9d9d9',
+                                    width: '100%',
+                                    margin: '4px 0',
+                                    backgroundColor: showResults
+                                        ? (key === question?.correct_answer
+                                            ? '#f6ffed'
+                                            : (selectedAnswers[index] === key && key !== question?.correct_answer
+                                                ? '#fff2f0'
+                                                : '#fafafa'))
+                                        : '#fff',
+                                    borderColor: showResults
+                                        ? (key === question?.correct_answer
+                                            ? '#52c41a'
+                                            : (selectedAnswers[index] === key && key !== question?.correct_answer
+                                                ? '#ff4d4f'
+                                                : '#d9d9d9'))
+                                        : '#d9d9d9'
+                                  }}
+                              >
+                                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', width: '100%', gap: '8px' }}>
+                                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '4px', flex: 1 }}>
+                                    <span style={{ flexShrink: 0 }}>{key}.</span>
+                                    <div
+                                        className={`${styles.markdownContent} ${styles.markdownInline}`}
+                                        style={{ flex: 1 }}
+                                        dangerouslySetInnerHTML={{
+                                          __html: (() => {
+                                            const result = preprocessLatex(value || '');
+                                            const { processedText = '', latexBlocks = [] } = result && typeof result === 'object' ? result : { processedText: result || '', latexBlocks: [] };
+                                            const html = marked.parse(processedText || '', {
+                                              headerIds: true,
+                                              mangle: false,
+                                              headerPrefix: '',
+                                              breaks: false,
+                                              gfm: true
+                                            });
+                                            const finalHtml = postprocessLatex(html, latexBlocks);
+                                            return DOMPurify.sanitize(finalHtml);
+                                          })(),
+                                        }}
+                                    />
+                                  </div>
+                                  {showResults && (
+                                      <span style={{ flexShrink: 0 }}>
+                              {key === question?.correct_answer ? (
+                                  <CheckCircleOutlined style={{ color: '#52c41a', fontSize: '16px' }} />
+                              ) : (selectedAnswers[index] === key && key !== question?.correct_answer) ? (
+                                  <CloseCircleOutlined style={{ color: '#ff4d4f', fontSize: '16px' }} />
+                              ) : null}
+                            </span>
+                                  )}
+                                </div>
+                              </Radio>
+                          ))}
+                        </Space>
+                      </Radio.Group>
+
+                      {/* Explanation */}
+                      {showResults && question.explanation && (
+                          <div style={{ marginTop: '12px' }}>
+                            <Button
+                                type="text"
+                                size="small"
+                                onClick={() => toggleExplanation(index)}
+                                style={{ padding: 0, height: 'auto', color: '#1890ff' }}
+                            >
+                              {showExplanations[index] ? 'Ẩn giải thích' : 'Xem giải thích'}
+                            </Button>
+                            {showExplanations[index] && (
+                                <div style={{
+                                  marginTop: '8px',
+                                  padding: '12px',
+                                  backgroundColor: '#f0f9ff',
+                                  border: '1px solid #91d5ff',
+                                  borderRadius: '6px',
+                                  fontSize: '14px',
+                                  color: '#262626'
+                                }}>
+                                  <strong>💡 Giải thích:</strong>
+                                  <div
+                                      className={styles.markdownContent}
+                                      dangerouslySetInnerHTML={{
+                                        __html: (() => {
+                                          const result = preprocessLatex(question.explanation || '');
+                                          const { processedText = '', latexBlocks = [] } = result && typeof result === 'object' ? result : { processedText: result || '', latexBlocks: [] };
+                                          const html = marked.parse(processedText || '', {
+                                            headerIds: true,
+                                            mangle: false,
+                                            headerPrefix: '',
+                                            breaks: false,
+                                            gfm: true
+                                          });
+                                          const finalHtml = postprocessLatex(html, latexBlocks);
+                                          return DOMPurify.sanitize(finalHtml);
+                                        })(),
+                                      }}
+                                  />
+                                </div>
+                            )}
+                          </div>
+                      )}
+                    </div>
+                ))}
               </div>
-            ))}
-          </div>
-        )}
+          )}
 
-        {/* Essay Questions */}
-        {hasEssayQuestions && (
-          <div>
-            <Divider />
-            <h4 style={{ marginBottom: '16px', color: '#722ed1' }}>
-              ✍️ Câu hỏi tự luận ({quizData.questionEssay.length} câu)
-            </h4>
+          {/* Essay Questions */}
+          {hasEssayQuestions && (
+              <div>
+                <Divider />
+                <h4 style={{ marginBottom: '16px', color: '#722ed1' }}>
+                  ✍️ Câu hỏi tự luận ({quizData.questionEssay.length} câu)
+                </h4>
 
-            {quizData.questionEssay.map((question, index) => (
-              <div key={index} style={{ marginBottom: '20px' }}>
-                <div style={{
-                  fontWeight: '500',
-                  marginBottom: '12px',
-                  fontSize: '15px',
-                  color: '#262626',
-                  display: 'flex',
-                  alignItems: 'flex-start',
-                  gap: '8px'
-                }}>
+                {quizData.questionEssay.map((question, index) => (
+                    <div key={index} style={{ marginBottom: '20px' }}>
+                      <div style={{
+                        fontWeight: '500',
+                        marginBottom: '12px',
+                        fontSize: '15px',
+                        color: '#262626',
+                        display: 'flex',
+                        alignItems: 'flex-start',
+                        gap: '8px'
+                      }}>
                   <span style={{ color: '#722ed1', flexShrink: 0 }}>
                     Câu {index + 1}:
                   </span>
-                  <div
-                    className={`${styles.markdownContent} ${styles.markdownInline}`}
-                    style={{ flex: 1 }}
-                    dangerouslySetInnerHTML={{
-                      __html: (() => {
-                        const result = preprocessLatex(question.question || '');
-                        const { processedText = '', latexBlocks = [] } = result && typeof result === 'object' ? result : { processedText: result || '', latexBlocks: [] };
-                        const html = marked.parse(processedText || '', {
-                          headerIds: true,
-                          mangle: false,
-                          headerPrefix: '',
-                          breaks: false,
-                          gfm: true
-                        });
-                        const finalHtml = postprocessLatex(html, latexBlocks);
-                        return DOMPurify.sanitize(finalHtml);
-                      })(),
-                    }}
-                  />
-                </div>
+                        <div
+                            className={`${styles.markdownContent} ${styles.markdownInline}`}
+                            style={{ flex: 1 }}
+                            dangerouslySetInnerHTML={{
+                              __html: (() => {
+                                const result = preprocessLatex(question.question || '');
+                                const { processedText = '', latexBlocks = [] } = result && typeof result === 'object' ? result : { processedText: result || '', latexBlocks: [] };
+                                const html = marked.parse(processedText || '', {
+                                  headerIds: true,
+                                  mangle: false,
+                                  headerPrefix: '',
+                                  breaks: false,
+                                  gfm: true
+                                });
+                                const finalHtml = postprocessLatex(html, latexBlocks);
+                                return DOMPurify.sanitize(finalHtml);
+                              })(),
+                            }}
+                        />
+                      </div>
 
-                <TextArea
-                  rows={4}
-                  placeholder="Nhập câu trả lời của bạn..."
-                  value={essayAnswers[index] || ''}
-                  onChange={(e) => handleEssayAnswerChange(index, e.target.value)}
-                  disabled={showResults}
-                  style={{
-                    borderColor: '#d9d9d9',
-                    borderRadius: '6px'
-                  }}
-                />
+                      <TextArea
+                          rows={4}
+                          placeholder="Nhập câu trả lời của bạn..."
+                          value={essayAnswers[index] || ''}
+                          onChange={(e) => handleEssayAnswerChange(index, e.target.value)}
+                          disabled={showResults}
+                          style={{
+                            borderColor: '#d9d9d9',
+                            borderRadius: '6px'
+                          }}
+                      />
 
-                {/* AI Grade Display - Show whenever AI grading is available */}
-                {aiGrading[index] && (
-                  <div style={{
-                    marginTop: '12px',
-                    padding: '16px',
-                    backgroundColor: '#f0f9ff',
-                    border: '1px solid #91d5ff',
-                    borderRadius: '8px',
-                    fontSize: '14px'
-                  }}>
-                    <div style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '8px',
-                      marginBottom: '8px',
-                      color: '#1890ff',
-                      fontWeight: '500'
-                    }}>
-                      <RobotOutlined />
-                      <span>Đánh giá của AI</span>
-                      <span style={{ fontSize: '12px', color: '#52c41a', marginLeft: 'auto' }}>
+                      {/* AI Grade Display - Show whenever AI grading is available */}
+                      {aiGrading[index] && (
+                          <div style={{
+                            marginTop: '12px',
+                            padding: '16px',
+                            backgroundColor: '#f0f9ff',
+                            border: '1px solid #91d5ff',
+                            borderRadius: '8px',
+                            fontSize: '14px'
+                          }}>
+                            <div style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '8px',
+                              marginBottom: '8px',
+                              color: '#1890ff',
+                              fontWeight: '500'
+                            }}>
+                              <RobotOutlined />
+                              <span>Đánh giá của AI</span>
+                              <span style={{ fontSize: '12px', color: '#52c41a', marginLeft: 'auto' }}>
                         ✅ Đã chấm điểm
                       </span>
+                            </div>
+                            <div className={styles.markdownContent} dangerouslySetInnerHTML={{
+                              __html: DOMPurify.sanitize(marked.parse(aiGrading[index] || 'Lỗi hiển thị kết quả từ AI'))
+                            }} />
+                          </div>
+                      )}
                     </div>
-                    <div className={styles.markdownContent} dangerouslySetInnerHTML={{
-                      __html: DOMPurify.sanitize(marked.parse(aiGrading[index] || 'Lỗi hiển thị kết quả từ AI'))
-                    }} />
-                  </div>
-                )}
+                ))}
               </div>
-            ))}
-          </div>
-        )}
+          )}
 
-        {/* Results */}
-        {showResults && (hasQuizQuestions || hasEssayQuestions) && (
-          <div style={{
-            marginTop: '24px',
-            padding: '20px',
-            backgroundColor: '#f6ffed',
-            border: '1px solid #b7eb8f',
-            borderRadius: '8px',
-            textAlign: 'center'
-          }}>
-            <h3 style={{ marginBottom: '16px', color: '#262626' }}>
-              🎯 Kết quả bài quiz
-            </h3>
+          {/* Results */}
+          {showResults && (hasQuizQuestions || hasEssayQuestions) && (
+              <div style={{
+                marginTop: '24px',
+                padding: '20px',
+                backgroundColor: '#f6ffed',
+                border: '1px solid #b7eb8f',
+                borderRadius: '8px',
+                textAlign: 'center'
+              }}>
+                <h3 style={{ marginBottom: '16px', color: '#262626' }}>
+                  🎯 Kết quả bài quiz
+                </h3>
 
-            {/* Quiz Results */}
-            {hasQuizQuestions && (
-              <>
-                <div style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '8px' }}>
-                  Điểm tổng: <span style={{ color: getScoreColor(calculateScore()) }}>
+                {/* Quiz Results */}
+                {hasQuizQuestions && (
+                    <>
+                      <div style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '8px' }}>
+                        Điểm tổng: <span style={{ color: getScoreColor(calculateScore()) }}>
                     {calculateScore()}/100
                   </span>
-                </div>
+                      </div>
 
-                <div style={{
-                  fontSize: '16px',
-                  color: getScoreColor(calculateScore()),
-                  fontWeight: '500',
-                  marginBottom: '16px'
-                }}>
-                  {getScoreMessage(calculateScore())}
-                </div>
+                      <div style={{
+                        fontSize: '16px',
+                        color: getScoreColor(calculateScore()),
+                        fontWeight: '500',
+                        marginBottom: '16px'
+                      }}>
+                        {getScoreMessage(calculateScore())}
+                      </div>
 
-                {/* Detailed Score Breakdown */}
-                <div style={{
-                  display: 'flex',
-                  justifyContent: 'space-around',
-                  marginBottom: '16px',
-                  flexWrap: 'wrap',
-                  gap: '16px'
-                }}>
-                  {/* Quiz Score */}
-                  {hasQuizQuestions && (
-                    <div style={{ textAlign: 'center' }}>
-                      <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#1890ff' }}>
-                        📝 Trắc nghiệm
+                      {/* Detailed Score Breakdown */}
+                      <div style={{
+                        display: 'flex',
+                        justifyContent: 'space-around',
+                        marginBottom: '16px',
+                        flexWrap: 'wrap',
+                        gap: '16px'
+                      }}>
+                        {/* Quiz Score */}
+                        {hasQuizQuestions && (
+                            <div style={{ textAlign: 'center' }}>
+                              <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#1890ff' }}>
+                                📝 Trắc nghiệm
+                              </div>
+                              <div style={{ fontSize: '16px', color: '#666' }}>
+                                {Object.keys(selectedAnswers).filter(index =>
+                                    selectedAnswers[index] === quizData.questionQuiz[index]?.correct_answer
+                                ).length} / {quizData.questionQuiz.length} câu đúng
+                              </div>
+                              <div style={{ fontSize: '14px', color: '#1890ff' }}>
+                                {Math.round((Object.keys(selectedAnswers).filter(index =>
+                                    selectedAnswers[index] === quizData.questionQuiz[index]?.correct_answer
+                                ).length * (100 / ((quizData.questionQuiz?.length || 0) + (quizData.questionEssay?.length || 0)))))}/{Math.round((quizData.questionQuiz?.length || 0) * (100 / ((quizData.questionQuiz?.length || 0) + (quizData.questionEssay?.length || 0))))} điểm
+                              </div>
+                            </div>
+                        )}
+
+                        {/* Essay Score */}
+                        {hasEssayQuestions && (
+                            <div style={{ textAlign: 'center' }}>
+                              <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#722ed1' }}>
+                                ✍️ Tự luận
+                              </div>
+                              <div style={{ fontSize: '16px', color: '#666' }}>
+                                {Object.keys(aiGrading).length} câu đã chấm
+                              </div>
+                              <div style={{ fontSize: '14px', color: '#722ed1' }}>
+                                {(() => {
+                                  let essayTotalScore = 0;
+                                  let essayCount = 0;
+                                  const pointsPerQuestion = 100 / ((quizData.questionQuiz?.length || 0) + (quizData.questionEssay?.length || 0));
+
+                                  quizData.questionEssay.forEach((question, index) => {
+                                    const answer = essayAnswers[index];
+                                    const aiResult = aiGrading[index];
+
+                                    if (answer && answer.trim() !== '' && aiGrading[index]) {
+                                      essayCount++;
+                                      // Try multiple regex patterns to extract score
+                                      let scoreMatch = aiResult.match(/ĐIỂM:\s*(\d+(?:\.\d+)?)\/10/i);
+
+                                      if (!scoreMatch) {
+                                        // Fallback: try to find any number before /10
+                                        scoreMatch = aiResult.match(/(\d+(?:\.\d+)?)\/10/i);
+                                      }
+
+                                      if (scoreMatch) {
+                                        const score = parseFloat(scoreMatch[1]);
+                                        const essayScore = (score / 10) * pointsPerQuestion;
+                                        essayTotalScore += essayScore;
+                                      } else {
+                                        console.warn(`Could not extract score from AI result for essay ${index}:`, aiResult);
+                                      }
+                                    }
+                                  })
+                                  return Math.round(essayTotalScore);
+                                })()}/{Math.round((quizData.questionEssay?.length || 0) * (100 / ((quizData.questionQuiz?.length || 0) + (quizData.questionEssay?.length || 0))))} điểm
+                              </div>
+                            </div>
+                        )}
                       </div>
-                      <div style={{ fontSize: '16px', color: '#666' }}>
-                        {Object.keys(selectedAnswers).filter(index =>
-                          selectedAnswers[index] === quizData.questionQuiz[index]?.correct_answer
-                        ).length} / {quizData.questionQuiz.length} câu đúng
+                    </>
+                )}
+
+                {/* Essay Results Summary */}
+                {hasEssayQuestions && (
+                    <div style={{
+                      marginTop: '16px',
+                      padding: '16px',
+                      backgroundColor: '#f0f9ff',
+                      border: '1px solid #91d5ff',
+                      borderRadius: '8px',
+                      textAlign: 'left'
+                    }}>
+                      <h4 style={{ color: '#1890ff', marginBottom: '12px' }}>
+                        ✍️ Kết quả câu tự luận
+                      </h4>
+                      <div style={{ fontSize: '14px', color: '#666' }}>
+                        {Object.keys(aiGrading).length > 0
+                            ? `AI đã chấm điểm ${Object.keys(aiGrading).length}/${quizData.questionEssay.length} câu tự luận. Xem chi tiết bên trên.`
+                            : 'Không có câu tự luận nào được chấm điểm.'
+                        }
                       </div>
-                      <div style={{ fontSize: '14px', color: '#1890ff' }}>
-                        {Math.round((Object.keys(selectedAnswers).filter(index =>
-                          selectedAnswers[index] === quizData.questionQuiz[index]?.correct_answer
-                        ).length * (100 / ((quizData.questionQuiz?.length || 0) + (quizData.questionEssay?.length || 0)))))}/{Math.round((quizData.questionQuiz?.length || 0) * (100 / ((quizData.questionQuiz?.length || 0) + (quizData.questionEssay?.length || 0))))} điểm
-                      </div>
+
                     </div>
-                  )}
+                )}
+              </div>
+          )}
 
-                  {/* Essay Score */}
-                  {hasEssayQuestions && (
-                    <div style={{ textAlign: 'center' }}>
-                      <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#722ed1' }}>
-                        ✍️ Tự luận
-                      </div>
-                      <div style={{ fontSize: '16px', color: '#666' }}>
-                        {Object.keys(aiGrading).length} câu đã chấm
-                      </div>
-                      <div style={{ fontSize: '14px', color: '#722ed1' }}>
-                        {(() => {
-                          let essayTotalScore = 0;
-                          let essayCount = 0;
-                          const pointsPerQuestion = 100 / ((quizData.questionQuiz?.length || 0) + (quizData.questionEssay?.length || 0));
-
-                          quizData.questionEssay.forEach((question, index) => {
-                            const answer = essayAnswers[index];
-                            const aiResult = aiGrading[index];
-
-                            if (answer && answer.trim() !== '' && aiGrading[index]) {
-                              essayCount++;
-                              // Try multiple regex patterns to extract score
-                              let scoreMatch = aiResult.match(/ĐIỂM:\s*(\d+(?:\.\d+)?)\/10/i);
-
-                              if (!scoreMatch) {
-                                // Fallback: try to find any number before /10
-                                scoreMatch = aiResult.match(/(\d+(?:\.\d+)?)\/10/i);
-                              }
-
-                              if (scoreMatch) {
-                                const score = parseFloat(scoreMatch[1]);
-                                const essayScore = (score / 10) * pointsPerQuestion;
-                                essayTotalScore += essayScore;
-                              } else {
-                                console.warn(`Could not extract score from AI result for essay ${index}:`, aiResult);
-                              }
-                            }
-                          })
-                          return Math.round(essayTotalScore);
-                        })()}/{Math.round((quizData.questionEssay?.length || 0) * (100 / ((quizData.questionQuiz?.length || 0) + (quizData.questionEssay?.length || 0))))} điểm
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </>
-            )}
-
-            {/* Essay Results Summary */}
-            {hasEssayQuestions && (
+          {/* Instructions */}
+          {!showResults && (hasQuizQuestions || hasEssayQuestions) && (
               <div style={{
-                marginTop: '16px',
+                marginTop: '20px',
                 padding: '16px',
                 backgroundColor: '#f0f9ff',
                 border: '1px solid #91d5ff',
-                borderRadius: '8px',
-                textAlign: 'left'
+                borderRadius: '6px',
+                fontSize: '14px',
+                color: '#262626'
               }}>
-                <h4 style={{ color: '#1890ff', marginBottom: '12px' }}>
-                  ✍️ Kết quả câu tự luận
-                </h4>
-                <div style={{ fontSize: '14px', color: '#666' }}>
-                  {Object.keys(aiGrading).length > 0
-                    ? `AI đã chấm điểm ${Object.keys(aiGrading).length}/${quizData.questionEssay.length} câu tự luận. Xem chi tiết bên trên.`
-                    : 'Không có câu tự luận nào được chấm điểm.'
-                  }
-                </div>
-
+                <div style={{ fontWeight: '500', marginBottom: '8px' }}>📋 Hướng dẫn:</div>
+                <ul style={{ margin: '8px 0', paddingLeft: '20px' }}>
+                  <li>Trả lời tất cả câu hỏi trắc nghiệm để có thể nộp bài</li>
+                  <li>Bài tự luận không bắt buộc phải trả lời</li>
+                  <li>AI sẽ tự động chấm điểm câu tự luận khi nộp bài</li>
+                  <li>Điểm tổng = Tổng điểm tất cả câu (mỗi câu được chia đều điểm từ 100)</li>
+                  <li>Nhấn "Nộp bài" để xem kết quả</li>
+                  {allowRetake && (
+                      <li>Nhấn "Làm lại" để làm lại từ đầu</li>
+                  )}
+                </ul>
               </div>
+          )}
+
+          <Space style={{ marginTop: 10 , marginBottom: 35 }}>
+            {!showResults && (hasQuizQuestions || hasEssayQuestions) && (
+                <>
+              <span style={{
+                fontSize: '13px',
+                color: allowRetake ? '#008000' : '#ff0000',
+                fontWeight: '500',
+                backgroundColor: allowRetake ? '#e6ffe6' : '#ffe6e6',
+                padding: '4px 8px',
+                borderRadius: '4px',
+                border: '1px solid ' + (allowRetake ? '#99ff99' : '#ff9999'),
+                marginLeft: '8px',
+                cursor: 'pointer'
+              }}
+              >
+                {allowRetake ? 'Cho phép làm lại bài Quiz' : 'Bài Quiz không hỗ trợ làm lại - Bạn chỉ có thể chấm điểm 1 lần'}
+              </span>
+                  <Button type="primary" onClick={handleSubmitQuiz} loading={isSubmitting}>
+                    {isSubmitting ? 'Đang nộp bài...' : 'Nộp bài'}
+                  </Button>
+                </>
+
+
             )}
-          </div>
-        )}
-
-        {/* Instructions */}
-        {!showResults && (hasQuizQuestions || hasEssayQuestions) && (
-          <div style={{
-            marginTop: '20px',
-            padding: '16px',
-            backgroundColor: '#f0f9ff',
-            border: '1px solid #91d5ff',
-            borderRadius: '6px',
-            fontSize: '14px',
-            color: '#262626'
-          }}>
-            <div style={{ fontWeight: '500', marginBottom: '8px' }}>📋 Hướng dẫn:</div>
-            <ul style={{ margin: '8px 0', paddingLeft: '20px' }}>
-              <li>Trả lời tất cả câu hỏi trắc nghiệm để có thể nộp bài</li>
-              <li>Bài tự luận không bắt buộc phải trả lời</li>
-              <li>AI sẽ tự động chấm điểm câu tự luận khi nộp bài</li>
-              <li>Điểm tổng = Tổng điểm tất cả câu (mỗi câu được chia đều điểm từ 100)</li>
-              <li>Nhấn "Nộp bài" để xem kết quả</li>
-              {allowRetake && (
-                <li>Nhấn "Làm lại" để làm lại từ đầu</li>
-              )}
-            </ul>
-          </div>
-        )}
-
-        <Space style={{ marginTop: 10 , marginBottom: 35 }}>
-          {!showResults && (hasQuizQuestions || hasEssayQuestions) && (
-            <>
-              <span style={{
-                fontSize: '13px',
-                color: allowRetake ? '#008000' : '#ff0000',
-                fontWeight: '500',
-                backgroundColor: allowRetake ? '#e6ffe6' : '#ffe6e6',
-                padding: '4px 8px',
-                borderRadius: '4px',
-                border: '1px solid ' + (allowRetake ? '#99ff99' : '#ff9999'),
-                marginLeft: '8px',
-                cursor: 'pointer'
-              }}
-              >
+            {((hasQuizQuestions || hasEssayQuestions) && allowRetake && showResults) && (
+                <Button onClick={handleResetQuiz}>
+                  Làm lại
+                </Button>
+            )}
+            {
+                showResults && (
+                    <span style={{
+                      fontSize: '13px',
+                      color: allowRetake ? '#008000' : '#ff0000',
+                      fontWeight: '500',
+                      backgroundColor: allowRetake ? '#e6ffe6' : '#ffe6e6',
+                      padding: '4px 8px',
+                      borderRadius: '4px',
+                      border: '1px solid ' + (allowRetake ? '#99ff99' : '#ff9999'),
+                      marginLeft: '8px',
+                      cursor: 'pointer'
+                    }}
+                    >
                 {allowRetake ? 'Cho phép làm lại bài Quiz' : 'Bài Quiz không hỗ trợ làm lại - Bạn chỉ có thể chấm điểm 1 lần'}
               </span>
-              <Button type="primary" onClick={handleSubmitQuiz} loading={isSubmitting}>
-                {isSubmitting ? 'Đang nộp bài...' : 'Nộp bài'}
-              </Button>
-            </>
+                )
+            }
 
-
-          )}
-          {((hasQuizQuestions || hasEssayQuestions) && allowRetake && showResults) && (
-            <Button onClick={handleResetQuiz}>
-              Làm lại
-            </Button>
-          )}
-          {
-            showResults && (
-              <span style={{
-                fontSize: '13px',
-                color: allowRetake ? '#008000' : '#ff0000',
-                fontWeight: '500',
-                backgroundColor: allowRetake ? '#e6ffe6' : '#ffe6e6',
-                padding: '4px 8px',
-                borderRadius: '4px',
-                border: '1px solid ' + (allowRetake ? '#99ff99' : '#ff9999'),
-                marginLeft: '8px',
-                cursor: 'pointer'
-              }}
-              >
-                {allowRetake ? 'Cho phép làm lại bài Quiz' : 'Bài Quiz không hỗ trợ làm lại - Bạn chỉ có thể chấm điểm 1 lần'}
-              </span>
-            )
-          }
-
-        </Space>
+          </Space>
+        </div>
       </div>
-    </div>
   );
 };
 

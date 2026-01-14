@@ -1398,7 +1398,18 @@ const K9Header = ({
 				color: '#531dab',
 				boxShadow: '0 2px 8px rgba(114, 46, 209, 0.3)'
 			};
-		} else {
+		} else if (accountType === 'Pro Flex') {
+			tagStyle = {
+			  ...tagStyle,
+			  background: 'rgba(255, 255, 255, 0.92)', // trung hòa đỏ & xanh bên dưới
+			  border: '1px solid #d6c9a3',              // gold rất muted
+			  color: '#4a4a4a',
+			  boxShadow: '0 1px 2px rgba(0,0,0,0.12)',
+			  fontWeight: 600
+			};
+		  }
+		  
+ 		 else {
 			// Dùng thử
 			tagStyle = {
 				...tagStyle,

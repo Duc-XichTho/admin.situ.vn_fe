@@ -1,5 +1,5 @@
 import { Button, Image, Popover, Switch } from 'antd';
-import { LeftOutlined, RightOutlined } from '@ant-design/icons';
+import { LeftOutlined, RightOutlined, StarOutlined } from '@ant-design/icons';
 import DOMPurify from 'dompurify';
 import { marked } from 'marked';
 import React, { useState } from 'react';
@@ -12,7 +12,9 @@ import { formatDateFromTimestamp } from '../../../generalFunction/format.js';
 import { Clock_Icon, FeedBack_Icon, Expand_Icon, Close_Icon } from '../../../icon/IconSvg.jsx';
 import AccessDenied from './AccessDenied.jsx';
 import ExcalidrawViewer from '../../K9Management/components/ExcalidrawViewer';
+import RatingPopup from './RatingPopup.jsx';
 const ContentPanel = ({
+  fetchItem,
   item,
   currentUser,
   isMobile,
@@ -45,7 +47,8 @@ const ContentPanel = ({
   onToggleRead,
 }) => {
   const [quizPopoverVisible, setQuizPopoverVisible] = useState(false);
-
+  const [ratingPopupVisible, setRatingPopupVisible] = useState(false);
+  console.log(item);
   if (!item) return null;
 
   const handleQuizItemClick = (quizItem) => {
@@ -61,7 +64,7 @@ const ContentPanel = ({
 
   const renderQuizPopoverContent = () => {
     const quizItems = relatedCaseTrainingItems;
-    
+
     if (quizItems.length === 0) {
       return (
         <div style={{ padding: '12px', textAlign: 'center', color: '#999' }}>
@@ -71,14 +74,14 @@ const ContentPanel = ({
     }
 
     return (
-      <div style={{ 
-        maxWidth:  isMobile ? '350px' : '500px'  , 
-        maxHeight: '400px', 
+      <div style={{
+        maxWidth: isMobile ? '350px' : '500px',
+        maxHeight: '400px',
         overflowY: 'auto',
         padding: '8px 0'
       }}>
-        <div style={{ 
-          padding: '8px 12px', 
+        <div style={{
+          padding: '8px 12px',
           borderBottom: '1px solid #f0f0f0',
           fontWeight: '600',
           fontSize: '14px',
@@ -93,7 +96,7 @@ const ContentPanel = ({
             const hasScore = quizScore !== undefined && quizScore !== null;
             const numeric = hasScore ? Number(quizScore) : null;
             const pass = numeric !== null && !isNaN(numeric) && numeric >= 70;
-            
+
             return (
               <div
                 key={quizItem.id}
@@ -210,7 +213,7 @@ const ContentPanel = ({
         ref={contentPanelRef}
         className={`${styles.contentPanel} ${newsTabStyles.contentPanel}`}
       >
-        <AccessDenied 
+        <AccessDenied
           isTrialAccount={isTrialAccount}
           onUpgradeClick={() => setIsPackageModalOpen(true)}
         />
@@ -306,6 +309,33 @@ const ContentPanel = ({
           marginTop: isMobile ? '8px' : '0',
           width: isMobile ? '100%' : 'auto'
         }}>
+          {/* Rating button */}
+          {currentUser?.id && (
+            <Button
+              type="text"
+              size="small"
+              icon={<StarOutlined style={{ color: '#faad14' }} />}
+              onClick={() => setRatingPopupVisible(true)}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+                color: '#faad14',
+                border: 'none',
+                boxShadow: 'none',
+                flexShrink: 0
+              }}
+              title="Đánh giá bài viết"
+            >
+              {item.scoreFeedback != null ? (
+                <span style={{ fontSize: '13px' }}>
+                  {Number(item.scoreFeedback || 0).toFixed(2)}
+                </span>
+              ) : (
+                <span style={{ fontSize: '13px' }}>Đánh giá</span>
+              )}
+            </Button>
+          )}
           {/* Read status toggle */}
           {onToggleRead && (
             <div style={{
@@ -355,7 +385,7 @@ const ContentPanel = ({
               <span className={`${styles.contentTitle} ${newsTabStyles.contentTitle}`}>{item.title}</span>
             </div>
           </div>
-          {item.summary  && (
+          {item.summary && (
             <div className={`${styles.contentDetail} ${newsTabStyles.contentDetail}`} style={{ marginTop: '12px', marginBottom: '12px' }}>
               <div
                 className={styles.markdownContent}
@@ -438,24 +468,17 @@ const ContentPanel = ({
                   {item.info?.filedLabel_1}
                 </span>
               )}
-              {item.info?.filedLabel_1 && item.info?.filedLabel_2 && (
-                <span style={{ color: '#C4C4C4' }}>|</span>
-              )}
-              {item.info?.filedLabel_2 && (
-                <span style={{ display: 'flex', alignItems: 'center' }}>
-                  {item.info?.filedLabel_2}
-                </span>
-              )}
+              {/*{item.info?.filedLabel_1 && item.info?.filedLabel_2 && (*/}
+              {/*  <span style={{ color: '#C4C4C4' }}>|</span>*/}
+              {/*)}*/}
+              {/*{item.info?.filedLabel_2 && (*/}
+              {/*  <span style={{ display: 'flex', alignItems: 'center' }}>*/}
+              {/*    {item.info?.filedLabel_2}*/}
+              {/*  </span>*/}
+              {/*)}*/}
             </div>
             {
-              currentUser?.id && (
-                <span onClick={() => setShowFeedbackModal(true)} style={{ display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }} title="Góp ý/Feedback cho nội dung">
-                  <FeedBack_Icon width={17} height={17} /> Góp ý, feedback cho nội dung
-                </span>
-              )
-            }
-            {
-              activeTab === 'stream' && relatedCaseTrainingItems.length > 0 &&  (
+              activeTab === 'stream' && relatedCaseTrainingItems.length > 0 && (
                 <Popover
                   content={renderQuizPopoverContent}
                   title={null}
@@ -465,14 +488,14 @@ const ContentPanel = ({
                   placement="bottomLeft"
                   overlayStyle={{ zIndex: 1001 }}
                 >
-                  <span 
-                    style={{ 
-                      display: 'flex', 
-                      alignItems: 'center', 
-                      gap: '4px', 
+                  <span
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px',
                       cursor: 'pointer',
                       color: '#9F9F9F'
-                    }} 
+                    }}
                     title="Quiz / Practice"
                   >
                     <span style={{ fontSize: '17px' }}>📝</span> Quiz / Practice
@@ -627,7 +650,7 @@ const ContentPanel = ({
                           maskClassName: 'custom-mask'
                         }}
                       />
-                      
+
                       {/* Navigation Buttons */}
                       {hasMultipleImages && (
                         <>
@@ -973,6 +996,26 @@ const ContentPanel = ({
           )}
         </div>
       </div>
+
+      {/* Rating Popup */}
+      {currentUser?.id && (
+        <RatingPopup
+          fetchItem={fetchItem}
+          visible={ratingPopupVisible}
+          onCancel={() => setRatingPopupVisible(false)}
+          contentId={item.id}
+          contentTitle={item.title}
+          currentUser={currentUser}
+          currentAverageRating={Number(item.scoreFeedback)}
+          currentRatingCount={item?.feedbackCount || 0}
+          onRatingUpdate={() => {
+            // Callback để refresh data nếu cần
+            // Có thể trigger reload từ parent component
+            setRatingPopupVisible(false);
+          }}
+          activeTab={activeTab}
+        />
+      )}
     </div>
   );
 };

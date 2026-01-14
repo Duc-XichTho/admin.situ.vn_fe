@@ -99,7 +99,7 @@ const AISummaryDetailGeneration = () => {
     const [editingDescriptions, setEditingDescriptions] = useState({}); // { index: description }
     const [savingDescription, setSavingDescription] = useState(false);
     const [uploadingImageIndex, setUploadingImageIndex] = useState(null); // Track which image is being uploaded
-    
+
     // Related Case Training Modal states
     const [relatedCaseTrainingModalVisible, setRelatedCaseTrainingModalVisible] = useState(false);
     const [selectedNewsItemForCaseTraining, setSelectedNewsItemForCaseTraining] = useState(null);
@@ -1083,10 +1083,10 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
             currentImageProcessing?.recordId !== item.id
         );
 
-           if (selectedRecords.length === 0) {
-               message.warning('Tất cả bản ghi đã có imgUrls hoặc đang trong hàng đợi!');
-               return;
-           }
+        if (selectedRecords.length === 0) {
+            message.warning('Tất cả bản ghi đã có imgUrls hoặc đang trong hàng đợi!');
+            return;
+        }
 
         // Show prompt selection modal
         setPendingImageRecords(selectedRecords);
@@ -1236,7 +1236,7 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
         );
 
         const splitResult = splitResponse.result || splitResponse.answer || splitResponse.content || splitResponse;
-        
+
         // Parse JSON từ response (có thể có markdown code block)
         let parts = [];
         try {
@@ -1266,11 +1266,11 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
 
         // Step 2 & 3: Với mỗi phần, tạo description và ảnh
         const allImageUrls = [];
-        
+
         for (let i = 0; i < parts.length; i++) {
             const part = parts[i];
             const partContent = part.content || part.text || '';
-            
+
             if (!partContent || partContent.trim() === '') {
                 console.warn(`Phần ${i + 1} không có nội dung, bỏ qua`);
                 continue;
@@ -1674,7 +1674,7 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
 
         try {
             setDeletingSummaryDetail(true);
-            
+
             // Sử dụng updateK9Bulk API
             const updateData = {
                 ids: selectedRowKeys,
@@ -1717,7 +1717,7 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
 
         try {
             setDeletingHtml(true);
-            
+
             // Sử dụng updateK9Bulk API
             const updateData = {
                 ids: selectedRowKeys,
@@ -1760,7 +1760,7 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
 
         try {
             setDeletingExcalidraw(true);
-            
+
             // Sử dụng updateK9Bulk API - cần xóa 3 field, gọi 3 lần
             await Promise.all([
                 updateK9Bulk({
@@ -1817,7 +1817,7 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
 
         try {
             setDeletingDetailImageUrls(true);
-            
+
             // Sử dụng updateK9Bulk API
             const updateData = {
                 ids: selectedRowKeys,
@@ -1861,7 +1861,7 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
 
         try {
             setDeletingImgUrls(true);
-            
+
             // Sử dụng updateK9Bulk API
             const updateData = {
                 ids: selectedRowKeys,
@@ -1905,7 +1905,7 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
 
         try {
             setTogglingShowHtml(true);
-            
+
             // Sử dụng updateK9Bulk API
             const updateData = {
                 ids: selectedRowKeys,
@@ -1947,7 +1947,7 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
 
         try {
             setTogglingShowExcalidraw(true);
-            
+
             // Sử dụng updateK9Bulk API
             const updateData = {
                 ids: selectedRowKeys,
@@ -1989,7 +1989,7 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
 
         try {
             setTogglingShowImgUrls(true);
-            
+
             // Sử dụng updateK9Bulk API
             const updateData = {
                 ids: selectedRowKeys,
@@ -2031,7 +2031,7 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
 
         try {
             setTogglingShowDetailImageUrls(true);
-            
+
             // Sử dụng updateK9Bulk API
             const updateData = {
                 ids: selectedRowKeys,
@@ -2073,7 +2073,7 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
 
         try {
             setTogglingShowDetail(true);
-            
+
             // Sử dụng updateK9Bulk API
             const updateData = {
                 ids: selectedRowKeys,
@@ -2112,8 +2112,8 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
             const tag4Setting = await getSettingByTypePublic('TAG4_OPTIONS');
             if (tag4Setting?.setting) {
                 // TAG4_OPTIONS can be an array or an object with options property
-                const options = Array.isArray(tag4Setting.setting) 
-                    ? tag4Setting.setting 
+                const options = Array.isArray(tag4Setting.setting)
+                    ? tag4Setting.setting
                     : (tag4Setting.setting.options || []);
                 setTag4Options(options);
             }
@@ -2143,7 +2143,7 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
 
         setLoadingRelatedCaseTraining(true);
         setSelectedNewsItemForCaseTraining(record);
-        
+
         try {
             const relatedCases = await getK9ByCidType(record.cid, 'caseTraining');
             const caseList = Array.isArray(relatedCases) ? relatedCases : (relatedCases?.data || []);
@@ -2184,10 +2184,10 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
             // Get container width
             const containerRect = container.getBoundingClientRect();
             const containerWidth = containerRect.width;
-            
+
             // Get all tags (including hidden ones)
             const tags = container.querySelectorAll('.program-filter-tag:not(.ellipsis-tag)');
-            
+
             if (tags.length === 0) {
                 setVisibleTagsCount(tag4Options.length);
                 return;
@@ -2203,15 +2203,15 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
             const parentRect = parentContainer.getBoundingClientRect();
             const label = parentContainer.querySelector('span');
             const clearButton = parentContainer.querySelector('button');
-            
+
             const labelWidth = label ? label.offsetWidth + 8 : 0; // + gap
             const clearButtonWidth = (clearButton && programFilter.length > 0) ? clearButton.offsetWidth + 8 : 0; // + gap
             const gap = 8;
             const ellipsisTagWidth = 100; // Approximate width for "... (X)" tag
-            
+
             // Available width for tags
             const availableWidth = parentRect.width - labelWidth - clearButtonWidth - gap;
-            
+
             // Measure actual tag widths by creating a temporary measurement container
             const measureTag = (text) => {
                 const measureEl = document.createElement('span');
@@ -2226,16 +2226,16 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
                 document.body.removeChild(measureEl);
                 return width;
             };
-            
+
             // First, try to fit all tags without ellipsis
             let totalWidth = 0;
             let count = 0;
-            
+
             for (let i = 0; i < tag4Options.length; i++) {
                 const option = tag4Options[i];
                 const tagText = option.label || option.displayName || option.value;
                 const tagWidth = measureTag(tagText) + gap;
-                
+
                 if (totalWidth + tagWidth <= availableWidth) {
                     totalWidth += tagWidth;
                     count++;
@@ -2243,19 +2243,19 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
                     break;
                 }
             }
-            
+
             // If we can't fit all tags, check if we can fit more with ellipsis
             if (count < tag4Options.length) {
                 // Reserve space for ellipsis
                 const availableWithEllipsis = availableWidth - ellipsisTagWidth - gap;
                 totalWidth = 0;
                 count = 0;
-                
+
                 for (let i = 0; i < tag4Options.length; i++) {
                     const option = tag4Options[i];
                     const tagText = option.label || option.displayName || option.value;
                     const tagWidth = measureTag(tagText) + gap;
-                    
+
                     if (totalWidth + tagWidth <= availableWithEllipsis) {
                         totalWidth += tagWidth;
                         count++;
@@ -2284,7 +2284,7 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
                 timeoutId2 = setTimeout(checkVisibleCount, 200);
             });
             resizeObserver.observe(programTagsContainerRef.current);
-            
+
             // Also observe parent container
             const parent = programTagsContainerRef.current.parentElement;
             if (parent) {
@@ -2299,7 +2299,7 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
             timeoutId1 = setTimeout(checkVisibleCount, 50);
             timeoutId2 = setTimeout(checkVisibleCount, 200);
         };
-        
+
         window.addEventListener('resize', handleResize);
         // Also listen to zoom changes
         let lastZoom = window.devicePixelRatio;
@@ -2388,14 +2388,14 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
             data = data.filter(item => {
                 const itemTag4 = item.tag4;
                 if (!itemTag4) return false;
-                
+
                 // Handle both array and string formats for tag4
-                const itemTag4Array = Array.isArray(itemTag4) 
-                    ? itemTag4 
+                const itemTag4Array = Array.isArray(itemTag4)
+                    ? itemTag4
                     : (itemTag4 ? [itemTag4] : []);
-                
+
                 // Check if any of the selected programs match any of the item's programs
-                return programFilter.some(selectedProgram => 
+                return programFilter.some(selectedProgram =>
                     itemTag4Array.includes(selectedProgram)
                 );
             });
@@ -2547,9 +2547,9 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
                 </Tooltip>
                 <Tooltip title={
                     hasExcalidraw ? 'Đã có Excalidraw' :
-                    isExcalidrawProcessing ? 'Đang tạo Excalidraw' :
-                    isExcalidrawInQueue ? 'Đang trong hàng đợi' :
-                    'Tạo Excalidraw từ SummaryDetail'
+                        isExcalidrawProcessing ? 'Đang tạo Excalidraw' :
+                            isExcalidrawInQueue ? 'Đang trong hàng đợi' :
+                                'Tạo Excalidraw từ SummaryDetail'
                 }>
                     <Button
                         type="link"
@@ -2568,9 +2568,9 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
                 </Tooltip>
                 <Tooltip title={
                     hasImageUrl ? 'Đã có ảnh từ summaryDetail' :
-                    isImageProcessing ? 'Đang tạo ảnh' :
-                    isImageInQueue ? 'Đang trong hàng đợi' :
-                    'Tạo ảnh từ SummaryDetail'
+                        isImageProcessing ? 'Đang tạo ảnh' :
+                            isImageInQueue ? 'Đang trong hàng đợi' :
+                                'Tạo ảnh từ SummaryDetail'
                 }>
                     <Button
                         type="link"
@@ -2589,9 +2589,9 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
                 </Tooltip>
                 <Tooltip title={
                     hasDetailImageUrls ? 'Đã có nhiều ảnh từ detail' :
-                    isMultiImageFromDetailProcessing ? 'Đang tạo nhiều ảnh từ detail' :
-                    isMultiImageFromDetailInQueue ? 'Đang trong hàng đợi' :
-                    'Tạo nhiều ảnh từ Detail'
+                        isMultiImageFromDetailProcessing ? 'Đang tạo nhiều ảnh từ detail' :
+                            isMultiImageFromDetailInQueue ? 'Đang trong hàng đợi' :
+                                'Tạo nhiều ảnh từ Detail'
                 }>
                     <Button
                         type="link"
@@ -2662,7 +2662,7 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
                 const lessonNumberStr = String(lessonNumber);
                 return (
                     <Tooltip title={lessonNumberStr}>
-                        <Tag 
+                        <Tag
                             color="purple"
                             style={{
                                 maxWidth: '140px',
@@ -2692,8 +2692,8 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
                 if (!tag4) return '-';
                 const text = Array.isArray(tag4) ? tag4.join(', ') : String(tag4);
                 return (
-                    <div style={{ 
-                        whiteSpace: 'normal', 
+                    <div style={{
+                        whiteSpace: 'normal',
                         wordBreak: 'break-word',
                         lineHeight: '1.5'
                     }}>
@@ -2790,7 +2790,7 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
                         backgroundColor: '#f0f0f0',
                         borderRadius: '4px'
                     }}
-                        title="Chưa tạo diagram HTML từ SummaryDetail"
+                         title="Chưa tạo diagram HTML từ SummaryDetail"
                     >
                         <FileTextOutlined style={{ fontSize: '16px', color: '#999' }} />
                     </div>
@@ -2834,7 +2834,7 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
                         backgroundColor: '#f0f0f0',
                         borderRadius: '4px'
                     }}
-                        title="Chưa tạo diagram Excalidraw từ SummaryDetail"
+                         title="Chưa tạo diagram Excalidraw từ SummaryDetail"
                     >
                         <PictureOutlined style={{ fontSize: '16px', color: '#999' }} />
                     </div>
@@ -2853,7 +2853,7 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
                     // Lấy ảnh đầu tiên để hiển thị thumbnail
                     const firstImage = record.imgUrls[0];
                     const thumbnailUrl = typeof firstImage === 'string' ? firstImage : (firstImage?.url || firstImage?.image_url || '');
-                    
+
                     return (
                         <div
                             onClick={() => {
@@ -2932,7 +2932,7 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
                         backgroundColor: '#f0f0f0',
                         borderRadius: '4px'
                     }}
-                        title="Chưa tạo imgUrls từ SummaryDetail"
+                         title="Chưa tạo imgUrls từ SummaryDetail"
                     >
                         <FileImageOutlined style={{ fontSize: '16px', color: '#999' }} />
                     </div>
@@ -2951,7 +2951,7 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
                     // Lấy ảnh đầu tiên để hiển thị thumbnail
                     const firstImage = record.detailImageUrls[0];
                     const thumbnailUrl = typeof firstImage === 'string' ? firstImage : (firstImage?.url || firstImage?.image_url || '');
-                    
+
                     return (
                         <div
                             onClick={() => {
@@ -3030,7 +3030,7 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
                         backgroundColor: '#f0f0f0',
                         borderRadius: '4px'
                     }}
-                        title="Chưa tạo detailImageUrls từ Detail"
+                         title="Chưa tạo detailImageUrls từ Detail"
                     >
                         <FileImageOutlined style={{ fontSize: '16px', color: '#999' }} />
                     </div>
@@ -3048,7 +3048,7 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
                         (Array.isArray(record.diagramHtmlCodeFromSummaryDetail)
                             ? record.diagramHtmlCodeFromSummaryDetail.length > 0
                             : String(record.diagramHtmlCodeFromSummaryDetail).trim() !== ''));
-                
+
                 return (
                     <Switch
                         checked={record.showHtml !== false} // Default true nếu không có giá trị
@@ -3087,7 +3087,7 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
             width: 130,
             render: (_, record) => {
                 const hasExcalidraw = record.diagramExcalidrawJson && record.diagramExcalidrawJson.length > 0;
-                
+
                 return (
                     <Switch
                         checked={record.showExcalidraw !== false} // Default true nếu không có giá trị
@@ -3126,7 +3126,7 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
             width: 120,
             render: (_, record) => {
                 const hasImgUrls = record.imgUrls && Array.isArray(record.imgUrls) && record.imgUrls.length > 0;
-                
+
                 return (
                     <Switch
                         checked={record.showImgUrls !== false} // Default true nếu không có giá trị
@@ -3165,7 +3165,7 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
             width: 150,
             render: (_, record) => {
                 const hasDetailImageUrls = record.detailImageUrls && Array.isArray(record.detailImageUrls) && record.detailImageUrls.length > 0;
-                
+
                 return (
                     <Switch
                         checked={record.showDetailImageUrls !== false} // Default true nếu không có giá trị
@@ -3204,7 +3204,7 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
             width: 120,
             render: (_, record) => {
                 const hasDetail = record.detail && record.detail.trim() !== '';
-                
+
                 return (
                     <Switch
                         checked={record.showDetail !== false} // Default true nếu không có giá trị
@@ -3363,149 +3363,149 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
 
                 {/* Row 2: Program Filter Tags */}
                 {tag4Options.length > 0 && (
-                        <div 
-                            style={{ 
-                                marginBottom: '12px', 
-                                display: 'flex', 
-                                gap: '8px', 
-                                alignItems: 'center', 
-                                flexWrap: 'nowrap', 
-                                width: '100%', 
+                    <div
+                        style={{
+                            marginBottom: '12px',
+                            display: 'flex',
+                            gap: '8px',
+                            alignItems: 'center',
+                            flexWrap: 'nowrap',
+                            width: '100%',
+                            overflow: 'hidden',
+                            boxSizing: 'border-box'
+                        }}
+                    >
+                        <span style={{ fontSize: '13px', fontWeight: 500, flexShrink: 0 }}>Lọc Program:</span>
+                        <div
+                            ref={programTagsContainerRef}
+                            style={{
+                                display: 'flex',
+                                gap: '8px',
+                                alignItems: 'center',
+                                flexWrap: 'nowrap',
                                 overflow: 'hidden',
-                                boxSizing: 'border-box'
+                                flex: 1,
+                                minWidth: 0,
+                                boxSizing: 'border-box',
+                                position: 'relative'
                             }}
                         >
-                            <span style={{ fontSize: '13px', fontWeight: 500, flexShrink: 0 }}>Lọc Program:</span>
-                            <div 
-                                ref={programTagsContainerRef}
-                                style={{ 
-                                    display: 'flex', 
-                                    gap: '8px', 
-                                    alignItems: 'center', 
-                                    flexWrap: 'nowrap', 
-                                    overflow: 'hidden', 
-                                    flex: 1, 
-                                    minWidth: 0,
-                                    boxSizing: 'border-box',
-                                    position: 'relative'
-                                }}
-                            >
-                                {tag4Options.map((option, index) => {
-                                    const isSelected = programFilter.includes(option.value);
-                                    const isVisible = index < visibleTagsCount;
-                                    
-                                    return (
-                                        <Tag
-                                            key={option.value}
-                                            className="program-filter-tag"
-                                            onClick={() => {
-                                                if (isSelected) {
-                                                    setProgramFilter(prev => prev.filter(p => p !== option.value));
-                                                } else {
-                                                    setProgramFilter(prev => [...prev, option.value]);
-                                                }
-                                            }}
-                                            style={{
-                                                cursor: 'pointer',
-                                                padding: '4px 12px',
-                                                fontSize: '13px',
-                                                border: isSelected ? '2px solid #1890ff' : '1px solid #d9d9d9',
-                                                backgroundColor: isSelected ? '#e6f7ff' : '#fafafa',
-                                                color: isSelected ? '#1890ff' : '#595959',
-                                                fontWeight: isSelected ? 600 : 400,
-                                                transition: 'all 0.2s ease',
-                                                userSelect: 'none',
-                                                flexShrink: 0,
-                                                whiteSpace: 'nowrap',
-                                                display: isVisible ? 'inline-flex' : 'none'
-                                            }}
-                                            onMouseEnter={(e) => {
-                                                if (!isSelected) {
-                                                    e.currentTarget.style.backgroundColor = '#f0f0f0';
-                                                    e.currentTarget.style.borderColor = '#40a9ff';
-                                                }
-                                            }}
-                                            onMouseLeave={(e) => {
-                                                if (!isSelected) {
-                                                    e.currentTarget.style.backgroundColor = '#fafafa';
-                                                    e.currentTarget.style.borderColor = '#d9d9d9';
-                                                }
-                                            }}
-                                        >
-                                            {option.label || option.displayName || option.value}
-                                        </Tag>
-                                    );
-                                })}
-                                {visibleTagsCount < tag4Options.length && (
-                                    <Dropdown
-                                        menu={{
-                                            items: tag4Options.slice(visibleTagsCount).map(option => {
-                                                const isSelected = programFilter.includes(option.value);
-                                                return {
-                                                    key: option.value,
-                                                    label: (
-                                                        <div
-                                                            style={{
-                                                                padding: '4px 8px',
-                                                                backgroundColor: isSelected ? '#e6f7ff' : 'transparent',
-                                                                borderRadius: '4px',
-                                                                color: isSelected ? '#1890ff' : '#595959',
-                                                                fontWeight: isSelected ? 600 : 400
-                                                            }}
-                                                        >
-                                                            {isSelected && '✓ '}
-                                                            {option.label || option.displayName || option.value}
-                                                        </div>
-                                                    ),
-                                                    onClick: () => {
-                                                        if (isSelected) {
-                                                            setProgramFilter(prev => prev.filter(p => p !== option.value));
-                                                        } else {
-                                                            setProgramFilter(prev => [...prev, option.value]);
-                                                        }
-                                                    }
-                                                };
-                                            })
+                            {tag4Options.map((option, index) => {
+                                const isSelected = programFilter.includes(option.value);
+                                const isVisible = index < visibleTagsCount;
+
+                                return (
+                                    <Tag
+                                        key={option.value}
+                                        className="program-filter-tag"
+                                        onClick={() => {
+                                            if (isSelected) {
+                                                setProgramFilter(prev => prev.filter(p => p !== option.value));
+                                            } else {
+                                                setProgramFilter(prev => [...prev, option.value]);
+                                            }
                                         }}
-                                        trigger={['click']}
-                                    >
-                                        <Tag
-                                            className="ellipsis-tag"
-                                            style={{
-                                                cursor: 'pointer',
-                                                padding: '4px 12px',
-                                                fontSize: '13px',
-                                                border: '1px solid #d9d9d9',
-                                                backgroundColor: '#fafafa',
-                                                color: '#595959',
-                                                flexShrink: 0,
-                                                whiteSpace: 'nowrap'
-                                            }}
-                                            onMouseEnter={(e) => {
+                                        style={{
+                                            cursor: 'pointer',
+                                            padding: '4px 12px',
+                                            fontSize: '13px',
+                                            border: isSelected ? '2px solid #1890ff' : '1px solid #d9d9d9',
+                                            backgroundColor: isSelected ? '#e6f7ff' : '#fafafa',
+                                            color: isSelected ? '#1890ff' : '#595959',
+                                            fontWeight: isSelected ? 600 : 400,
+                                            transition: 'all 0.2s ease',
+                                            userSelect: 'none',
+                                            flexShrink: 0,
+                                            whiteSpace: 'nowrap',
+                                            display: isVisible ? 'inline-flex' : 'none'
+                                        }}
+                                        onMouseEnter={(e) => {
+                                            if (!isSelected) {
                                                 e.currentTarget.style.backgroundColor = '#f0f0f0';
                                                 e.currentTarget.style.borderColor = '#40a9ff';
-                                            }}
-                                            onMouseLeave={(e) => {
+                                            }
+                                        }}
+                                        onMouseLeave={(e) => {
+                                            if (!isSelected) {
                                                 e.currentTarget.style.backgroundColor = '#fafafa';
                                                 e.currentTarget.style.borderColor = '#d9d9d9';
-                                            }}
-                                        >
-                                            ... ({tag4Options.length - visibleTagsCount})
-                                        </Tag>
-                                    </Dropdown>
-                                )}
-                            </div>
-                            {programFilter.length > 0 && (
-                                <Button
-                                    type="link"
-                                    size="small"
-                                    onClick={() => setProgramFilter([])}
-                                    style={{ fontSize: '12px', padding: '0 4px', height: 'auto', flexShrink: 0 }}
+                                            }
+                                        }}
+                                    >
+                                        {option.label || option.displayName || option.value}
+                                    </Tag>
+                                );
+                            })}
+                            {visibleTagsCount < tag4Options.length && (
+                                <Dropdown
+                                    menu={{
+                                        items: tag4Options.slice(visibleTagsCount).map(option => {
+                                            const isSelected = programFilter.includes(option.value);
+                                            return {
+                                                key: option.value,
+                                                label: (
+                                                    <div
+                                                        style={{
+                                                            padding: '4px 8px',
+                                                            backgroundColor: isSelected ? '#e6f7ff' : 'transparent',
+                                                            borderRadius: '4px',
+                                                            color: isSelected ? '#1890ff' : '#595959',
+                                                            fontWeight: isSelected ? 600 : 400
+                                                        }}
+                                                    >
+                                                        {isSelected && '✓ '}
+                                                        {option.label || option.displayName || option.value}
+                                                    </div>
+                                                ),
+                                                onClick: () => {
+                                                    if (isSelected) {
+                                                        setProgramFilter(prev => prev.filter(p => p !== option.value));
+                                                    } else {
+                                                        setProgramFilter(prev => [...prev, option.value]);
+                                                    }
+                                                }
+                                            };
+                                        })
+                                    }}
+                                    trigger={['click']}
                                 >
-                                    Xóa tất cả
-                                </Button>
+                                    <Tag
+                                        className="ellipsis-tag"
+                                        style={{
+                                            cursor: 'pointer',
+                                            padding: '4px 12px',
+                                            fontSize: '13px',
+                                            border: '1px solid #d9d9d9',
+                                            backgroundColor: '#fafafa',
+                                            color: '#595959',
+                                            flexShrink: 0,
+                                            whiteSpace: 'nowrap'
+                                        }}
+                                        onMouseEnter={(e) => {
+                                            e.currentTarget.style.backgroundColor = '#f0f0f0';
+                                            e.currentTarget.style.borderColor = '#40a9ff';
+                                        }}
+                                        onMouseLeave={(e) => {
+                                            e.currentTarget.style.backgroundColor = '#fafafa';
+                                            e.currentTarget.style.borderColor = '#d9d9d9';
+                                        }}
+                                    >
+                                        ... ({tag4Options.length - visibleTagsCount})
+                                    </Tag>
+                                </Dropdown>
                             )}
                         </div>
+                        {programFilter.length > 0 && (
+                            <Button
+                                type="link"
+                                size="small"
+                                onClick={() => setProgramFilter([])}
+                                style={{ fontSize: '12px', padding: '0 4px', height: 'auto', flexShrink: 0 }}
+                            >
+                                Xóa tất cả
+                            </Button>
+                        )}
+                    </div>
                 )}
 
                 {/* Row 3: Generation Buttons */}
@@ -4554,7 +4554,7 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
                 )}
             </Modal>
 
-            
+
             {/* Preview imgUrls Modal */}
             <Modal
                 title={
@@ -4590,18 +4590,18 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
             >
 
                 {previewingRecord?.imgUrls && Array.isArray(previewingRecord.imgUrls) && previewingRecord.imgUrls.length > 0 ? (
-                    <div style={{              
+                    <div style={{
                         height : '100%',
                         width: '100%',
-                        overflow: 'auto', 
+                        overflow: 'auto',
                         position: 'relative'    ,
-                        marginTop: '16px'                   
+                        marginTop: '16px'
                     }}>
                         {previewingRecord.imgUrls.map((imgItem, index) => {
                             const imageUrl = typeof imgItem === 'string' ? imgItem : (imgItem?.url || imgItem?.image_url || '');
                             const description = typeof imgItem === 'object' ? imgItem?.description : '';
                             if (!imageUrl) return null;
-                            
+
                             return (
                                 <Card
                                     key={index}
@@ -4618,7 +4618,7 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
                                 >
                                     <div style={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
                                         {/* Image Section */}
-                                        <div style={{ 
+                                        <div style={{
                                             position: 'relative',
                                             width: '100%',
                                             backgroundColor: '#fafafa',
@@ -4671,9 +4671,9 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
                                                 #{index + 1}
                                             </div>
                                         </div>
-                                        
+
                                         {/* Description Section */}
-                                        <div style={{ 
+                                        <div style={{
                                             padding: '16px',
                                             backgroundColor: '#fff'
                                         }}>
@@ -4700,7 +4700,7 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
                                                             [index]: currentDescription
                                                         }));
                                                     }}
-                                                    style={{ 
+                                                    style={{
                                                         padding: '0 4px',
                                                         height: '20px',
                                                         fontSize: '11px',
@@ -4710,7 +4710,7 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
                                                     {editingDescriptions[index] !== undefined ? 'Hủy' : '✏️ Sửa'}
                                                 </Button>
                                             </div>
-                                            
+
                                             {editingDescriptions[index] !== undefined ? (
                                                 <div>
                                                     <TextArea
@@ -4742,42 +4742,42 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
                                                                         ...updatedImgUrls[index],
                                                                         description: newDescription
                                                                     };
-                                                                    
+
                                                                     const updateData = {
                                                                         id: previewingRecord.id,
                                                                         imgUrls: updatedImgUrls
                                                                     };
-                                                                    
+
                                                                     const updateResponse = await updateK9(updateData);
                                                                     const updatedRecord = updateResponse?.data || updateResponse;
-                                                                    
+
                                                                     // Update local state
                                                                     const updater = (list) => list.map(item =>
-                                                                        item.id === previewingRecord.id 
+                                                                        item.id === previewingRecord.id
                                                                             ? { ...item, ...updatedRecord }
                                                                             : item
                                                                     );
-                                                                    
+
                                                                     setK9Data(prev => ({
                                                                         news: updater(prev.news || []),
                                                                         caseTraining: updater(prev.caseTraining || []),
                                                                         longForm: updater(prev.longForm || []),
                                                                         home: updater(prev.home || []),
                                                                     }));
-                                                                    
+
                                                                     // Update previewing record
                                                                     setPreviewingRecord(prev => ({
                                                                         ...prev,
                                                                         imgUrls: updatedImgUrls
                                                                     }));
-                                                                    
+
                                                                     // Clear editing state
                                                                     setEditingDescriptions(prev => {
                                                                         const newState = { ...prev };
                                                                         delete newState[index];
                                                                         return newState;
                                                                     });
-                                                                    
+
                                                                     message.success('Đã cập nhật mô tả thành công!');
                                                                 } catch (error) {
                                                                     console.error('Error updating description:', error);
@@ -4876,12 +4876,12 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
             >
 
                 {previewingDetailImageUrlsRecord?.detailImageUrls && Array.isArray(previewingDetailImageUrlsRecord.detailImageUrls) && previewingDetailImageUrlsRecord.detailImageUrls.length > 0 ? (
-                    <div style={{              
+                    <div style={{
                         height : '100%',
                         width: '100%',
-                        overflow: 'auto', 
+                        overflow: 'auto',
                         position: 'relative'    ,
-                        marginTop: '16px'                   
+                        marginTop: '16px'
                     }}>
                         {previewingDetailImageUrlsRecord.detailImageUrls.map((imgItem, index) => {
                             const imageUrl = typeof imgItem === 'string' ? imgItem : (imgItem?.url || imgItem?.image_url || '');
@@ -4889,7 +4889,7 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
                             const partNumber = typeof imgItem === 'object' ? imgItem?.partNumber : (index + 1);
                             const partContent = typeof imgItem === 'object' ? imgItem?.partContent : '';
                             if (!imageUrl) return null;
-                            
+
                             return (
                                 <Card
                                     key={index}
@@ -4906,7 +4906,7 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
                                 >
                                     <div style={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
                                         {/* Image Section */}
-                                        <div style={{ 
+                                        <div style={{
                                             position: 'relative',
                                             width: '100%',
                                             backgroundColor: '#fafafa',
@@ -5004,7 +5004,7 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
 
                                                             // Update local state
                                                             const updater = (list) => list.map(item =>
-                                                                item.id === previewingDetailImageUrlsRecord.id 
+                                                                item.id === previewingDetailImageUrlsRecord.id
                                                                     ? { ...item, ...updatedRecord }
                                                                     : item
                                                             );
@@ -5053,10 +5053,10 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
                                                 </Button>
                                             </div>
                                         </div>
-                                        
+
                                         {/* Part Content Section */}
                                         {partContent && (
-                                            <div style={{ 
+                                            <div style={{
                                                 padding: '12px 16px',
                                                 backgroundColor: '#f9f0ff',
                                                 borderBottom: '1px solid #f0f0f0'
@@ -5079,9 +5079,9 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
                                                 </div>
                                             </div>
                                         )}
-                                        
+
                                         {/* Description Section */}
-                                        <div style={{ 
+                                        <div style={{
                                             padding: '16px',
                                             backgroundColor: '#fff'
                                         }}>
@@ -5096,7 +5096,7 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
                                                     Mô tả
                                                 </span>
                                             </div>
-                                            
+
                                             {description ? (
                                                 <div style={{
                                                     fontSize: '13px',

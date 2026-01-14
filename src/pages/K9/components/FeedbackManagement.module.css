@@ -1,39 +1,91 @@
 .container{
   height: 100vh;
-  padding: 16px;
   display: flex;
   flex-direction: column;
-  background: #afb4bd;
+  background: #f5f7fa;
+  overflow: hidden;
 }
 
 .headerCard{
-  border: 1px solid #eef2f7;
-  border-radius: 12px;
-  background: linear-gradient(180deg, #ffffff 0%, #fafcff 100%);
-  box-shadow: 0 2px 8px rgba(17, 24, 39, 0.04);
-  margin-bottom: 12px;
+  border: 1px solid #e1e8ed;
+  border-radius: 16px;
+  background: linear-gradient(180deg, #ffffff 0%, #fafbfc 100%);
+  box-shadow: 0 4px 12px rgba(17, 24, 39, 0.06);
+  margin-bottom: 16px;
+  transition: box-shadow 0.3s ease;
+}
+
+.headerCard:hover{
+  box-shadow: 0 6px 16px rgba(17, 24, 39, 0.08);
 }
 
 .tableWrap{
   flex: 1;
   min-height: 0;
+  overflow: hidden;
 }
 
 /* Zebra rows and hover state */
 .tableWrap :global(.ant-table-tbody > tr:nth-child(odd) > td){
-  background: #fcfdff;
+  background: #fafbfc;
 }
 
 .tableWrap :global(.ant-table-tbody > tr:hover > td){
   background: #f0f7ff !important;
+  transition: background-color 0.2s ease;
 }
 
-/* Sticky header subtle border */
+/* Sticky header */
 .tableWrap :global(.ant-table-thead > tr > th){
   background: #ffffff;
-  border-bottom: 1px solid #eef2f7;
+  border-bottom: 1px solid #e8e8e8;
+  font-weight: 500;
+  color: #1f2937;
+  padding: 12px;
+}
+
+.tableWrap :global(.ant-table-tbody > tr > td){
+  padding: 12px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+/* Table border radius */
+.tableWrap :global(.ant-table){
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.tableWrap :global(.ant-table-container){
+  border-radius: 12px;
 }
 
 .detailModal :global(.ant-modal-content){
-  border-radius: 12px;
+  border-radius: 8px;
+}
+
+/* Tabs styling */
+:global(.ant-tabs-top > .ant-tabs-nav){
+  margin-bottom: 0;
+  padding: 0 16px;
+  background: #ffffff;
+  border-radius: 12px 12px 0 0;
+}
+
+:global(.ant-tabs-tab){
+  padding: 12px 20px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+:global(.ant-tabs-tab:hover){
+  color: #1890ff;
+}
+
+:global(.ant-tabs-tab-active){
+  font-weight: 600;
+}
+
+:global(.ant-tabs-ink-bar){
+  height: 3px;
+  border-radius: 2px;
 }

@@ -1738,6 +1738,7 @@ const MapView = ({
 			setQuizScores: (qid, score) => setQuizScores(prev => ({ ...prev, [qid]: score })),
 			preprocessLatex,
 			postprocessLatex,
+			activeTab: 'caseTraining',
 		};
 
 		return <CaseTrainingContentPanel {...caseTrainingContentPanelProps} />;

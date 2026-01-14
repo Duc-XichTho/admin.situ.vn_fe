@@ -1,8 +1,8 @@
 import { Button, Image, Typography } from 'antd';
-import { LeftOutlined, RightOutlined } from '@ant-design/icons';
+import { LeftOutlined, RightOutlined, StarOutlined } from '@ant-design/icons';
 import DOMPurify from 'dompurify';
 import { marked } from 'marked';
-import React from 'react';
+import React, { useState } from 'react';
 import styles from './CaseTrainingTab.module.css';
 import newsTabStyles from './NewsTab.module.css';
 import QuizComponent from './QuizComponent.jsx';
@@ -11,6 +11,7 @@ import AudioPlayer from '../../../components/AudioPlayer/AudioPlayer.jsx';
 import { FeedBack_Icon, Expand_Icon, Close_Icon } from '../../../icon/IconSvg.jsx';
 import AccessDenied from './AccessDenied.jsx';
 import ExcalidrawViewer from '../../K9Management/components/ExcalidrawViewer';
+import RatingPopup from './RatingPopup.jsx';
 
 const { Text } = Typography;
 
@@ -41,7 +42,11 @@ const CaseTrainingContentPanel = ({
   setQuizScores,
   preprocessLatex,
   postprocessLatex,
+  activeTab,
+  fetchItem,
 }) => {
+  const [ratingPopupVisible, setRatingPopupVisible] = useState(false);
+
   if (!item) return null;
 
   // Check access permission
@@ -52,7 +57,7 @@ const CaseTrainingContentPanel = ({
         ref={contentPanelRef}
         className={`${styles.contentPanel} ${newsTabStyles.contentPanel}`}
       >
-        <AccessDenied 
+        <AccessDenied
           isTrialAccount={isTrialAccount}
           onUpgradeClick={() => setIsPackageModalOpen(true)}
         />
@@ -67,8 +72,35 @@ const CaseTrainingContentPanel = ({
 
   return (
     <>
-      {currentUser?.isAdmin && !isMobile && (
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', width: '100%' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', width: '100%', gap: '8px' }}>
+        {/* Rating button */}
+        {currentUser?.id && (
+          <Button
+            type="text"
+            size="small"
+            icon={<StarOutlined style={{ color: '#faad14' }} />}
+            onClick={() => setRatingPopupVisible(true)}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+              color: '#faad14',
+              border: 'none',
+              boxShadow: 'none',
+              flexShrink: 0
+            }}
+            title="Đánh giá bài viết"
+          >
+            {item.scoreFeedback != null ? (
+              <span style={{ fontSize: '13px' }}>
+                {Number(item.scoreFeedback || 0).toFixed(2)}
+              </span>
+            ) : (
+              <span style={{ fontSize: '13px' }}>Đánh giá</span>
+            )}
+          </Button>
+        )}
+        {currentUser?.isAdmin && !isMobile && (
           <Button
             type="text"
             size="small"
@@ -81,8 +113,8 @@ const CaseTrainingContentPanel = ({
           >
             Edit
           </Button>
-        </div>
-      )}
+        )}
+      </div>
       <div
         ref={contentPanelRef}
         className={`${styles.contentPanel} ${newsTabStyles.contentPanel}`}
@@ -118,8 +150,10 @@ const CaseTrainingContentPanel = ({
               />
             </div>
           )}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginLeft: 'auto', marginTop: '20px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginLeft: 'auto', marginTop: '20px', flexWrap: 'wrap' }}>
             <span style={{ fontSize: '13px', color: '#6b7280', fontWeight: '500', }}>ID: {item.id}</span>
+
+
 
             {/* Hiển thị thông tin CID source nếu có */}
             {cidSourceInfo && cidSourceInfo.length > 0 && (
@@ -189,14 +223,14 @@ const CaseTrainingContentPanel = ({
                 {item.info?.filedLabel_1}
               </span>
             )}
-            {item.info?.filedLabel_1 && item.info?.filedLabel_2 && (
-              <span style={{ color: '#C4C4C4' }}>|</span>
-            )}
-            {item.info?.filedLabel_2 && (
-              <span style={{ display: 'flex', alignItems: 'center' }}>
-                {item.info?.filedLabel_2}
-              </span>
-            )}
+            {/*{item.info?.filedLabel_1 && item.info?.filedLabel_2 && (*/}
+            {/*  <span style={{ color: '#C4C4C4' }}>|</span>*/}
+            {/*)}*/}
+            {/*{item.info?.filedLabel_2 && (*/}
+            {/*  <span style={{ display: 'flex', alignItems: 'center' }}>*/}
+            {/*    {item.info?.filedLabel_2}*/}
+            {/*  </span>*/}
+            {/*)}*/}
           </div>
 
           {
@@ -351,7 +385,7 @@ const CaseTrainingContentPanel = ({
                             maskClassName: 'custom-mask'
                           }}
                         />
-                        
+
                         {/* Navigation Buttons */}
                         {hasMultipleImages && (
                           <>
@@ -708,6 +742,22 @@ const CaseTrainingContentPanel = ({
           </div>
         </div>
       </div>
+
+      {/* Rating Popup */}
+      {currentUser?.id && (
+        <RatingPopup
+          fetchItem={fetchItem}
+          visible={ratingPopupVisible}
+          onCancel={() => setRatingPopupVisible(false)}
+          contentId={item.id}
+          contentTitle={item.title}
+          currentUser={currentUser}
+          currentAverageRating={Number(item.scoreFeedback || 0)}
+          currentRatingCount={item?.feedbackCount || 0}
+          activeTab={activeTab || 'caseTraining'}
+
+        />
+      )}
     </>
   );
 };

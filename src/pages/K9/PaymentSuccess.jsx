@@ -50,7 +50,8 @@ const PaymentSuccess = () => {
 		// Lấy thông tin từ URL params
 		const orderCode = searchParams.get('orderCode');
 		const packageName = searchParams.get('package');
-		
+		const amount = searchParams.get('amount');
+
 		// Simulate loading và fetch user data
 		setTimeout(async () => {
 			if (fetchCurrentUser) {
@@ -60,6 +61,7 @@ const PaymentSuccess = () => {
 			setPaymentInfo({
 				orderCode,
 				packageName: packageName ? decodeURIComponent(packageName) : 'Unknown',
+				amount : amount ? decodeURIComponent(amount) : 'Unknown',
 				timestamp: new Date().toLocaleString('vi-VN')
 			});
 			
@@ -67,7 +69,7 @@ const PaymentSuccess = () => {
 		}, 1500);
 
 		return () => clearInterval(interval);
-	}, [searchParams, fetchCurrentUser]);
+	}, [searchParams]);
 
 	const handleGoHome = () => {
 		navigate('/home');

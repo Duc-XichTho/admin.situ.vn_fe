@@ -135,11 +135,11 @@ const RelatedCaseTrainingModal = ({
                             <Customize_Icon /> {item.info?.filedLabel_1}
                         </span>
                     )}
-                    {item.info?.filedLabel_2 && (
-                        <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                            <Document_Icon /> {item.info?.filedLabel_2}
-                        </span>
-                    )}
+                    {/*{item.info?.filedLabel_2 && (*/}
+                    {/*    <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>*/}
+                    {/*        <Document_Icon /> {item.info?.filedLabel_2}*/}
+                    {/*    </span>*/}
+                    {/*)}*/}
                 </div>
 
                 {/* Video/Audio Player Section */}

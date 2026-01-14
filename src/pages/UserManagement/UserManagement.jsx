@@ -556,8 +556,16 @@ const UserManagement = () => {
           // Gói Pro: dùng thời điểm hiện tại (khi sửa) làm mốc, tự động set số ngày
           startDate = dayjs(); // Đặt startDate = ngày hiện tại khi sửa
           durationDays = accountTypeMap[values.accountType];
+        } else if (values.accountType === 'Pro Flex') {
+          // Pro Flex: dùng giá trị từ form (cho phép chỉnh thủ công)
+          startDate = values.startDate || dayjs();
+          durationDays = values.durationDays || 10;
+        } else if (values.accountType === 'Dùng thử') {
+          // Dùng thử: mặc định 3 ngày
+          startDate = values.startDate || dayjs();
+          durationDays = values.durationDays || 3;
         } else {
-          // Dùng thử hoặc không chọn gói: dùng giá trị từ form
+          // Không chọn gói: dùng giá trị từ form, mặc định 10 ngày
           startDate = values.startDate || dayjs();
           durationDays = values.durationDays || 10;
         }
@@ -619,11 +627,19 @@ const UserManagement = () => {
         };
         
         if (values.accountType && accountTypeMap[values.accountType]) {
-          // Gói Pro: dùng thời điểm hiện tại (khi sửa) làm mốc, tự động set số ngày
+          // Gói Pro: dùng thời điểm hiện tại (khi tạo) làm mốc, tự động set số ngày
           startDate = dayjs(); // Đặt startDate = ngày hiện tại
           durationDays = accountTypeMap[values.accountType];
+        } else if (values.accountType === 'Pro Flex') {
+          // Pro Flex: dùng giá trị từ form (cho phép chỉnh thủ công)
+          startDate = values.startDate || dayjs();
+          durationDays = values.durationDays || 10;
+        } else if (values.accountType === 'Dùng thử') {
+          // Dùng thử: mặc định 3 ngày
+          startDate = values.startDate || dayjs();
+          durationDays = values.durationDays || 3;
         } else {
-          // Dùng thử hoặc không chọn gói: dùng giá trị từ form
+          // Không chọn gói: dùng giá trị từ form, mặc định 10 ngày
           startDate = values.startDate || dayjs();
           durationDays = values.durationDays || 10;
         }
@@ -852,6 +868,7 @@ const UserManagement = () => {
           'Pro 90': 'blue',
           'Pro 365': 'cyan',
           'Pro 730': 'purple',
+          'Pro Flex': 'gold',
           'M12': 'cyan',
           'M24': 'purple'
         };
@@ -1130,6 +1147,7 @@ const UserManagement = () => {
               <Option value="Pro 90">Pro 90</Option>
               <Option value="Pro 365">Pro 365</Option>
               <Option value="Pro 730">Pro 730</Option>
+              <Option value="Pro Flex">Pro Flex</Option>
             </Select>
             <Button
               icon={<ReloadOutlined />}
@@ -1205,7 +1223,7 @@ const UserManagement = () => {
             userGroup: 'normal',
             level: ['elementary'],
             startDate: dayjs(),
-            durationDays: 10,
+            durationDays: 3,
             username: '',
             password: '9999'
           }}
@@ -1340,7 +1358,7 @@ const UserManagement = () => {
           <Form.Item
             name="accountType"
             label="Gói tài khoản"
-            extra="Chọn gói Pro để tự động tính thời gian hết hạn từ thời điểm hiện tại. Chọn 'Dùng thử' để nhập thủ công."
+            extra="Chọn gói Pro để tự động tính thời gian hết hạn từ thời điểm hiện tại. Chọn 'Pro Flex' để set thời gian thủ công. Chọn 'Dùng thử' để nhập thủ công."
           >
             <Select
               placeholder="Chọn gói tài khoản (tùy chọn)"
@@ -1349,9 +1367,9 @@ const UserManagement = () => {
                 const accountTypeMap = {
                   'Pro 90': 90,
                   'Pro 365': 365,
-                  'Pro 730': 820
+                  'Pro 730': 730
                 };
-                // Chỉ tự động tính toán cho các gói Pro
+                // Chỉ tự động tính toán cho các gói Pro (không bao gồm Pro Flex)
                 if (value && accountTypeMap[value]) {
                   // Tự động set startDate = ngày hiện tại và durationDays
                   form.setFieldsValue({
@@ -1360,26 +1378,34 @@ const UserManagement = () => {
                     accountType: value
                   });
                   setSelectedAccountType(value);
-                } else {
-                  // Nếu chọn "Dùng thử" hoặc clear, set thành "Dùng thử" để cho phép custom
-                  const finalValue = value || 'Dùng thử';
+                } else if (value === 'Pro Flex') {
+                  // Pro Flex: cho phép chỉnh thủ công, không tự động set
                   form.setFieldsValue({
-                    accountType: finalValue
+                    accountType: 'Pro Flex'
                   });
-                  setSelectedAccountType(finalValue);
-                  // Reset durationDays nếu đang clear
-                  if (!value) {
-                    form.setFieldsValue({
-                      durationDays: undefined
-                    });
-                  }
+                  setSelectedAccountType('Pro Flex');
+                } else if (value === 'Dùng thử') {
+                  // Dùng thử: tự động set durationDays = 3 ngày
+                  form.setFieldsValue({
+                    accountType: 'Dùng thử',
+                    durationDays: 3
+                  });
+                  setSelectedAccountType('Dùng thử');
+                } else {
+                  // Nếu clear, reset về mặc định
+                  form.setFieldsValue({
+                    accountType: undefined,
+                    durationDays: undefined
+                  });
+                  setSelectedAccountType(null);
                 }
               }}
             >
               <Option value="Dùng thử">Dùng thử (nhập thủ công)</Option>
-              <Option value="Pro 90">Pro 90 (90 ngày)</Option>
-              <Option value="Pro 365">Pro 365 (365 ngày)</Option>
-              <Option value="Pro 730">Pro 730 (730 ngày)</Option>
+              <Option value="Pro 90">Pro 90 (90 ngày - tự động)</Option>
+              <Option value="Pro 365">Pro 365 (365 ngày - tự động)</Option>
+              <Option value="Pro 730">Pro 730 (730 ngày - tự động)</Option>
+              <Option value="Pro Flex">Pro Flex (tùy chỉnh thời gian)</Option>
             </Select>
           </Form.Item>
 
@@ -1389,7 +1415,7 @@ const UserManagement = () => {
             rules={[
               { required: true, message: 'Vui lòng chọn ngày bắt đầu' }
             ]}
-            extra={selectedAccountType && ['Pro 90', 'Pro 365', 'Pro 730'].includes(selectedAccountType) ? 'Tự động đặt bằng thời điểm hiện tại' : ''}
+            extra={selectedAccountType && ['Pro 90', 'Pro 365', 'Pro 730'].includes(selectedAccountType) ? 'Tự động đặt bằng thời điểm hiện tại' : selectedAccountType === 'Pro Flex' ? 'Có thể chỉnh sửa thủ công' : ''}
           >
             <DatePicker
               placeholder="Chọn ngày bắt đầu"
@@ -1398,8 +1424,8 @@ const UserManagement = () => {
               format="DD/MM/YYYY"
               disabled={selectedAccountType && ['Pro 90', 'Pro 365', 'Pro 730'].includes(selectedAccountType)}
               onChange={(date) => {
-                // Nếu user tự chỉnh sửa startDate (không bị disabled), set thành "Dùng thử"
-                if (date && (!selectedAccountType || !['Pro 90', 'Pro 365', 'Pro 730'].includes(selectedAccountType))) {
+                // Nếu user tự chỉnh sửa startDate (không bị disabled), chỉ set thành "Dùng thử" nếu không phải Pro Flex
+                if (date && selectedAccountType !== 'Pro Flex' && (!selectedAccountType || !['Pro 90', 'Pro 365', 'Pro 730'].includes(selectedAccountType))) {
                   form.setFieldsValue({
                     accountType: 'Dùng thử'
                   });

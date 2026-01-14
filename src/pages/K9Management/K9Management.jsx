@@ -729,6 +729,8 @@ Format your response as:
 
   const [programFilter, setProgramFilter] = useState('all'); // Filter for program selection
 
+  const [programMultiFilter, setProgramMultiFilter] = useState([]); // Filter for multiple program selection (OR logic)
+
   const [voiceFilter, setVoiceFilter] = useState('all'); // Filter for voice: 'all' | 'hasVoice' | 'noVoice'
 
   const [tagManagementModalVisible, setTagManagementModalVisible] = useState(false);
@@ -996,6 +998,8 @@ Format your response as:
 
       setProgramFilter(currentFilters.programFilter || 'all');
 
+      setProgramMultiFilter(currentFilters.programMultiFilter || []);
+
       setVoiceFilter(currentFilters.voiceFilter || 'all');
 
       setSearchText(currentFilters.searchText || '');
@@ -1034,6 +1038,12 @@ Format your response as:
       tag4Filter,
 
       chapterFilter,
+
+      programFilter,
+
+      programMultiFilter,
+
+      voiceFilter,
 
       searchText
 
@@ -1253,6 +1263,34 @@ Format your response as:
     if (['home', 'news', 'caseTraining', 'longForm'].includes(currentTab)) {
       applyFilters();
     }
+
+  };
+
+  const handleProgramMultiFilterChange = (value) => {
+
+    setProgramMultiFilter(value);
+
+    const currentFilters = {
+
+      ...filterHistory[currentTab],
+
+      programMultiFilter: value
+
+    };
+
+    const updatedHistory = {
+
+      ...filterHistory,
+
+      [currentTab]: currentFilters
+
+    };
+
+    setFilterHistory(updatedHistory);
+
+    saveFilterHistory(updatedHistory);
+
+    // applyFilters will be called automatically by useEffect when programMultiFilter changes
 
   };
 
@@ -1533,7 +1571,7 @@ Format your response as:
 
     currentTab === 'caseTraining' ? tag3Filter : null,
 
-    searchText, currentTab, programFilter, voiceFilter]);
+    searchText, currentTab, programFilter, programMultiFilter, voiceFilter]);
 
 
 
@@ -1547,7 +1585,7 @@ Format your response as:
 
     }
 
-  }, [categoryFilter, imageFilter, diagramFilter, quizFilter, tag4Filter, chapterFilter, tag1Filter, tag2Filter, tag3Filter, searchText, programFilter, voiceFilter, currentTab]);
+  }, [categoryFilter, imageFilter, diagramFilter, quizFilter, tag4Filter, chapterFilter, tag1Filter, tag2Filter, tag3Filter, searchText, programFilter, programMultiFilter, voiceFilter, currentTab]);
 
 
   // Apply filters when tab changes (to ensure fresh data is displayed)
@@ -3361,6 +3399,15 @@ Format your response as:
     if (programFilter && programFilter !== 'all') {
       filteredData = filteredData.filter(item => item.tag4.includes(programFilter));
     }
+
+    // Apply program multi filter (OR logic: item needs to have at least one of the selected programs)
+    if (programMultiFilter && Array.isArray(programMultiFilter) && programMultiFilter.length > 0) {
+      filteredData = filteredData.filter(item => {
+        const itemTag4Array = Array.isArray(item.tag4) ? item.tag4 : [];
+        // Check if item has at least one of the selected programs
+        return programMultiFilter.some(selectedProgram => itemTag4Array.includes(selectedProgram));
+      });
+    }
     // Apply search filter if exists
 
     if (searchText.trim()) {
@@ -3615,6 +3662,8 @@ Format your response as:
 
     setProgramFilter('all');
 
+    setProgramMultiFilter([]);
+
     if (currentTab === 'caseTraining') {
 
       setTag1Filter('all');
@@ -3643,6 +3692,12 @@ Format your response as:
       tag4Filter: [],
 
       chapterFilter: 'all',
+
+      programFilter: 'all',
+
+      programMultiFilter: [],
+
+      voiceFilter: 'all',
 
       searchText: '',
 
@@ -16109,44 +16164,6 @@ Chỉ trả về nội dung theo đúng định dạng trên, không thêm phầ
 
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
 
-              <AutoComplete
-
-                placeholder="Tìm kiếm theo tiêu đề, tóm tắt, chi tiết..."
-
-                value={searchText}
-
-                onChange={(value) => handleLocalSearch(value)}
-
-                onSearch={handleSearchSubmit}
-
-                style={{ width: 250 }}
-
-                allowClear
-
-                loading={searchLoading}
-
-                options={searchHistory[currentTab]?.map(term => ({
-
-                  value: term,
-
-                  label: (
-
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-
-                      <HistoryOutlined style={{ color: '#999' }} />
-
-                      <span>{term}</span>
-
-                    </div>
-
-                  )
-
-                })) || []}
-
-                onSelect={(value) => handleSearchSubmit(value)}
-
-              />
-
               {processingImageQueue && (
 
                 <div style={{
@@ -17163,7 +17180,6 @@ Chỉ trả về nội dung theo đúng định dạng trên, không thêm phầ
 
                 gap: '8px',
 
-                marginLeft: 'auto',
 
                 fontSize: '12px',
 
@@ -17229,31 +17245,6 @@ Chỉ trả về nội dung theo đúng định dạng trên, không thêm phầ
 
 
               </div>
-
-              {/* Program Filter */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span style={{ fontSize: '14px' }}>Program:</span>
-                <Select
-                  value={programFilter}
-                  onChange={handleProgramFilterChange}
-                  style={{ width: 200 }}
-                  placeholder="Chọn program"
-                  showSearch
-                  filterOption={(input, option) =>
-                    (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
-                  }
-                >
-                  <Option value="all">Tất cả</Option>
-                  <Option value="">Trống</Option>
-                  {programOptions.map(option => (
-                    <Option key={option.value} value={option.value}>
-                      {option.label}
-                    </Option>
-                  ))}
-                </Select>
-              </div>
-
-
 
               {/* Image Filter */}
 
@@ -17345,6 +17336,26 @@ Chỉ trả về nội dung theo đúng định dạng trên, không thêm phầ
                 </Select>
 
               </div>
+                      {/* Search */}
+                      <AutoComplete
+                  placeholder="Tìm kiếm theo tiêu đề, tóm tắt, chi tiết..."
+                  value={searchText}
+                  onChange={(value) => handleLocalSearch(value)}
+                  onSearch={handleSearchSubmit}
+                  style={{ width: 250 }}
+                  allowClear
+                  loading={searchLoading}
+                  options={searchHistory[currentTab]?.map(term => ({
+                    value: term,
+                    label: (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <HistoryOutlined style={{ color: '#999' }} />
+                        <span>{term}</span>
+                      </div>
+                    )
+                  })) || []}
+                  onSelect={(value) => handleSearchSubmit(value)}
+                />
 
 
 
@@ -17468,49 +17479,6 @@ Chỉ trả về nội dung theo đúng định dạng trên, không thêm phầ
 
 
 
-              {/* Tag4 Filter (Program) - For all tabs */}
-
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-
-                <span style={{ fontSize: '14px' }}>Program:</span>
-
-                <Select
-
-                  mode="multiple"
-
-                  value={tag4Filter}
-
-                  onChange={handleTag4FilterChange}
-
-                  style={{ width: 300 }}
-
-                  placeholder="Chọn program"
-
-                  maxTagCount="responsive"
-
-                  showSearch
-
-                  filterOption={(input, option) =>
-
-                    (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
-
-                  }
-
-                >
-
-                  {tag4Options.map(option => (
-
-                    <Option key={option.value} value={option.value} label={option.label}>
-
-                      {option.label}
-
-                    </Option>
-
-                  ))}
-
-                </Select>
-
-              </div>
 
 
 
@@ -17559,7 +17527,101 @@ Chỉ trả về nội dung theo đúng định dạng trên, không thêm phầ
 
               </div>
 
+              {/* Program Filters and Search - Grouped together at the end */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                {/* Program Filter (Single) */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span style={{ fontSize: '14px' }}>Program (1):</span>
+                  <Select
+                    value={programFilter}
+                    onChange={handleProgramFilterChange}
+                    style={{ width: 200 }}
+                    placeholder="Chọn 1 program"
+                    showSearch
+                    filterOption={(input, option) =>
+                      (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+                    }
+                  >
+                    <Option value="all">Tất cả</Option>
+                    <Option value="">Trống</Option>
+                    {programOptions.map(option => (
+                      <Option key={option.value} value={option.value}>
+                        {option.label}
+                      </Option>
+                    ))}
+                  </Select>
+                </div>
 
+                {/* Program Multi Filter (OR logic) */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span style={{ fontSize: '14px' }}>Program (nhiều - OR):</span>
+                  <Select
+                    mode="multiple"
+                    value={programMultiFilter}
+                    onChange={handleProgramMultiFilterChange}
+                    style={{ width: 250 }}
+                    placeholder="Chọn nhiều program (chỉ cần có 1)"
+                    showSearch
+                    filterOption={(input, option) =>
+                      (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+                    }
+                    maxTagCount="responsive"
+                  >
+                    {programOptions.map(option => (
+                      <Option key={option.value} value={option.value}>
+                        {option.label}
+                      </Option>
+                    ))}
+                  </Select>
+                </div>
+
+        
+              </div>
+
+
+              {/* Tag4 Filter (Program) - For all tabs */}
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+
+                <span style={{ fontSize: '14px' }}>Program (nhiều-In):</span>
+
+                <Select
+
+                  mode="multiple"
+
+                  value={tag4Filter}
+
+                  onChange={handleTag4FilterChange}
+
+                  style={{ width: 300 }}
+
+                  placeholder="Chọn program (Tag4 - chính xác)"
+
+                  maxTagCount="responsive"
+
+                  showSearch
+
+                  filterOption={(input, option) =>
+
+                    (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+
+                  }
+
+                >
+
+                  {tag4Options.map(option => (
+
+                    <Option key={option.value} value={option.value} label={option.label}>
+
+                      {option.label}
+
+                    </Option>
+
+                  ))}
+
+                </Select>
+
+              </div>
 
               {/* Reset Filters Button */}
 
@@ -17569,7 +17631,7 @@ Chỉ trả về nội dung theo đúng định dạng trên, không thêm phầ
 
                 style={{ marginLeft: '8px' }}
 
-                disabled={categoryFilter === 'all' && imageFilter === 'all' && diagramFilter === 'all' && quizFilter === 'all' && tag4Filter.length === 0 && chapterFilter === 'all' && programFilter === 'all' &&
+                disabled={categoryFilter === 'all' && imageFilter === 'all' && diagramFilter === 'all' && quizFilter === 'all' && tag4Filter.length === 0 && chapterFilter === 'all' && programFilter === 'all' && programMultiFilter.length === 0 &&
                   (currentTab === 'caseTraining' ? (tag1Filter === 'all' && tag2Filter === 'all' && tag3Filter === 'all') : true) &&
 
                   !searchText.trim()}
@@ -17588,7 +17650,7 @@ Chỉ trả về nội dung theo đúng định dạng trên, không thêm phầ
 
               {/* Active Filters Display */}
 
-              {(categoryFilter !== 'all' || imageFilter !== 'all' || voiceFilter !== 'all' || diagramFilter !== 'all' || quizFilter !== 'all' || tag4Filter.length > 0 || chapterFilter !== 'all' ||
+              {(categoryFilter !== 'all' || imageFilter !== 'all' || voiceFilter !== 'all' || diagramFilter !== 'all' || quizFilter !== 'all' || tag4Filter.length > 0 || chapterFilter !== 'all' || programFilter !== 'all' || programMultiFilter.length > 0 ||
                 (currentTab === 'caseTraining' && (tag1Filter !== 'all' || tag2Filter !== 'all' || tag3Filter !== 'all'))) && (
 
                   <div style={{
@@ -17693,6 +17755,12 @@ Chỉ trả về nội dung theo đúng định dạng trên, không thêm phầ
                     {programFilter !== 'all' && (
                       <Tag color="lime" closable onClose={() => handleProgramFilterChange('all')}>
                         Program: {programFilter}
+                      </Tag>
+                    )}
+
+                    {programMultiFilter.length > 0 && (
+                      <Tag color="lime" closable onClose={() => handleProgramMultiFilterChange([])}>
+                        Program (nhiều): {programMultiFilter.join(', ')}
                       </Tag>
                     )}
 

@@ -120,16 +120,16 @@ const ImageSpellCheck = () => {
 
         // Filter by OCR status
         if (ocrFilter === 'hasOcr') {
-            filtered = filtered.filter(img => 
-                img.ocrText && 
-                typeof img.ocrText === 'string' && 
-                img.ocrText.trim() && 
+            filtered = filtered.filter(img =>
+                img.ocrText &&
+                typeof img.ocrText === 'string' &&
+                img.ocrText.trim() &&
                 img.ocrText !== 'Đang xử lý...' &&
                 !img.ocrText.startsWith('Lỗi OCR')
             );
         } else if (ocrFilter === 'noOcr') {
-            filtered = filtered.filter(img => 
-                !img.ocrText || 
+            filtered = filtered.filter(img =>
+                !img.ocrText ||
                 (typeof img.ocrText === 'string' && (!img.ocrText.trim() || img.ocrText === 'Đang xử lý...' || img.ocrText.startsWith('Lỗi OCR')))
             );
         }
@@ -554,14 +554,14 @@ const ImageSpellCheck = () => {
                     // Cập nhật local state
                     setImageData(prev => prev.map(img =>
                         img.id === imageItem.id
-                            ? { 
-                                ...img, 
-                                ocrText: extractedText, 
+                            ? {
+                                ...img,
+                                ocrText: extractedText,
                                 needsReview: needsReview,
                                 averageConfidence: averageConfidence,
                                 lowConfidenceCount: lowConfidenceCount,
                                 lowConfidenceWords: lowConfidenceWords,
-                                ocrStatus: 'completed' 
+                                ocrStatus: 'completed'
                             }
                             : img
                     ));
@@ -572,14 +572,14 @@ const ImageSpellCheck = () => {
                     // Fallback: vẫn cập nhật local state
                     setImageData(prev => prev.map(img =>
                         img.id === imageItem.id
-                            ? { 
-                                ...img, 
-                                ocrText: extractedText, 
+                            ? {
+                                ...img,
+                                ocrText: extractedText,
                                 needsReview: needsReview,
                                 averageConfidence: averageConfidence,
                                 lowConfidenceCount: lowConfidenceCount,
                                 lowConfidenceWords: lowConfidenceWords,
-                                ocrStatus: 'completed' 
+                                ocrStatus: 'completed'
                             }
                             : img
                     ));
@@ -593,14 +593,14 @@ const ImageSpellCheck = () => {
                     // Cập nhật local state
                     setImageData(prev => prev.map(img =>
                         img.id === imageItem.id
-                            ? { 
-                                ...img, 
-                                ocrText: extractedText, 
+                            ? {
+                                ...img,
+                                ocrText: extractedText,
                                 needsReview: needsReview,
                                 averageConfidence: averageConfidence,
                                 lowConfidenceCount: lowConfidenceCount,
                                 lowConfidenceWords: lowConfidenceWords,
-                                ocrStatus: 'completed' 
+                                ocrStatus: 'completed'
                             }
                             : img
                     ));
@@ -611,14 +611,14 @@ const ImageSpellCheck = () => {
                     // Fallback: vẫn cập nhật local state
                     setImageData(prev => prev.map(img =>
                         img.id === imageItem.id
-                            ? { 
-                                ...img, 
-                                ocrText: extractedText, 
+                            ? {
+                                ...img,
+                                ocrText: extractedText,
                                 needsReview: needsReview,
                                 averageConfidence: averageConfidence,
                                 lowConfidenceCount: lowConfidenceCount,
                                 lowConfidenceWords: lowConfidenceWords,
-                                ocrStatus: 'completed' 
+                                ocrStatus: 'completed'
                             }
                             : img
                     ));
@@ -1264,8 +1264,8 @@ const ImageSpellCheck = () => {
                 if (record.averageConfidence === undefined || record.averageConfidence === null) {
                     return <Text type="secondary">-</Text>;
                 }
-                const confidence = typeof record.averageConfidence === 'number' 
-                    ? record.averageConfidence 
+                const confidence = typeof record.averageConfidence === 'number'
+                    ? record.averageConfidence
                     : parseFloat(record.averageConfidence);
                 const color = confidence >= 0.8 ? 'green' : confidence >= 0.6 ? 'orange' : 'red';
                 return (
@@ -1283,13 +1283,13 @@ const ImageSpellCheck = () => {
                 if (record.lowConfidenceCount === undefined || record.lowConfidenceCount === null) {
                     return <Text type="secondary">-</Text>;
                 }
-                const count = typeof record.lowConfidenceCount === 'number' 
-                    ? record.lowConfidenceCount 
+                const count = typeof record.lowConfidenceCount === 'number'
+                    ? record.lowConfidenceCount
                     : parseInt(record.lowConfidenceCount);
                 const hasLowConfidenceWords = record.lowConfidenceWords && Array.isArray(record.lowConfidenceWords) && record.lowConfidenceWords.length > 0;
-                
+
                 return (
-                    <Tag 
+                    <Tag
                         color={count > 0 ? 'red' : 'green'}
                         style={hasLowConfidenceWords ? { cursor: 'pointer' } : {}}
                         onClick={hasLowConfidenceWords ? () => {
@@ -1887,8 +1887,8 @@ const ImageSpellCheck = () => {
                                     if (confidence === undefined || confidence === null) {
                                         return <Text type="secondary">-</Text>;
                                     }
-                                    const conf = typeof confidence === 'number' 
-                                        ? confidence 
+                                    const conf = typeof confidence === 'number'
+                                        ? confidence
                                         : parseFloat(confidence);
                                     const color = conf >= 0.8 ? 'green' : conf >= 0.6 ? 'orange' : 'red';
                                     return (
