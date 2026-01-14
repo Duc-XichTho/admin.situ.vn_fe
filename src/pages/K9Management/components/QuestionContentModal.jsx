@@ -13,14 +13,26 @@ const QuestionContentModal = ({ visible, onCancel, questionContent, recordTitle,
   const [editingData, setEditingData] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [rawJsonText, setRawJsonText] = useState('');
+  const [jsonError, setJsonError] = useState(null);
 
   // Initialize editing data when modal opens or questionContent changes
   useEffect(() => {
     if (visible && questionContent) {
       setEditingData(JSON.parse(JSON.stringify(questionContent))); // Deep copy
       setIsEditing(false);
+      setRawJsonText(JSON.stringify(questionContent, null, 2));
+      setJsonError(null);
     }
   }, [visible, questionContent]);
+
+  // Update raw JSON text when editingData changes (but not when user is typing in raw JSON tab)
+  useEffect(() => {
+    if (activeTab !== 'raw' && editingData) {
+      setRawJsonText(JSON.stringify(editingData, null, 2));
+      setJsonError(null);
+    }
+  }, [editingData, activeTab]);
 
   const handleClearQuestionContent = () => {
     if (onUpdateQuestionContent) {
@@ -32,19 +44,35 @@ const QuestionContentModal = ({ visible, onCancel, questionContent, recordTitle,
     try {
       setSaving(true);
       
-      if (!editingData) {
+      let dataToSave = editingData;
+
+      // If in raw JSON tab, parse JSON first
+      if (activeTab === 'raw') {
+        try {
+          const parsed = JSON.parse(rawJsonText);
+          setJsonError(null);
+          dataToSave = parsed;
+        } catch (error) {
+          setJsonError('JSON không hợp lệ: ' + error.message);
+          message.error('JSON không hợp lệ. Vui lòng kiểm tra lại.');
+          return;
+        }
+      }
+
+      if (!dataToSave) {
         message.error('Không có dữ liệu để lưu');
         return;
       }
 
       // Ensure arrays exist
-      if (!editingData.questionQuiz) editingData.questionQuiz = [];
-      if (!editingData.questionEssay) editingData.questionEssay = [];
+      if (!dataToSave.questionQuiz) dataToSave.questionQuiz = [];
+      if (!dataToSave.questionEssay) dataToSave.questionEssay = [];
 
       // Save
       if (onUpdateQuestionContent) {
-        await onUpdateQuestionContent(editingData);
+        await onUpdateQuestionContent(dataToSave);
         setIsEditing(false);
+        setJsonError(null);
         message.success('Cập nhật thành công!');
       }
     } catch (error) {
@@ -52,6 +80,20 @@ const QuestionContentModal = ({ visible, onCancel, questionContent, recordTitle,
       message.error('Lỗi khi lưu: ' + (error.message || 'Unknown error'));
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleRawJsonChange = (value) => {
+    setRawJsonText(value);
+    // Try to parse JSON to validate
+    try {
+      JSON.parse(value);
+      setJsonError(null);
+      // Update editingData if valid
+      const parsed = JSON.parse(value);
+      setEditingData(parsed);
+    } catch (error) {
+      setJsonError('JSON không hợp lệ: ' + error.message);
     }
   };
 
@@ -663,6 +705,72 @@ const QuestionContentModal = ({ visible, onCancel, questionContent, recordTitle,
           </Divider>
           {renderQuizQuestions(isEditing && editingData ? editingData.questionEssay : questionContent.questionEssay, 'questionEssay')}
 
+        </TabPane>
+
+        <TabPane 
+          tab={
+            <span>
+              <FileTextOutlined />
+              Raw JSON
+            </span>
+          } 
+          key="raw"
+        >
+          <Alert
+            message="Chỉnh sửa JSON trực tiếp"
+            description="Bạn có thể chỉnh sửa JSON trực tiếp ở đây. Đảm bảo JSON hợp lệ trước khi lưu."
+            type="info"
+            showIcon
+            style={{ marginBottom: '16px' }}
+          />
+          {jsonError && (
+            <Alert
+              message="Lỗi JSON"
+              description={jsonError}
+              type="error"
+              showIcon
+              style={{ marginBottom: '16px' }}
+            />
+          )}
+          <TextArea
+            value={rawJsonText}
+            onChange={(e) => handleRawJsonChange(e.target.value)}
+            rows={20}
+            style={{ 
+              fontFamily: 'monospace',
+              fontSize: '13px'
+            }}
+            placeholder='{"questionQuiz": [], "questionEssay": []}'
+          />
+          <div style={{ marginTop: '12px', textAlign: 'right' }}>
+            <Button
+              onClick={() => {
+                try {
+                  const parsed = JSON.parse(rawJsonText);
+                  setEditingData(parsed);
+                  setJsonError(null);
+                  message.success('JSON hợp lệ!');
+                } catch (error) {
+                  setJsonError('JSON không hợp lệ: ' + error.message);
+                  message.error('JSON không hợp lệ');
+                }
+              }}
+              style={{ marginRight: '8px' }}
+            >
+              Validate JSON
+            </Button>
+            <Button
+              onClick={() => {
+                if (questionContent) {
+                  setRawJsonText(JSON.stringify(questionContent, null, 2));
+                  setJsonError(null);
+                  message.info('Đã khôi phục về dữ liệu gốc');
+                }
+              }}
+            >
+              Khôi phục
+            </Button>
+          </div>
         </TabPane>
 
       </Tabs>
