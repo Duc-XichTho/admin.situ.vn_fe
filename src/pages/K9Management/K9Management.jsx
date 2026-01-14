@@ -17559,7 +17559,7 @@ Chỉ trả về nội dung theo đúng định dạng trên, không thêm phầ
                     mode="multiple"
                     value={programMultiFilter}
                     onChange={handleProgramMultiFilterChange}
-                    style={{ width: 250 }}
+                    style={{ width: 450 }}
                     placeholder="Chọn nhiều program (chỉ cần có 1)"
                     showSearch
                     filterOption={(input, option) =>
@@ -17595,7 +17595,7 @@ Chỉ trả về nội dung theo đúng định dạng trên, không thêm phầ
 
                   style={{ width: 300 }}
 
-                  placeholder="Chọn program (Tag4 - chính xác)"
+                  placeholder="Chọn program (chọn nhiều - chính xác)"
 
                   maxTagCount="responsive"
 

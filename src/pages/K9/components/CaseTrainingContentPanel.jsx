@@ -233,13 +233,13 @@ const CaseTrainingContentPanel = ({
             {/*)}*/}
           </div>
 
-          {
+          {/* {
             currentUser?.id && (
               <span onClick={() => setShowFeedbackModal(true)} style={{ display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }} title="Góp ý/Feedback cho nội dung">
                 <FeedBack_Icon width={17} height={17} /> Góp ý, feedback cho nội dung
               </span>
             )
-          }
+          } */}
         </div>
         <div className={styles.audioPlayerContainer}>
           <AudioPlayer audioUrl={item.audioUrl} />
