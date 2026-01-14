@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { Table, Input, Select, Space, Button, Tag, Modal, Tooltip, Card, Statistic, Divider, Typography, Rate, Tabs, message, InputNumber } from 'antd';
-import { getFeedback, createFeedback } from '../../../apis/feedbackService.jsx';
+import { getFeedback, createFeedback, createBulkFeedback } from '../../../apis/feedbackService.jsx';
 import { formatDateToDDMMYYYY, formatDateFromTimestamp, createTimestamp } from '../../../generalFunction/format.js';
 import styles from './FeedbackManagement.module.css';
 import { useNavigate } from 'react-router-dom';
@@ -30,7 +30,9 @@ const FeedbackManagement = () => {
   const [activeTab, setActiveTab] = useState('all');
   const [visibleContentRatings, setVisibleContentRatings] = useState(false);
   const [selectedContent, setSelectedContent] = useState(null);
-  const [lowRatingFilter, setLowRatingFilter] = useState(false);
+  const [ratingFilter, setRatingFilter] = useState('all'); // Filter điểm: 'all', 'low', 'medium', 'high', 'veryHigh', 'custom'
+  const [customMinRating, setCustomMinRating] = useState(null); // Điểm tối thiểu (tùy chỉnh)
+  const [customMaxRating, setCustomMaxRating] = useState(null); // Điểm tối đa (tùy chỉnh)
   const [buffingRating, setBuffingRating] = useState(false);
   const [visibleBuffModal, setVisibleBuffModal] = useState(false);
   const [buffingContentId, setBuffingContentId] = useState(null);
@@ -38,6 +40,8 @@ const FeedbackManagement = () => {
   const [buffCount, setBuffCount] = useState(5); // Số lần rating
   const [buffRatingValue, setBuffRatingValue] = useState(5); // Số sao
   const [commentTypeFilter, setCommentTypeFilter] = useState('all'); // Filter theo loại comment: 'all', 'user', 'admin'
+  const [selectedRowKeys, setSelectedRowKeys] = useState([]); // Các bài đã chọn (contentId)
+  const [visibleBulkBuffModal, setVisibleBulkBuffModal] = useState(false); // Modal buff hàng loạt
 
   const fetchData = async () => {
       setLoading(true);
@@ -59,8 +63,12 @@ const FeedbackManagement = () => {
   useEffect(() => {
     // Reset to first page when filters/search change
     setCurrentPage(1);
-  }, [search, sourceFilter, commentTypeFilter]);
-console.log(feedbacks);
+    // Reset selected rows when filter changes (only for byContent tab)
+    if (activeTab === 'byContent') {
+      setSelectedRowKeys([]);
+    }
+  }, [search, sourceFilter, commentTypeFilter, ratingFilter, customMinRating, customMaxRating]);
+  
   const getFiltered = () => {
     let list = Array.isArray(feedbacks) ? feedbacks : [];
     
@@ -159,12 +167,39 @@ console.log(feedbacks);
     });
   }, [feedbacks]);
 
-  // Filter content ratings by low rating
+  // Filter content ratings by rating filter
   const filteredContentRatings = useMemo(() => {
     let filtered = contentRatings;
     
-    if (lowRatingFilter) {
-      filtered = filtered.filter(c => c.averageRating < 4.0);
+    // Filter by rating range
+    if (ratingFilter !== 'all') {
+      switch (ratingFilter) {
+        case 'low':
+          filtered = filtered.filter(c => c.averageRating < 3.0);
+          break;
+        case 'medium':
+          filtered = filtered.filter(c => c.averageRating >= 3.0 && c.averageRating <= 4.0);
+          break;
+        case 'high':
+          filtered = filtered.filter(c => c.averageRating >= 4.0);
+          break;
+        case 'veryHigh':
+          filtered = filtered.filter(c => c.averageRating >= 4.5);
+          break;
+        case 'custom':
+          // Filter by custom range
+          if (customMinRating != null || customMaxRating != null) {
+            filtered = filtered.filter(c => {
+              const rating = c.averageRating;
+              const minOk = customMinRating == null || rating >= customMinRating;
+              const maxOk = customMaxRating == null || rating <= customMaxRating;
+              return minOk && maxOk;
+            });
+          }
+          break;
+        default:
+          break;
+      }
     }
     
     if (search) {
@@ -183,9 +218,19 @@ console.log(feedbacks);
       filtered = filtered.filter(c => normalizeSource(c.sourceTab) === sourceFilter);
     }
     
-    // Sort by average rating (low to high)
-    return filtered.sort((a, b) => a.averageRating - b.averageRating);
-  }, [contentRatings, lowRatingFilter, search, sourceFilter]);
+    // Sort by contentId
+    return filtered.sort((a, b) => {
+      const idA = String(a.contentId || '').toLowerCase();
+      const idB = String(b.contentId || '').toLowerCase();
+      // Nếu là số thì sort số, không thì sort string
+      const numA = Number(a.contentId);
+      const numB = Number(b.contentId);
+      if (!isNaN(numA) && !isNaN(numB)) {
+        return  numB - numA ;
+      }
+      return idA.localeCompare(idB);
+    });
+  }, [contentRatings, ratingFilter, customMinRating, customMaxRating, search, sourceFilter]);
 
   // Open buff modal
   const handleOpenBuffModal = (contentId, contentName) => {
@@ -219,19 +264,22 @@ console.log(feedbacks);
       const content = contentRatings.find(c => c.contentId === buffingContentId);
       const sourceTab = content?.sourceTab || 'stream';
 
-      // Create all feedbacks with same rating
-      const promises = Array.from({ length: buffCount }, () => {
-        const payload = {
-          k9Content_Id: buffingContentId,
-          rating: buffRatingValue,
-          desc: 'admin buff',
-          source_tab: sourceTab,
-          createdAt: createTimestamp(),
-        };
-        return createFeedback(payload);
-      });
+      // Tạo mảng payloads cho tất cả các ratings
+      const payloads = Array.from({ length: buffCount }, () => ({
+        k9Content_Id: buffingContentId,
+        rating: buffRatingValue,
+        desc: 'admin buff',
+        source_tab: sourceTab,
+        createdAt: createTimestamp(),
+      }));
 
-      await Promise.all(promises);
+      // Sử dụng bulk API nếu buff nhiều lần, hoặc single API nếu chỉ 1 lần
+      if (buffCount === 1) {
+        await createFeedback(payloads[0]);
+      } else {
+        await createBulkFeedback(payloads);
+      }
+      
       message.success(`Đã thêm ${buffCount} System ratings (${buffRatingValue} sao) cho bài "${buffingContentName}"`);
       
       // Refresh data after buffing
@@ -254,6 +302,79 @@ console.log(feedbacks);
     } finally {
       setBuffingRating(false);
     }
+  };
+
+  // Handle bulk buff rating - buff nhiều bài cùng lúc
+  const handleBulkBuffRating = async () => {
+    if (!selectedRowKeys || selectedRowKeys.length === 0) {
+      message.warning('Vui lòng chọn ít nhất một bài');
+      return;
+    }
+
+    if (!buffCount || buffCount < 1) {
+      message.warning('Số lần rating phải lớn hơn 0');
+      return;
+    }
+
+    if (!buffRatingValue || buffRatingValue < 1 || buffRatingValue > 5) {
+      message.warning('Rating phải từ 1 đến 5');
+      return;
+    }
+
+    setBuffingRating(true);
+    try {
+      const payloads = [];
+      
+      // Tạo mảng payloads cho tất cả các ratings cần tạo
+      for (const contentId of selectedRowKeys) {
+        const content = contentRatings.find(c => c.contentId === contentId);
+        const sourceTab = content?.sourceTab || 'stream';
+        
+        // Tạo buffCount payloads cho mỗi bài
+        for (let i = 0; i < buffCount; i++) {
+          payloads.push({
+            k9Content_Id: contentId,
+            rating: buffRatingValue,
+            desc: 'admin buff',
+            source_tab: sourceTab,
+            createdAt: createTimestamp(),
+          });
+        }
+      }
+
+      // Gọi API bulk để tạo tất cả ratings cùng lúc
+      await createBulkFeedback(payloads);
+      message.success(`Đã thêm ${buffCount} System ratings (${buffRatingValue} sao) cho ${selectedRowKeys.length} bài`);
+      
+      // Refresh data after buffing
+      await fetchData();
+      
+      // Reset selections and close modal
+      setSelectedRowKeys([]);
+      setVisibleBulkBuffModal(false);
+      setBuffCount(5);
+      setBuffRatingValue(5);
+    } catch (error) {
+      message.error('Lỗi khi buff rating hàng loạt: ' + (error.response?.data?.message || error.message));
+    } finally {
+      setBuffingRating(false);
+    }
+  };
+
+  // Handle row selection
+  const rowSelection = {
+    selectedRowKeys,
+    onChange: (selectedKeys) => {
+      setSelectedRowKeys(selectedKeys);
+    },
+    onSelectAll: (selected, selectedRows, changeRows) => {
+      if (selected) {
+        const allKeys = filteredContentRatings.map(c => c.contentId);
+        setSelectedRowKeys(allKeys);
+      } else {
+        setSelectedRowKeys([]);
+      }
+    },
   };
 
   const columns = [
@@ -565,18 +686,94 @@ console.log(feedbacks);
             </Select>
             
             {activeTab === 'byContent' && (
-              <Select 
-                value={lowRatingFilter ? 'low' : 'all'} 
-                onChange={(val) => setLowRatingFilter(val === 'low')} 
-                style={{ 
-                  width: 160,
-                  borderRadius: '8px',
-                  height: '36px'
-                }}
-              >
-                <Option value="all">Tất cả điểm</Option>
-                <Option value="low">Điểm thấp (&lt; 4.0)</Option>
-              </Select>
+              <>
+                <Select 
+                  value={ratingFilter} 
+                  onChange={(val) => {
+                    setRatingFilter(val);
+                    if (val !== 'custom') {
+                      setCustomMinRating(null);
+                      setCustomMaxRating(null);
+                    }
+                  }}
+                  style={{ 
+                    width: 230,
+                    borderRadius: '8px',
+                    height: '36px'
+                  }}
+                >
+                  <Option value="all">Tất cả điểm</Option>
+                  <Option value="low">Điểm thấp (&lt; 3.0)</Option>
+                  <Option value="medium">Điểm trung bình (3.0 - 4.0)</Option>
+                  <Option value="high">Điểm cao (≥ 4.0)</Option>
+                  <Option value="veryHigh">Điểm rất cao (≥ 4.5)</Option>
+                  <Option value="custom">Tùy chỉnh khoảng điểm</Option>
+                </Select>
+                {ratingFilter === 'custom' && (
+                  <Space size="small" style={{ alignItems: 'center' }}>
+                    <Text type="secondary" style={{ fontSize: 13 }}>Từ:</Text>
+                    <InputNumber
+                      min={0}
+                      max={5}
+                      step={0.1}
+                      precision={1}
+                      value={customMinRating}
+                      onChange={(val) => setCustomMinRating(val)}
+                      placeholder="Min"
+                      style={{ 
+                        width: 90,
+                        borderRadius: '8px',
+                        height: '36px'
+                      }}
+                    />
+                    <Text type="secondary" style={{ fontSize: 13 }}>Đến:</Text>
+                    <InputNumber
+                      min={0}
+                      max={5}
+                      step={0.1}
+                      precision={1}
+                      value={customMaxRating}
+                      onChange={(val) => setCustomMaxRating(val)}
+                      placeholder="Max"
+                      style={{ 
+                        width: 90,
+                        borderRadius: '8px',
+                        height: '36px'
+                      }}
+                    />
+                    {(customMinRating != null || customMaxRating != null) && (
+                      <Button
+                        size="small"
+                        type="text"
+                        onClick={() => {
+                          setCustomMinRating(null);
+                          setCustomMaxRating(null);
+                        }}
+                        style={{ fontSize: 12, padding: '0 8px' }}
+                      >
+                        Xóa
+                      </Button>
+                    )}
+                  </Space>
+                )}
+                {selectedRowKeys.length > 0 && (
+                  <Button
+                    type="primary"
+                    danger
+                    onClick={() => {
+                      setBuffCount(5);
+                      setBuffRatingValue(5);
+                      setVisibleBulkBuffModal(true);
+                    }}
+                    style={{ 
+                      borderRadius: '8px',
+                      height: '36px'
+                    }}
+                  >
+                    Buff rating hàng loạt ({selectedRowKeys.length})
+                  </Button>
+                )}
+              </>
             )}
           </div>
         </div>
@@ -592,7 +789,10 @@ console.log(feedbacks);
       >
         <Tabs
           activeKey={activeTab}
-          onChange={setActiveTab}
+          onChange={(key) => {
+            setActiveTab(key);
+            setSelectedRowKeys([]); // Reset selection when switching tabs
+          }}
           style={{ padding: '0 16px' }}
           items={[
           {
@@ -633,6 +833,7 @@ console.log(feedbacks);
                   loading={loading}
                   dataSource={filteredContentRatings}
                   columns={contentRatingColumns}
+                  rowSelection={rowSelection}
                   bordered
                   sticky
                   scroll={{ y: 'calc(100vh - 400px)', x: true }}
@@ -905,6 +1106,94 @@ console.log(feedbacks);
             </Text>
             <Text type="secondary">
               Mỗi rating: <Text strong style={{ color: '#1890ff' }}>{buffRatingValue}</Text> sao
+            </Text>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Modal Buff Rating Hàng loạt */}
+      <Modal
+        open={visibleBulkBuffModal}
+        title={
+          <div>
+            <Title level={5} style={{ margin: 0 }}>Buff Rating Hàng loạt</Title>
+            <div style={{ marginTop: 8 }}>
+              <Text type="secondary">Đã chọn: <Text strong>{selectedRowKeys.length}</Text> bài</Text>
+            </div>
+          </div>
+        }
+        onCancel={() => {
+          setVisibleBulkBuffModal(false);
+          setBuffCount(5);
+          setBuffRatingValue(5);
+        }}
+        onOk={handleBulkBuffRating}
+        okText="Thêm ratings"
+        cancelText="Hủy"
+        confirmLoading={buffingRating}
+        width={500}
+        destroyOnClose
+      >
+        <div style={{ marginTop: 16 }}>
+          <Text type="secondary" style={{ marginBottom: 24, display: 'block' }}>
+            Thêm System ratings cho {selectedRowKeys.length} bài đã chọn. Tất cả ratings sẽ có cùng số sao và desc = "admin buff"
+          </Text>
+          
+          <Space direction="vertical" size="large" style={{ width: '100%' }}>
+            <div>
+              <Text strong style={{ display: 'block', marginBottom: 8 }}>
+                Số lần rating (cho mỗi bài):
+              </Text>
+              <InputNumber
+                min={1}
+                max={100}
+                value={buffCount}
+                onChange={(value) => setBuffCount(value || 1)}
+                style={{ width: '100%' }}
+                placeholder="Nhập số lần rating"
+              />
+            </div>
+            
+            <div>
+              <Text strong style={{ display: 'block', marginBottom: 8 }}>
+                Số sao (cho tất cả các lần):
+              </Text>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
+                <Rate
+                  value={buffRatingValue}
+                  onChange={setBuffRatingValue}
+                  style={{ fontSize: 24 }}
+                />
+                <InputNumber
+                  min={1}
+                  max={5}
+                  value={buffRatingValue}
+                  onChange={(value) => setBuffRatingValue(value || 5)}
+                  style={{ width: '100px' }}
+                  precision={1}
+                  step={0.5}
+                />
+                <Text type="secondary">/ 5</Text>
+              </div>
+            </div>
+          </Space>
+          
+          <Divider />
+          
+          <div style={{ 
+            padding: '16px', 
+            backgroundColor: '#f0f9ff', 
+            borderRadius: '4px',
+            border: '1px solid #bae7ff'
+          }}>
+            <Text type="secondary" style={{ display: 'block', marginBottom: 4 }}>
+              Sẽ tạo: <Text strong style={{ color: '#1890ff' }}>{buffCount * selectedRowKeys.length}</Text> System ratings
+            </Text>
+            <Text type="secondary" style={{ display: 'block', marginBottom: 4 }}>
+              Cho: <Text strong style={{ color: '#1890ff' }}>{selectedRowKeys.length}</Text> bài
+            </Text>
+            <Text type="secondary">
+              Mỗi bài: <Text strong style={{ color: '#1890ff' }}>{buffCount}</Text> ratings × <Text strong style={{ color: '#1890ff' }}>{buffRatingValue}</Text> sao
             </Text>
           </div>
         </div>

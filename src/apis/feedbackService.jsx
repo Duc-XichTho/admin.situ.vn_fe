@@ -14,6 +14,16 @@ export const createFeedback = async (payload) => {
   }
 };
 
+export const createBulkFeedback = async (payloads) => {
+  try {
+    const { data } = await instance.post(URL + '/bulk', payloads);
+    return data;
+  } catch (error) {
+    console.error('Error creating bulk feedback:', error);
+    throw error;
+  }
+};
+
 
 export const getFeedback = async () => {
   try {
