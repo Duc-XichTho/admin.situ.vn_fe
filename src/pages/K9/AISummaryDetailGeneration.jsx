@@ -73,6 +73,7 @@ const AISummaryDetailGeneration = () => {
     const [detailImageUrlsFilter, setDetailImageUrlsFilter] = useState('all'); // 'all', 'has', 'none'
     const [showDetailFilter, setShowDetailFilter] = useState('all'); // 'all', 'has', 'none'
     const [lessonNumberFilter, setLessonNumberFilter] = useState(''); // Text search for lessonNumber
+    const [relatedCaseFilter, setRelatedCaseFilter] = useState('all'); // 'all', '0', '1', '2', ..., '10'
     const [programFilter, setProgramFilter] = useState([]); // Array of selected program values
     const [tag4Options, setTag4Options] = useState([]); // List of available programs
     const programTagsContainerRef = useRef(null); // Ref for tags container
@@ -2168,7 +2169,7 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
     // Reset to page 1 when tab, search, or filters change
     useEffect(() => {
         setCurrentPage(1);
-    }, [activeTab, searchText, summaryDetailFilter, diagramHtmlFilter, diagramExcalidrawFilter, imgUrlsFilter, detailImageUrlsFilter, showDetailFilter, lessonNumberFilter, programFilter]);
+    }, [activeTab, searchText, summaryDetailFilter, diagramHtmlFilter, diagramExcalidrawFilter, imgUrlsFilter, detailImageUrlsFilter, showDetailFilter, lessonNumberFilter, relatedCaseFilter, programFilter]);
 
     // Calculate how many tags can fit in the container
     useEffect(() => {
@@ -2401,6 +2402,19 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
             });
         }
 
+        // Filter by related case count (only for news tab)
+        if (activeTab === 'news' && relatedCaseFilter !== 'all') {
+            data = data.filter(item => {
+                const caseCount = getRelatedCaseTrainingCount(item);
+                if (relatedCaseFilter === '0') {
+                    return caseCount === 0;
+                } else {
+                    const filterCount = parseInt(relatedCaseFilter, 10);
+                    return caseCount === filterCount;
+                }
+            });
+        }
+
         // Filter by general search text
         if (searchText.trim()) {
             const searchLower = searchText.toLowerCase();
@@ -2420,7 +2434,7 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
         }
 
         return data;
-    }, [searchText, summaryDetailFilter, diagramHtmlFilter, diagramExcalidrawFilter, imgUrlsFilter, detailImageUrlsFilter, showDetailFilter, lessonNumberFilter, programFilter, currentTabData]);
+    }, [searchText, summaryDetailFilter, diagramHtmlFilter, diagramExcalidrawFilter, imgUrlsFilter, detailImageUrlsFilter, showDetailFilter, lessonNumberFilter, relatedCaseFilter, programFilter, activeTab, currentTabData, getRelatedCaseTrainingCount]);
 
     const renderDetail = useCallback((text, record) => {
         if (!text) return '-';
@@ -3358,6 +3372,23 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
                             allowClear
                             size="small"
                         />
+                        {activeTab === 'news' && (
+                            <>
+                                <span style={{ fontSize: '13px', fontWeight: 500 }}>Case liên quan:</span>
+                                <Select
+                                    value={relatedCaseFilter}
+                                    onChange={setRelatedCaseFilter}
+                                    style={{ width: 140 }}
+                                    size="small"
+                                >
+                                    <Select.Option value="all">Tất cả</Select.Option>
+                                    <Select.Option value="0">Không có case</Select.Option>
+                                    {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15].map(num => (
+                                        <Select.Option key={num} value={String(num)}>{num} case</Select.Option>
+                                    ))}
+                                </Select>
+                            </>
+                        )}
                     </div>
                 </div>
 

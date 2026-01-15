@@ -93,7 +93,7 @@ import { getAllFinRatioBaohiems } from '../../apis/finRatioBaohiemService.jsx';
 import { getAllFinRatioChungkhoans } from '../../apis/finRatioChungkhoanService.jsx';
 import { getAllFinRatioNganhangs } from '../../apis/finRatioNganhangService.jsx';
 import { getAllFinRatios } from '../../apis/finRatioService.jsx';
-import { createK9, deleteK9, getK9ById, getK9ByType, searchK9ByTextToVector, updateK9, updateK9Bulk } from '../../apis/k9Service';
+import { createK9, deleteK9, getK9ById, getK9ByType, getK9ByCidType, searchK9ByTextToVector, updateK9, updateK9Bulk } from '../../apis/k9Service';
 import { createOrUpdateSetting, getSettingByType } from '../../apis/settingService';
 import { getAllUserClass } from '../../apis/userClassService';
 import ReportOverviewModal from '../K9/components/ReportOverviewModal';
@@ -107,6 +107,7 @@ import DiagramPreviewModal from './components/DiagramPreviewModal.jsx';
 import ImproveDetailModal from './components/ImproveDetailModal.jsx';
 import QuestionContentModal from './components/QuestionContentModal.jsx';
 import QuizEditorModal from './components/QuizEditorModal.jsx';
+import RelatedCaseTrainingModal from '../K9/components/RelatedCaseTrainingModal.jsx';
 import TagManagementModal from './components/TagManagementModal.jsx';
 import CategoriesManagementModal from './components/CategoriesManagementModal.jsx';
 import TagProgramModal from './components/TagProgramModal.jsx';
@@ -234,6 +235,12 @@ const K9Management = () => {
   // Bulk import states
 
   const [importModalVisible, setImportModalVisible] = useState(false);
+  
+  // Related Case Training Modal states
+  const [relatedCaseTrainingModalVisible, setRelatedCaseTrainingModalVisible] = useState(false);
+  const [selectedNewsItemForCaseTraining, setSelectedNewsItemForCaseTraining] = useState(null);
+  const [relatedCaseTrainingList, setRelatedCaseTrainingList] = useState([]);
+  const [loadingRelatedCaseTraining, setLoadingRelatedCaseTraining] = useState(false);
 
   const [uploadingImport, setUploadingImport] = useState(false);
 
@@ -541,6 +548,8 @@ const K9Management = () => {
   const [tag2Filter, setTag2Filter] = useState('all');
 
   const [tag3Filter, setTag3Filter] = useState('all');
+  
+  const [relatedCaseFilter, setRelatedCaseFilter] = useState('all'); // 'all', '0', '1', '2', ..., '15'
 
   const [processingCompanySummaryQueue, setProcessingCompanySummaryQueue] = useState(false);
 
@@ -1374,6 +1383,11 @@ Format your response as:
 
 
 
+  const handleRelatedCaseFilterChange = (value) => {
+    setRelatedCaseFilter(value);
+    // applyFilters will be called automatically by useEffect when relatedCaseFilter changes
+  };
+
   const handleTag3FilterChange = (value) => {
 
     setTag3Filter(value);
@@ -1585,7 +1599,7 @@ Format your response as:
 
     }
 
-  }, [categoryFilter, imageFilter, diagramFilter, quizFilter, tag4Filter, chapterFilter, tag1Filter, tag2Filter, tag3Filter, searchText, programFilter, programMultiFilter, voiceFilter, currentTab]);
+  }, [categoryFilter, imageFilter, diagramFilter, quizFilter, tag4Filter, chapterFilter, tag1Filter, tag2Filter, tag3Filter, searchText, programFilter, programMultiFilter, voiceFilter, relatedCaseFilter, currentTab]);
 
 
   // Apply filters when tab changes (to ensure fresh data is displayed)
@@ -3461,6 +3475,19 @@ Format your response as:
       }
     }
 
+    // Apply related case filter (only for news tab)
+    if (currentTab === 'news' && relatedCaseFilter !== 'all') {
+      filteredData = filteredData.filter(item => {
+        const caseCount = getRelatedCaseTrainingCount(item);
+        if (relatedCaseFilter === '0') {
+          return caseCount === 0;
+        } else {
+          const filterCount = parseInt(relatedCaseFilter, 10);
+          return caseCount === filterCount;
+        }
+      });
+    }
+
     setFilteredData({
 
       ...allData,
@@ -3663,6 +3690,8 @@ Format your response as:
     setProgramFilter('all');
 
     setProgramMultiFilter([]);
+    
+    setRelatedCaseFilter('all');
 
     if (currentTab === 'caseTraining') {
 
@@ -7104,6 +7133,36 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
 
   };
 
+  // Get related case training count by cid (only for news tab)
+  const getRelatedCaseTrainingCount = (record) => {
+    if (!record.cid || currentTab !== 'news') return 0;
+    const relatedCases = allData.caseTraining?.filter(item => item.cid === record.cid) || [];
+    return relatedCases.length;
+  };
+
+  // Handle open related case training modal
+  const handleOpenRelatedCaseTrainingModal = async (record) => {
+    if (!record.cid) {
+      message.warning('Record này không có CID!');
+      return;
+    }
+
+    setLoadingRelatedCaseTraining(true);
+    setSelectedNewsItemForCaseTraining(record);
+
+    try {
+      const relatedCases = await getK9ByCidType(record.cid, 'caseTraining');
+      const caseList = Array.isArray(relatedCases) ? relatedCases : (relatedCases?.data || []);
+      setRelatedCaseTrainingList(caseList);
+      setRelatedCaseTrainingModalVisible(true);
+    } catch (error) {
+      console.error('Error loading related case training:', error);
+      message.error('Lỗi khi tải danh sách case training liên quan!');
+    } finally {
+      setLoadingRelatedCaseTraining(false);
+    }
+  };
+
   const getColumns = () => {
 
     const baseColumns = [
@@ -7138,6 +7197,36 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
         render: (cid) => cid || '-'
 
       },
+      // Case liên quan - chỉ hiển thị ở tab news
+      ...(currentTab === 'news' ? [{
+        title: 'Case liên quan',
+        key: 'relatedCaseTraining',
+        width: 120,
+        fixed: 'left',
+        render: (_, record) => {
+          const count = getRelatedCaseTrainingCount(record);
+          return (
+            <Button
+              type="link"
+              size="small"
+              onClick={() => handleOpenRelatedCaseTrainingModal(record)}
+              loading={loadingRelatedCaseTraining && selectedNewsItemForCaseTraining?.id === record.id}
+              style={{
+                color: count > 0 ? '#1890ff' : '#999',
+                fontWeight: count > 0 ? 600 : 'normal',
+                padding: 0
+              }}
+            >
+              {count > 0 ? `${count} bài` : '0 bài'}
+            </Button>
+          );
+        },
+        sorter: (a, b) => {
+          const countA = getRelatedCaseTrainingCount(a);
+          const countB = getRelatedCaseTrainingCount(b);
+          return countA - countB;
+        }
+      }] : []),
       {
 
         title: 'Số bài',
@@ -17623,6 +17712,25 @@ Chỉ trả về nội dung theo đúng định dạng trên, không thêm phầ
 
               </div>
 
+              {/* Related Case Filter - only for news tab */}
+              {currentTab === 'news' && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span style={{ fontSize: '14px' }}>Case liên quan:</span>
+                  <Select
+                    value={relatedCaseFilter}
+                    onChange={handleRelatedCaseFilterChange}
+                    style={{ width: 140 }}
+                    placeholder="Chọn số case"
+                  >
+                    <Option value="all">Tất cả</Option>
+                    <Option value="0">Không có case</Option>
+                    {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15].map(num => (
+                      <Option key={num} value={String(num)}>{num} case</Option>
+                    ))}
+                  </Select>
+                </div>
+              )}
+
               {/* Reset Filters Button */}
 
               <Button
@@ -17633,7 +17741,7 @@ Chỉ trả về nội dung theo đúng định dạng trên, không thêm phầ
 
                 disabled={categoryFilter === 'all' && imageFilter === 'all' && diagramFilter === 'all' && quizFilter === 'all' && tag4Filter.length === 0 && chapterFilter === 'all' && programFilter === 'all' && programMultiFilter.length === 0 &&
                   (currentTab === 'caseTraining' ? (tag1Filter === 'all' && tag2Filter === 'all' && tag3Filter === 'all') : true) &&
-
+                  (currentTab === 'news' ? relatedCaseFilter === 'all' : true) &&
                   !searchText.trim()}
 
               >
@@ -17651,7 +17759,8 @@ Chỉ trả về nội dung theo đúng định dạng trên, không thêm phầ
               {/* Active Filters Display */}
 
               {(categoryFilter !== 'all' || imageFilter !== 'all' || voiceFilter !== 'all' || diagramFilter !== 'all' || quizFilter !== 'all' || tag4Filter.length > 0 || chapterFilter !== 'all' || programFilter !== 'all' || programMultiFilter.length > 0 ||
-                (currentTab === 'caseTraining' && (tag1Filter !== 'all' || tag2Filter !== 'all' || tag3Filter !== 'all'))) && (
+                (currentTab === 'caseTraining' && (tag1Filter !== 'all' || tag2Filter !== 'all' || tag3Filter !== 'all')) ||
+                (currentTab === 'news' && relatedCaseFilter !== 'all')) && (
 
                   <div style={{
 
@@ -17792,6 +17901,12 @@ Chỉ trả về nội dung theo đúng định dạng trên, không thêm phầ
 
                       </Tag>
 
+                    )}
+
+                    {currentTab === 'news' && relatedCaseFilter !== 'all' && (
+                      <Tag color="blue" closable onClose={() => handleRelatedCaseFilterChange('all')}>
+                        Case liên quan: {relatedCaseFilter === '0' ? 'Không có case' : `${relatedCaseFilter} case`}
+                      </Tag>
                     )}
 
                   </div>
@@ -19249,6 +19364,21 @@ Chỉ trả về nội dung theo đúng định dạng trên, không thêm phầ
         voiceQueue={voiceQueue}
         currentProcessing={currentProcessing}
         onStopTask={handleStopVoiceTask}
+      />
+
+      {/* Related Case Training Modal */}
+      <RelatedCaseTrainingModal
+        visible={relatedCaseTrainingModalVisible}
+        onClose={() => {
+          setRelatedCaseTrainingModalVisible(false);
+          setSelectedNewsItemForCaseTraining(null);
+          setRelatedCaseTrainingList([]);
+        }}
+        selectedNewsItem={selectedNewsItemForCaseTraining}
+        relatedCaseTrainingList={relatedCaseTrainingList}
+        onRefresh={() => {
+          loadAllData();
+        }}
       />
     </div>
 

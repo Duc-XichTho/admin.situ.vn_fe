@@ -1,0 +1,108 @@
+.carousel :global(.css-1f8sh1y) {
+    height: 100% !important;
+    overflow: auto !important;
+}
+
+.title_textarea.disabled {
+    pointer-events: none;
+    background-color: transparent;
+    color: #262626;
+    cursor: default;
+}
+
+/* Quill Editor Styles */
+
+/*!* Bold Text *!*/
+
+.reactQuill :global(.ql-editor strong) {
+    font-weight: bold !important;
+    /* Ghi đè mọi quy định khác */
+    font-size: inherit !important;
+    /* Giữ nguyên kích thước */
+    color: #000;
+    /* Màu đen đậm, có thể thay đổi */
+}
+
+/* Italic Text */
+.reactQuill :global(.ql-editor em),
+.reactQuill :global(.ql-editor i) {
+    font-style: italic !important;
+    /* Ghi đè mọi quy định khác */
+    font-size: inherit !important;
+    /* Giữ nguyên kích thước */
+    color: inherit;
+    /* Không thay đổi màu sắc */
+}
+
+/* Underline Text */
+.reactQuill :global(.ql-editor u) {
+    text-decoration: underline !important;
+    /* Ghi đè mọi quy định khác */
+    font-size: inherit !important;
+    /* Giữ nguyên kích thước */
+    color: inherit;
+    /* Không thay đổi màu sắc */
+}
+
+/* Clear Formatting Reset */
+.reactQuill :global(.ql-clean) {
+    font-weight: normal;
+    font-style: normal;
+    text-decoration: none;
+    font-size: 16px;
+    /* Reset kích thước nếu clear */
+}
+
+/* Ensure consistent line spacing for all formats */
+.reactQuill :global(.ql-editor) * {
+    line-height: 1.6 !important;
+    /* Đảm bảo khoảng cách dòng không bị thay đổi */
+    overflow-y: auto !important;
+}
+
+/* Đảm bảo rằng ảnh được tái áp dụng đúng kích thước */
+.ql-editor img {
+    max-width: 100%;
+    height: auto;
+}
+
+/* Nếu bạn đang sử dụng quill-image-resize, cần đảm bảo các handle resize được hiển thị */
+.ql-image-resize-handle {
+    position: absolute;
+    z-index: 1;
+    cursor: pointer;
+    background-color: rgba(0, 0, 0, 0.5);
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+}
+
+.ql-image-resize-handle.ql-image-resize-handle-bottom-right {
+    bottom: 0;
+    right: 0;
+}
+
+/* Chỉ áp dụng cho buttons trong onboardingGuide, không ảnh hưởng đến carousel navigation */
+.onboardingGuide :global(.MuiButtonBase-root):not(:global(.MuiIconButton-root)) {
+    background-color: transparent !important;
+}
+
+/* Đảm bảo carousel navigation buttons hiển thị đúng - không override */
+.onboardingGuide :global(.MuiIconButton-root[class*="Carousel"]) {
+    background-color: rgba(0, 0, 0, 0.5) !important;
+    color: #FFFFFF !important;
+}
+
+/* Đảm bảo icon SVG trong carousel hiển thị */
+.onboardingGuide :global(.MuiSvgIcon-root) {
+    display: inline-block !important;
+    font-size: inherit !important;
+    width: 1em !important;
+    height: 1em !important;
+}
+
+/* Đảm bảo icon trong carousel navigation hiển thị */
+.onboardingGuide :global(.MuiSvgIcon-root) {
+    display: inline-block !important;
+    font-size: inherit !important;
+}

@@ -1,15 +1,31 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import { Dialog, DialogContent, DialogActions, Button, Checkbox, FormControlLabel } from '@mui/material';
 import { MyContext } from '../../../MyContext';
 import styles from './FloatButtons.module.css';
 import EmailModal from './EmailModal';
 import ZaloModal from './ZaloModal';
+import OnboardingGuide from '../../../pages/Guide/OnboardingGuide';
 import { sendEmail } from '../../../apis/emailService';
-
+import { HelpOutline } from '@mui/icons-material';
 const FloatButtons = ({ onShowGuideline }) => {
 	const [showEmailModal, setShowEmailModal] = useState(false);
 	const [showZaloModal, setShowZaloModal] = useState(false);
+	const [showOnboardingGuide, setShowOnboardingGuide] = useState(false);
+	const [openSlideManager, setOpenSlideManager] = useState(false);
+	const [hideOnboarding, setHideOnboarding] = useState(false);
 	const { currentUser } = React.useContext(MyContext);
+
+	// Kiểm tra localStorage khi component mount
+	useEffect(() => {
+		const hideGuide = localStorage.getItem('hideOnboardingGuideK9');
+		if (hideGuide === 'true') {
+			setHideOnboarding(true);
+		} else {
+			setHideOnboarding(false);
+			setShowOnboardingGuide(true);
+		}
+	}, []);
 
 	const handleEmailSubmit = async (email) => {
 		try {
@@ -19,6 +35,19 @@ const FloatButtons = ({ onShowGuideline }) => {
 			console.error('Error sending email:', error);
 			alert('Có lỗi xảy ra khi gửi email!');
 		}
+	};
+
+	const handleCloseDialog = () => {
+		if (hideOnboarding) {
+			localStorage.setItem('hideOnboardingGuideK9', 'true');
+		}
+		setShowOnboardingGuide(false);
+		setHideOnboarding(false);
+	};
+
+	const handleCheckboxChange = (event) => {
+		localStorage.setItem('hideOnboardingGuideK9', event.target.checked);
+		setHideOnboarding(event.target.checked);
 	};
 
 	const floatButtonsContent = (
@@ -56,6 +85,17 @@ const FloatButtons = ({ onShowGuideline }) => {
 			>
 				<img src="https://cdn.icon-icons.com/icons2/2108/PNG/512/facebook_icon_130940.png" alt="Facebook" />
 			</button>
+			
+			{/* Onboarding Guide Button */}
+			<button
+				className={`${styles.floatButton} ${styles.guidelineButton}`}
+				onClick={() => setShowOnboardingGuide(true)}
+				title="Hướng dẫn sử dụng"
+			>
+				<HelpOutline
+					style={{ fontSize: 22 }}
+				/>
+			</button>
 		</div>
 	);
 
@@ -76,6 +116,61 @@ const FloatButtons = ({ onShowGuideline }) => {
 				onClose={() => setShowZaloModal(false)}
 				currentUser={currentUser}
 			/>
+
+			{/* Onboarding Guide Dialog */}
+			<Dialog
+				open={showOnboardingGuide}
+				onClose={handleCloseDialog}
+				PaperProps={{
+					style: {
+						width: '80vw',
+						height: '80vh',
+						maxWidth: 'none',
+						maxHeight: '80vh',
+					},
+				}}
+			>
+				<DialogContent
+					style={{ marginBottom: '-30px' }}
+				>
+					<div style={{ display: 'flex', justifyContent: 'space-between', alignItems: "start" }}>
+						<div></div>
+						{(currentUser?.isAdmin || currentUser?.isSecretary) && (
+							<Button
+								variant="contained"
+								color="primary"
+								onClick={() => setOpenSlideManager(true)}
+							>
+								Quản lý Slide
+							</Button>
+						)}
+					</div>
+					<OnboardingGuide
+						componentName="K9"
+						openSlideManager={openSlideManager}
+						setOpenSlideManager={setOpenSlideManager}
+					/>
+				</DialogContent>
+				<DialogActions>
+					<FormControlLabel
+						control={
+							<Checkbox
+								checked={hideOnboarding}
+								onChange={handleCheckboxChange}
+								color="primary"
+							/>
+						}
+						label="Không hiển thị lại"
+					/>
+					<Button
+						onClick={handleCloseDialog}
+						color="primary"
+						style={{ fontWeight: 'bold' }}
+					>
+						Bắt đầu sử dụng
+					</Button>
+				</DialogActions>
+			</Dialog>
 		</>
 	);
 };
