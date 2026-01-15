@@ -4,7 +4,7 @@ import katex from 'katex';
 import 'katex/dist/katex.min.css';
 import { marked } from 'marked';
 import markedKatex from 'marked-katex-extension';
-import React, { useContext, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { getK9ByCidTypePublic, getK9ByIdPublic } from '../../../apis/public/publicService.jsx';
 import { getListQuestionHistoryByUser } from '../../../apis/questionHistoryService';
 import { getCurrentUserLogin, updateUser } from '../../../apis/userService';
@@ -18,7 +18,6 @@ import FeedbackModal from './FeedbackModal.jsx';
 import styles from './MapView.module.css';
 import MapViewConnectionLines from './MapViewConnectionLines';
 import newsTabStyles from './NewsTab.module.css';
-import { MyContext } from '../../../MyContext.jsx';
 
 const { Text } = Typography;
 

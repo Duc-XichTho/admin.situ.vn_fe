@@ -36,7 +36,13 @@ export const getK9ByIdPublic = async (id) => {
 
 export const getK9ByCidTypePublic = async (cid, type, currentUserId) => {
 	try {
-		const { data } = await instance.get(`${URL}/k9/cid/${cid}/type/${type}?currentUserId=${currentUserId}`);
+		let url = `${URL}/k9/cid/${cid}/type/${type}`;
+
+		if (currentUserId) {
+			url += `?currentUserId=${currentUserId}`;
+		}
+
+		const { data } = await instance.get(url);
 		return data.data;
 	} catch (error) {
 		console.error('Error fetching K9 by CID:', error);
