@@ -39,13 +39,13 @@ const MapView = ({
 					 activeTab,
 					 selectedProgram,
 					 tag4Filter,
+					 currentUser,
 					 tag4Options,
 					 expandedItem,
 					 showDetailId,
 				 }) => {
 
 	console.log('expandedItem', expandedItem);
-	const { currentUser } = useContext(MyContext);
 	const [historyData, setHistoryData] = useState([]);
 	const [loading, setLoading] = useState(false);
 	const [selectedLongFormItem, setSelectedLongFormItem] = useState(null);
