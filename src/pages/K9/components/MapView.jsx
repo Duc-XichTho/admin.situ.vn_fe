@@ -26,23 +26,23 @@ const { Text } = Typography;
 marked.use(markedKatex({
 	throwOnError: false,
 	strict: false,
-	trust: true
+	trust: true,
 }));
 
 const MapView = ({
-	headerStats,
-	setHeaderStats,
-	newsItems = [],
-	caseTrainingItems = [],
-	longFormItems = [],
-	homeItems = [],
-	activeTab,
-	selectedProgram,
-	tag4Filter,
-	tag4Options,
-	expandedItem,
-	showDetailId
-}) => {
+					 headerStats,
+					 setHeaderStats,
+					 newsItems = [],
+					 caseTrainingItems = [],
+					 longFormItems = [],
+					 homeItems = [],
+					 activeTab,
+					 selectedProgram,
+					 tag4Filter,
+					 tag4Options,
+					 expandedItem,
+					 showDetailId,
+				 }) => {
 
 	console.log('expandedItem', expandedItem);
 	const { currentUser } = useContext(MyContext);
@@ -128,59 +128,59 @@ const MapView = ({
 
 	const fetchRelatedCaseTrainingItems = async (cid) => {
 		if (!cid) {
-		  setRelatedCaseTrainingItems([]);
-		  setRelatedQuizScores({});
-		  return;
-		}
-		try {
-		  const data = await getK9ByCidTypePublic(cid, 'caseTraining' , currentUser?.id);
-		  if (data && Array.isArray(data)) {
-			// Filter only items with questionContent (quiz items)
-			const quizItems = data.filter(item => 
-			  item.status === 'published'  
-			);
-			setRelatedCaseTrainingItems(quizItems);
-			
-			// Fetch quiz scores for these items
-			if (currentUser?.id && quizItems.length > 0) {
-			  try {
-				const histories = await getListQuestionHistoryByUser({ where: { user_id: currentUser.id } });
-				if (Array.isArray(histories?.data)) {
-				  const scoreMap = {};
-				  quizItems.forEach(item => {
-					const history = histories.data.find(h => {
-					  const qid = h.question_id ?? h.questionId ?? h.idQuestion;
-					  return qid === item.id;
-					});
-					if (history) {
-					  const raw = history.score;
-					  const num = typeof raw === 'number' ? raw : parseFloat(raw);
-					  scoreMap[item.id] = isNaN(num) ? null : num;
-					} else {
-					  scoreMap[item.id] = null;
-					}
-				  });
-				  setRelatedQuizScores(scoreMap);
-				} else {
-				  setRelatedQuizScores({});
-				}
-			  } catch (err) {
-				console.error('Error fetching quiz scores:', err);
-				setRelatedQuizScores({});
-			  }
-			} else {
-			  setRelatedQuizScores({});
-			}
-		  } else {
 			setRelatedCaseTrainingItems([]);
 			setRelatedQuizScores({});
-		  }
-		} catch (error) {
-		  console.error('Error fetching related caseTraining items:', error);
-		  setRelatedCaseTrainingItems([]);
-		  setRelatedQuizScores({});
+			return;
 		}
-	  };
+		try {
+			const data = await getK9ByCidTypePublic(cid, 'caseTraining', currentUser?.id);
+			if (data && Array.isArray(data)) {
+				// Filter only items with questionContent (quiz items)
+				const quizItems = data.filter(item =>
+					item.status === 'published',
+				);
+				setRelatedCaseTrainingItems(quizItems);
+
+				// Fetch quiz scores for these items
+				if (currentUser?.id && quizItems.length > 0) {
+					try {
+						const histories = await getListQuestionHistoryByUser({ where: { user_id: currentUser.id } });
+						if (Array.isArray(histories?.data)) {
+							const scoreMap = {};
+							quizItems.forEach(item => {
+								const history = histories.data.find(h => {
+									const qid = h.question_id ?? h.questionId ?? h.idQuestion;
+									return qid === item.id;
+								});
+								if (history) {
+									const raw = history.score;
+									const num = typeof raw === 'number' ? raw : parseFloat(raw);
+									scoreMap[item.id] = isNaN(num) ? null : num;
+								} else {
+									scoreMap[item.id] = null;
+								}
+							});
+							setRelatedQuizScores(scoreMap);
+						} else {
+							setRelatedQuizScores({});
+						}
+					} catch (err) {
+						console.error('Error fetching quiz scores:', err);
+						setRelatedQuizScores({});
+					}
+				} else {
+					setRelatedQuizScores({});
+				}
+			} else {
+				setRelatedCaseTrainingItems([]);
+				setRelatedQuizScores({});
+			}
+		} catch (error) {
+			console.error('Error fetching related caseTraining items:', error);
+			setRelatedCaseTrainingItems([]);
+			setRelatedQuizScores({});
+		}
+	};
 
 	// Load history data and build quiz scores map (for all items: newsItems, caseTrainingItems, longFormItems)
 	useEffect(() => {
@@ -210,7 +210,7 @@ const MapView = ({
 								const raw = hist.score;
 								const num = typeof raw === 'number' ? raw : parseFloat(raw);
 								return [qid, isNaN(num) ? null : num];
-							})
+							}),
 						);
 						setQuizScores(scoreMap);
 					} else {
@@ -269,10 +269,10 @@ const MapView = ({
 				setTheoryModalItem(itemData);
 				setSelectedTheoryItem(itemData);
 				setTheoryModalLoading(false);
-				
+
 				// Fetch related case training items if has CID
 				if (itemData.cid) {
-					fetchRelatedCaseTrainingItems(itemData.cid);
+					await fetchRelatedCaseTrainingItems(itemData.cid);
 				}
 			} else if (isCase) {
 				// Open case modal
@@ -282,7 +282,7 @@ const MapView = ({
 				setSelectedCaseItem(itemData);
 				setSelectedTheoryItem(null); // Clear theory selection
 				setShowSummaryDetail(false);
-				
+
 				// Fetch CID source info if has CID
 				if (itemData.cid) {
 					await fetchCidSourceInfo(itemData.cid);
@@ -303,7 +303,7 @@ const MapView = ({
 					targetElement.scrollIntoView({
 						behavior: 'smooth',
 						block: 'center',
-						inline: 'nearest'
+						inline: 'nearest',
 					});
 					// Add highlight effect
 					targetElement.style.backgroundColor = '#e6f7ff';
@@ -321,11 +321,11 @@ const MapView = ({
 
 	// Handle expandedItem from URL params
 	useEffect(() => {
-		if (expandedItem) {
+		if (expandedItem && currentUser.id) {
 			fetchItem(expandedItem);
 
 		}
-	}, [expandedItem, newsItems, caseTrainingItems, longFormItems]);
+	}, [expandedItem, newsItems, caseTrainingItems, longFormItems , currentUser]);
 
 
 	// Get current program name
@@ -344,10 +344,10 @@ const MapView = ({
 	};
 
 	const programName = getCurrentProgramName();
-	
+
 	// Calculate completion rate from headerStats
-	const completionRate = headerStats?.totalQuizzes > 0 
-		? Math.round((headerStats.completedQuizzes / headerStats.totalQuizzes) * 100) 
+	const completionRate = headerStats?.totalQuizzes > 0
+		? Math.round((headerStats.completedQuizzes / headerStats.totalQuizzes) * 100)
 		: 0;
 
 	// Filter longFormItems by selectedProgram and search text
@@ -375,7 +375,7 @@ const MapView = ({
 		return {
 			type: 'done',
 			numeric,
-			pass
+			pass,
 		};
 	};
 
@@ -456,7 +456,7 @@ const MapView = ({
 	// Get all unique tag5 values from all items - use state instead of useMemo
 	const [allTag5Options, setAllTag5Options] = useState([]);
 	console.log('allTag5Options', allTag5Options);
-	
+
 
 	// Calculate progress for each tag5
 	const tag5Progress = useMemo(() => {
@@ -470,9 +470,9 @@ const MapView = ({
 				}
 				return item.tag5 === tag5Value;
 			});
-			
+
 			// Filter by selectedProgram if needed
-			const filteredItems = selectedProgram && selectedProgram !== 'all' 
+			const filteredItems = selectedProgram && selectedProgram !== 'all'
 				? itemsWithTag5.filter(item => {
 					if (!Array.isArray(item.tag4)) return false;
 					if (Array.isArray(selectedProgram)) {
@@ -483,8 +483,8 @@ const MapView = ({
 				: itemsWithTag5;
 
 			// Count items with quiz (questionContent)
-			const itemsWithQuiz = filteredItems.filter(item => 
-				item.questionContent !== undefined && item.questionContent !== null
+			const itemsWithQuiz = filteredItems.filter(item =>
+				item.questionContent !== undefined && item.questionContent !== null,
 			);
 			const total = itemsWithQuiz.length;
 
@@ -500,7 +500,7 @@ const MapView = ({
 			progress[tag5Value] = {
 				total,
 				completed,
-				completionRate
+				completionRate,
 			};
 		});
 		return progress;
@@ -587,7 +587,7 @@ const MapView = ({
 					if (a.id === selectedCaseItem.id) return -1;
 					if (b.id === selectedCaseItem.id) return 1;
 				}
-				
+
 				// Second priority: items with connection to selected theory item
 				if (selectedTheoryItem && selectedTheoryItem.cid) {
 					const aHasConnection = a.cid === selectedTheoryItem.cid;
@@ -595,7 +595,7 @@ const MapView = ({
 					if (aHasConnection && !bHasConnection) return -1;
 					if (!aHasConnection && bHasConnection) return 1;
 				}
-				
+
 				return 0;
 			});
 		}
@@ -608,7 +608,7 @@ const MapView = ({
 		const tag5Set = new Set();
 		// Use original items, but filter by selectedProgram if needed
 		let allItems = [...newsItems, ...caseTrainingItems, ...longFormItems];
-		
+
 		// Filter by selectedProgram if needed (but NOT by selectedTag5)
 		if (selectedProgram && selectedProgram !== 'all') {
 			allItems = allItems.filter(item => {
@@ -619,10 +619,10 @@ const MapView = ({
 				return item.tag4.includes(selectedProgram);
 			});
 		}
-		
+
 		// Only include published items
 		allItems = allItems.filter(item => item.status === 'published');
-		
+
 		allItems.forEach(item => {
 			if (item.tag5) {
 				if (Array.isArray(item.tag5)) {
@@ -650,7 +650,7 @@ const MapView = ({
 		const calculateVisibleCount = () => {
 			const container = tagListRef.current;
 			const hiddenContainer = hiddenTagListRef.current;
-			
+
 			if (!container || !hiddenContainer) return;
 
 			// Update hidden container width to match visible container
@@ -658,7 +658,7 @@ const MapView = ({
 
 			// Get all items from hidden container
 			const allItems = Array.from(hiddenContainer.children);
-			
+
 			if (allItems.length === 0) {
 				setVisibleTagCount(Infinity);
 				return;
@@ -672,7 +672,7 @@ const MapView = ({
 
 			allItems.forEach((item, index) => {
 				const itemWidth = item.offsetWidth;
-				
+
 				if (currentRowWidth + itemWidth > containerWidth && currentRow.length > 0) {
 					rows.push(currentRow);
 					currentRow = [index];
@@ -712,7 +712,7 @@ const MapView = ({
 			resizeObserver.disconnect();
 		};
 	}, [allTag5Options.length, tag5Progress]);
-	
+
 	// Combined items for connection lines
 	const allPanel1Items = useMemo(() => {
 		return [...filteredTheoryItems, ...filteredCaseItems];
@@ -722,7 +722,7 @@ const MapView = ({
 	useEffect(() => {
 		panel1ItemRefs.current = {
 			...theoryItemRefs.current,
-			...caseItemRefs.current
+			...caseItemRefs.current,
 		};
 	}, [filteredTheoryItems, filteredCaseItems]);
 
@@ -759,8 +759,8 @@ const MapView = ({
 			},
 			{
 				threshold: 0.1,
-				rootMargin: '100px'
-			}
+				rootMargin: '100px',
+			},
 		);
 
 		observer.observe(lastItemRef.current);
@@ -857,7 +857,7 @@ const MapView = ({
 			wav: '🎵',
 			zip: '📦',
 			rar: '📦',
-			'7z': '📦'
+			'7z': '📦',
 		};
 		return iconMap[extension] || '📄';
 	};
@@ -868,7 +868,7 @@ const MapView = ({
 		setPreviewFile({
 			url: fileUrl,
 			name: fileName,
-			extension: fileExtension
+			extension: fileExtension,
 		});
 		setPreviewModalVisible(true);
 	};
@@ -921,7 +921,7 @@ const MapView = ({
 					throwOnError: false,
 					displayMode: display,
 					strict: false,
-					trust: true
+					trust: true,
 				});
 				result = result.replace(new RegExp(placeholder, 'g'), renderedLatex);
 			} catch (error) {
@@ -958,7 +958,7 @@ const MapView = ({
 			element.scrollIntoView({
 				behavior: 'smooth',
 				block: 'start',
-				inline: 'nearest'
+				inline: 'nearest',
 			});
 		}
 	};
@@ -982,7 +982,7 @@ const MapView = ({
 			mangle: false,
 			headerPrefix: '',
 			breaks: false,
-			gfm: true
+			gfm: true,
 		});
 		const finalHtml = postprocessLatex(html, latexBlocks);
 		const tempDiv = document.createElement('div');
@@ -1001,7 +1001,7 @@ const MapView = ({
 				position: index,
 				context: context,
 				match: plainText.substring(index, index + searchTerm.length),
-				matchIndex: index
+				matchIndex: index,
 			});
 			index += searchTerm.length;
 		}
@@ -1035,7 +1035,7 @@ const MapView = ({
 				node: textNode,
 				startPos: startPos,
 				endPos: plainText.length,
-				text: nodeText
+				text: nodeText,
 			});
 		});
 		const lowerPlainText = plainText.toLowerCase();
@@ -1052,7 +1052,7 @@ const MapView = ({
 				context: context,
 				match: plainText.substring(index, index + searchTerm.length),
 				node: nodeInfo?.node || null,
-				nodeOffset: nodeInfo ? index - nodeInfo.startPos : 0
+				nodeOffset: nodeInfo ? index - nodeInfo.startPos : 0,
 			});
 			index += searchTerm.length;
 		}
@@ -1093,7 +1093,7 @@ const MapView = ({
 						elementToScroll.scrollIntoView({
 							behavior: 'smooth',
 							block: 'center',
-							inline: 'nearest'
+							inline: 'nearest',
 						});
 						const parent = range.startContainer.parentElement;
 						if (parent) {
@@ -1126,7 +1126,7 @@ const MapView = ({
 					const walker = document.createTreeWalker(
 						markdownContentRef.current,
 						NodeFilter.SHOW_TEXT,
-						null
+						null,
 					);
 					let node;
 					let charCount = 0;
@@ -1141,12 +1141,12 @@ const MapView = ({
 								range.setEnd(node, Math.min(offset + result.match.length, nodeLength));
 								node.parentElement?.scrollIntoView({
 									behavior: 'smooth',
-									block: 'center'
+									block: 'center',
 								});
 							} catch (e) {
 								node.parentElement?.scrollIntoView({
 									behavior: 'smooth',
-									block: 'center'
+									block: 'center',
 								});
 							}
 							break;
@@ -1175,7 +1175,7 @@ const MapView = ({
 		const rect = panelRef.current.getBoundingClientRect();
 		setDragOffset({
 			x: e.clientX - rect.left,
-			y: e.clientY - rect.top
+			y: e.clientY - rect.top,
 		});
 		setIsDragging(true);
 		e.preventDefault();
@@ -1196,7 +1196,7 @@ const MapView = ({
 				const newY = e.clientY - dragOffset.y;
 				setPanelPosition({
 					x: Math.max(0, Math.min(newX, maxX)),
-					y: Math.max(0, Math.min(newY, maxY))
+					y: Math.max(0, Math.min(newY, maxY)),
 				});
 			});
 		};
@@ -1290,7 +1290,7 @@ const MapView = ({
 			mangle: false,
 			headerPrefix: '',
 			breaks: false,
-			gfm: true
+			gfm: true,
 		});
 		const finalHtml = postprocessLatex(html, latexBlocks);
 		const tempDiv = document.createElement('div');
@@ -1309,7 +1309,7 @@ const MapView = ({
 				position: index,
 				context: context,
 				match: plainText.substring(index, index + searchTerm.length),
-				matchIndex: index
+				matchIndex: index,
 			});
 			index += searchTerm.length;
 		}
@@ -1342,7 +1342,7 @@ const MapView = ({
 				node: textNode,
 				startPos: startPos,
 				endPos: plainText.length,
-				text: nodeText
+				text: nodeText,
 			});
 		});
 		const lowerPlainText = plainText.toLowerCase();
@@ -1359,7 +1359,7 @@ const MapView = ({
 				context: context,
 				match: plainText.substring(index, index + searchTerm.length),
 				node: nodeInfo?.node || null,
-				nodeOffset: nodeInfo ? index - nodeInfo.startPos : 0
+				nodeOffset: nodeInfo ? index - nodeInfo.startPos : 0,
 			});
 			index += searchTerm.length;
 		}
@@ -1400,7 +1400,7 @@ const MapView = ({
 						elementToScroll.scrollIntoView({
 							behavior: 'smooth',
 							block: 'center',
-							inline: 'nearest'
+							inline: 'nearest',
 						});
 						const parent = range.startContainer.parentElement;
 						if (parent) {
@@ -1433,7 +1433,7 @@ const MapView = ({
 					const walker = document.createTreeWalker(
 						caseMarkdownContentRef.current,
 						NodeFilter.SHOW_TEXT,
-						null
+						null,
 					);
 					let node;
 					let charCount = 0;
@@ -1448,12 +1448,12 @@ const MapView = ({
 								range.setEnd(node, Math.min(offset + result.match.length, nodeLength));
 								node.parentElement?.scrollIntoView({
 									behavior: 'smooth',
-									block: 'center'
+									block: 'center',
 								});
 							} catch (e) {
 								node.parentElement?.scrollIntoView({
 									behavior: 'smooth',
-									block: 'center'
+									block: 'center',
 								});
 							}
 							break;
@@ -1482,7 +1482,7 @@ const MapView = ({
 		const rect = casePanelRef.current.getBoundingClientRect();
 		setCaseDragOffset({
 			x: e.clientX - rect.left,
-			y: e.clientY - rect.top
+			y: e.clientY - rect.top,
 		});
 		setCaseIsDragging(true);
 		e.preventDefault();
@@ -1503,7 +1503,7 @@ const MapView = ({
 				const newY = e.clientY - caseDragOffset.y;
 				setCasePanelPosition({
 					x: Math.max(0, Math.min(newX, maxX)),
-					y: Math.max(0, Math.min(newY, maxY))
+					y: Math.max(0, Math.min(newY, maxY)),
 				});
 			});
 		};
@@ -1640,8 +1640,8 @@ const MapView = ({
 				await updateUser(user.id, {
 					info: {
 						...user.info,
-						read_items_stream: newReadItems
-					}
+						read_items_stream: newReadItems,
+					},
 				});
 			}
 		} catch (error) {
@@ -1655,14 +1655,17 @@ const MapView = ({
 	const renderSkeleton = () => (
 		<div className={`${k9Styles.contentPanel} ${newsTabStyles.contentPanel}`}>
 			<div className={`${k9Styles.contentHeader} ${newsTabStyles.contentHeader}`}>
-				<div className={`${newsTabStyles.skeleton} ${newsTabStyles.skeletonText}`} style={{ width: '70%' }}></div>
-				<div className={`${newsTabStyles.skeleton} ${newsTabStyles.skeletonText}`} style={{ width: '20%' }}></div>
+				<div className={`${newsTabStyles.skeleton} ${newsTabStyles.skeletonText}`}
+					 style={{ width: '70%' }}></div>
+				<div className={`${newsTabStyles.skeleton} ${newsTabStyles.skeletonText}`}
+					 style={{ width: '20%' }}></div>
 			</div>
 			<div className={`${newsTabStyles.skeleton} ${newsTabStyles.skeletonImage}`}></div>
 			<div className={`${k9Styles.contentBody} ${newsTabStyles.contentBody}`}>
 				<div className={`${newsTabStyles.skeleton} ${newsTabStyles.skeletonText}`}></div>
 				<div className={`${newsTabStyles.skeleton} ${newsTabStyles.skeletonText}`}></div>
-				<div className={`${newsTabStyles.skeleton} ${newsTabStyles.skeletonText}`} style={{ width: '80%' }}></div>
+				<div className={`${newsTabStyles.skeleton} ${newsTabStyles.skeletonText}`}
+					 style={{ width: '80%' }}></div>
 			</div>
 		</div>
 	);
@@ -1692,11 +1695,16 @@ const MapView = ({
 			handleEditClick: undefined,
 			relatedCaseTrainingItems: relatedCaseTrainingItems,
 			relatedQuizScores: relatedQuizScores,
-			onShare: () => {},
+			onShare: () => {
+			},
 			setShowSummaryDetail,
-			setSelectedDetailImageIndex: (index) => setSelectedDetailImageIndex(prev => ({ ...prev, [item.id]: index })),
+			setSelectedDetailImageIndex: (index) => setSelectedDetailImageIndex(prev => ({
+				...prev,
+				[item.id]: index,
+			})),
 			setShowFeedbackModal,
-			setQuizPopoverVisible: () => {},
+			setQuizPopoverVisible: () => {
+			},
 			setIsPackageModalOpen,
 			setQuestionScoreMap: (qid, score) => setQuizScores(prev => ({ ...prev, [qid]: score })),
 			preprocessLatex,
@@ -1731,9 +1739,13 @@ const MapView = ({
 			openFilePreview,
 			handleEditClick: undefined,
 			handleCidSourceInfoClick,
-			onShare: () => {},
+			onShare: () => {
+			},
 			setShowSummaryDetail,
-			setSelectedDetailImageIndex: (index) => setSelectedDetailImageIndex(prev => ({ ...prev, [item.id]: index })),
+			setSelectedDetailImageIndex: (index) => setSelectedDetailImageIndex(prev => ({
+				...prev,
+				[item.id]: index,
+			})),
 			setShowFeedbackModal,
 			setIsPackageModalOpen,
 			setQuizScores: (qid, score) => setQuizScores(prev => ({ ...prev, [qid]: score })),
@@ -1769,7 +1781,7 @@ const MapView = ({
 							/>
 						</div>
 					</div>
-					
+
 					{/* Bottom Row: Tag5 Filter */}
 					{allTag5Options.length > 0 && (
 						<div className={styles.tag5FilterSection}>
@@ -1777,8 +1789,8 @@ const MapView = ({
 								<span className={styles.tag5FilterTitle}>Tags</span>
 								{selectedTag5.length > 0 && (
 									<Button
-										type="default"
-										size="small"
+										type='default'
+										size='small'
 										onClick={() => setSelectedTag5([])}
 										className={styles.tag5FilterClearBtn}
 										icon={<ClearOutlined />}
@@ -1787,140 +1799,162 @@ const MapView = ({
 									</Button>
 								)}
 							</div>
-								{/* Hidden container to measure all items */}
-								<div 
-									className={styles.tag5FilterListHidden} 
-									ref={hiddenTagListRef}
-									style={{ position: 'absolute', visibility: 'hidden', width: tagListRef.current?.offsetWidth || '100%' }}
-								>
-									{allTag5Options.map(tag5Value => {
-										const progress = tag5Progress[tag5Value] || { total: 0, completed: 0, completionRate: 0 };
-										const isSelected = selectedTag5.includes(tag5Value);
-										const getProgressColor = () => {
-											if (progress.completionRate === 100) return '#52c41a';
-											if (progress.completionRate >= 50) return '#1890ff';
-											if (progress.completionRate > 0) return '#faad14';
-											return '#d9d9d9';
-										};
-										return (
-											<div
-												key={tag5Value}
-												className={`${styles.tag5FilterItem} ${isSelected ? styles.tag5FilterItemActive : ''}`}
-											>
-												<Tag color={isSelected ? 'processing' : 'default'} className={styles.tag5FilterTag}>
-													{tag5Value}
-												</Tag>
-												<div className={styles.tag5FilterProgressWrapper}>
-													<div className={styles.tag5FilterProgressBar}>
-														<div
-															className={styles.tag5FilterProgressFill}
-															style={{
-																width: `${progress.completionRate}%`,
-																backgroundColor: getProgressColor(),
-															}}
-														/>
-													</div>
-													<span className={styles.tag5FilterPercent}>{progress.completionRate}%</span>
-												</div>
-											</div>
-										);
-									})}
-								</div>
-								<div className={styles.tag5FilterList} ref={tagListRef}>
-									{allTag5Options.slice(0, visibleTagCount).map(tag5Value => {
-										const progress = tag5Progress[tag5Value] || { total: 0, completed: 0, completionRate: 0 };
-										const isSelected = selectedTag5.includes(tag5Value);
-										const getProgressColor = () => {
-											if (progress.completionRate === 100) return '#52c41a';
-											if (progress.completionRate >= 50) return '#1890ff';
-											if (progress.completionRate > 0) return '#faad14';
-											return '#d9d9d9';
-										};
-										return (
-											<div
-												key={tag5Value}
-												className={`${styles.tag5FilterItem} ${isSelected ? styles.tag5FilterItemActive : ''}`}
-												onClick={() => setSelectedTag5(isSelected ? [] : [tag5Value])}
-												title={`${tag5Value}: ${progress.completed}/${progress.total} bài (${progress.completionRate}%)`}
-											>
-												<Tag color={isSelected ? 'processing' : 'default'} className={styles.tag5FilterTag}>
-													{tag5Value}
-												</Tag>
-												<div className={styles.tag5FilterProgressWrapper}>
-													<div className={styles.tag5FilterProgressBar}>
-														<div
-															className={styles.tag5FilterProgressFill}
-															style={{
-																width: `${progress.completionRate}%`,
-																backgroundColor: getProgressColor(),
-															}}
-														/>
-													</div>
-													<span className={styles.tag5FilterPercent}>{progress.completionRate}%</span>
-												</div>
-											</div>
-										);
-									})}
-									{visibleTagCount < allTag5Options.length && (() => {
-										const remainingTags = allTag5Options.slice(visibleTagCount);
-										const menuItems = remainingTags.map(tag5Value => {
-											const progress = tag5Progress[tag5Value] || { total: 0, completed: 0, completionRate: 0 };
-											const isSelected = selectedTag5.includes(tag5Value);
-											const getProgressColor = () => {
-												if (progress.completionRate === 100) return '#52c41a';
-												if (progress.completionRate >= 50) return '#1890ff';
-												if (progress.completionRate > 0) return '#faad14';
-												return '#d9d9d9';
-											};
-											return {
-												key: tag5Value,
-												label: (
+							{/* Hidden container to measure all items */}
+							<div
+								className={styles.tag5FilterListHidden}
+								ref={hiddenTagListRef}
+								style={{
+									position: 'absolute',
+									visibility: 'hidden',
+									width: tagListRef.current?.offsetWidth || '100%',
+								}}
+							>
+								{allTag5Options.map(tag5Value => {
+									const progress = tag5Progress[tag5Value] || {
+										total: 0,
+										completed: 0,
+										completionRate: 0,
+									};
+									const isSelected = selectedTag5.includes(tag5Value);
+									const getProgressColor = () => {
+										if (progress.completionRate === 100) return '#52c41a';
+										if (progress.completionRate >= 50) return '#1890ff';
+										if (progress.completionRate > 0) return '#faad14';
+										return '#d9d9d9';
+									};
+									return (
+										<div
+											key={tag5Value}
+											className={`${styles.tag5FilterItem} ${isSelected ? styles.tag5FilterItemActive : ''}`}
+										>
+											<Tag color={isSelected ? 'processing' : 'default'}
+												 className={styles.tag5FilterTag}>
+												{tag5Value}
+											</Tag>
+											<div className={styles.tag5FilterProgressWrapper}>
+												<div className={styles.tag5FilterProgressBar}>
 													<div
-														className={`${styles.tag5FilterDropdownItem} ${isSelected ? styles.tag5FilterDropdownItemActive : ''}`}
-														onClick={(e) => {
-															e.stopPropagation();
-															setSelectedTag5(isSelected ? [] : [tag5Value]);
+														className={styles.tag5FilterProgressFill}
+														style={{
+															width: `${progress.completionRate}%`,
+															backgroundColor: getProgressColor(),
 														}}
-													>
-														<Tag color={isSelected ? 'processing' : 'default'} className={styles.tag5FilterTag}>
-															{tag5Value}
-														</Tag>
-														<div className={styles.tag5FilterProgressWrapper}>
-															<div className={styles.tag5FilterProgressBar}>
-																<div
-																	className={styles.tag5FilterProgressFill}
-																	style={{
-																		width: `${progress.completionRate}%`,
-																		backgroundColor: getProgressColor(),
-																	}}
-																/>
-															</div>
-															<span className={styles.tag5FilterPercent}>{progress.completionRate}%</span>
-														</div>
-													</div>
-												),
-											};
-										});
-										return (
-											<Dropdown 
-												menu={{ items: menuItems }} 
-												trigger={['click']} 
-												placement="bottomLeft"
-											>
-												<Button
-													type="default"
-													icon={<MoreOutlined />}
-													className={styles.tag5FilterMoreBtn}
-													onClick={(e) => e.stopPropagation()}
-												>
-													+{allTag5Options.length - visibleTagCount}
-												</Button>
-											</Dropdown>
-										);
-									})()}
-								</div>
+													/>
+												</div>
+												<span
+													className={styles.tag5FilterPercent}>{progress.completionRate}%</span>
+											</div>
+										</div>
+									);
+								})}
 							</div>
-						)}
+							<div className={styles.tag5FilterList} ref={tagListRef}>
+								{allTag5Options.slice(0, visibleTagCount).map(tag5Value => {
+									const progress = tag5Progress[tag5Value] || {
+										total: 0,
+										completed: 0,
+										completionRate: 0,
+									};
+									const isSelected = selectedTag5.includes(tag5Value);
+									const getProgressColor = () => {
+										if (progress.completionRate === 100) return '#52c41a';
+										if (progress.completionRate >= 50) return '#1890ff';
+										if (progress.completionRate > 0) return '#faad14';
+										return '#d9d9d9';
+									};
+									return (
+										<div
+											key={tag5Value}
+											className={`${styles.tag5FilterItem} ${isSelected ? styles.tag5FilterItemActive : ''}`}
+											onClick={() => setSelectedTag5(isSelected ? [] : [tag5Value])}
+											title={`${tag5Value}: ${progress.completed}/${progress.total} bài (${progress.completionRate}%)`}
+										>
+											<Tag color={isSelected ? 'processing' : 'default'}
+												 className={styles.tag5FilterTag}>
+												{tag5Value}
+											</Tag>
+											<div className={styles.tag5FilterProgressWrapper}>
+												<div className={styles.tag5FilterProgressBar}>
+													<div
+														className={styles.tag5FilterProgressFill}
+														style={{
+															width: `${progress.completionRate}%`,
+															backgroundColor: getProgressColor(),
+														}}
+													/>
+												</div>
+												<span
+													className={styles.tag5FilterPercent}>{progress.completionRate}%</span>
+											</div>
+										</div>
+									);
+								})}
+								{visibleTagCount < allTag5Options.length && (() => {
+									const remainingTags = allTag5Options.slice(visibleTagCount);
+									const menuItems = remainingTags.map(tag5Value => {
+										const progress = tag5Progress[tag5Value] || {
+											total: 0,
+											completed: 0,
+											completionRate: 0,
+										};
+										const isSelected = selectedTag5.includes(tag5Value);
+										const getProgressColor = () => {
+											if (progress.completionRate === 100) return '#52c41a';
+											if (progress.completionRate >= 50) return '#1890ff';
+											if (progress.completionRate > 0) return '#faad14';
+											return '#d9d9d9';
+										};
+										return {
+											key: tag5Value,
+											label: (
+												<div
+													className={`${styles.tag5FilterDropdownItem} ${isSelected ? styles.tag5FilterDropdownItemActive : ''}`}
+													onClick={(e) => {
+														e.stopPropagation();
+														setSelectedTag5(isSelected ? [] : [tag5Value]);
+													}}
+												>
+													<Tag color={isSelected ? 'processing' : 'default'}
+														 className={styles.tag5FilterTag}>
+														{tag5Value}
+													</Tag>
+													<div className={styles.tag5FilterProgressWrapper}>
+														<div className={styles.tag5FilterProgressBar}>
+															<div
+																className={styles.tag5FilterProgressFill}
+																style={{
+																	width: `${progress.completionRate}%`,
+																	backgroundColor: getProgressColor(),
+																}}
+															/>
+														</div>
+														<span
+															className={styles.tag5FilterPercent}>{progress.completionRate}%</span>
+													</div>
+												</div>
+											),
+										};
+									});
+									return (
+										<Dropdown
+											menu={{ items: menuItems }}
+											trigger={['click']}
+											placement='bottomLeft'
+										>
+											<Button
+												type='default'
+												icon={<MoreOutlined />}
+												className={styles.tag5FilterMoreBtn}
+												onClick={(e) => e.stopPropagation()}
+											>
+												+{allTag5Options.length - visibleTagCount}
+											</Button>
+										</Dropdown>
+									);
+								})()}
+							</div>
+						</div>
+					)}
 				</div>
 
 				{/* Two Panel Layout */}
@@ -1935,12 +1969,12 @@ const MapView = ({
 										Lý thuyết ({filteredTheoryItems.length})
 									</div>
 									<Input
-										placeholder="Tìm kiếm..."
+										placeholder='Tìm kiếm...'
 										prefix={<SearchOutlined />}
 										value={theorySearchText}
 										onChange={(e) => setTheorySearchText(e.target.value)}
 										allowClear
-										size="small"
+										size='small'
 										className={styles.rightPanelSearch}
 									/>
 								</div>
@@ -1954,16 +1988,16 @@ const MapView = ({
 											filteredTheoryItems.map((item) => (
 												<div
 													key={item.id}
-													ref={(el) => {	
+													ref={(el) => {
 														theoryItemRefs.current[item.id] = el;
 														panel1ItemRefs.current[item.id] = el;
 													}}
-													onClick={() => {
+													onClick={async () => {
 														setSelectedTheoryItem(item);
 														setSelectedCaseItem(null);
 														setRelatedCaseTrainingItems([]);
 														setRelatedQuizScores({});
-														fetchRelatedCaseTrainingItems(item.cid);
+														await fetchRelatedCaseTrainingItems(item.cid);
 
 													}}
 													className={`${styles.itemCard} ${selectedTheoryItem?.id === item.id ? styles.itemCardSelected : ''}`}
@@ -1979,52 +2013,70 @@ const MapView = ({
 														/>
 													)}
 													<div className={styles.itemCardContent}>
-														<div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '8px' }}>
-															<div className={styles.itemCardTitleFlexWrap} style={{ flex: 1 }}>
+														<div style={{
+															display: 'flex',
+															alignItems: 'flex-start',
+															justifyContent: 'space-between',
+															gap: '8px',
+														}}>
+															<div className={styles.itemCardTitleFlexWrap}
+																 style={{ flex: 1 }}>
 																{currentUser?.account_type === 'Dùng thử' && item.isPublic !== true && (
-																	<span style={{ marginRight: '6px', fontSize: '14px', verticalAlign: 'middle' }}>🔒</span>
+																	<span style={{
+																		marginRight: '6px',
+																		fontSize: '14px',
+																		verticalAlign: 'middle',
+																	}}>🔒</span>
 																)}
 																{item.title}
 															</div>
 															<Button
-																type="text"
+																type='text'
 																icon={<Icon_View_Modal width={16} height={16} />}
-																size="small"
+																size='small'
 																onClick={
-																(e) => {
-																	e.stopPropagation();
-																	handleTheoryItemIconClick(item, e)
-																}
+																	(e) => {
+																		e.stopPropagation();
+																		handleTheoryItemIconClick(item, e);
+																	}
 																}
 																style={{
 																	flexShrink: 0,
 																	color: '#1890ff',
-																	padding: '4px 8px'
+																	padding: '4px 8px',
 																}}
-																title="Xem chi tiết"
+																title='Xem chi tiết'
 															/>
 														</div>
 														{/* ID, Lesson Number, CID, Tag5 and Quiz Status Row */}
 														<div className={styles.itemCardMeta}>
-															<div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+															<div style={{
+																display: 'flex',
+																alignItems: 'center',
+																gap: '8px',
+																flexWrap: 'wrap',
+															}}>
 																{item.lessonNumber && (
-																	<span className={styles.itemCardId} style={{ color: '#1890ff' }}>
+																	<span className={styles.itemCardId}
+																		  style={{ color: '#1890ff' }}>
 																		 {item.lessonNumber}
 																	</span>
 																)}
-																{item.lessonNumber && item.cid && <span style={{ color: '#8c8c8c' }}>|</span>}
+																{item.lessonNumber && item.cid &&
+																	<span style={{ color: '#8c8c8c' }}>|</span>}
 																{item.cid && (
 																	<span className={styles.itemCardId}>
 																		CID: {item.cid}
 																	</span>
 																)}
-																{(item.lessonNumber || item.cid) && item.id && <span style={{ color: '#8c8c8c' }}>|</span>}
+																{(item.lessonNumber || item.cid) && item.id &&
+																	<span style={{ color: '#8c8c8c' }}>|</span>}
 																<span className={styles.itemCardId}>
 																	ID: {item.id}
 																</span>
 																{renderQuizStatusBadge(item)}
 																{item.tag5 && (
-																	<Tag color="green">
+																	<Tag color='green'>
 																		{Array.isArray(item.tag5) ? item.tag5.join(', ') : item.tag5}
 																	</Tag>
 																)}
@@ -2046,18 +2098,24 @@ const MapView = ({
 									</div>
 									<div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
 										<Input
-											placeholder="Tìm kiếm..."
+											placeholder='Tìm kiếm...'
 											prefix={<SearchOutlined />}
 											value={caseSearchText}
 											onChange={(e) => setCaseSearchText(e.target.value)}
 											allowClear
-											size="small"
+											size='small'
 											className={styles.rightPanelSearch}
 										/>
-										<div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', whiteSpace: 'nowrap' }}>
+										<div style={{
+											display: 'flex',
+											alignItems: 'center',
+											gap: '4px',
+											fontSize: '12px',
+											whiteSpace: 'nowrap',
+										}}>
 											<span>Auto-Arrange</span>
 											<Switch
-												size="small"
+												size='small'
 												checked={caseSortByConnection}
 												onChange={setCaseSortByConnection}
 											/>
@@ -2074,62 +2132,74 @@ const MapView = ({
 											filteredCaseItems.map((item) => {
 												// Check if this case item should be highlighted (has same CID as selected theory item)
 												const isHighlighted = selectedTheoryItem?.cid && item.cid === selectedTheoryItem.cid && selectedCaseItem?.id !== item.id;
-												
+
 												return (
-												<div
-													key={item.id}
-													ref={(el) => {
-														caseItemRefs.current[item.id] = el;
-														panel1ItemRefs.current[item.id] = el;
-													}}
-													onClick={() => handleCaseItemClick(item)}
-													className={`${styles.itemCard} ${selectedCaseItem?.id === item.id ? styles.itemCardSelected : ''} ${isHighlighted ? styles.itemCardHighlighted : ''}`}
-												>
-													{item.avatarUrl && (
-														<Image
-															src={item.avatarUrl}
-															alt={item.title}
-															width={80}
-															height={80}
-															className={styles.itemCardAvatar}
-															preview={false}
-														/>
-													)}
-													<div className={styles.itemCardContent}>
-														<div className={styles.itemCardTitleFlexWrap}>
-															{currentUser?.account_type === 'Dùng thử' && item.isPublic !== true && (
-																<span style={{ marginRight: '6px', fontSize: '14px', verticalAlign: 'middle' }}>🔒</span>
-															)}
-															{item.title}
-														</div>
-														{/* ID, Lesson Number, CID, Tag5 and Quiz Status Row */}
-														<div className={styles.itemCardMeta}>
-															<div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-																{item.lessonNumber && (
-																	<span className={styles.itemCardId} style={{ color: '#1890ff' }}>
+													<div
+														key={item.id}
+														ref={(el) => {
+															caseItemRefs.current[item.id] = el;
+															panel1ItemRefs.current[item.id] = el;
+														}}
+														onClick={() => handleCaseItemClick(item)}
+														className={`${styles.itemCard} ${selectedCaseItem?.id === item.id ? styles.itemCardSelected : ''} ${isHighlighted ? styles.itemCardHighlighted : ''}`}
+													>
+														{item.avatarUrl && (
+															<Image
+																src={item.avatarUrl}
+																alt={item.title}
+																width={80}
+																height={80}
+																className={styles.itemCardAvatar}
+																preview={false}
+															/>
+														)}
+														<div className={styles.itemCardContent}>
+															<div className={styles.itemCardTitleFlexWrap}>
+																{currentUser?.account_type === 'Dùng thử' && item.isPublic !== true && (
+																	<span style={{
+																		marginRight: '6px',
+																		fontSize: '14px',
+																		verticalAlign: 'middle',
+																	}}>🔒</span>
+																)}
+																{item.title}
+															</div>
+															{/* ID, Lesson Number, CID, Tag5 and Quiz Status Row */}
+															<div className={styles.itemCardMeta}>
+																<div style={{
+																	display: 'flex',
+																	alignItems: 'center',
+																	gap: '8px',
+																	flexWrap: 'wrap',
+																}}>
+																	{item.lessonNumber && (
+																		<span className={styles.itemCardId}
+																			  style={{ color: '#1890ff' }}>
 																		 {item.lessonNumber}
 																	</span>
-																)}
-																{item.lessonNumber && item.cid && <span style={{ color: '#8c8c8c' }}>|</span>}
-																{item.cid && (
-																	<span className={styles.itemCardId}>
+																	)}
+																	{item.lessonNumber && item.cid &&
+																		<span style={{ color: '#8c8c8c' }}>|</span>}
+																	{item.cid && (
+																		<span className={styles.itemCardId}>
 																		CID: {item.cid}
 																	</span>
-																)}
-																{(item.lessonNumber || item.cid) && item.id && <span style={{ color: '#8c8c8c' }}>|</span>}
-																<span className={styles.itemCardId}>
+																	)}
+																	{(item.lessonNumber || item.cid) && item.id &&
+																		<span style={{ color: '#8c8c8c' }}>|</span>}
+																	<span className={styles.itemCardId}>
 																	ID: {item.id}
 																</span>
-																{renderQuizStatusBadge(item)}
-																{item.tag5 && (
-																	<Tag color="green">
-																		{Array.isArray(item.tag5) ? item.tag5.join(', ') : item.tag5}
-																	</Tag>
-																)}
+																	{renderQuizStatusBadge(item)}
+																	{item.tag5 && (
+																		<Tag color='green'>
+																			{Array.isArray(item.tag5) ? item.tag5.join(', ') : item.tag5}
+																		</Tag>
+																	)}
+																</div>
 															</div>
 														</div>
 													</div>
-												</div>
 												);
 											})
 										)}
@@ -2145,8 +2215,8 @@ const MapView = ({
 								containerRef={panel1ContainerRef}
 								itemRefs={panel1ItemRefs}
 								visibleItemIds={[...filteredTheoryItems.map(item => item.id), ...filteredCaseItems.map(item => item.id)]}
-								sourceType="theory"
-								targetType="case"
+								sourceType='theory'
+								targetType='case'
 								theoryItems={filteredTheoryItems}
 								caseItems={filteredCaseItems}
 							/>
@@ -2160,12 +2230,12 @@ const MapView = ({
 								Business Wiki ({filteredLongFormItems.length})
 							</div>
 							<Input
-								placeholder="Tìm kiếm..."
+								placeholder='Tìm kiếm...'
 								prefix={<SearchOutlined />}
 								value={searchText}
 								onChange={(e) => setSearchText(e.target.value)}
 								allowClear
-								size="small"
+								size='small'
 								className={styles.rightPanelSearch}
 							/>
 						</div>
@@ -2196,7 +2266,11 @@ const MapView = ({
 											<div className={styles.itemCardContent}>
 												<div className={styles.itemCardTitle}>
 													{currentUser?.account_type === 'Dùng thử' && item.isPublic !== true && (
-														<span style={{ marginRight: '6px', fontSize: '14px', verticalAlign: 'middle' }}>🔒</span>
+														<span style={{
+															marginRight: '6px',
+															fontSize: '14px',
+															verticalAlign: 'middle',
+														}}>🔒</span>
 													)}
 													{item.title}
 												</div>
@@ -2207,19 +2281,26 @@ const MapView = ({
 												)}
 												{/* Lesson Number, ID, Tag5 and Quiz Status Row */}
 												<div className={styles.itemCardMeta}>
-													<div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+													<div style={{
+														display: 'flex',
+														alignItems: 'center',
+														gap: '8px',
+														flexWrap: 'wrap',
+													}}>
 														{item.lessonNumber && (
-															<span className={styles.itemCardId} style={{ color: '#1890ff' }}>
+															<span className={styles.itemCardId}
+																  style={{ color: '#1890ff' }}>
 																{item.lessonNumber}
 															</span>
 														)}
-														{item.lessonNumber && item.id && <span style={{ color: '#8c8c8c' }}>|</span>}
+														{item.lessonNumber && item.id &&
+															<span style={{ color: '#8c8c8c' }}>|</span>}
 														<span className={styles.itemCardId}>
 															ID: {item.id}
 														</span>
 														{renderQuizStatusBadge(item)}
 														{item.tag5 && (
-															<Tag color="green">
+															<Tag color='green'>
 																{Array.isArray(item.tag5) ? item.tag5.join(', ') : item.tag5}
 															</Tag>
 														)}
@@ -2251,7 +2332,7 @@ const MapView = ({
 								alignItems: 'center',
 								gap: '8px',
 								fontWeight: '600',
-								color: '#262626'
+								color: '#262626',
 							}}>
 								<span style={{ fontSize: '18px' }}>Business Wiki</span>
 								<span>{'>'}</span>
@@ -2260,14 +2341,14 @@ const MapView = ({
 									maxWidth: '600px',
 									overflow: 'hidden',
 									textOverflow: 'ellipsis',
-									whiteSpace: 'nowrap'
+									whiteSpace: 'nowrap',
 								}}>
 									{selectedLongFormItem.title}
 								</span>
 							</div>
 							<div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
 								<Input
-									placeholder="Tìm kiếm trong nội dung..."
+									placeholder='Tìm kiếm trong nội dung...'
 									prefix={<SearchOutlined />}
 									value={modalSearchText}
 									onChange={(e) => setModalSearchText(e.target.value)}
@@ -2282,7 +2363,7 @@ const MapView = ({
 								{searchResults.length > 0 && (
 									<>
 										<Button
-											size="small"
+											size='small'
 											onClick={() => navigateSearchResult(-1)}
 											disabled={searchResults.length === 0}
 											style={{ minWidth: '32px', padding: '0 8px' }}
@@ -2295,15 +2376,15 @@ const MapView = ({
 												color: '#666',
 												minWidth: '50px',
 												textAlign: 'center',
-												cursor: 'pointer'
+												cursor: 'pointer',
 											}}
 											onClick={() => setShowSearchResultsPanel(!showSearchResultsPanel)}
-											title="Xem danh sách kết quả"
+											title='Xem danh sách kết quả'
 										>
 											{highlightedIndex + 1} / {searchResults.length}
 										</span>
 										<Button
-											size="small"
+											size='small'
 											onClick={() => navigateSearchResult(1)}
 											disabled={searchResults.length === 0}
 											style={{ minWidth: '32px', padding: '0 8px' }}
@@ -2325,7 +2406,7 @@ const MapView = ({
 				width={selectedLongFormItem?.hasTitle ? 1400 : 1000}
 				style={{
 					top: '0px',
-					paddingBottom: '0px'
+					paddingBottom: '0px',
 				}}
 				destroyOnClose={true}
 				maskClosable={true}
@@ -2333,7 +2414,10 @@ const MapView = ({
 				className={newsTabStyles.modalContent}
 			>
 				<div style={{ display: 'flex', height: '100%', width: '100%', overflow: 'auto', position: 'relative' }}>
-					<div style={selectedLongFormItem?.hasTitle ? { flex: 1, padding: '20px' } : { padding: '20px', width: '100%' }}>
+					<div style={selectedLongFormItem?.hasTitle ? { flex: 1, padding: '20px' } : {
+						padding: '20px',
+						width: '100%',
+					}}>
 						{modalLoading ? (
 							<div style={{ padding: '40px', textAlign: 'center' }}>Đang tải...</div>
 						) : (
@@ -2365,7 +2449,7 @@ const MapView = ({
 								flexDirection: 'column',
 								overflow: 'hidden',
 								cursor: isDragging ? 'grabbing' : 'default',
-								userSelect: 'none'
+								userSelect: 'none',
 							}}
 						>
 							<div
@@ -2377,7 +2461,7 @@ const MapView = ({
 									borderBottom: '1px solid #f0f0f0',
 									backgroundColor: '#fafafa',
 									cursor: 'move',
-									userSelect: 'none'
+									userSelect: 'none',
 								}}
 								onMouseDown={handleMouseDown}
 							>
@@ -2385,13 +2469,13 @@ const MapView = ({
 									fontSize: '14px',
 									fontWeight: '600',
 									color: '#262626',
-									flex: 1
+									flex: 1,
 								}}>
 									Kết quả tìm kiếm ({searchResults.length})
 								</div>
 								<Button
-									type="text"
-									size="small"
+									type='text'
+									size='small'
 									icon={<CloseOutlined />}
 									onClick={() => setShowSearchResultsPanel(false)}
 									style={{ minWidth: 'auto', padding: '0 4px' }}
@@ -2401,7 +2485,7 @@ const MapView = ({
 							<div style={{
 								overflowY: 'auto',
 								padding: '12px',
-								flex: 1
+								flex: 1,
 							}}>
 								<div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
 									{searchResults.map((result, index) => (
@@ -2418,7 +2502,7 @@ const MapView = ({
 												border: highlightedIndex === index ? '1px solid #1890ff' : '1px solid #f0f0f0',
 												fontSize: '12px',
 												lineHeight: '1.5',
-												transition: 'all 0.2s'
+												transition: 'all 0.2s',
 											}}
 											onMouseEnter={(e) => {
 												if (highlightedIndex !== index) {
@@ -2434,20 +2518,20 @@ const MapView = ({
 											<div style={{
 												color: '#666',
 												marginBottom: '4px',
-												fontSize: '11px'
+												fontSize: '11px',
 											}}>
 												Kết quả {index + 1}
 											</div>
 											<div
 												style={{
 													color: '#262626',
-													lineHeight: '1.6'
+													lineHeight: '1.6',
 												}}
 												dangerouslySetInnerHTML={{
 													__html: `...${result.context.replace(
 														new RegExp(`(${result.match.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi'),
-														'<mark style="background-color: #fff3cd; padding: 2px 0; border-radius: 2px;">$1</mark>'
-													)}...`
+														'<mark style="background-color: #fff3cd; padding: 2px 0; border-radius: 2px;">$1</mark>',
+													)}...`,
 												}}
 											/>
 										</div>
@@ -2469,7 +2553,7 @@ const MapView = ({
 								alignItems: 'center',
 								gap: '8px',
 								fontWeight: '600',
-								color: '#262626'
+								color: '#262626',
 							}}>
 								<span style={{ fontSize: '18px' }}>Lý thuyết</span>
 								<span>{'>'}</span>
@@ -2478,14 +2562,14 @@ const MapView = ({
 									maxWidth: '600px',
 									overflow: 'hidden',
 									textOverflow: 'ellipsis',
-									whiteSpace: 'nowrap'
+									whiteSpace: 'nowrap',
 								}}>
 									{theoryModalItem.title}
 								</span>
 							</div>
 							<div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
 								<Input
-									placeholder="Tìm kiếm trong nội dung..."
+									placeholder='Tìm kiếm trong nội dung...'
 									prefix={<SearchOutlined />}
 									value={modalSearchText}
 									onChange={(e) => setModalSearchText(e.target.value)}
@@ -2500,7 +2584,7 @@ const MapView = ({
 								{searchResults.length > 0 && (
 									<>
 										<Button
-											size="small"
+											size='small'
 											onClick={() => navigateSearchResult(-1)}
 											disabled={searchResults.length === 0}
 											style={{ minWidth: '32px', padding: '0 8px' }}
@@ -2513,15 +2597,15 @@ const MapView = ({
 												color: '#666',
 												minWidth: '50px',
 												textAlign: 'center',
-												cursor: 'pointer'
+												cursor: 'pointer',
 											}}
 											onClick={() => setShowSearchResultsPanel(!showSearchResultsPanel)}
-											title="Xem danh sách kết quả"
+											title='Xem danh sách kết quả'
 										>
 											{highlightedIndex + 1} / {searchResults.length}
 										</span>
 										<Button
-											size="small"
+											size='small'
 											onClick={() => navigateSearchResult(1)}
 											disabled={searchResults.length === 0}
 											style={{ minWidth: '32px', padding: '0 8px' }}
@@ -2543,7 +2627,7 @@ const MapView = ({
 				width={theoryModalItem?.hasTitle ? 1400 : 1000}
 				style={{
 					top: '0px',
-					paddingBottom: '0px'
+					paddingBottom: '0px',
 				}}
 				destroyOnClose={true}
 				maskClosable={true}
@@ -2551,7 +2635,10 @@ const MapView = ({
 				className={newsTabStyles.modalContent}
 			>
 				<div style={{ display: 'flex', height: '100%', width: '100%', overflow: 'auto', position: 'relative' }}>
-					<div style={theoryModalItem?.hasTitle ? { flex: 1, padding: '20px' } : { padding: '20px', width: '100%' }}>
+					<div style={theoryModalItem?.hasTitle ? { flex: 1, padding: '20px' } : {
+						padding: '20px',
+						width: '100%',
+					}}>
 						{theoryModalLoading ? (
 							<div style={{ padding: '40px', textAlign: 'center' }}>Đang tải...</div>
 						) : (
@@ -2583,7 +2670,7 @@ const MapView = ({
 								flexDirection: 'column',
 								overflow: 'hidden',
 								cursor: isDragging ? 'grabbing' : 'default',
-								userSelect: 'none'
+								userSelect: 'none',
 							}}
 						>
 							<div
@@ -2595,7 +2682,7 @@ const MapView = ({
 									borderBottom: '1px solid #f0f0f0',
 									backgroundColor: '#fafafa',
 									cursor: 'move',
-									userSelect: 'none'
+									userSelect: 'none',
 								}}
 								onMouseDown={handleMouseDown}
 							>
@@ -2603,13 +2690,13 @@ const MapView = ({
 									fontSize: '14px',
 									fontWeight: '600',
 									color: '#262626',
-									flex: 1
+									flex: 1,
 								}}>
 									Kết quả tìm kiếm ({searchResults.length})
 								</div>
 								<Button
-									type="text"
-									size="small"
+									type='text'
+									size='small'
 									icon={<CloseOutlined />}
 									onClick={() => setShowSearchResultsPanel(false)}
 									style={{ minWidth: 'auto', padding: '0 4px' }}
@@ -2619,7 +2706,7 @@ const MapView = ({
 							<div style={{
 								overflowY: 'auto',
 								padding: '12px',
-								flex: 1
+								flex: 1,
 							}}>
 								<div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
 									{searchResults.map((result, index) => (
@@ -2636,7 +2723,7 @@ const MapView = ({
 												border: highlightedIndex === index ? '1px solid #1890ff' : '1px solid #f0f0f0',
 												fontSize: '12px',
 												lineHeight: '1.5',
-												transition: 'all 0.2s'
+												transition: 'all 0.2s',
 											}}
 											onMouseEnter={(e) => {
 												if (highlightedIndex !== index) {
@@ -2652,20 +2739,20 @@ const MapView = ({
 											<div style={{
 												color: '#666',
 												marginBottom: '4px',
-												fontSize: '11px'
+												fontSize: '11px',
 											}}>
 												Kết quả {index + 1}
 											</div>
 											<div
 												style={{
 													color: '#262626',
-													lineHeight: '1.6'
+													lineHeight: '1.6',
 												}}
 												dangerouslySetInnerHTML={{
 													__html: `...${result.context.replace(
 														new RegExp(`(${result.match.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi'),
-														'<mark style="background-color: #fff3cd; padding: 2px 0; border-radius: 2px;">$1</mark>'
-													)}...`
+														'<mark style="background-color: #fff3cd; padding: 2px 0; border-radius: 2px;">$1</mark>',
+													)}...`,
 												}}
 											/>
 										</div>
@@ -2687,7 +2774,7 @@ const MapView = ({
 								alignItems: 'center',
 								gap: '8px',
 								fontWeight: '600',
-								color: '#262626'
+								color: '#262626',
 							}}>
 								<span style={{ fontSize: '18px' }}>Case Study</span>
 								<span>{'>'}</span>
@@ -2696,14 +2783,14 @@ const MapView = ({
 									maxWidth: '600px',
 									overflow: 'hidden',
 									textOverflow: 'ellipsis',
-									whiteSpace: 'nowrap'
+									whiteSpace: 'nowrap',
 								}}>
 									{caseModalItem.title}
 								</span>
 							</div>
 							<div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
 								<Input
-									placeholder="Tìm kiếm trong nội dung..."
+									placeholder='Tìm kiếm trong nội dung...'
 									prefix={<SearchOutlined />}
 									value={caseModalSearchText}
 									onChange={(e) => setCaseModalSearchText(e.target.value)}
@@ -2718,7 +2805,7 @@ const MapView = ({
 								{caseSearchResults.length > 0 && (
 									<>
 										<Button
-											size="small"
+											size='small'
 											onClick={() => navigateCaseSearchResult(-1)}
 											disabled={caseSearchResults.length === 0}
 											style={{ minWidth: '32px', padding: '0 8px' }}
@@ -2731,15 +2818,15 @@ const MapView = ({
 												color: '#666',
 												minWidth: '50px',
 												textAlign: 'center',
-												cursor: 'pointer'
+												cursor: 'pointer',
 											}}
 											onClick={() => setCaseShowSearchResultsPanel(!caseShowSearchResultsPanel)}
-											title="Xem danh sách kết quả"
+											title='Xem danh sách kết quả'
 										>
 											{caseHighlightedIndex + 1} / {caseSearchResults.length}
 										</span>
 										<Button
-											size="small"
+											size='small'
 											onClick={() => navigateCaseSearchResult(1)}
 											disabled={caseSearchResults.length === 0}
 											style={{ minWidth: '32px', padding: '0 8px' }}
@@ -2762,7 +2849,7 @@ const MapView = ({
 				width={caseModalItem?.hasTitle ? 1500 : 1000}
 				style={{
 					top: '0px',
-					paddingBottom: '0px'
+					paddingBottom: '0px',
 				}}
 				destroyOnClose={true}
 				maskClosable={true}
@@ -2777,7 +2864,7 @@ const MapView = ({
 							renderCaseContentPanel(caseModalItem)
 						)}
 					</div>
-					{caseModalItem?.hasTitle &&  hasAccess(caseModalItem) && (
+					{caseModalItem?.hasTitle && hasAccess(caseModalItem) && (
 						<div style={{ width: '25%', borderLeft: '1px solid #f0f0f0', overflowY: 'auto' }}>
 							{renderCaseTOCSidebar(caseModalItem)}
 						</div>
@@ -2804,7 +2891,7 @@ const MapView = ({
 								cursor: caseIsDragging ? 'grabbing' : 'default',
 								userSelect: 'none',
 								willChange: caseIsDragging ? 'transform' : 'auto',
-								transition: caseIsDragging ? 'none' : 'box-shadow 0.2s'
+								transition: caseIsDragging ? 'none' : 'box-shadow 0.2s',
 							}}
 						>
 							<div
@@ -2816,7 +2903,7 @@ const MapView = ({
 									borderBottom: '1px solid #f0f0f0',
 									backgroundColor: '#fafafa',
 									cursor: 'move',
-									userSelect: 'none'
+									userSelect: 'none',
 								}}
 								onMouseDown={handleCaseMouseDown}
 							>
@@ -2824,13 +2911,13 @@ const MapView = ({
 									fontSize: '14px',
 									fontWeight: '600',
 									color: '#262626',
-									flex: 1
+									flex: 1,
 								}}>
 									Kết quả tìm kiếm ({caseSearchResults.length})
 								</div>
 								<Button
-									type="text"
-									size="small"
+									type='text'
+									size='small'
 									icon={<CloseOutlined />}
 									onClick={() => setCaseShowSearchResultsPanel(false)}
 									style={{ minWidth: 'auto', padding: '0 4px' }}
@@ -2840,7 +2927,7 @@ const MapView = ({
 							<div style={{
 								overflowY: 'auto',
 								padding: '12px',
-								flex: 1
+								flex: 1,
 							}}>
 								<div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
 									{caseSearchResults.map((result, index) => (
@@ -2857,7 +2944,7 @@ const MapView = ({
 												border: caseHighlightedIndex === index ? '1px solid #1890ff' : '1px solid #f0f0f0',
 												fontSize: '12px',
 												lineHeight: '1.5',
-												transition: 'all 0.2s'
+												transition: 'all 0.2s',
 											}}
 											onMouseEnter={(e) => {
 												if (caseHighlightedIndex !== index) {
@@ -2873,20 +2960,20 @@ const MapView = ({
 											<div style={{
 												color: '#666',
 												marginBottom: '4px',
-												fontSize: '11px'
+												fontSize: '11px',
 											}}>
 												Kết quả {index + 1}
 											</div>
 											<div
 												style={{
 													color: '#262626',
-													lineHeight: '1.6'
+													lineHeight: '1.6',
 												}}
 												dangerouslySetInnerHTML={{
 													__html: `...${result.context.replace(
 														new RegExp(`(${result.match.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi'),
-														'<mark style="background-color: #fff3cd; padding: 2px 0; border-radius: 2px;">$1</mark>'
-													)}...`
+														'<mark style="background-color: #fff3cd; padding: 2px 0; border-radius: 2px;">$1</mark>',
+													)}...`,
 												}}
 											/>
 										</div>
