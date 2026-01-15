@@ -1,5 +1,5 @@
 import { useRef, useEffect } from 'react';
-import css from './Tiptap.module.css';
+import css from './TipTap.module.css';
 import {
   BoldIcon, HighlightIcon, ItalicIcon, StrikeIcon, UnderlineIcon,
   BlockquoteIcon, BulletListIcon, OrderedListIcon, ImageIcon,
