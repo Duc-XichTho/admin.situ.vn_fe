@@ -1,4 +1,4 @@
-import css from './Tiptap.module.css';
+import css from './TipTap.module.css';
 import React, { useContext, useEffect, useRef, useState } from 'react';
 import { EditorContent } from '@tiptap/react';
 import { TiptapToolbar } from './TiptapToolbar';

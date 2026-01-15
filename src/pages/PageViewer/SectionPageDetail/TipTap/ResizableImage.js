@@ -1,5 +1,5 @@
 import Image from '@tiptap/extension-image'
-import css from './Tiptap.module.css'
+import css from './TipTap.module.css'
 
 export const ResizableImage = Image.extend({
   addAttributes() {
