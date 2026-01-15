@@ -1,7 +1,7 @@
 import { Box, TextField, Typography } from '@mui/material';
 import { EditorContent } from '@tiptap/react';
 import React, { useEffect, useState } from 'react';
-import tiptapCss from '../PageViewer/SectionPageDetail/TipTap/Tiptap.module.css';
+import tiptapCss from '../PageViewer/SectionPageDetail/TipTap/TipTap.module.css';
 import { TiptapToolbar } from '../PageViewer/SectionPageDetail/TipTap/TiptapToolbar';
 import { useEditor } from '../PageViewer/SectionPageDetail/TipTap/useEditor';
 
@@ -12,16 +12,16 @@ const SlideEditor = ({ slide, onContentChange, isEditable = true }) => {
     const [colorPickerMenuOpen, setColorPickerMenuOpen] = useState(false);
     const [fontSizeMenuOpen, setFontSizeMenuOpen] = useState(false);
     const [lineHeightMenuOpen, setLineHeightMenuOpen] = useState(false);
-    
+
     const { editor } = useEditor();
-    
+
     // Set editor editable mode
     useEffect(() => {
         if (editor) {
             editor.setEditable(isEditable);
         }
     }, [editor, isEditable]);
-    
+
     // Load slide content when slide changes
     useEffect(() => {
         if (editor && slide) {
@@ -29,35 +29,35 @@ const SlideEditor = ({ slide, onContentChange, isEditable = true }) => {
             editor.commands.setContent(content);
         }
     }, [slide?.order, editor]);
-    
+
     // Save content when editor changes
     useEffect(() => {
         if (!editor || !isEditable) return;
-        
+
         const handleUpdate = () => {
             const content = editor.getHTML();
             if (onContentChange) {
                 onContentChange(content, undefined);
             }
         };
-        
+
         editor.on('update', handleUpdate);
         return () => {
             editor.off('update', handleUpdate);
         };
     }, [editor, isEditable, onContentChange]);
-    
+
     const handleTitleChange = (newTitle) => {
         if (onContentChange) {
             onContentChange(undefined, newTitle);
         }
     };
-    
+
     return (
-        <Box sx={{ 
-            height: '100%', 
+        <Box sx={{
+            height: '100%',
             width: '100%',
-            display: 'flex', 
+            display: 'flex',
             flexDirection: 'column',
             border: '1px solid #e0e0e0',
             borderRadius: '8px',
