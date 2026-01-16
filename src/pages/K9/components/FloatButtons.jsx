@@ -15,6 +15,15 @@ const FloatButtons = ({ onShowGuideline }) => {
 	const [openSlideManager, setOpenSlideManager] = useState(false);
 	const [hideOnboarding, setHideOnboarding] = useState(false);
 	const { currentUser } = React.useContext(MyContext);
+	const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+	useEffect(() => {
+		const handleResize = () => {
+			setIsMobile(window.innerWidth <= 768);
+		};
+		window.addEventListener('resize', handleResize);
+		return () => window.removeEventListener('resize', handleResize);
+	}, []);
 
 	// Kiểm tra localStorage khi component mount
 	useEffect(() => {
@@ -85,7 +94,7 @@ const FloatButtons = ({ onShowGuideline }) => {
 			>
 				<img src="https://cdn.icon-icons.com/icons2/2108/PNG/512/facebook_icon_130940.png" alt="Facebook" />
 			</button>
-			
+
 			{/* Onboarding Guide Button */}
 			<button
 				className={`${styles.floatButton} ${styles.guidelineButton}`}
@@ -121,8 +130,16 @@ const FloatButtons = ({ onShowGuideline }) => {
 			<Dialog
 				open={showOnboardingGuide}
 				onClose={handleCloseDialog}
+				fullScreen={isMobile}
 				PaperProps={{
-					style: {
+					style: isMobile ? {
+						margin: '20px 10px 30px 10px',
+						maxHeight: 'calc(100vh - 50px)',
+						height: 'calc(100vh - 50px)',
+						maxWidth: 'calc(100vw - 20px)',
+						width: 'calc(100vw - 20px)',
+						borderRadius: '8px',
+					} : {
 						width: '80vw',
 						height: '80vh',
 						maxWidth: 'none',
@@ -131,7 +148,13 @@ const FloatButtons = ({ onShowGuideline }) => {
 				}}
 			>
 				<DialogContent
-					style={{ padding: '0px' }}
+					style={{
+						padding: '0px',
+						height: '100%',
+						display: 'flex',
+						flexDirection: 'column',
+						overflow: 'hidden'
+					}}
 				>
 					<OnboardingGuide
 						componentName="K9"

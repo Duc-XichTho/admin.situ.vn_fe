@@ -1,6 +1,32 @@
 .carousel :global(.css-1f8sh1y) {
     height: 100% !important;
     overflow: auto !important;
+    max-height: 100% !important;
+}
+
+/* Mobile: Đảm bảo carousel không tạo scroll không cần thiết */
+@media (max-width: 768px) {
+    .carousel :global(.css-1f8sh1y) {
+        height: 100% !important;
+        max-height: 100% !important;
+        overflow: auto !important;
+    }
+    
+    .onboardingGuide > div:nth-child(2) {
+        overflow: hidden !important;
+        flex: 1 !important;
+        min-height: 0 !important;
+        max-height: 100% !important;
+        display: flex !important;
+        flex-direction: column !important;
+    }
+    
+    .onboardingGuide > div:nth-child(2) > div {
+        flex: 1 !important;
+        min-height: 0 !important;
+        max-height: 100% !important;
+        overflow: hidden !important;
+    }
 }
 
 .title_textarea.disabled {
@@ -115,4 +141,113 @@
 .onboardingGuide :global(.MuiSvgIcon-root) {
     display: inline-block !important;
     font-size: inherit !important;
+}
+
+/* Mobile Responsive Styles */
+@media (max-width: 768px) {
+    .onboardingGuide {
+        height: 100% !important;
+        max-height: 100% !important;
+        overflow: hidden !important;
+        display: flex !important;
+        flex-direction: column !important;
+    }
+
+    /* Header responsive */
+    .onboardingGuide > div:first-child {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        padding: 10px 12px !important;
+        gap: 10px !important;
+        flex-shrink: 0 !important;
+    }
+
+    /* Left side container */
+    .onboardingGuide > div:first-child > div:first-child {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 10px !important;
+        width: 100% !important;
+    }
+
+    /* Row 1 on mobile: Title + Checkbox + Button */
+    .onboardingGuide > div:first-child > div:first-child > div:first-child {
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: center !important;
+        gap: 8px !important;
+        width: 100% !important;
+    }
+
+    /* Title on mobile */
+    .onboardingGuide > div:first-child > div:first-child > div:first-child > h6 {
+        font-size: 14px !important;
+        margin: 0 !important;
+        width: auto !important;
+        flex-shrink: 0 !important;
+    }
+
+    /* Checkbox and Button container on mobile */
+    .onboardingGuide > div:first-child > div:first-child > div:first-child > div {
+        flex-direction: row !important;
+        align-items: center !important;
+        gap: 6px !important;
+        margin-left: auto !important;
+        flex-wrap: nowrap !important;
+    }
+
+    /* Row 2 on mobile: Navigation buttons */
+    .onboardingGuide > div:first-child > div:first-child > div:last-child {
+        display: flex !important;
+        gap: 6px !important;
+        width: 100% !important;
+        flex-shrink: 0 !important;
+    }
+
+    /* Navigation buttons on mobile */
+    .onboardingGuide > div:first-child > div:first-child > div:last-child > div {
+        flex: 1 !important;
+        text-align: center !important;
+        padding: 6px 10px !important;
+        font-size: 11px !important;
+        min-height: 32px !important;
+    }
+
+    /* Checkbox label */
+    .onboardingGuide > div:first-child > div:last-child > label {
+        margin: 0 !important;
+        width: auto !important;
+        padding: 0 !important;
+        flex-shrink: 0 !important;
+    }
+
+    .onboardingGuide > div:first-child > div:last-child > label > span:last-child {
+        font-size: 11px !important;
+    }
+
+    /* Start button */
+    .onboardingGuide > div:first-child > div:last-child > button {
+        width: auto !important;
+        padding: 6px 12px !important;
+        font-size: 11px !important;
+        min-height: 32px !important;
+        white-space: nowrap !important;
+        flex-shrink: 0 !important;
+    }
+
+    /* Main content */
+    .onboardingGuide > div:nth-child(2) {
+        padding: 12px !important;
+    }
+
+    /* Slide content */
+    .onboardingGuide > div:nth-child(2) > div > div > div > div {
+        padding: 12px !important;
+    }
+
+    /* Carousel indicators */
+    .onboardingGuide :global(.MuiIconButton-root[class*="Carousel"]) {
+        width: 32px !important;
+        height: 32px !important;
+    }
 }

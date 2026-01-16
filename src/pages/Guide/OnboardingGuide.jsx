@@ -11,7 +11,7 @@ import {
     Typography,
     IconButton,
     Box,
-    Radio,
+    Checkbox,
     FormControlLabel,
 } from "@mui/material";
 import { Settings, ArrowBack, ArrowForward } from "@mui/icons-material";
@@ -29,6 +29,7 @@ const OnboardingGuide = ({
     const [slides, setSlides] = useState([]);
     const [guidelineSettingId, setGuidelineSettingId] = useState(null);
     const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
+    const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
     const fetchData = async () => {
         try {
@@ -107,6 +108,14 @@ const OnboardingGuide = ({
         fetchData();
     }, [componentName]);
 
+    useEffect(() => {
+        const handleResize = () => {
+            setIsMobile(window.innerWidth <= 768);
+        };
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
     const handlePrevious = () => {
         if (currentSlideIndex > 0) {
             setCurrentSlideIndex(currentSlideIndex - 1);
@@ -120,103 +129,268 @@ const OnboardingGuide = ({
     };
 
     return (
-        <div style={{ display: "flex", height: "100%", width: "100%", flexDirection: "column" }} className={css.onboardingGuide}>
+        <div style={{ 
+            display: "flex", 
+            height: "100%", 
+            width: "100%", 
+            flexDirection: "column",
+            overflow: "hidden",
+            maxHeight: "100%"
+        }} className={css.onboardingGuide}>
             {/* Header with Title, Buttons, and DialogActions */}
             <Box
                 style={{
                     display: "flex",
+                    flexDirection: isMobile ? "column" : "row",
                     justifyContent: "space-between",
-                    alignItems: "center",
-                    padding: "15px 20px",
+                    alignItems: isMobile ? "stretch" : "center",
+                    padding: isMobile ? "10px 12px" : "15px 20px",
                     borderBottom: "1px solid #e0e0e0",
                     backgroundColor: "#EDEDED",
+                    gap: isMobile ? "10px" : "0",
+                    flexShrink: 0
                 }}
             >
                 {/* Left side: Title and Navigation Buttons */}
-                <Box style={{ display: "flex", alignItems: "center", gap: "10px" ,}}>
-                    <Typography variant="h6" style={{ fontWeight: "bold", marginRight: "10px" }}>
-                        TUTORIAL SLIDE
-                    </Typography>
-                    <div
-                        onClick={currentSlideIndex === 0 || slides.length === 0 ? undefined : handlePrevious}
-                        style={{
-                            border: "1px solid #999",
-                            borderRadius: "8px",
-                            padding: "4px 10px",
-                            backgroundColor: "#ffffff",
-                            cursor: (currentSlideIndex === 0 || slides.length === 0) ? "not-allowed" : "pointer",
-                            opacity: (currentSlideIndex === 0 || slides.length === 0) ? 0.5 : 1,
-                            display: "inline-block",
-                            fontSize: "13px"
-                        }}
-                    >
-                        <span>Quay lại</span>
-                    </div>
-                    <div
-                        onClick={currentSlideIndex === slides.length - 1 || slides.length === 0 ? undefined : handleNext}
-                        style={{
-                            border: "1px solid #999",
-                            borderRadius: "8px",
-                            padding: "4px 10px",
-                            backgroundColor: "#ffffff",
-                            cursor: (currentSlideIndex === slides.length - 1 || slides.length === 0) ? "not-allowed" : "pointer",
-                            opacity: (currentSlideIndex === slides.length - 1 || slides.length === 0) ? 0.5 : 1,
-                            display: "inline-block",
-                            fontSize: "13px"
-                        }}
-                    >
-                        <span>Tiếp theo</span>
-                    </div>
-                    {currentUser?.isAdmin && (
-                        <IconButton
-                            onClick={() => setOpenSlideManager(true)}
-                            title="Quản lý Slide"
-                            color="primary"
-                            size="small"
+                <Box style={{ 
+                    display: "flex", 
+                    flexDirection: isMobile ? "column" : "row",
+                    alignItems: isMobile ? "stretch" : "center", 
+                    gap: isMobile ? "10px" : "10px",
+                    width: isMobile ? "100%" : "auto",
+                    flex: isMobile ? "none" : "1"
+                }}>
+                    {!isMobile && (
+                        <Typography 
+                            variant="h6" 
+                            style={{ 
+                                fontWeight: "bold", 
+                                marginRight: "10px",
+                                fontSize: "inherit"
+                            }}
                         >
-                            <Settings />
-                        </IconButton>
+                            TUTORIAL SLIDE
+                        </Typography>
                     )}
-                </Box>
-
-                {/* Right side: DialogActions */}
-                <Box style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                    <FormControlLabel
-                        control={
-                            <Radio
-                                checked={hideOnboarding || false}
-                                onChange={onCheckboxChange}
-                                color="primary"
-                                size="small"
-                            />
-                        }
-                        label={
-                            <Typography
-                                variant="body2"
-                                style={{
-                                    color: 'rgba(0, 0, 0, 0.6)',
-                                    fontWeight: 'normal'
+                    {isMobile && (
+                        <Box style={{
+                            display: "flex",
+                            flexDirection: "row",
+                            alignItems: "center",
+                            gap: "8px",
+                            width: "100%"
+                        }}>
+                            <Typography 
+                                variant="h6" 
+                                style={{ 
+                                    fontWeight: "bold", 
+                                    marginRight: "8px",
+                                    fontSize: "14px",
+                                    margin: 0,
+                                    flexShrink: 0
                                 }}
                             >
-                                Không hiển thị lại
+                                TUTORIAL SLIDE
                             </Typography>
-                        }
-                    />
-                    <Button
-                        onClick={onClose}
-                        color="primary"
-                        variant="contained"
-                        className={css.startUsingButton}
-                        style={{ fontWeight: 'bold' }}
-                    >
-                        Bắt đầu sử dụng
-                    </Button>
+                            
+                            {/* Checkbox and Button on mobile */}
+                            <Box style={{ 
+                                display: "flex", 
+                                flexDirection: "row",
+                                alignItems: "center", 
+                                gap: "6px",
+                                flexShrink: 0,
+                                marginLeft: "auto"
+                            }}>
+                                <FormControlLabel
+                                    control={
+                                        <Checkbox
+                                            checked={hideOnboarding || false}
+                                            onChange={onCheckboxChange}
+                                            color="primary"
+                                            size="small"
+                                        />
+                                    }
+                                    label={
+                                        <Typography
+                                            variant="body2"
+                                            style={{
+                                                color: 'rgba(0, 0, 0, 0.6)',
+                                                fontWeight: 'normal',
+                                                fontSize: "11px"
+                                            }}
+                                        >
+                                            Không hiển thị lại
+                                        </Typography>
+                                    }
+                                    style={{ 
+                                        margin: 0, 
+                                        width: "auto",
+                                        padding: 0,
+                                        flexShrink: 0
+                                    }}
+                                />
+                                <Button
+                                    onClick={onClose}
+                                    color="primary"
+                                    variant="contained"
+                                    className={css.startUsingButton}
+                                    size="small"
+                                    style={{ 
+                                        fontWeight: 'bold',
+                                        width: "auto",
+                                        padding: "4px 8px",
+                                        fontSize: "10px",
+                                        minHeight: "28px",
+                                        whiteSpace: "nowrap",
+                                        flexShrink: 0
+                                    }}
+                                >
+                                    Bắt đầu sử dụng
+                                </Button>
+                            </Box>
+                        </Box>
+                    )}
+                    <Box style={{ 
+                        display: "flex", 
+                        gap: isMobile ? "6px" : "8px",
+                        width: isMobile ? "100%" : "auto",
+                        alignItems: "center"
+                    }}>
+                        <div
+                            onClick={currentSlideIndex === 0 || slides.length === 0 ? undefined : handlePrevious}
+                            style={{
+                                border: "1px solid #999",
+                                borderRadius: "6px",
+                                padding: isMobile ? "6px 10px" : "4px 10px",
+                                backgroundColor: "#ffffff",
+                                cursor: (currentSlideIndex === 0 || slides.length === 0) ? "not-allowed" : "pointer",
+                                opacity: (currentSlideIndex === 0 || slides.length === 0) ? 0.5 : 1,
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                fontSize: isMobile ? "11px" : "13px",
+                                flex: isMobile ? 1 : "none",
+                                minHeight: isMobile ? "32px" : "auto"
+                            }}
+                        >
+                            <span>Quay lại</span>
+                        </div>
+                        <div
+                            onClick={currentSlideIndex === slides.length - 1 || slides.length === 0 ? undefined : handleNext}
+                            style={{
+                                border: "1px solid #999",
+                                borderRadius: "6px",
+                                padding: isMobile ? "6px 10px" : "4px 10px",
+                                backgroundColor: "#ffffff",
+                                cursor: (currentSlideIndex === slides.length - 1 || slides.length === 0) ? "not-allowed" : "pointer",
+                                opacity: (currentSlideIndex === slides.length - 1 || slides.length === 0) ? 0.5 : 1,
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                fontSize: isMobile ? "11px" : "13px",
+                                flex: isMobile ? 1 : "none",
+                                minHeight: isMobile ? "32px" : "auto"
+                            }}
+                        >
+                            <span>Tiếp theo</span>
+                        </div>
+                        {currentUser?.isAdmin && (
+                            <IconButton
+                                onClick={() => setOpenSlideManager(true)}
+                                title="Quản lý Slide"
+                                color="primary"
+                                size={isMobile ? "small" : "small"}
+                                style={{ 
+                                    flexShrink: 0,
+                                    padding: isMobile ? "6px" : undefined
+                                }}
+                            >
+                                <Settings fontSize={isMobile ? "small" : "small"} />
+                            </IconButton>
+                        )}
+                    </Box>
                 </Box>
+
+                {/* Right side: Checkbox and Button (desktop only) */}
+                {!isMobile && (
+                    <Box style={{ 
+                        display: "flex", 
+                        flexDirection: "row",
+                        alignItems: "center", 
+                        gap: "10px",
+                        flexShrink: 0
+                    }}>
+                        <FormControlLabel
+                            control={
+                                <Checkbox
+                                    checked={hideOnboarding || false}
+                                    onChange={onCheckboxChange}
+                                    color="primary"
+                                    size="small"
+                                />
+                            }
+                            label={
+                                <Typography
+                                    variant="body2"
+                                    style={{
+                                        color: 'rgba(0, 0, 0, 0.6)',
+                                        fontWeight: 'normal',
+                                        fontSize: "13px"
+                                    }}
+                                >
+                                    Không hiển thị lại
+                                </Typography>
+                            }
+                            style={{ 
+                                margin: 0, 
+                                width: "auto",
+                                padding: 0,
+                                flexShrink: 0
+                            }}
+                        />
+                        <Button
+                            onClick={onClose}
+                            color="primary"
+                            variant="contained"
+                            className={css.startUsingButton}
+                            size="small"
+                            style={{ 
+                                fontWeight: 'bold',
+                                width: "auto",
+                                padding: "6px 12px",
+                                fontSize: "12px",
+                                minHeight: "32px",
+                                whiteSpace: "nowrap",
+                                flexShrink: 0
+                            }}
+                        >
+                            Bắt đầu sử dụng
+                        </Button>
+                    </Box>
+                )}
             </Box>
 
             {/* Main Content */}
-            <div style={{ flex: 1, padding: "20px", paddingBottom: "10px", height: "100%", overflow: "hidden", display: "flex", flexDirection: "column" }}>
-                <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
+            <div style={{ 
+                flex: 1, 
+                padding: isMobile ? "8px" : "20px", 
+                paddingBottom: isMobile ? "8px" : "10px", 
+                height: "100%", 
+                overflow: "hidden", 
+                display: "flex", 
+                flexDirection: "column",
+                minHeight: 0,
+                maxHeight: "100%"
+            }}>
+                <div style={{ 
+                    flex: 1, 
+                    minHeight: 0, 
+                    maxHeight: "100%",
+                    display: "flex", 
+                    flexDirection: "column",
+                    overflow: "hidden"
+                }}>
                     {slides.length > 0 ? (
                         <Carousel
                             className={css.carousel}
@@ -262,9 +436,11 @@ const OnboardingGuide = ({
                                             width: "100%",
                                             display: "flex",
                                             flexDirection: "column",
-                                            padding: "20px 40px",
+                                            padding: isMobile ? "8px" : "20px 40px",
                                             boxSizing: "border-box",
-                                            overflow: "auto",
+                                            overflow: isMobile ? "auto" : "auto",
+                                            maxHeight: "100%",
+                                            minHeight: 0
                                         }}
                                     >
                                         <SlideEditor
@@ -289,7 +465,8 @@ const OnboardingGuide = ({
                 open={openSlideManager}
                 onClose={() => setOpenSlideManager(false)}
                 fullWidth
-                maxWidth="lg"
+                maxWidth={isMobile ? "sm" : "lg"}
+                fullScreen={isMobile}
             >
                 <DialogTitle>Manage Slides</DialogTitle>
                 <DialogContent>
