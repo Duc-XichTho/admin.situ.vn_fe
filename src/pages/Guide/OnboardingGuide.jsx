@@ -9,10 +9,23 @@ import {
     DialogContent,
     DialogTitle,
     Typography,
+    IconButton,
+    Box,
+    Radio,
+    FormControlLabel,
 } from "@mui/material";
+import { Settings, ArrowBack, ArrowForward } from "@mui/icons-material";
 import { getSettingByType, createOrUpdateSetting } from "../../apis/settingService.jsx";
 import css from "./guide.module.css";
-const OnboardingGuide = ({ openSlideManager, setOpenSlideManager, componentName }) => {
+const OnboardingGuide = ({
+    openSlideManager,
+    setOpenSlideManager,
+    componentName,
+    currentUser,
+    onClose,
+    hideOnboarding,
+    onCheckboxChange,
+}) => {
     const [slides, setSlides] = useState([]);
     const [guidelineSettingId, setGuidelineSettingId] = useState(null);
     const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
@@ -94,13 +107,115 @@ const OnboardingGuide = ({ openSlideManager, setOpenSlideManager, componentName 
         fetchData();
     }, [componentName]);
 
+    const handlePrevious = () => {
+        if (currentSlideIndex > 0) {
+            setCurrentSlideIndex(currentSlideIndex - 1);
+        }
+    };
 
-
+    const handleNext = () => {
+        if (currentSlideIndex < slides.length - 1) {
+            setCurrentSlideIndex(currentSlideIndex + 1);
+        }
+    };
 
     return (
-        <div style={{ display: "flex", height: "95%", width: "100%" }} className={css.onboardingGuide}>
+        <div style={{ display: "flex", height: "100%", width: "100%", flexDirection: "column" }} className={css.onboardingGuide}>
+            {/* Header with Title, Buttons, and DialogActions */}
+            <Box
+                style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    padding: "15px 20px",
+                    borderBottom: "1px solid #e0e0e0",
+                    backgroundColor: "#EDEDED",
+                }}
+            >
+                {/* Left side: Title and Navigation Buttons */}
+                <Box style={{ display: "flex", alignItems: "center", gap: "10px" ,}}>
+                    <Typography variant="h6" style={{ fontWeight: "bold", marginRight: "10px" }}>
+                        TUTORIAL SLIDE
+                    </Typography>
+                    <div
+                        onClick={currentSlideIndex === 0 || slides.length === 0 ? undefined : handlePrevious}
+                        style={{
+                            border: "1px solid #999",
+                            borderRadius: "8px",
+                            padding: "4px 10px",
+                            backgroundColor: "#ffffff",
+                            cursor: (currentSlideIndex === 0 || slides.length === 0) ? "not-allowed" : "pointer",
+                            opacity: (currentSlideIndex === 0 || slides.length === 0) ? 0.5 : 1,
+                            display: "inline-block",
+                            fontSize: "13px"
+                        }}
+                    >
+                        <span>Quay lại</span>
+                    </div>
+                    <div
+                        onClick={currentSlideIndex === slides.length - 1 || slides.length === 0 ? undefined : handleNext}
+                        style={{
+                            border: "1px solid #999",
+                            borderRadius: "8px",
+                            padding: "4px 10px",
+                            backgroundColor: "#ffffff",
+                            cursor: (currentSlideIndex === slides.length - 1 || slides.length === 0) ? "not-allowed" : "pointer",
+                            opacity: (currentSlideIndex === slides.length - 1 || slides.length === 0) ? 0.5 : 1,
+                            display: "inline-block",
+                            fontSize: "13px"
+                        }}
+                    >
+                        <span>Tiếp theo</span>
+                    </div>
+                    {currentUser?.isAdmin && (
+                        <IconButton
+                            onClick={() => setOpenSlideManager(true)}
+                            title="Quản lý Slide"
+                            color="primary"
+                            size="small"
+                        >
+                            <Settings />
+                        </IconButton>
+                    )}
+                </Box>
+
+                {/* Right side: DialogActions */}
+                <Box style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                    <FormControlLabel
+                        control={
+                            <Radio
+                                checked={hideOnboarding || false}
+                                onChange={onCheckboxChange}
+                                color="primary"
+                                size="small"
+                            />
+                        }
+                        label={
+                            <Typography
+                                variant="body2"
+                                style={{
+                                    color: 'rgba(0, 0, 0, 0.6)',
+                                    fontWeight: 'normal'
+                                }}
+                            >
+                                Không hiển thị lại
+                            </Typography>
+                        }
+                    />
+                    <Button
+                        onClick={onClose}
+                        color="primary"
+                        variant="contained"
+                        className={css.startUsingButton}
+                        style={{ fontWeight: 'bold' }}
+                    >
+                        Bắt đầu sử dụng
+                    </Button>
+                </Box>
+            </Box>
+
             {/* Main Content */}
-            <div style={{ flex: 1, padding: "20px", height: "100%", overflow: "hidden", display: "flex", flexDirection: "column" }}>
+            <div style={{ flex: 1, padding: "20px", paddingBottom: "10px", height: "100%", overflow: "hidden", display: "flex", flexDirection: "column" }}>
                 <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
                     {slides.length > 0 ? (
                         <Carousel
@@ -110,17 +225,17 @@ const OnboardingGuide = ({ openSlideManager, setOpenSlideManager, componentName 
                             autoPlay={false}
                             animation="slide"
                             indicators
-                            navButtonsAlwaysVisible
+                            navButtonsAlwaysVisible={false}
                             sx={{ flex: 1, display: "flex", flexDirection: "column" }}
-                            navButtonsProps={{
-                                style: {
-                                    backgroundColor: "rgba(0, 0, 0, 0.5)",
-                                    color: "#FFFFFF",
-                                    borderRadius: "50%",
-                                    width: "40px",
-                                    height: "40px",
-                                }
-                            }}
+                            // navButtonsProps={{
+                            //     style: {
+                            //         backgroundColor: "rgba(0, 0, 0, 0.5)",
+                            //         color: "#FFFFFF",
+                            //         borderRadius: "50%",
+                            //         width: "40px",
+                            //         height: "40px",
+                            //     }
+                            // }}
                             indicatorContainerProps={{
                                 style: {
                                     marginTop: "10px",

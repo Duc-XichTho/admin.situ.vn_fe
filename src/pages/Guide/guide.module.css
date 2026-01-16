@@ -82,9 +82,19 @@
     right: 0;
 }
 
-/* Chỉ áp dụng cho buttons trong onboardingGuide, không ảnh hưởng đến carousel navigation */
-.onboardingGuide :global(.MuiButtonBase-root):not(:global(.MuiIconButton-root)) {
+/* Chỉ áp dụng cho buttons trong onboardingGuide, không ảnh hưởng đến carousel navigation và contained buttons */
+.onboardingGuide :global(.MuiButtonBase-root):not(:global(.MuiIconButton-root)):not(:global(.MuiButton-contained)):not(:global(.startUsingButton)) {
     background-color: transparent !important;
+}
+
+/* Đảm bảo button "Bắt đầu sử dụng" có nền xanh */
+.startUsingButton {
+    background-color: #1976d2 !important;
+    color: #ffffff !important;
+}
+
+.startUsingButton:hover {
+    background-color: #1565c0 !important;
 }
 
 /* Đảm bảo carousel navigation buttons hiển thị đúng - không override */

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { Dialog, DialogContent, DialogActions, Button, Checkbox, FormControlLabel } from '@mui/material';
+import { Dialog, DialogContent } from '@mui/material';
 import { MyContext } from '../../../MyContext';
 import styles from './FloatButtons.module.css';
 import EmailModal from './EmailModal';
@@ -131,45 +131,18 @@ const FloatButtons = ({ onShowGuideline }) => {
 				}}
 			>
 				<DialogContent
-					style={{ marginBottom: '-30px' }}
+					style={{ padding: '0px' }}
 				>
-					<div style={{ display: 'flex', justifyContent: 'space-between', alignItems: "start" }}>
-						<div></div>
-						{(currentUser?.isAdmin || currentUser?.isSecretary) && (
-							<Button
-								variant="contained"
-								color="primary"
-								onClick={() => setOpenSlideManager(true)}
-							>
-								Quản lý Slide
-							</Button>
-						)}
-					</div>
 					<OnboardingGuide
 						componentName="K9"
 						openSlideManager={openSlideManager}
 						setOpenSlideManager={setOpenSlideManager}
+						currentUser={currentUser}
+						onClose={handleCloseDialog}
+						hideOnboarding={hideOnboarding}
+						onCheckboxChange={handleCheckboxChange}
 					/>
 				</DialogContent>
-				<DialogActions>
-					<FormControlLabel
-						control={
-							<Checkbox
-								checked={hideOnboarding}
-								onChange={handleCheckboxChange}
-								color="primary"
-							/>
-						}
-						label="Không hiển thị lại"
-					/>
-					<Button
-						onClick={handleCloseDialog}
-						color="primary"
-						style={{ fontWeight: 'bold' }}
-					>
-						Bắt đầu sử dụng
-					</Button>
-				</DialogActions>
 			</Dialog>
 		</>
 	);
