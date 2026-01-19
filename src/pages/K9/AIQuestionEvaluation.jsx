@@ -7,6 +7,7 @@ import { getK9ByCidType, getK9ByType, updateK9 } from '../../apis/k9Service.jsx'
 import { createOrUpdateSetting, getSettingByType } from '../../apis/settingService.jsx';
 import { MODEL_AI_LIST } from '../Admin/AIGen/AI_CONST.js';
 import QuizEditorModal from '../K9Management/components/QuizEditorModal.jsx';
+import QuestionContentModal from '../K9Management/components/QuestionContentModal.jsx';
 import EditDetailModal from './components/EditDetailModal.jsx';
 
 const { TabPane } = Tabs;
@@ -24,6 +25,13 @@ const AIQuestionEvaluation = () => {
     const [quizEditorVisible, setQuizEditorVisible] = useState(false);
     const [quizEditorRecord, setQuizEditorRecord] = useState(null);
     const [savingQuiz, setSavingQuiz] = useState(false);
+    const [questionContentModalVisible, setQuestionContentModalVisible] = useState(false);
+    const [selectedQuestionContent, setSelectedQuestionContent] = useState(null);
+    const [selectedQuestionContentTitle, setSelectedQuestionContentTitle] = useState('');
+    const [selectedQuestionContentRecord, setSelectedQuestionContentRecord] = useState(null);
+    const [theoryModalVisible, setTheoryModalVisible] = useState(false);
+    const [selectedTheoryRecord, setSelectedTheoryRecord] = useState(null);
+    const [loadingTheoryId, setLoadingTheoryId] = useState(null);
     const [settingsModalVisible, setSettingsModalVisible] = useState(false);
     const [systemMessage, setSystemMessage] = useState('');
     const [model, setModel] = useState(MODEL_AI_LIST[0]?.value || '');
@@ -37,6 +45,7 @@ const AIQuestionEvaluation = () => {
     const [selectedFeedback, setSelectedFeedback] = useState('');
     const [feedbackFilter, setFeedbackFilter] = useState('all'); // 'all', 'has', 'none'
     const [feedbackSearchText, setFeedbackSearchText] = useState('');
+    const [tag4Options, setTag4Options] = useState([]);
 
     // K9 data for each tab
     const [k9Data, setK9Data] = useState({
@@ -79,6 +88,22 @@ const AIQuestionEvaluation = () => {
             }
         } catch (error) {
             console.error('Error loading settings:', error);
+        }
+    };
+
+    // Load tag4 options for Program column
+    const loadTag4Options = async () => {
+        try {
+            const tag4Settings = await getSettingByType('TAG4_OPTIONS');
+            if (tag4Settings?.setting) {
+                setTag4Options(tag4Settings.setting);
+            } else {
+                // Default empty array if no settings exist
+                setTag4Options([]);
+            }
+        } catch (error) {
+            console.error('Error loading tag4 options:', error);
+            setTag4Options([]);
         }
     };
 
@@ -233,6 +258,7 @@ const AIQuestionEvaluation = () => {
     useEffect(() => {
         loadK9Data();
         loadSettings();
+        loadTag4Options();
     }, []);
 
     // Memoize current tab data to avoid unnecessary recalculations
@@ -303,6 +329,15 @@ const AIQuestionEvaluation = () => {
         return data;
     }, [searchText, feedbackFilter, feedbackSearchText, currentTabData]);
 
+    // Handle quiz view - memoized to prevent re-renders
+    const handleViewQuestionContent = useCallback((record) => {
+        const questionContent = record.questionContent || record.quizContent || record.quizzContent;
+        setSelectedQuestionContent(questionContent);
+        setSelectedQuestionContentTitle(record.title || 'Không có tiêu đề');
+        setSelectedQuestionContentRecord(record);
+        setQuestionContentModalVisible(true);
+    }, []);
+
     // Handle quiz edit - memoized to prevent re-renders
     const handleEditQuiz = useCallback((record) => {
         setQuizEditorRecord(record);
@@ -317,19 +352,28 @@ const AIQuestionEvaluation = () => {
         if (typeof questionContent === 'object' && !Array.isArray(questionContent)) {
             const quizCount = Array.isArray(questionContent.questionQuiz) ? questionContent.questionQuiz.length : 0;
             const essayCount = Array.isArray(questionContent.questionEssay) ? questionContent.questionEssay.length : 0;
+            const hasQuiz = quizCount > 0 || essayCount > 0;
+            
             return (
                 <div>
-                    <div>Quiz: {quizCount} câu</div>
-                    <div>Essay: {essayCount} câu</div>
-                    <Button
-                        type="link"
-                        size="small"
-                        onClick={() => {
-                            handleEditQuiz(record);
-                        }}
-                    >
-                        Xem chi tiết
-                    </Button>
+                    {hasQuiz ? (
+                        <>
+                            <div>Quiz: {quizCount} câu</div>
+                            <div>Essay: {essayCount} câu</div>
+                            <Button
+                                type="link"
+                                size="small"
+                                onClick={() => {
+                                    handleViewQuestionContent(record);
+                                }}
+                                style={{ padding: 0, height: 'auto' }}
+                            >
+                                Xem chi tiết
+                            </Button>
+                        </>
+                    ) : (
+                        <span style={{ color: '#999' }}>Không có</span>
+                    )}
                 </div>
             );
         }
@@ -354,7 +398,7 @@ const AIQuestionEvaluation = () => {
             );
         }
         return <div>{text}</div>;
-    }, [handleEditQuiz, setSelectedQuestion, setPreviewVisible]);
+    }, [handleViewQuestionContent, setSelectedQuestion, setPreviewVisible]);
 
     const renderDetail = useCallback((text) => {
         if (!text) return '-';
@@ -407,39 +451,48 @@ const AIQuestionEvaluation = () => {
         );
     }, []);
 
-    const renderAction = useCallback((_, record) => (
-        <Space>
-            {record.questionContent && (
-                <Button
-                    type="link"
-                    size="small"
-                    onClick={() => {
-                        const questionContent = record.questionContent;
-                        if (typeof questionContent === 'object' && !Array.isArray(questionContent)) {
-                            handleEditQuiz(record);
-                        } else {
-                            setSelectedQuestion({ questionContent: String(questionContent) });
-                            setPreviewVisible(true);
-                        }
-                    }}
-                >
-                    Xem Quiz
-                </Button>
-            )}
-            {record.detail && (
-                <Button
-                    type="link"
-                    size="small"
-                    onClick={() => {
-                        setSelectedDetailRecord(record);
-                        setDetailModalVisible(true);
-                    }}
-                >
-                    Xem Detail
-                </Button>
-            )}
-        </Space>
-    ), [handleEditQuiz, setSelectedQuestion, setPreviewVisible, setSelectedDetailRecord, setDetailModalVisible]);
+    const renderAction = useCallback((_, record) => {
+        const questionContent = record.questionContent || record.quizContent || record.quizzContent;
+        const hasQuiz = questionContent && (
+            (typeof questionContent === 'object' && !Array.isArray(questionContent) && 
+             ((questionContent.questionQuiz && questionContent.questionQuiz.length > 0) ||
+              (questionContent.questionEssay && questionContent.questionEssay.length > 0))) ||
+            (typeof questionContent === 'string' && questionContent.trim())
+        );
+
+        return (
+            <Space>
+                {hasQuiz && (
+                    <Button
+                        type="link"
+                        size="small"
+                        onClick={() => {
+                            if (typeof questionContent === 'object' && !Array.isArray(questionContent)) {
+                                handleViewQuestionContent(record);
+                            } else {
+                                setSelectedQuestion({ questionContent: String(questionContent) });
+                                setPreviewVisible(true);
+                            }
+                        }}
+                    >
+                        Xem Quiz
+                    </Button>
+                )}
+                {record.detail && (
+                    <Button
+                        type="link"
+                        size="small"
+                        onClick={() => {
+                            setSelectedDetailRecord(record);
+                            setDetailModalVisible(true);
+                        }}
+                    >
+                        Xem Detail
+                    </Button>
+                )}
+            </Space>
+        );
+    }, [handleViewQuestionContent, setSelectedQuestion, setPreviewVisible, setSelectedDetailRecord, setDetailModalVisible]);
 
     // Handle quiz save
     const handleQuizSave = async (questionContent) => {
@@ -475,71 +528,187 @@ const AIQuestionEvaluation = () => {
         }
     };
 
+    // Handle question content update from QuestionContentModal
+    const handleUpdateQuestionContent = async (newQuestionContent) => {
+        if (!selectedQuestionContentRecord) return;
+
+        try {
+            await updateK9({
+                id: selectedQuestionContentRecord.id,
+                questionContent: newQuestionContent,
+            });
+
+            message.success('Cập nhật thành công');
+
+            // Update local data
+            const updater = (list) => list.map(item =>
+                item.id === selectedQuestionContentRecord.id
+                    ? { ...item, questionContent: newQuestionContent }
+                    : item
+            );
+
+            setK9Data(prev => ({
+                news: updater(prev.news || []),
+                caseTraining: updater(prev.caseTraining || []),
+                longForm: updater(prev.longForm || []),
+            }));
+
+            setSelectedQuestionContent(newQuestionContent);
+        } catch (error) {
+            console.error('Error updating question content:', error);
+            message.error('Lỗi khi cập nhật: ' + error.message);
+        }
+    };
+
+
+    // Handle open theory modal
+    const handleOpenTheoryModal = useCallback(async (record) => {
+        if (!record.cid) {
+            message.warning('Bản ghi này không có CID');
+            return;
+        }
+
+        setLoadingTheoryId(record.id);
+        try {
+            const cidData = await getK9ByCidType(record.cid, 'news');
+            if (cidData && cidData.length > 0) {
+                const theoryItem = cidData[0];
+                setSelectedTheoryRecord(theoryItem);
+                setTheoryModalVisible(true);
+            } else {
+                message.info('Không tìm thấy bản ghi lý thuyết liên quan');
+            }
+        } catch (error) {
+            console.error('Error fetching theory record:', error);
+            message.error('Lỗi khi tải bản ghi lý thuyết');
+        } finally {
+            setLoadingTheoryId(null);
+        }
+    }, []);
 
     // Memoize columns to prevent table re-render on every component update
-    const columns = useMemo(() => [
-        {
-            title: 'ID',
-            dataIndex: 'id',
-            key: 'id',
-            width: 80,
-            fixed: 'left',
-            sorter: (a, b) => a.id - b.id,
-        },
-        {
-            title: 'CID',
-            dataIndex: 'cid',
-            key: 'cid',
-            width: 100,
-            render: (cid) => cid ? <Tag color="blue">{cid}</Tag> : '-',
-        },
-        {
-            title: 'Question Content',
-            dataIndex: 'questionContent',
-            key: 'questionContent',
-            width: 150,
-            ellipsis: {
-                showTitle: false,
+    const columns = useMemo(() => {
+        const baseColumns = [
+            {
+                title: 'ID',
+                dataIndex: 'id',
+                key: 'id',
+                width: 80,
+                fixed: 'left',
+                sorter: (a, b) => a.id - b.id,
             },
-            render: renderQuestionContent,
-        },
-        {
-            title: 'Title',
-            dataIndex: 'title',
-            key: 'title',
-            width: 400,
-            render: (text, record) => {
-                return <div>{record.title}</div>;
+            {
+                title: 'CID',
+                dataIndex: 'cid',
+                key: 'cid',
+                width: 100,
+                render: (cid) => cid ? <Tag color="blue">{cid}</Tag> : '-',
             },
-        },
-        {
-            title: 'Detail',
-            dataIndex: 'detail',
-            key: 'detail',
-            width: 400,
-            ellipsis: {
-                showTitle: false,
+        ];
+
+        // Thêm cột "Lý thuyết" chỉ ở tab caseTraining
+        if (activeTab === 'caseTraining') {
+            baseColumns.push({
+                title: 'Lý thuyết',
+                key: 'theory',
+                width: 120,
+                render: (_, record) => {
+                    if (!record.cid) {
+                        return <span style={{ color: '#999' }}>-</span>;
+                    }
+                    const isLoading = loadingTheoryId === record.id;
+                    return (
+                        <Button
+                            type="link"
+                            size="small"
+                            onClick={() => handleOpenTheoryModal(record)}
+                            loading={isLoading}
+                            style={{ padding: 0 }}
+                        >
+                            Xem/Chỉnh sửa
+                        </Button>
+                    );
+                },
+            });
+        }
+
+        return [
+            ...baseColumns,
+            {
+                title: 'Program',
+                dataIndex: 'tag4',
+                key: 'tag4',
+                width: 300,
+                ellipsis: {
+                    showTitle: false,
+                },
+                render: (tag4) => {
+                    if (!Array.isArray(tag4) || tag4.length === 0) {
+                        return <span style={{ color: '#999' }}>-</span>;
+                    }
+                    return (
+                        <div>
+                            {tag4.map((val, index) => {
+                                const option = tag4Options.find((opt) => opt.value === val);
+                                return (
+                                    <span key={index}>
+                                        {option?.label || val}
+                                        {index < tag4.length - 1 && ', '}
+                                    </span>
+                                );
+                            })}
+                        </div>
+                    );
+                },
             },
-            render: renderDetail,
-        },
-        {
-            title: 'AI Feedback',
-            dataIndex: 'ai_feedback_quiz',
-            key: 'ai_feedback_quiz',
-            width: 400,
-            ellipsis: {
-                showTitle: false,
+            {
+                title: 'Question Content',
+                dataIndex: 'questionContent',
+                key: 'questionContent',
+                width: 150,
+                ellipsis: {
+                    showTitle: false,
+                },
+                render: renderQuestionContent,
             },
-            render: renderFeedback,
-        },
-        {
-            title: 'Thao tác',
-            key: 'action',
-            width: 250,
-            fixed: 'right',
-            render: renderAction,
-        },
-    ], [renderQuestionContent, renderDetail, renderFeedback, renderAction]);
+            {
+                title: 'Title',
+                dataIndex: 'title',
+                key: 'title',
+                width: 400,
+                render: (text, record) => {
+                    return <div>{record.title}</div>;
+                },
+            },
+            {
+                title: 'Detail',
+                dataIndex: 'detail',
+                key: 'detail',
+                width: 400,
+                ellipsis: {
+                    showTitle: false,
+                },
+                render: renderDetail,
+            },
+            {
+                title: 'AI Feedback',
+                dataIndex: 'ai_feedback_quiz',
+                key: 'ai_feedback_quiz',
+                width: 400,
+                ellipsis: {
+                    showTitle: false,
+                },
+                render: renderFeedback,
+            },
+            {
+                title: 'Thao tác',
+                key: 'action',
+                width: 250,
+                fixed: 'right',
+                render: renderAction,
+            },
+        ];
+    }, [activeTab, handleOpenTheoryModal, loadingTheoryId, tag4Options, renderQuestionContent, renderDetail, renderFeedback, renderAction]);
 
     return (
         <div style={{ padding: '24px', maxWidth: '1700px', margin: '0 auto' }}>
@@ -692,6 +861,20 @@ const AIQuestionEvaluation = () => {
                 onSave={handleQuizSave}
             />
 
+            {/* Question Content Modal */}
+            <QuestionContentModal
+                visible={questionContentModalVisible}
+                onCancel={() => {
+                    setQuestionContentModalVisible(false);
+                    setSelectedQuestionContent(null);
+                    setSelectedQuestionContentTitle('');
+                    setSelectedQuestionContentRecord(null);
+                }}
+                questionContent={selectedQuestionContent}
+                recordTitle={selectedQuestionContentTitle}
+                onUpdateQuestionContent={handleUpdateQuestionContent}
+            />
+
             {/* Detail Modal */}
             <EditDetailModal
                 visible={detailModalVisible}
@@ -712,6 +895,29 @@ const AIQuestionEvaluation = () => {
                         news: updater(prev.news || []),
                         caseTraining: updater(prev.caseTraining || []),
                         longForm: updater(prev.longForm || []),
+                    }));
+                }}
+            />
+
+            {/* Theory Modal - chỉnh sửa bản ghi lý thuyết */}
+            <EditDetailModal
+                visible={theoryModalVisible}
+                onClose={() => {
+                    setTheoryModalVisible(false);
+                    setSelectedTheoryRecord(null);
+                }}
+                item={selectedTheoryRecord}
+                onUpdate={(updatedItem) => {
+                    // Update local data - cập nhật trong news data
+                    const updater = (list) => list.map(item =>
+                        item.id === updatedItem.id
+                            ? { ...item, detail: updatedItem.detail }
+                            : item
+                    );
+
+                    setK9Data(prev => ({
+                        ...prev,
+                        news: updater(prev.news || []),
                     }));
                 }}
             />
