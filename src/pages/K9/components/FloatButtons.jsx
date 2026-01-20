@@ -140,10 +140,10 @@ const FloatButtons = ({ onShowGuideline }) => {
 						width: 'calc(100vw - 20px)',
 						borderRadius: '8px',
 					} : {
-						width: '80vw',
-						height: '80vh',
+						width: '75vw',
+						height: '95vh',
 						maxWidth: 'none',
-						maxHeight: '80vh',
+						maxHeight: '95vh',
 					},
 				}}
 			>

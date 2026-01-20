@@ -59,11 +59,11 @@ const SlideManager = ({ slides, setSlides, table = "Onboarding-Guide", tableId =
             editingSlide !== null
                 ? slides.map((slide) =>
                     slide.order === editingSlide 
-                        ? { ...editingSlideData, order: editingSlide } 
-                        : slide
+                        ? { ...slide, ...editingSlideData, order: editingSlide } 
+                        : { ...slide }
                 )
                 : [
-                    ...slides,
+                    ...slides.map(slide => ({ ...slide })),
                     {
                         ...editingSlideData,
                         order: slides.length + 1,
@@ -120,26 +120,24 @@ const SlideManager = ({ slides, setSlides, table = "Onboarding-Guide", tableId =
         
         if (direction === "up" && currentIndex > 0) {
             // Đổi chỗ với slide trước đó
-            const newSlides = [...sortedSlides];
-            [newSlides[currentIndex - 1], newSlides[currentIndex]] = [
-                newSlides[currentIndex],
-                newSlides[currentIndex - 1]
-            ];
-            // Cập nhật lại order
-            newSlides.forEach((slide, index) => {
-                slide.order = index + 1;
+            const newSlides = sortedSlides.map((slide, index) => {
+                if (index === currentIndex - 1) {
+                    return { ...sortedSlides[currentIndex], order: index + 1 };
+                } else if (index === currentIndex) {
+                    return { ...sortedSlides[currentIndex - 1], order: index + 1 };
+                }
+                return { ...slide, order: index + 1 };
             });
             setSlides(newSlides);
         } else if (direction === "down" && currentIndex < sortedSlides.length - 1) {
             // Đổi chỗ với slide sau đó
-            const newSlides = [...sortedSlides];
-            [newSlides[currentIndex], newSlides[currentIndex + 1]] = [
-                newSlides[currentIndex + 1],
-                newSlides[currentIndex]
-            ];
-            // Cập nhật lại order
-            newSlides.forEach((slide, index) => {
-                slide.order = index + 1;
+            const newSlides = sortedSlides.map((slide, index) => {
+                if (index === currentIndex) {
+                    return { ...sortedSlides[currentIndex + 1], order: index + 1 };
+                } else if (index === currentIndex + 1) {
+                    return { ...sortedSlides[currentIndex], order: index + 1 };
+                }
+                return { ...slide, order: index + 1 };
             });
             setSlides(newSlides);
         }
@@ -161,7 +159,12 @@ const SlideManager = ({ slides, setSlides, table = "Onboarding-Guide", tableId =
             {/* Dialog thêm/sửa */}
             <Dialog 
                 open={openDialog} 
-                onClose={handleCloseDialog} 
+                onClose={(event, reason) => {
+                    // Chỉ cho phép đóng bằng nút Hủy/Lưu, không cho đóng khi click ra ngoài
+                    if (reason !== 'backdropClick') {
+                        handleCloseDialog();
+                    }
+                }}
                 fullWidth 
                 maxWidth="lg"
                 PaperProps={{

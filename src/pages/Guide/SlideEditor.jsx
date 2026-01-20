@@ -26,9 +26,14 @@ const SlideEditor = ({ slide, onContentChange, isEditable = true }) => {
     useEffect(() => {
         if (editor && slide) {
             const content = slide.content || '';
-            editor.commands.setContent(content);
+            // Use a more reliable way to detect changes - compare with current editor content
+            const currentContent = editor.getHTML();
+            // Always update if slide object reference changed or content/title changed
+            if (currentContent !== content) {
+                editor.commands.setContent(content);
+            }
         }
-    }, [slide?.order, editor]);
+    }, [slide, editor]);
     
     // Save content when editor changes
     useEffect(() => {
@@ -59,10 +64,10 @@ const SlideEditor = ({ slide, onContentChange, isEditable = true }) => {
             width: '100%',
             display: 'flex', 
             flexDirection: 'column',
-            border: '1px solid #e0e0e0',
+            // border: '1px solid #e0e0e0',
             borderRadius: '8px',
             overflow: 'hidden',
-            backgroundColor: isEditable ? '#ffffff' : '#fafafa',
+            // backgroundColor: isEditable ? '#ffffff' : '#fafafa',
         }}>
             {isEditable && (
                 <Box sx={{ flexShrink: 0 }}>
@@ -94,6 +99,7 @@ const SlideEditor = ({ slide, onContentChange, isEditable = true }) => {
             >
                 {isEditable ? (
                     <TextField
+                        fullWidth
                         value={slide?.title || ''}
                         onChange={(e) => handleTitleChange(e.target.value)}
                         placeholder="Nhập tiêu đề cho slide"
@@ -108,6 +114,7 @@ const SlideEditor = ({ slide, onContentChange, isEditable = true }) => {
                             backgroundColor: '#fffbe6',
                             padding: '12px',
                             borderRadius: '4px',
+                            width: '100%',
                             '& .MuiInputBase-input': {
                                 cursor: 'text',
                             }

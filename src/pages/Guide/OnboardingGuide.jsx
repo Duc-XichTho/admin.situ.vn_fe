@@ -374,8 +374,8 @@ const OnboardingGuide = ({
             {/* Main Content */}
             <div style={{ 
                 flex: 1, 
-                padding: isMobile ? "8px" : "20px", 
-                paddingBottom: isMobile ? "8px" : "10px", 
+                padding: isMobile ? "8px" : "0px", 
+                paddingBottom: isMobile ? "8px" : "15px", 
                 height: "100%", 
                 overflow: "hidden", 
                 display: "flex", 
@@ -430,13 +430,13 @@ const OnboardingGuide = ({
                                 .sort((a, b) => a.order - b.order)
                                 .map((slide, index) => (
                                     <div
-                                        key={slide.order}
+                                        key={`${slide.order}-${slide.content?.substring(0, 50) || ''}-${slide.title || ''}`}
                                         style={{
                                             height: "100%",
                                             width: "100%",
                                             display: "flex",
                                             flexDirection: "column",
-                                            padding: isMobile ? "8px" : "20px 40px",
+                                            padding: isMobile ? "8px" : "0px 20px",
                                             boxSizing: "border-box",
                                             overflow: isMobile ? "auto" : "auto",
                                             maxHeight: "100%",
