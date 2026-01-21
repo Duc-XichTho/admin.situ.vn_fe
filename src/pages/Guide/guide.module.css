@@ -123,10 +123,14 @@
     background-color: #1565c0 !important;
 }
 
-/* Đảm bảo carousel navigation buttons hiển thị đúng - không override */
-.onboardingGuide :global(.MuiIconButton-root[class*="Carousel"]) {
-    background-color: rgba(0, 0, 0, 0.5) !important;
-    color: #FFFFFF !important;
+/* Ẩn hoàn toàn các nút navigation của carousel */
+.carousel :global(.MuiIconButton-root) {
+    display: none !important;
+}
+
+/* Ẩn các button navigation của carousel */
+.carousel button[class*="Carousel"] {
+    display: none !important;
 }
 
 /* Đảm bảo icon SVG trong carousel hiển thị */
