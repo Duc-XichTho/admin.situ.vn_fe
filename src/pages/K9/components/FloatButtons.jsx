@@ -134,16 +134,16 @@ const FloatButtons = ({ onShowGuideline }) => {
 				PaperProps={{
 					style: isMobile ? {
 						margin: '20px 10px 30px 10px',
-						maxHeight: 'calc(100vh - 50px)',
-						height: 'calc(100vh - 50px)',
+						maxHeight: 'calc(100vh - 100px)',
+						height: 'calc(100vh - 100px)',
 						maxWidth: 'calc(100vw - 20px)',
 						width: 'calc(100vw - 20px)',
 						borderRadius: '8px',
 					} : {
 						width: '75vw',
-						height: '95vh',
+						height: '90vh',
 						maxWidth: 'none',
-						maxHeight: '95vh',
+						maxHeight: '90vh',
 					},
 				}}
 			>
