@@ -123,7 +123,7 @@ const RatingPopup = ({
             okText={userRating ? undefined : "Lưu đánh giá"}
             cancelText="Đóng"
             footer={userRating ? null : undefined}
-            width={500}
+            width={500} 
         >
             <div style={{ height: '100%' , overflowY: 'auto'}}>
                 <div style={{ marginBottom: 16 }}>

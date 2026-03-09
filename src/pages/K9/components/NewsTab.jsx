@@ -1,23 +1,28 @@
-import { CloseOutlined, SearchOutlined } from '@ant-design/icons';
-import { Button, Input, Modal } from 'antd';
+import { ClockCircleOutlined, CloseOutlined, SearchOutlined, ShareAltOutlined, StarOutlined } from '@ant-design/icons';
+import { Button, Checkbox, Image, Input, Modal, Space, Tooltip } from 'antd';
+import DOMPurify from 'dompurify';
 import katex from 'katex';
 import 'katex/dist/katex.min.css';
 import { marked } from 'marked';
 import markedKatex from 'marked-katex-extension';
-import React, { useContext, useEffect, useMemo, useRef, useState } from 'react';
+import { useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { getK9ByCidTypePublic, getK9ByIdPublic, getSettingByTypePublic } from '../../../apis/public/publicService.jsx';
 import { getListQuestionHistoryByUser } from '../../../apis/questionHistoryService.jsx';
 import { getAllUserClass } from '../../../apis/userClassService';
 import { getCurrentUserLogin, updateUser } from '../../../apis/userService';
 import PaymentModal from '../../../components/PaymentModal/PaymentModal';
+import PreviewFileModal from '../../../components/PreviewFile/PreviewFileModal';
+import { formatDateFromTimestamp } from '../../../generalFunction/format.js';
+import { BookMark_Icon_Off, BookMark_Icon_On } from '../../../icon/IconSvg.jsx';
 import { MyContext } from '../../../MyContext';
 import styles from '../K9.module.css';
+import ContentPanel from './ContentPanel.jsx';
 import EditDetailModal from './EditDetailModal.jsx';
 import FeedbackModal from './FeedbackModal.jsx';
 import K9Filters from './K9Filters';
 import NewsItem from './NewsItem';
 import newsTabStyles from './NewsTab.module.css';
-
+import RatingPopup from './RatingPopup.jsx';
 
 // Cấu hình marked với KaTeX extension
 marked.use(markedKatex({
@@ -26,8 +31,7 @@ marked.use(markedKatex({
   trust: true
 }));
 
-import PreviewFileModal from '../../../components/PreviewFile/PreviewFileModal';
-import ContentPanel from './ContentPanel.jsx';
+
 const NewsTab = ({
   currentTab,
   updateURL,
@@ -146,9 +150,10 @@ const NewsTab = ({
   const [previewFile, setPreviewFile] = useState(null);
 
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+  const [showRatingPopup, setShowRatingPopup] = useState(false);
 
   // Quiz/Practice popover state
- const [relatedCaseTrainingItems, setRelatedCaseTrainingItems] = useState([]);
+  const [relatedCaseTrainingItems, setRelatedCaseTrainingItems] = useState([]);
   const [relatedQuizScores, setRelatedQuizScores] = useState({});
 
   // Package purchase modal states
@@ -169,9 +174,44 @@ const NewsTab = ({
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const panelRef = useRef(null);
 
+  // PC modal split states
+  const [modalPcSplitRatio, setModalPcSplitRatio] = useState(0.25);
+  const [modalResizeStartRatio, setModalResizeStartRatio] = useState(0.25);
+
   // Infinite scroll states
   const [visibleItems, setVisibleItems] = useState([]);
   const [renderedCount, setRenderedCount] = useState(20);
+
+  const resizableContainerRef = useRef(null);
+
+  // Handle resizing of PC modal panels
+  useEffect(() => {
+    const handleMouseMove = (e) => {
+      if (modalResizeStartRatio !== null && resizableContainerRef.current) {
+        const rect = resizableContainerRef.current.getBoundingClientRect();
+        const newRatio = (e.clientX - rect.left) / rect.width;
+        // Limit range between 15% and 50%
+        if (newRatio > 0.15 && newRatio < 0.5) {
+          setModalPcSplitRatio(newRatio);
+        }
+      }
+    };
+
+    const handleMouseUp = () => {
+      setModalResizeStartRatio(null);
+    };
+
+    if (modalResizeStartRatio !== null) {
+      window.addEventListener('mousemove', handleMouseMove);
+      window.addEventListener('mouseup', handleMouseUp);
+    }
+
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [modalResizeStartRatio]);
+
 
   // Persist filters to localStorage
   const NEWS_FILTERS_KEY = 'k9_news_filters_v1' + currentTab;
@@ -261,7 +301,7 @@ const NewsTab = ({
       // Find the index of the item in filteredItems
       const filteredItems = getFilteredNewsWithFilters();
       const itemIndex = filteredItems.findIndex(i => i.id === id);
-      
+
       if (itemIndex >= 0) {
         // If item is beyond renderedCount, increase renderedCount to include it
         if (itemIndex >= renderedCount) {
@@ -861,14 +901,14 @@ const NewsTab = ({
       return;
     }
     try {
-      const data = await getK9ByCidTypePublic(cid, 'caseTraining' , currentUser?.id);
+      const data = await getK9ByCidTypePublic(cid, 'caseTraining', currentUser?.id);
       if (data && Array.isArray(data)) {
         // Filter only items with questionContent (quiz items)
-        const quizItems = data.filter(item => 
-          item.status === 'published'  
+        const quizItems = data.filter(item =>
+          item.status === 'published'
         );
         setRelatedCaseTrainingItems(quizItems);
-        
+
         // Fetch quiz scores for these items
         if (currentUser?.id && quizItems.length > 0) {
           try {
@@ -912,12 +952,12 @@ const NewsTab = ({
 
   // Fetch related caseTraining when selectedItem changes
   useEffect(() => {
-    if ( activeTab === 'stream' && selectedItem && selectedItem.cid && currentUser?.id) {
+    if (activeTab === 'stream' && selectedItem && selectedItem.cid && currentUser?.id) {
       fetchRelatedCaseTrainingItems(selectedItem.cid);
     } else {
       setRelatedCaseTrainingItems([]);
     }
-  }, [selectedItem?.cid , activeTab , currentUser?.id]);
+  }, [selectedItem?.cid, activeTab, currentUser?.id]);
 
 
 
@@ -1031,6 +1071,152 @@ const NewsTab = ({
     } else {
       console.log('Element not found at index:', headingIndex);
     }
+  };
+
+  // Render Sidebar Content for PC Modal (Grid View)
+  const renderArticleSidebarContent = (item) => {
+    if (!item) return null;
+    return (
+      <div className={`${newsTabStyles.articleSidebar} ${newsTabStyles.sidebarPC}`}>
+        {/* Row 1: ID, Share, Rating */}
+        <div className={newsTabStyles.sidebarRow1}>
+          <span>ID: {item.id}</span>
+          <div
+            onClick={() => onShare(item)}
+            className={newsTabStyles.sidebarActionItem}
+          >
+            <ShareAltOutlined /> Chia sẻ
+          </div>
+          <div
+            onClick={() => setShowRatingPopup(true)}
+            className={newsTabStyles.sidebarActionItem}
+          >
+            <StarOutlined style={{ color: '#faad14' }} /> {item.scoreFeedback != null ? (
+              <span style={{ fontWeight: '500' }}>
+                {Number(item.scoreFeedback || 0).toFixed(2)}
+              </span>
+            ) : (
+              "Đánh giá"
+            )}
+          </div>
+        </div>
+
+        {/* Summary Section */}
+        {item.summary && (
+          <div className={newsTabStyles.sidebarShortformSection}>
+            <div
+              className={newsTabStyles.sidebarSummaryText}
+              dangerouslySetInnerHTML={{
+                __html: (() => {
+                  const { processedText, latexBlocks } = preprocessLatex(item.summary || '');
+                  let html = marked.parse(processedText);
+                  const finalHtml = postprocessLatex(html, latexBlocks);
+                  return DOMPurify.sanitize(finalHtml);
+                })(),
+              }}
+            />
+          </div>
+        )}
+
+        {/* Metadata Line: Date & Module */}
+        <div className={newsTabStyles.sidebarMetadataRow}>
+          {(item.updatedAt || item.createdAt) && (
+            <span className={newsTabStyles.sidebarMetadataDate}>
+              <ClockCircleOutlined />
+              {formatDateFromTimestamp(item.updatedAt || item.createdAt)}
+            </span>
+          )}
+          {item.tag4 && Array.isArray(item.tag4) && item.tag4.length > 0 && (
+            <div className={newsTabStyles.sidebarRelatedModuleWrapper}>
+              <Tooltip title={`Related module: ${item.tag4.join(', ')}`} mouseEnterDelay={0.5}>
+                <div className={newsTabStyles.sidebarRelatedModuleText}>
+                  Related module: {item.tag4.join(', ')}
+                </div>
+              </Tooltip>
+            </div>
+          )}
+        </div>
+
+        {/* Divider */}
+        <div className={newsTabStyles.sidebarDividerLine} />
+
+        {/* Quiz Section */}
+        {activeTab === 'stream' && relatedCaseTrainingItems.length > 0 && (
+          <div>
+            <div className={newsTabStyles.quizSectionHeader}>
+              Các bài kiểm tra liên quan ({relatedCaseTrainingItems.length})
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              {relatedCaseTrainingItems.map((quizItem) => {
+                const quizScore = relatedQuizScores[quizItem.id];
+                const hasScore = quizScore !== undefined && quizScore !== null;
+                const pass = hasScore && Number(quizScore) >= 70;
+
+                return (
+                  <div
+                    key={quizItem.id}
+                    onClick={() => {
+                      const url = new URL(`${window.location.origin}/home`);
+                      url.searchParams.set('tab', 'caseTraining');
+                      url.searchParams.set('item', quizItem.id);
+                      if (selectedProgram && selectedProgram !== 'all') {
+                        url.searchParams.set('program', selectedProgram);
+                      }
+                      window.open(url.toString(), '_blank');
+                    }}
+                    className={newsTabStyles.quizItemCard}
+                  >
+                    {(quizItem.avatarUrl || quizItem.image || quizItem.coverImage) && (
+                      <div className={newsTabStyles.quizItemThumbnail}>
+                        <Image
+                          src={quizItem.avatarUrl || quizItem.image || quizItem.coverImage}
+                          alt={quizItem.title}
+                          width={95}
+                          height={70}
+                          className={newsTabStyles.quizItemImage}
+                          preview={false}
+                        />
+                      </div>
+                    )}
+                    <div className={newsTabStyles.quizItemContent}>
+                      {/* Row 1: Title */}
+                      <Tooltip title={quizItem.title} mouseEnterDelay={0.5}>
+                        <div className={newsTabStyles.quizItemTitle}>
+                          {quizItem.title}
+                        </div>
+                      </Tooltip>
+
+                      {/* Row 2: Summary */}
+                      {quizItem.summary && (
+                        <Tooltip title={quizItem.summary} mouseEnterDelay={0.5}>
+                          <div className={newsTabStyles.quizItemSummaryText}>
+                            {quizItem.summary}
+                          </div>
+                        </Tooltip>
+                      )}
+
+                      {/* Row 3: Status and ID */}
+                      <div className={newsTabStyles.quizItemMetaRow}>
+                        <span className={newsTabStyles.quizItemID}>ID: {quizItem.id}</span>
+                        {hasScore ? (
+                          <span className={`${newsTabStyles.quizStatusBadge} ${pass ? newsTabStyles.quizStatusPass : newsTabStyles.quizStatusOther}`}>
+                            {quizScore}/100
+                          </span>
+                        ) : (
+                          <span className={`${newsTabStyles.quizStatusBadge} ${newsTabStyles.quizStatusFail}`}>
+                            Chưa làm
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+      </div>
+    );
   };
 
   // Toggle TOC sidebar
@@ -1572,9 +1758,9 @@ const NewsTab = ({
   }, [isDragging, dragOffset]);
 
   // Render content panel - now using ContentPanel component
-  const renderContentPanel = (item) => {
+  const renderContentPanel = (item, hideMeta = false) => {
     if (!item) return null;
-    
+
     return (
       <ContentPanel
         fetchItem={fetchItem}
@@ -1608,11 +1794,368 @@ const NewsTab = ({
         postprocessLatex={postprocessLatex}
         isRead={(readItems || []).includes(item?.id)}
         onToggleRead={handleToggleRead}
+        hideHeaderMeta={hideMeta}
       />
     );
   };
 
+  const renderMobileView = () => (
+    <div className={styles.newsPanel}>
+      {loading ? (
+        <div className={styles.emptyState}>
+          <div>Đang tải dữ liệu...</div>
+        </div>
+      ) : visibleItems.length === 0 ? (
+        <div className={styles.emptyState}>
+          <div>Không tìm thấy tin tức phù hợp</div>
+        </div>
+      ) : (
+        visibleItems.map((item, index) => (
+          <div key={item.id} ref={index === visibleItems.length - 1 ? lastItemRef : null}>
+            <NewsItem
+              item={(item)}
+              expandedItem={item.id}
+              showDetailId={showDetailId}
+              onItemClick={() => handleItemSelect(item)}
+              onShowDetail={onShowDetail}
+              onOpenSource={onOpenSource}
+              isBookmarked={(bookmarkedItems || []).includes(item.id)}
+              onToggleBookmark={handleToggleBookmark}
+              isRead={(readItems || []).includes(item.id)}
+              onToggleRead={handleToggleRead}
+              quizScore={questionScoreMap[item.id]}
+              data-item-id={item.id}
+              isHome={isHome}
+              currentUser={currentUser}
+            />
+          </div>
+        ))
+      )}
 
+      {/* Loading indicator when loading more */}
+      {renderedCount < filteredItems.length && (
+        <div style={{ padding: '20px', textAlign: 'center' }}>
+          <div>Loading more items...</div>
+        </div>
+      )}
+
+      <Modal
+        open={showMobileModal && selectedItem}
+        onCancel={closeMobileModal}
+        footer={null}
+        width={'100%'}
+        style={{ top: '10' }}
+        destroyOnClose={true}
+        maskClosable={true}
+        closable={true}
+        centered={true}
+        className={styles.modalContent}
+      >
+        {renderContentPanel(selectedItem)}
+      </Modal>
+    </div>
+  );
+
+  const renderDesktopGridView = () => (
+    <div style={{ padding: '20px', flex: 1 }}>
+      {loading ? (
+        <div className={styles.emptyState}>
+          <div>Đang tải dữ liệu...</div>
+        </div>
+      ) : visibleItems.length === 0 ? (
+        <div className={styles.emptyState}>
+          <div>Không tìm thấy tin tức phù hợp</div>
+        </div>
+      ) : (
+        <>
+          <div className={newsTabStyles.gridContainer}>
+            {visibleItems.map((item, index) => {
+              const isSelected = selectedItem?.id === item.id;
+              return (
+                <div
+                  key={item.id}
+                  ref={index === visibleItems.length - 1 ? lastItemRef : null}
+                  title={`${item.title}${item.summary ? '\n\n' + item.summary : ''}`}
+                  className={`${newsTabStyles.gridItemWrapper} ${isSelected ? newsTabStyles.gridItemWrapperSelected : ''}`}
+                  onClick={() => handleGridItemClick(item)}
+                >
+                  <NewsItem
+                    item={item}
+                    expandedItem={item.id}
+                    showDetailId={showDetailId}
+                    onItemClick={() => handleGridItemClick(item)}
+                    onShowDetail={() => handleGridItemClick(item)}
+                    onOpenSource={onOpenSource}
+                    isBookmarked={(bookmarkedItems || []).includes(item.id)}
+                    onToggleBookmark={handleToggleBookmark}
+                    isRead={(readItems || []).includes(item.id)}
+                    onToggleRead={handleToggleRead}
+                    isSelected={selectedItem?.id === item.id}
+                    quizScore={questionScoreMap[item.id]}
+                    data-item-id={item.id}
+                    isHome={isHome}
+                    isGridView={true}
+                    currentUser={currentUser}
+                  />
+                </div>
+              );
+            })}
+          </div>
+          {/* Loading indicator */}
+          {renderedCount < filteredItems.length && (
+            <div className={newsTabStyles.gridLoadingMore}>
+              <div>Đang tải thêm...</div>
+            </div>
+          )}
+        </>
+      )}
+
+      {/* Grid Modal */}
+      <Modal
+        title={
+          selectedItem && (
+            <div className={newsTabStyles.modalTitleContainer}>
+              <div className={newsTabStyles.modalTitleMain}>
+                <span className={newsTabStyles.modalTitleTabName}>{getTabDisplayName(activeTab)}</span>
+                <span>/</span>
+                <span className={newsTabStyles.modalTitleItemName}>
+                  {selectedItem.title}
+                </span>
+              </div>
+
+              <div className={newsTabStyles.modalTitleActions}>
+                {/* Search input in title bar */}
+                <Input
+                  placeholder="Tìm kiếm trong nội d..."
+                  prefix={<SearchOutlined />}
+                  value={searchText}
+                  onChange={(e) => setSearchText(e.target.value)}
+                  allowClear
+                  style={{ width: '200px' }}
+                  onPressEnter={() => {
+                    if (searchResults.length > 0) {
+                      scrollToSearchResult(highlightedIndex >= 0 ? highlightedIndex : 0);
+                    }
+                  }}
+                />
+
+                {/* Search navigation */}
+                {searchResults.length > 0 && (
+                  <Space size={4}>
+                    <Button
+                      size="small"
+                      icon={<span>↑</span>}
+                      onClick={() => navigateSearchResult(-1)}
+                      disabled={searchResults.length === 0}
+                    />
+                    <span style={{ fontSize: '12px', color: '#666', minWidth: '45px', textAlign: 'center' }}>
+                      {highlightedIndex + 1}/{searchResults.length}
+                    </span>
+                    <Button
+                      size="small"
+                      icon={<span>↓</span>}
+                      onClick={() => navigateSearchResult(1)}
+                      disabled={searchResults.length === 0}
+                    />
+                  </Space>
+                )}
+
+                {/* Read status checkbox in title bar */}
+                <Tooltip title={readItems.includes(selectedItem.id) ? "Đánh dấu là chưa đọc" : "Đánh dấu là đã đọc"}>
+                  <Checkbox
+                    checked={readItems.includes(selectedItem.id)}
+                    onChange={() => handleToggleRead(selectedItem)}
+                    style={{ color: '#595959', fontWeight: '500' }}
+                  >
+                    Đã đọc
+                  </Checkbox>
+                </Tooltip>
+                <Tooltip title={(bookmarkedItems || []).includes(selectedItem.id) ? 'Bỏ lưu' : 'Lưu vào mục quan tâm'}>
+                  <Button
+                    type="text"
+                    icon={(bookmarkedItems || []).includes(selectedItem.id) ?
+                      <BookMark_Icon_On width={18} height={18} /> :
+                      <BookMark_Icon_Off width={18} height={18} />
+                    }
+                    onClick={() => handleToggleBookmark(selectedItem)}
+                    className={newsTabStyles.modalTitleBookmark}
+                  >
+                    Bookmark
+                  </Button>
+                </Tooltip>
+
+                {/* Edit button in title bar */}
+                {currentUser?.isAdmin && (
+                  <Button
+                    type="text"
+                    size="small"
+                    onClick={handleEditClick}
+                    className={newsTabStyles.modalTitleEdit}
+                  >
+                    Edit
+                  </Button>
+                )}
+              </div>
+            </div>
+          )
+        }
+        open={selectedItem !== null && viewMode === 'grid'}
+        onCancel={() => { setSelectedItem(null); updateURL({ item: null }), setExpandedItem(null) }}
+        footer={null}
+        width={selectedItem ? 1400 : 1000}
+        style={{
+          top: '0px', paddingBottom: '0px'
+        }}
+        destroyOnClose={true}
+        maskClosable={true}
+        closable={true}
+        className={newsTabStyles.modalContent}
+      >
+        <div className={newsTabStyles.resizablePanel} ref={resizableContainerRef}>
+          {/* Left panel: Sidebar Information */}
+          <div
+            className={newsTabStyles.modalSidebarPanel}
+            style={{ width: `${modalPcSplitRatio * 100}%` }}
+          >
+            {renderArticleSidebarContent(selectedItem)}
+            {/* TOC Section */}
+            {selectedItem?.hasTitle && <div style={{ height: 'auto' }}>{renderTOCSidebar(selectedItem)}</div>}
+          </div>
+
+          {/* Resizer */}
+          <div
+            className={`${newsTabStyles.resizer} ${modalResizeStartRatio !== null ? newsTabStyles.resizerActive : ''}`}
+            onMouseDown={(e) => {
+              setModalResizeStartRatio(modalPcSplitRatio);
+              e.preventDefault();
+            }}
+          />
+
+          {/* Right panel: Article Content */}
+          <div className={newsTabStyles.modalContentPanel}>
+            {renderContentPanel(selectedItem, true)}
+          </div>
+
+        </div>
+
+        {/* Floating Search Results Panel moved outside resizable container to avoid flex issues */}
+        {searchResults.length > 0 && showSearchResultsPanel && (
+          <div
+            className={newsTabStyles.searchResultsPanel}
+            ref={panelRef}
+            style={{
+              top: `${panelPosition.y}px`,
+              left: `${panelPosition.x}px`,
+              cursor: isDragging ? 'grabbing' : 'default'
+            }}
+          >
+            <div
+              className={newsTabStyles.searchResultsHeader}
+              onMouseDown={handleMouseDown}
+            >
+              <div className={newsTabStyles.searchResultsTitle}>
+                Kết quả tìm kiếm ({searchResults.length})
+              </div>
+              <Button
+                type="text"
+                size="small"
+                icon={<CloseOutlined />}
+                onClick={() => setShowSearchResultsPanel(false)}
+                style={{ minWidth: 'auto', padding: '0 4px' }}
+                onMouseDown={(e) => e.stopPropagation()}
+              />
+            </div>
+            <div className={newsTabStyles.searchResultsList}>
+              <div className={newsTabStyles.searchResultsContainer}>
+                {searchResults.map((result, index) => (
+                  <div
+                    key={index}
+                    onClick={() => scrollToSearchResult(index)}
+                    className={`${newsTabStyles.searchResultItem} ${highlightedIndex === index ? newsTabStyles.searchResultItemActive : ''}`}
+                  >
+                    <div style={{ fontSize: '11px', color: '#8c8c8c', marginBottom: '4px' }}>
+                      Kết quả {index + 1}
+                    </div>
+                    <div
+                      style={{ fontSize: '13px', lineHeight: '1.4', color: '#595959' }}
+                      dangerouslySetInnerHTML={{
+                        __html: `...${result.context.replace(
+                          new RegExp(`(${result.match.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi'),
+                          '<mark style="background-color: #fff3cd; padding: 2px 0; border-radius: 2px;">$1</mark>'
+                        )}...`
+                      }}
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+      </Modal>
+    </div>
+  );
+
+  const renderDesktopListView = () => (
+    <div className={styles.dualPanelContainer}>
+      <div className={styles.leftPanel}>
+        {loading ? (
+          <div className={styles.emptyState}>
+            <div>Đang tải dữ liệu...</div>
+          </div>
+        ) : visibleItems.length === 0 ? (
+          <div className={styles.emptyState}>
+            <div>Không tìm thấy tin tức phù hợp</div>
+          </div>
+        ) : (
+          visibleItems.map((item, index) => (
+            <div key={item.id} ref={index === visibleItems.length - 1 ? lastItemRef : null}>
+              <NewsItem
+                item={item}
+                expandedItem={item.id}
+                showDetailId={showDetailId}
+                onItemClick={() => handleItemSelect(item)}
+                onShowDetail={onShowDetail}
+                onOpenSource={onOpenSource}
+                isBookmarked={(bookmarkedItems || []).includes(item.id)}
+                onToggleBookmark={handleToggleBookmark}
+                isRead={(readItems || []).includes(item.id)}
+                onToggleRead={handleToggleRead}
+                isSelected={selectedItem?.id === item.id}
+                quizScore={questionScoreMap[item.id]}
+                data-item-id={item.id}
+                isHome={isHome}
+                currentUser={currentUser}
+              />
+            </div>
+          ))
+        )}
+
+        {/* Loading indicator when loading more */}
+        {renderedCount < filteredItems.length && (
+          <div style={{ padding: '20px', textAlign: 'center', borderTop: '1px solid #f0f0f0' }}>
+            <div>Loading more items...</div>
+          </div>
+        )}
+      </div>
+
+      <div className={styles.rightPanel} style={{ padding: selectedItem?.hasTitle ? '0px' : '20px 140px' }}>
+        {selectedItem ? (
+          renderContentPanel(selectedItem)
+        ) : (
+          <div className={styles.emptyContentState}>
+            <div className={styles.emptyContentIcon}>📰</div>
+            <h3>Chọn một bài viết để xem nội dung</h3>
+            <p>Nhấp vào bất kỳ bài viết nào ở bên trái để xem chi tiết</p>
+          </div>
+        )}
+      </div>
+      {selectedItem?.hasTitle && hasAccess(selectedItem) &&
+        <div style={{ width: '18%' }}>
+          {renderTOCSidebar(selectedItem)}
+        </div>
+      }
+    </div>
+  );
 
 
   return (
@@ -1658,6 +2201,22 @@ const NewsTab = ({
           window.location.reload();
         }}
       />
+
+      {/* Rating Popup for Sidebar interaction */}
+      {selectedItem && currentUser?.id && (
+        <RatingPopup
+          fetchItem={fetchItem}
+          visible={showRatingPopup}
+          onCancel={() => setShowRatingPopup(false)}
+          contentId={selectedItem.id}
+          contentTitle={selectedItem.title}
+          currentUser={currentUser}
+          currentAverageRating={Number(selectedItem.scoreFeedback || 0)}
+          currentRatingCount={selectedItem?.feedbackCount || 0}
+          activeTab={activeTab}
+        />
+      )}
+
       {/* Chỉ hiển thị K9Filters khi không phải là Home tab và showSearchSection = true */}
       {!isHome && showSearchSection && (
         <K9Filters
@@ -1687,417 +2246,9 @@ const NewsTab = ({
         />
       )}
 
-      {isMobile ? (
-        // Mobile view: Single panel with modal
-        <div className={styles.newsPanel}>
-          {loading ? (
-            <div className={styles.emptyState}>
-              <div>Đang tải dữ liệu...</div>
-            </div>
-          ) : visibleItems.length === 0 ? (
-            <div className={styles.emptyState}>
-              <div>Không tìm thấy tin tức phù hợp</div>
-            </div>
-          ) : (
-            visibleItems.map((item, index) => (
-              <div key={item.id} ref={index === visibleItems.length - 1 ? lastItemRef : null}>
-                <NewsItem
-                  item={(item)}
-                  expandedItem={item.id}
-                  showDetailId={showDetailId}
-                  onItemClick={() => handleItemSelect(item)}
-                  onShowDetail={onShowDetail}
-                  onOpenSource={onOpenSource}
-                  isBookmarked={(bookmarkedItems || []).includes(item.id)}
-                  onToggleBookmark={handleToggleBookmark}
-                  isRead={(readItems || []).includes(item.id)}
-                  onToggleRead={handleToggleRead}
-                  quizScore={questionScoreMap[item.id]}
-                  data-item-id={item.id}
-                  isHome={isHome}
-                  currentUser={currentUser}
-                />
-              </div>
-            ))
-          )}
-
-          {/* Loading indicator when loading more */}
-          {renderedCount < filteredItems.length && (
-            <div style={{ padding: '20px', textAlign: 'center' }}>
-              <div>Loading more items...</div>
-            </div>
-          )}
-
-          <Modal
-            open={showMobileModal && selectedItem}
-            onCancel={closeMobileModal}
-            footer={null}
-            width={'100%'}
-            style={{
-              top: '10'
-            }}
-            destroyOnClose={true}
-            maskClosable={true}
-            closable={true}
-            centered={true}
-            className={styles.modalContent}
-          >
-            {renderContentPanel(selectedItem)}
-          </Modal>
-        </div>
-      ) : viewMode === 'grid' ? (
-        // Desktop Grid view
-        <div style={{ padding: '20px', flex: 1 }}>
-
-          {loading ? (
-            <div className={styles.emptyState}>
-              <div>Đang tải dữ liệu...</div>
-            </div>
-          ) : visibleItems.length === 0 ? (
-            <div className={styles.emptyState}>
-              <div>Không tìm thấy tin tức phù hợp</div>
-            </div>
-          ) : (
-            <>
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(3, 1fr)',
-                gap: '20px',
-                padding: '10px'
-              }}>
-                {visibleItems.map((item, index) => {
-                  const isSelected = selectedItem?.id === item.id;
-                  return (
-                    <div
-                      key={item.id}
-                      ref={index === visibleItems.length - 1 ? lastItemRef : null}
-                      title={`${item.title}${item.summary ? '\n\n' + item.summary : ''}`}
-                      style={{
-                        height: '210px',
-                        overflow: 'hidden',
-                        cursor: 'pointer',
-                        border: isSelected ? '2px solid #1890ff' : '1px solid #f0f0f0',
-                        borderRadius: '8px',
-                        transition: 'all 0.3s ease',
-                        backgroundColor: isSelected ? '#e6f7ff' : '#fff',
-                        boxShadow: isSelected ? '0 4px 12px rgba(24, 144, 255, 0.2)' : 'none',
-                        padding: '16px 16px 5px 16px'
-                      }}
-                      onMouseEnter={(e) => {
-                        if (!isSelected) {
-                          e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
-                          e.currentTarget.style.transform = 'translateY(-2px)';
-                        }
-                      }}
-                      onMouseLeave={(e) => {
-                        if (!isSelected) {
-                          e.currentTarget.style.boxShadow = 'none';
-                          e.currentTarget.style.transform = 'translateY(0)';
-                        }
-                      }}
-                    >
-                      <NewsItem
-                        item={item}
-                        expandedItem={item.id}
-                        showDetailId={showDetailId}
-                        onItemClick={() => handleGridItemClick(item)}
-                        onShowDetail={() => handleGridItemClick(item)}
-                        onOpenSource={onOpenSource}
-                        isBookmarked={(bookmarkedItems || []).includes(item.id)}
-                        onToggleBookmark={handleToggleBookmark}
-                        isRead={(readItems || []).includes(item.id)}
-                        onToggleRead={handleToggleRead}
-                        quizScore={questionScoreMap[item.id]}
-                        data-item-id={item.id}
-                        isHome={isHome}
-                        isGridView={true}
-                        currentUser={currentUser}
-                      />
-                    </div>
-                  );
-                })}
-              </div>
-              {/* Loading indicator */}
-              {renderedCount < filteredItems.length && (
-                <div style={{ padding: '20px', textAlign: 'center', color: '#999' }}>
-                  <div>Đang tải thêm...</div>
-                </div>
-              )}
-            </>
-          )}
-
-          {/* Grid Modal */}
-          <Modal
-            title={
-              selectedItem && (
-                <div style={{ display: 'flex', gap: '12px' }}>
-                  <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                    fontWeight: '600',
-                    color: '#262626'
-                  }}>
-                    <span style={{ fontSize: '18px' , width: 'max-content' }}>{getTabDisplayName(activeTab)}</span>
-                    <span>{'>'}</span>
-                    <span style={{
-                      fontSize: '16px',
-                      maxWidth: '600px',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap'
-                    }}>
-                      {selectedItem.title}
-                    </span>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <Input
-                      placeholder="Tìm kiếm trong nội dung..."
-                      prefix={<SearchOutlined />}
-                      value={searchText}
-                      onChange={(e) => setSearchText(e.target.value)}
-                      allowClear
-                      style={{ flex: 1, maxWidth: '400px' , minWidth: '200px'}}
-                      onPressEnter={() => {
-                        if (searchResults.length > 0) {
-                          scrollToSearchResult(highlightedIndex >= 0 ? highlightedIndex : 0);
-                        }
-                      }}
-                    />
-                    {searchResults.length > 0 && (
-                      <>
-                        <Button
-                          size="small"
-                          onClick={() => navigateSearchResult(-1)}
-                          disabled={searchResults.length === 0}
-                          style={{ minWidth: '32px', padding: '0 8px' }}
-                        >
-                          ↑
-                        </Button>
-                        <span
-                          style={{
-                            fontSize: '12px',
-                            color: '#666',
-                            minWidth: '50px',
-                            textAlign: 'center',
-                            cursor: 'pointer'
-                          }}
-                          onClick={() => setShowSearchResultsPanel(!showSearchResultsPanel)}
-                          title="Xem danh sách kết quả"
-                        >
-                          {highlightedIndex + 1} / {searchResults.length}
-                        </span>
-                        <Button
-                          size="small"
-                          onClick={() => navigateSearchResult(1)}
-                          disabled={searchResults.length === 0}
-                          style={{ minWidth: '32px', padding: '0 8px' }}
-                        >
-                          ↓
-                        </Button>
-                      </>
-                    )}
-                  </div>
-                </div>
-              )
-            }
-            open={selectedItem !== null && viewMode === 'grid'}
-            onCancel={() => { setSelectedItem(null); updateURL({ item: null }) , setExpandedItem(null)}}
-            footer={null}
-            width={selectedItem?.hasTitle ? 1400 : 1000}
-            style={{
-              top: '0px', paddingBottom: '0px'
-            }}
-            destroyOnClose={true}
-            maskClosable={true}
-            closable={true}
-            className={newsTabStyles.modalContent}
-          >
-            <div style={{ display: 'flex', height: '100%', width: '100%', overflow: 'auto', position: 'relative' }}>
-              <div style={selectedItem?.hasTitle ? { flex: 1, padding: '20px' } : { padding: '20px', width: '100%' }}>
-                {renderContentPanel(selectedItem)}
-              </div>
-              {selectedItem?.hasTitle && hasAccess(selectedItem) && (
-                <div style={{ width: '25%', borderLeft: '1px solid #f0f0f0', overflowY: 'auto' }}>
-                  {renderTOCSidebar(selectedItem)}
-                </div>
-              )}
-
-              {/* Floating Search Results Panel */}
-              {searchResults.length > 0 && showSearchResultsPanel && (
-                <div
-                  ref={panelRef}
-                  style={{
-                    position: 'fixed',
-                    top: `${panelPosition.y}px`,
-                    left: `${panelPosition.x}px`,
-                    width: '350px',
-                    maxHeight: '70vh',
-                    backgroundColor: '#fff',
-                    border: '1px solid #d9d9d9',
-                    borderRadius: '8px',
-                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-                    zIndex: 1000,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    overflow: 'hidden',
-                    cursor: isDragging ? 'grabbing' : 'default',
-                    userSelect: 'none'
-                  }}
-                >
-                  <div
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      padding: '12px 16px',
-                      borderBottom: '1px solid #f0f0f0',
-                      backgroundColor: '#fafafa',
-                      cursor: 'move',
-                      userSelect: 'none'
-                    }}
-                    onMouseDown={handleMouseDown}
-                  >
-                    <div style={{
-                      fontSize: '14px',
-                      fontWeight: '600',
-                      color: '#262626',
-                      flex: 1
-                    }}>
-                      Kết quả tìm kiếm ({searchResults.length})
-                    </div>
-                    <Button
-                      type="text"
-                      size="small"
-                      icon={<CloseOutlined />}
-                      onClick={() => setShowSearchResultsPanel(false)}
-                      style={{ minWidth: 'auto', padding: '0 4px' }}
-                      onMouseDown={(e) => e.stopPropagation()}
-                    />
-                  </div>
-                  <div style={{
-                    overflowY: 'auto',
-                    padding: '12px',
-                    flex: 1
-                  }}>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                      {searchResults.map((result, index) => (
-                        <div
-                          key={index}
-                          onClick={() => {
-                            scrollToSearchResult(index);
-                          }}
-                          style={{
-                            padding: '8px 12px',
-                            cursor: 'pointer',
-                            borderRadius: '4px',
-                            backgroundColor: highlightedIndex === index ? '#e6f7ff' : '#fff',
-                            border: highlightedIndex === index ? '1px solid #1890ff' : '1px solid #f0f0f0',
-                            fontSize: '12px',
-                            lineHeight: '1.5',
-                            transition: 'all 0.2s'
-                          }}
-                          onMouseEnter={(e) => {
-                            if (highlightedIndex !== index) {
-                              e.currentTarget.style.backgroundColor = '#f5f5f5';
-                            }
-                          }}
-                          onMouseLeave={(e) => {
-                            if (highlightedIndex !== index) {
-                              e.currentTarget.style.backgroundColor = '#fff';
-                            }
-                          }}
-                        >
-                          <div style={{
-                            color: '#666',
-                            marginBottom: '4px',
-                            fontSize: '11px'
-                          }}>
-                            Kết quả {index + 1}
-                          </div>
-                          <div
-                            style={{
-                              color: '#262626',
-                              lineHeight: '1.6'
-                            }}
-                            dangerouslySetInnerHTML={{
-                              __html: `...${result.context.replace(
-                                new RegExp(`(${result.match.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi'),
-                                '<mark style="background-color: #fff3cd; padding: 2px 0; border-radius: 2px;">$1</mark>'
-                              )}...`
-                            }}
-                          />
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-          </Modal>
-        </div>
-      ) : (
-        // Desktop view: Dual panel (List mode)
-        <div className={styles.dualPanelContainer}>
-          <div className={styles.leftPanel}>
-            {loading ? (
-              <div className={styles.emptyState}>
-                <div>Đang tải dữ liệu...</div>
-              </div>
-            ) : visibleItems.length === 0 ? (
-              <div className={styles.emptyState}>
-                <div>Không tìm thấy tin tức phù hợp</div>
-              </div>
-            ) : (
-              visibleItems.map((item, index) => (
-                <div key={item.id} ref={index === visibleItems.length - 1 ? lastItemRef : null}>
-                  <NewsItem
-                    item={item}
-                    expandedItem={item.id}
-                    showDetailId={showDetailId}
-                    onItemClick={() => handleItemSelect(item)}
-                    onShowDetail={onShowDetail}
-                    onOpenSource={onOpenSource}
-                    isBookmarked={(bookmarkedItems || []).includes(item.id)}
-                    onToggleBookmark={handleToggleBookmark}
-                    isRead={(readItems || []).includes(item.id)}
-                    onToggleRead={handleToggleRead}
-                    isSelected={selectedItem?.id === item.id}
-                    quizScore={questionScoreMap[item.id]}
-                    data-item-id={item.id}
-                    isHome={isHome}
-                    currentUser={currentUser}
-                  />
-                </div>
-              ))
-            )}
-
-            {/* Loading indicator when loading more */}
-            {renderedCount < filteredItems.length && (
-              <div style={{ padding: '20px', textAlign: 'center', borderTop: '1px solid #f0f0f0' }}>
-                <div>Loading more items...</div>
-              </div>
-            )}
-          </div>
-
-          <div className={styles.rightPanel} style={{ padding: selectedItem?.hasTitle ? '0px' : '20px 150px 20px 150px' }}>
-            {selectedItem ? (
-              renderContentPanel(selectedItem)
-            ) : (
-              <div className={styles.emptyContentState}>
-                <div className={styles.emptyContentIcon}>📰</div>
-                <h3>Chọn một bài viết để xem nội dung</h3>
-                <p>Nhấp vào bất kỳ bài viết nào ở bên trái để xem chi tiết</p>
-              </div>
-            )}
-          </div>
-          {selectedItem?.hasTitle && hasAccess(selectedItem) &&
-              renderTOCSidebar(selectedItem)}
-
-        </div>
-      )}
+      {isMobile ? renderMobileView() : viewMode === 'grid' ? renderDesktopGridView() : renderDesktopListView()}
     </div>
   );
 };
 
-export default NewsTab; 
+export default NewsTab;

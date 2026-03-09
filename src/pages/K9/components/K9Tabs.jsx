@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import styles from '../K9.module.css';
 
-const K9Tabs = ({ activeTab, onTabChange, tabOptions, newsItems, caseTrainingItems, longFormItems, selectedProgram }) => {
+const K9Tabs = ({ activeTab, onTabChange, tabOptions, homeItems ,newsItems, caseTrainingItems, longFormItems, selectedProgram }) => {
 
 	// State to store question counts for each tab
 	const [questionCounts, setQuestionCounts] = useState({

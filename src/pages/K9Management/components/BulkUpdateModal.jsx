@@ -6,19 +6,19 @@ const { Option } = Select;
 const { Text } = Typography;
 
 const BulkUpdateModal = ({
-                           visible,
-                           onClose,
-                           selectedIds,
-                           fieldToUpdate,
-                           currentTab, // Thêm currentTab để biết đang ở tab nào
-                           onSuccess,
-                           categoryOptions,
-                           tagOptions = [], // Options cho tag
-                           levelOptions = [], // Options cho level
-                           seriesOptions = [], // Options cho series
-                           programOptions = [], // Options cho program
-                           setUpdateCategoryLoading
-                         }) => {
+  visible,
+  onClose,
+  selectedIds,
+  fieldToUpdate,
+  currentTab, // Thêm currentTab để biết đang ở tab nào
+  onSuccess,
+  categoryOptions,
+  tagOptions = [], // Options cho tag
+  levelOptions = [], // Options cho level
+  seriesOptions = [], // Options cho series
+  programOptions = [], // Options cho program
+  setUpdateCategoryLoading
+}) => {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
 
@@ -29,7 +29,7 @@ const BulkUpdateModal = ({
       case 'category':
         return categoryOptions;
       case 'tag1':
-        return tagOptions;
+        return currentTab === 'news' ? [] : tagOptions;
       case 'tag2':
         return levelOptions;
       case 'tag3':
@@ -47,7 +47,7 @@ const BulkUpdateModal = ({
       case 'category':
         return 'Danh mục';
       case 'tag1':
-        return 'Tag 1';
+        return currentTab === 'news' ? 'Bộ dữ liệu' : 'Category';
       case 'tag2':
         return 'Level';
       case 'tag3':
@@ -65,7 +65,7 @@ const BulkUpdateModal = ({
       case 'category':
         return 'Chọn danh mục...';
       case 'tag1':
-        return 'Chọn tag...';
+        return currentTab === 'news' ? 'Nhập bộ dữ liệu và nhấn Enter...' : 'Chọn tag...';
       case 'tag2':
         return 'Chọn level...';
       case 'tag3':
@@ -83,6 +83,7 @@ const BulkUpdateModal = ({
       case 'caseTraining':
         return ['category', 'tag1', 'tag2', 'tag3', 'tag4'].includes(fieldToUpdate);
       case 'news':
+        return ['category', 'tag1', 'tag4'].includes(fieldToUpdate);
       case 'longForm':
       case 'home':
       case 'report':
@@ -97,9 +98,11 @@ const BulkUpdateModal = ({
     }
   };
 
-  // Kiểm tra xem field có hỗ trợ chọn nhiều không
-  const isMultipleSelection = () => {
-    return fieldToUpdate === 'tag4';
+  // Kiểm tra xem trường xử lý kiểu danh sách/tags không
+  const getSelectMode = () => {
+    if (fieldToUpdate === 'tag4') return 'multiple';
+    if (currentTab === 'news' && fieldToUpdate === 'tag1') return 'tags';
+    return undefined;
   };
 
   const handleSubmit = async () => {
@@ -108,10 +111,17 @@ const BulkUpdateModal = ({
       setLoading(true);
       setUpdateCategoryLoading(true);
 
+      let finalValue = values[fieldToUpdate];
+      if (currentTab === 'news' && fieldToUpdate === 'tag1' && Array.isArray(finalValue)) {
+        finalValue = JSON.stringify(finalValue);
+      } else if (!finalValue) {
+        finalValue = null;
+      }
+
       const updateData = {
         ids: selectedIds,
         fieldToUpdate: fieldToUpdate,
-        value: values[fieldToUpdate]
+        value: finalValue
       };
 
       await updateK9Bulk(updateData);
@@ -137,117 +147,118 @@ const BulkUpdateModal = ({
   // Nếu field không hợp lệ cho tab hiện tại, hiển thị thông báo lỗi
   if (!isFieldValidForTab()) {
     return (
-        <Modal
-            title="Lỗi"
-            open={visible}
-            onCancel={onClose}
-            footer={[
-              <Button key="close" onClick={onClose}>
-                Đóng
-              </Button>
-            ]}
-            width={500}
-        >
-          <div style={{ textAlign: 'center', padding: '20px' }}>
-            <Text type="danger">
-              Trường <strong>{getFieldLabel()}</strong> không khả dụng cho tab <strong>{currentTab}</strong>
-            </Text>
-          </div>
-        </Modal>
+      <Modal
+        title="Lỗi"
+        open={visible}
+        onCancel={onClose}
+        footer={[
+          <Button key="close" onClick={onClose}>
+            Đóng
+          </Button>
+        ]}
+        width={500}
+      >
+        <div style={{ textAlign: 'center', padding: '20px' }}>
+          <Text type="danger">
+            Trường <strong>{getFieldLabel()}</strong> không khả dụng cho tab <strong>{currentTab}</strong>
+          </Text>
+        </div>
+      </Modal>
     );
   }
 
   return (
-      <Modal
-          title={`Cập nhật hàng loạt - ${getFieldLabel()}`}
-          open={visible}
-          onCancel={handleCancel}
-          footer={[
-            <Button key="cancel" onClick={handleCancel}>
-              Hủy
-            </Button>,
-            <Button
-                key="submit"
-                type="primary"
-                loading={loading}
-                onClick={handleSubmit}
-                disabled={selectedIds.length === 0}
-            >
-              Cập nhật ({selectedIds.length} bản ghi)
-            </Button>
-          ]}
-          width={500}
-      >
-        <div style={{ marginBottom: 16 }}>
-          <Text type="secondary">
-            Bạn đã chọn <Text strong>{selectedIds.length}</Text> bản ghi để cập nhật
-          </Text>
-          <br />
-          <Text type="secondary" style={{ fontSize: '12px' }}>
-            Tab hiện tại: <Text strong>{currentTab}</Text>
-          </Text>
-          {fieldToUpdate === 'tag4' && (
-              <>
-                <br />
-                <Text type="secondary" style={{ fontSize: '12px', color: '#1890ff' }}>
-                  <strong>Lưu ý:</strong> Program sẽ được lưu vào trường Tag4
-                </Text>
-              </>
-          )}
-        </div>
+    <Modal
+      title={`Cập nhật hàng loạt - ${getFieldLabel()}`}
+      open={visible}
+      onCancel={handleCancel}
+      footer={[
+        <Button key="cancel" onClick={handleCancel}>
+          Hủy
+        </Button>,
+        <Button
+          key="submit"
+          type="primary"
+          loading={loading}
+          onClick={handleSubmit}
+          disabled={selectedIds.length === 0}
+        >
+          Cập nhật ({selectedIds.length} bản ghi)
+        </Button>
+      ]}
+      width={500}
+    >
+      <div style={{ marginBottom: 16 }}>
+        <Text type="secondary">
+          Bạn đã chọn <Text strong>{selectedIds.length}</Text> bản ghi để cập nhật
+        </Text>
+        <br />
+        <Text type="secondary" style={{ fontSize: '12px' }}>
+          Tab hiện tại: <Text strong>{currentTab}</Text>
+        </Text>
+        {fieldToUpdate === 'tag4' && (
+          <>
+            <br />
+            <Text type="secondary" style={{ fontSize: '12px', color: '#1890ff' }}>
+              <strong>Lưu ý:</strong> Program sẽ được lưu vào trường Tag4
+            </Text>
+          </>
+        )}
+      </div>
 
-        <Form form={form} layout="vertical">
-          <Form.Item
-              label={`Chọn ${getFieldLabel()} mới`}
-              name={fieldToUpdate}
-              rules={[{ required: true, message: `Vui lòng chọn ${getFieldLabel()}` }]}
+      <Form form={form} layout="vertical">
+        <Form.Item
+          label={`Chọn ${getFieldLabel()} mới`}
+          name={fieldToUpdate}
+          rules={[{ required: true, message: `Vui lòng chọn ${getFieldLabel()}` }]}
+        >
+          <Select
+            placeholder={getFieldPlaceholder()}
+            showSearch
+            mode={getSelectMode()}
+            maxTagCount={getSelectMode() ? 'responsive' : undefined}
+            filterOption={(input, option) =>
+              (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+            }
+            allowClear
+            open={currentTab === 'news' && fieldToUpdate === 'tag1' ? false : undefined}
           >
-            <Select
-                placeholder={getFieldPlaceholder()}
-                showSearch
-                mode={isMultipleSelection() ? 'multiple' : undefined}
-                maxTagCount={isMultipleSelection() ? 'responsive' : undefined}
-                filterOption={(input, option) =>
-                    (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
-                }
-                allowClear
-            >
-              {getFieldOptions().map(option => (
-                  <Option key={option.value} value={option.value} label={option.label}>
-                    {option.label}
-                  </Option>
-              ))}
-            </Select>
-          </Form.Item>
-        </Form>
+            {getFieldOptions()?.map(option => (
+              <Option key={option.value} value={option.value} label={option.label}>
+                {option.label}
+              </Option>
+            ))}
+          </Select>
+        </Form.Item>
+      </Form>
 
-        <Divider />
+      <Divider />
 
-        <div style={{
-          marginTop: 16,
-          padding: 12,
-          backgroundColor: '#f6ffed',
-          border: '1px solid #b7eb8f',
-          borderRadius: 6
-        }}>
-          <Text type="secondary" style={{ fontSize: '12px' }}>
-            <strong>Lưu ý:</strong> Hành động này sẽ cập nhật {selectedIds.length} bản ghi cùng lúc.
-            Vui lòng kiểm tra kỹ trước khi thực hiện.
-          </Text>
-          <br />
-          <Text type="secondary" style={{ fontSize: '12px', marginTop: '8px' }}>
-            <strong>Trường được cập nhật:</strong> {fieldToUpdate === 'tag4' ? 'Tag4 (Program)' : getFieldLabel()}
-          </Text>
-          {fieldToUpdate === 'tag4' && (
-              <>
-                <br />
-                <Text type="secondary" style={{ fontSize: '12px', marginTop: '8px' }}>
-                  <strong>Chế độ:</strong> Chọn nhiều giá trị
-                </Text>
-              </>
-          )}
-        </div>
-      </Modal>
+      <div style={{
+        marginTop: 16,
+        padding: 12,
+        backgroundColor: '#f6ffed',
+        border: '1px solid #b7eb8f',
+        borderRadius: 6
+      }}>
+        <Text type="secondary" style={{ fontSize: '12px' }}>
+          <strong>Lưu ý:</strong> Hành động này sẽ cập nhật {selectedIds.length} bản ghi cùng lúc.
+          Vui lòng kiểm tra kỹ trước khi thực hiện.
+        </Text>
+        <br />
+        <Text type="secondary" style={{ fontSize: '12px', marginTop: '8px' }}>
+          <strong>Trường được cập nhật:</strong> {fieldToUpdate === 'tag4' ? 'Tag4 (Program)' : getFieldLabel()}
+        </Text>
+        {fieldToUpdate === 'tag4' && (
+          <>
+            <br />
+            <Text type="secondary" style={{ fontSize: '12px', marginTop: '8px' }}>
+              <strong>Chế độ:</strong> Chọn nhiều giá trị
+            </Text>
+          </>
+        )}
+      </div>
+    </Modal>
   );
 };
 

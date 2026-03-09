@@ -235,7 +235,7 @@ const K9Management = () => {
   // Bulk import states
 
   const [importModalVisible, setImportModalVisible] = useState(false);
-  
+
   // Related Case Training Modal states
   const [relatedCaseTrainingModalVisible, setRelatedCaseTrainingModalVisible] = useState(false);
   const [selectedNewsItemForCaseTraining, setSelectedNewsItemForCaseTraining] = useState(null);
@@ -548,7 +548,7 @@ const K9Management = () => {
   const [tag2Filter, setTag2Filter] = useState('all');
 
   const [tag3Filter, setTag3Filter] = useState('all');
-  
+
   const [relatedCaseFilter, setRelatedCaseFilter] = useState('all'); // 'all', '0', '1', '2', ..., '15'
 
   const [processingCompanySummaryQueue, setProcessingCompanySummaryQueue] = useState(false);
@@ -3535,21 +3535,61 @@ Format your response as:
 
 
 
-    // Get all tag1 values including empty/null ones
+    // Flatten tag1 values (support both string and array)
+    const flattenedTag1s = tabData.reduce((acc, item) => {
+      if (!item.tag1) return acc;
+      let tags = [];
+      if (Array.isArray(item.tag1)) {
+        tags = item.tag1;
+      } else if (typeof item.tag1 === 'string') {
+        try {
+          tags = JSON.parse(item.tag1);
+          if (!Array.isArray(tags)) tags = [item.tag1];
+        } catch (e) {
+          tags = [item.tag1];
+        }
+      } else {
+        tags = [String(item.tag1)];
+      }
 
-    const allTag1s = tabData.map(item => item.tag1);
+      // Check for doubly stringified arrays like '["a","b"]' inside elements
+      tags = tags.flatMap(t => {
+        if (typeof t === 'string' && t.trim().startsWith('[') && t.trim().endsWith(']')) {
+          try {
+            const parsed = JSON.parse(t);
+            if (Array.isArray(parsed)) return parsed;
+          } catch (e) { }
+        }
+        return [t];
+      });
 
-    const tag1s = [...new Set(allTag1s)];
+      if (tags.length === 0) return acc;
+      acc.push(...tags);
+      return acc;
+    }, []);
 
+    const tag1s = [...new Set(flattenedTag1s)];
 
+    const hasEmpty = tabData.some(item => {
+      if (!item.tag1) return true;
+      if (Array.isArray(item.tag1) && item.tag1.length === 0) return true;
+      if (item.tag1 === '[]') return true;
+      return false;
+    });
 
-    return tag1s.map(tag1 => ({
-
-      text: tag1 || 'Trống',
-
-      value: tag1 || null
-
+    const filters = tag1s.map(tag1 => ({
+      text: tag1,
+      value: tag1
     }));
+
+    if (hasEmpty) {
+      filters.push({
+        text: 'Trống',
+        value: null
+      });
+    }
+
+    return filters;
 
   };
 
@@ -3690,7 +3730,7 @@ Format your response as:
     setProgramFilter('all');
 
     setProgramMultiFilter([]);
-    
+
     setRelatedCaseFilter('all');
 
     if (currentTab === 'caseTraining') {
@@ -7725,6 +7765,84 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
           }
 
         ] : []),
+
+      ...(currentTab === 'news' ? [
+        {
+          title: 'Bộ dữ liệu',
+          dataIndex: 'tag1',
+          key: 'dataset_tag1',
+          width: 150,
+          render: (tag1) => {
+            if (!tag1) return '';
+            let parsedTags = [];
+            if (Array.isArray(tag1)) {
+              parsedTags = tag1;
+            } else if (typeof tag1 === 'string') {
+              try {
+                parsedTags = JSON.parse(tag1);
+                if (!Array.isArray(parsedTags)) {
+                  parsedTags = [tag1];
+                }
+              } catch (e) {
+                parsedTags = [tag1];
+              }
+            } else {
+              parsedTags = [String(tag1)];
+            }
+
+            // Unpack if any inner item is stringified array
+            parsedTags = parsedTags.flatMap(t => {
+              if (typeof t === 'string' && t.trim().startsWith('[') && t.trim().endsWith(']')) {
+                try {
+                  const p = JSON.parse(t);
+                  if (Array.isArray(p)) return p;
+                } catch (e) { }
+              }
+              return [t];
+            });
+
+            if (parsedTags.length === 0) return '';
+            return (
+              <>
+                {parsedTags.map((val, index) => (
+                  <span key={index} className={styles.summaryCell}>{val}{index < parsedTags.length - 1 ? ' , ' : ''}</span>
+                ))}
+              </>
+            );
+          },
+          filters: getCurrentTabTag1Filters(),
+          onFilter: (value, record) => {
+            if (value === null) {
+              return !record.tag1 || record.tag1.length === 0 || record.tag1 === '[]';
+            }
+            let parsedTags = [];
+            if (Array.isArray(record.tag1)) {
+              parsedTags = record.tag1;
+            } else if (typeof record.tag1 === 'string') {
+              try {
+                parsedTags = JSON.parse(record.tag1);
+                if (!Array.isArray(parsedTags)) {
+                  parsedTags = [record.tag1];
+                }
+              } catch (e) {
+                parsedTags = [record.tag1];
+              }
+            }
+
+            parsedTags = parsedTags.flatMap(t => {
+              if (typeof t === 'string' && t.trim().startsWith('[') && t.trim().endsWith(']')) {
+                try {
+                  const p = JSON.parse(t);
+                  if (Array.isArray(p)) return p;
+                } catch (e) { }
+              }
+              return [t];
+            });
+
+            return parsedTags.includes(value);
+          }
+        }
+      ] : []),
 
       {
 
@@ -12189,9 +12307,38 @@ Chỉ trả về JSON, không thêm text khác.`;
       }
     }
 
+    let tag1Parsed = record.tag1;
+    if (currentTab === 'news' && record.tag1) {
+      if (typeof record.tag1 === 'string') {
+        try {
+          tag1Parsed = JSON.parse(record.tag1);
+          if (!Array.isArray(tag1Parsed)) {
+            tag1Parsed = [record.tag1];
+          }
+        } catch (e) {
+          tag1Parsed = [record.tag1];
+        }
+      } else if (!Array.isArray(record.tag1)) {
+        tag1Parsed = [String(record.tag1)];
+      }
+
+      if (Array.isArray(tag1Parsed)) {
+        tag1Parsed = tag1Parsed.flatMap(t => {
+          if (typeof t === 'string' && t.trim().startsWith('[') && t.trim().endsWith(']')) {
+            try {
+              const p = JSON.parse(t);
+              if (Array.isArray(p)) return p;
+            } catch (e) { }
+          }
+          return [t];
+        });
+      }
+    }
+
     const formData = {
 
       ...record,
+      tag1: tag1Parsed,
 
       // Add filedLabel fields from info
       filedLabel_1: filedLabel_1,
@@ -12851,6 +12998,14 @@ Chỉ trả về JSON, không thêm text khác.`;
 
       };
 
+      if (contentType === 'news' && recordData.tag1 !== undefined) {
+        if (Array.isArray(recordData.tag1)) {
+          recordData.tag1 = JSON.stringify(recordData.tag1);
+        } else if (!recordData.tag1) {
+          recordData.tag1 = null;
+        }
+      }
+
       if (contentType === 'story') {
 
         recordData.audioText = audioText;
@@ -13235,7 +13390,19 @@ Chỉ trả về JSON, không thêm text khác.`;
 
     }
 
+    if (contentType === 'news') {
 
+      fields.push(
+
+        <Form.Item key="tag1" name="tag1" label="Bộ dữ liệu">
+
+          <Select placeholder="Nhập bộ dữ liệu và nhấn Enter" mode="tags" allowClear />
+
+        </Form.Item>
+
+      );
+
+    }
 
     fields.push(
 
@@ -17054,7 +17221,21 @@ Chỉ trả về nội dung theo đúng định dạng trên, không thêm phầ
 
                     </Button>
 
-
+                    {currentTab === 'news' && (
+                      <Button
+                        type="primary"
+                        disabled={false}
+                        onClick={() => {
+                          if (selectedRowKeys.length === 0) {
+                            message.warning('Vui lòng chọn ít nhất một bản ghi!');
+                            return;
+                          }
+                          handleBulkUpdate('tag1');
+                        }}
+                      >
+                        Update Bộ dữ liệu ({selectedRowKeys.length})
+                      </Button>
+                    )}
 
                   </>
 
@@ -17221,45 +17402,547 @@ Chỉ trả về nội dung theo đúng định dạng trên, không thêm phầ
 
 
 
-        {/* Filter section for home, news, caseTraining, and longForm tabs */}
+        {/* Filter section for home, news, caseTraining, and longForm tabs */ }
 
-        {(currentTab === 'home' || currentTab === 'news' || currentTab === 'caseTraining' || currentTab === 'longForm') && (
+  {
+    (currentTab === 'home' || currentTab === 'news' || currentTab === 'caseTraining' || currentTab === 'longForm') && (
+
+      <div style={{
+
+        marginBottom: '16px',
+
+        padding: '16px',
+
+        backgroundColor: '#fafafa',
+
+        borderRadius: '8px',
+
+        border: '1px solid #e8e8e8'
+
+      }}>
+
+        <div style={{
+
+          display: 'flex',
+
+          alignItems: 'center',
+
+          gap: '16px',
+
+          flexWrap: 'wrap'
+
+        }}>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+
+            <span style={{ fontWeight: 'bold', fontSize: '14px' }}>Lọc theo:</span>
+
+          </div>
+
+
+
+          {/* Filter Count Display */}
 
           <div style={{
 
-            marginBottom: '16px',
+            display: 'flex',
 
-            padding: '16px',
+            alignItems: 'center',
 
-            backgroundColor: '#fafafa',
+            gap: '8px',
 
-            borderRadius: '8px',
 
-            border: '1px solid #e8e8e8'
+            fontSize: '12px',
+
+            color: '#666'
 
           }}>
 
-            <div style={{
+            <span>
 
-              display: 'flex',
+              Hiển thị {filteredData[currentTab]?.length || 0} / {allData[currentTab]?.length || 0} bản ghi
 
-              alignItems: 'center',
+            </span>
 
-              gap: '16px',
-
-              flexWrap: 'wrap'
-
-            }}>
-
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-
-                <span style={{ fontWeight: 'bold', fontSize: '14px' }}>Lọc theo:</span>
-
-              </div>
+          </div>
 
 
 
-              {/* Filter Count Display */}
+          {/* Category Filter */}
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+
+            {
+
+              currentTab !== 'caseTraining' && <>
+
+                <span style={{ fontSize: '14px' }}>Danh mục:</span>
+
+                <Select
+
+                  value={categoryFilter}
+
+                  onChange={(value) => handleCategoryFilterChange(value)}
+
+                  style={{ width: 200 }}
+
+                  placeholder="Chọn danh mục"
+
+                >
+
+
+                  <Option value="">Trống</Option>
+
+                  {categoriesOptions.map(option => (
+
+                    <Option key={option.key} value={option.key}>
+
+                      {option.label}
+
+                    </Option>
+
+                  ))}
+
+
+
+
+
+                </Select>
+
+              </>
+
+            }
+
+
+
+          </div>
+
+          {/* Image Filter */}
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+
+            <span style={{ fontSize: '14px' }}>Ảnh:</span>
+
+            <Select
+
+              value={imageFilter}
+
+              onChange={handleImageFilterChange}
+
+              style={{ width: 120 }}
+
+              placeholder="Chọn trạng thái ảnh"
+
+            >
+
+              <Option value="all">Tất cả</Option>
+
+              <Option value="has">Có ảnh</Option>
+
+              <Option value="no">Không có ảnh</Option>
+
+            </Select>
+
+          </div>
+
+          {/* Voice Filter */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ fontSize: '14px' }}>Voice:</span>
+            <Select
+              value={voiceFilter}
+              onChange={handleVoiceFilterChange}
+              style={{
+                width: 150,
+              }}
+              className={styles.voiceFilter}
+              placeholder="Chọn trạng thái voice"
+            >
+              <Option value="all">Tất cả</Option>
+              <Option value="hasVoice">Có voice</Option>
+              <Option value="noVoice">Không có voice</Option>
+            </Select>
+          </div>
+
+          {/* Diagram Filter */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ fontSize: '14px' }}>Diagram:</span>
+            <Select
+              value={diagramFilter}
+              onChange={handleDiagramFilterChange}
+              placeholder="Chọn loại diagram"
+              style={{ width: 180 }}
+            >
+              <Option value="all">Tất cả</Option>
+              <Option value="not_created">Chưa tạo</Option>
+              <Option value="html">Đã tạo bằng HTML</Option>
+              <Option value="excalidraw">Đã tạo bằng Excalidraw</Option>
+            </Select>
+          </div>
+
+
+          {/* Quiz Filter */}
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+
+            <span style={{ fontSize: '14px' }}>Quiz:</span>
+
+            <Select
+
+              value={quizFilter}
+
+              onChange={handleQuizFilterChange}
+
+              style={{ width: 120 }}
+
+              placeholder="Chọn trạng thái quiz"
+
+            >
+
+              <Option value="all">Tất cả</Option>
+
+              <Option value="has">Có quiz</Option>
+
+              <Option value="no">Không có quiz</Option>
+
+            </Select>
+
+          </div>
+          {/* Search */}
+          <AutoComplete
+            placeholder="Tìm kiếm theo tiêu đề, tóm tắt, chi tiết..."
+            value={searchText}
+            onChange={(value) => handleLocalSearch(value)}
+            onSearch={handleSearchSubmit}
+            style={{ width: 250 }}
+            allowClear
+            loading={searchLoading}
+            options={searchHistory[currentTab]?.map(term => ({
+              value: term,
+              label: (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <HistoryOutlined style={{ color: '#999' }} />
+                  <span>{term}</span>
+                </div>
+              )
+            })) || []}
+            onSelect={(value) => handleSearchSubmit(value)}
+          />
+
+
+
+          {/* Tag1 Filter - Only for caseTraining */}
+
+          {currentTab === 'caseTraining' && (
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+
+              <span style={{ fontSize: '14px' }}>Categories:</span>
+
+              <Select
+
+                value={tag1Filter}
+
+                onChange={handleTag1FilterChange}
+
+                style={{ width: 150 }}
+
+                placeholder="Chọn category"
+
+              >
+
+                <Option value="all">Tất cả</Option>
+
+                {tag1Options.map(option => (
+
+                  <Option key={option.value} value={option.value}>
+
+                    {option.label}
+
+                  </Option>
+
+                ))}
+
+              </Select>
+
+            </div>
+
+          )}
+
+
+
+          {/* Tag2 Filter - Only for caseTraining */}
+
+          {currentTab === 'caseTraining' && (
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+
+              <span style={{ fontSize: '14px' }}>Levels:</span>
+
+              <Select
+
+                value={tag2Filter}
+
+                onChange={handleTag2FilterChange}
+
+                style={{ width: 150 }}
+
+                placeholder="Chọn level"
+
+              >
+
+                <Option value="all">Tất cả</Option>
+
+                {tag2Options.map(option => (
+
+                  <Option key={option.value} value={option.value}>
+
+                    {option.label}
+
+                  </Option>
+
+                ))}
+
+              </Select>
+
+            </div>
+
+          )}
+
+
+
+          {/* Tag3 Filter - Only for caseTraining */}
+
+          {currentTab === 'caseTraining' && (
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+
+              <span style={{ fontSize: '14px' }}>Series:</span>
+
+              <Select
+
+                value={tag3Filter}
+
+                onChange={handleTag3FilterChange}
+
+                style={{ width: 150 }}
+
+                placeholder="Chọn series"
+
+              >
+
+                <Option value="all">Tất cả</Option>
+
+                {tag3Options.map(option => (
+
+                  <Option key={option.value} value={option.value}>
+
+                    {option.label}
+
+                  </Option>
+
+                ))}
+
+              </Select>
+
+            </div>
+
+          )}
+
+
+
+
+
+
+          {/* Chapter Filter - For all tabs */}
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+
+            <span style={{ fontSize: '14px' }}>Số program:</span>
+
+            <Select
+
+              value={chapterFilter}
+
+              onChange={handleChapterFilterChange}
+
+              style={{ width: 150 }}
+
+              placeholder="Chọn số program"
+
+            >
+
+              <Option value="all">Tất cả</Option>
+
+              <Option value="has">Có program</Option>
+
+              <Option value="no">Không có program</Option>
+
+              <Option value="1">1 program</Option>
+
+              <Option value="2">2 programs</Option>
+
+              <Option value="3">3 programs</Option>
+
+              <Option value="4">4 programs</Option>
+
+              <Option value="5">5 programs</Option>
+
+              <Option value="6">6 programs</Option>
+
+              <Option value="7">7 programs</Option>
+              <Option value="8">8 programs</Option>
+              <Option value="9">9 programs</Option>
+              <Option value="10+">10+ programs</Option>
+
+            </Select>
+
+          </div>
+
+          {/* Program Filters and Search - Grouped together at the end */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+            {/* Program Filter (Single) */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ fontSize: '14px' }}>Program (1):</span>
+              <Select
+                value={programFilter}
+                onChange={handleProgramFilterChange}
+                style={{ width: 200 }}
+                placeholder="Chọn 1 program"
+                showSearch
+                filterOption={(input, option) =>
+                  (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+                }
+              >
+                <Option value="all">Tất cả</Option>
+                <Option value="">Trống</Option>
+                {programOptions.map(option => (
+                  <Option key={option.value} value={option.value}>
+                    {option.label}
+                  </Option>
+                ))}
+              </Select>
+            </div>
+
+            {/* Program Multi Filter (OR logic) */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ fontSize: '14px' }}>Program (nhiều - OR):</span>
+              <Select
+                mode="multiple"
+                value={programMultiFilter}
+                onChange={handleProgramMultiFilterChange}
+                style={{ width: 450 }}
+                placeholder="Chọn nhiều program (chỉ cần có 1)"
+                showSearch
+                filterOption={(input, option) =>
+                  (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+                }
+                maxTagCount="responsive"
+              >
+                {programOptions.map(option => (
+                  <Option key={option.value} value={option.value}>
+                    {option.label}
+                  </Option>
+                ))}
+              </Select>
+            </div>
+
+
+          </div>
+
+
+          {/* Tag4 Filter (Program) - For all tabs */}
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+
+            <span style={{ fontSize: '14px' }}>Program (nhiều-In):</span>
+
+            <Select
+
+              mode="multiple"
+
+              value={tag4Filter}
+
+              onChange={handleTag4FilterChange}
+
+              style={{ width: 300 }}
+
+              placeholder="Chọn program (chọn nhiều - chính xác)"
+
+              maxTagCount="responsive"
+
+              showSearch
+
+              filterOption={(input, option) =>
+
+                (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+
+              }
+
+            >
+
+              {tag4Options.map(option => (
+
+                <Option key={option.value} value={option.value} label={option.label}>
+
+                  {option.label}
+
+                </Option>
+
+              ))}
+
+            </Select>
+
+          </div>
+
+          {/* Related Case Filter - only for news tab */}
+          {currentTab === 'news' && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ fontSize: '14px' }}>Case liên quan:</span>
+              <Select
+                value={relatedCaseFilter}
+                onChange={handleRelatedCaseFilterChange}
+                style={{ width: 140 }}
+                placeholder="Chọn số case"
+              >
+                <Option value="all">Tất cả</Option>
+                <Option value="0">Không có case</Option>
+                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15].map(num => (
+                  <Option key={num} value={String(num)}>{num} case</Option>
+                ))}
+              </Select>
+            </div>
+          )}
+
+          {/* Reset Filters Button */}
+
+          <Button
+
+            onClick={resetFilters}
+
+            style={{ marginLeft: '8px' }}
+
+            disabled={categoryFilter === 'all' && imageFilter === 'all' && diagramFilter === 'all' && quizFilter === 'all' && tag4Filter.length === 0 && chapterFilter === 'all' && programFilter === 'all' && programMultiFilter.length === 0 &&
+              (currentTab === 'caseTraining' ? (tag1Filter === 'all' && tag2Filter === 'all' && tag3Filter === 'all') : true) &&
+              (currentTab === 'news' ? relatedCaseFilter === 'all' : true) &&
+              !searchText.trim()}
+
+          >
+
+            Xóa bộ lọc
+
+          </Button>
+
+
+
+
+
+
+
+          {/* Active Filters Display */}
+
+          {(categoryFilter !== 'all' || imageFilter !== 'all' || voiceFilter !== 'all' || diagramFilter !== 'all' || quizFilter !== 'all' || tag4Filter.length > 0 || chapterFilter !== 'all' || programFilter !== 'all' || programMultiFilter.length > 0 ||
+            (currentTab === 'caseTraining' && (tag1Filter !== 'all' || tag2Filter !== 'all' || tag3Filter !== 'all')) ||
+            (currentTab === 'news' && relatedCaseFilter !== 'all')) && (
 
               <div style={{
 
@@ -17269,1216 +17952,719 @@ Chỉ trả về nội dung theo đúng định dạng trên, không thêm phầ
 
                 gap: '8px',
 
+                marginTop: '8px',
 
-                fontSize: '12px',
-
-                color: '#666'
+                flexWrap: 'wrap'
 
               }}>
 
-                <span>
+                <span style={{ fontSize: '12px', color: '#666' }}>Bộ lọc đang hoạt động:</span>
 
-                  Hiển thị {filteredData[currentTab]?.length || 0} / {allData[currentTab]?.length || 0} bản ghi
+                {categoryFilter !== 'all' && (
 
-                </span>
+                  <Tag color="blue" closable onClose={() => handleCategoryFilterChange('all')}>
 
-              </div>
+                    Danh mục: {categoryFilter}
 
-
-
-              {/* Category Filter */}
-
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-
-                {
-
-                  currentTab !== 'caseTraining' && <>
-
-                    <span style={{ fontSize: '14px' }}>Danh mục:</span>
-
-                    <Select
-
-                      value={categoryFilter}
-
-                      onChange={(value) => handleCategoryFilterChange(value)}
-
-                      style={{ width: 200 }}
-
-                      placeholder="Chọn danh mục"
-
-                    >
-
-
-                      <Option value="">Trống</Option>
-
-                      {categoriesOptions.map(option => (
-
-                        <Option key={option.key} value={option.key}>
-
-                          {option.label}
-
-                        </Option>
-
-                      ))}
-
-
-
-
-
-                    </Select>
-
-                  </>
-
-                }
-
-
-
-              </div>
-
-              {/* Image Filter */}
-
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-
-                <span style={{ fontSize: '14px' }}>Ảnh:</span>
-
-                <Select
-
-                  value={imageFilter}
-
-                  onChange={handleImageFilterChange}
-
-                  style={{ width: 120 }}
-
-                  placeholder="Chọn trạng thái ảnh"
-
-                >
-
-                  <Option value="all">Tất cả</Option>
-
-                  <Option value="has">Có ảnh</Option>
-
-                  <Option value="no">Không có ảnh</Option>
-
-                </Select>
-
-              </div>
-
-              {/* Voice Filter */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span style={{ fontSize: '14px' }}>Voice:</span>
-                <Select
-                  value={voiceFilter}
-                  onChange={handleVoiceFilterChange}
-                  style={{
-                    width: 150,
-                  }}
-                  className={styles.voiceFilter}
-                  placeholder="Chọn trạng thái voice"
-                >
-                  <Option value="all">Tất cả</Option>
-                  <Option value="hasVoice">Có voice</Option>
-                  <Option value="noVoice">Không có voice</Option>
-                </Select>
-              </div>
-
-              {/* Diagram Filter */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span style={{ fontSize: '14px' }}>Diagram:</span>
-                <Select
-                  value={diagramFilter}
-                  onChange={handleDiagramFilterChange}
-                  placeholder="Chọn loại diagram"
-                  style={{ width: 180 }}
-                >
-                  <Option value="all">Tất cả</Option>
-                  <Option value="not_created">Chưa tạo</Option>
-                  <Option value="html">Đã tạo bằng HTML</Option>
-                  <Option value="excalidraw">Đã tạo bằng Excalidraw</Option>
-                </Select>
-              </div>
-
-
-              {/* Quiz Filter */}
-
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-
-                <span style={{ fontSize: '14px' }}>Quiz:</span>
-
-                <Select
-
-                  value={quizFilter}
-
-                  onChange={handleQuizFilterChange}
-
-                  style={{ width: 120 }}
-
-                  placeholder="Chọn trạng thái quiz"
-
-                >
-
-                  <Option value="all">Tất cả</Option>
-
-                  <Option value="has">Có quiz</Option>
-
-                  <Option value="no">Không có quiz</Option>
-
-                </Select>
-
-              </div>
-                      {/* Search */}
-                      <AutoComplete
-                  placeholder="Tìm kiếm theo tiêu đề, tóm tắt, chi tiết..."
-                  value={searchText}
-                  onChange={(value) => handleLocalSearch(value)}
-                  onSearch={handleSearchSubmit}
-                  style={{ width: 250 }}
-                  allowClear
-                  loading={searchLoading}
-                  options={searchHistory[currentTab]?.map(term => ({
-                    value: term,
-                    label: (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <HistoryOutlined style={{ color: '#999' }} />
-                        <span>{term}</span>
-                      </div>
-                    )
-                  })) || []}
-                  onSelect={(value) => handleSearchSubmit(value)}
-                />
-
-
-
-              {/* Tag1 Filter - Only for caseTraining */}
-
-              {currentTab === 'caseTraining' && (
-
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-
-                  <span style={{ fontSize: '14px' }}>Categories:</span>
-
-                  <Select
-
-                    value={tag1Filter}
-
-                    onChange={handleTag1FilterChange}
-
-                    style={{ width: 150 }}
-
-                    placeholder="Chọn category"
-
-                  >
-
-                    <Option value="all">Tất cả</Option>
-
-                    {tag1Options.map(option => (
-
-                      <Option key={option.value} value={option.value}>
-
-                        {option.label}
-
-                      </Option>
-
-                    ))}
-
-                  </Select>
-
-                </div>
-
-              )}
-
-
-
-              {/* Tag2 Filter - Only for caseTraining */}
-
-              {currentTab === 'caseTraining' && (
-
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-
-                  <span style={{ fontSize: '14px' }}>Levels:</span>
-
-                  <Select
-
-                    value={tag2Filter}
-
-                    onChange={handleTag2FilterChange}
-
-                    style={{ width: 150 }}
-
-                    placeholder="Chọn level"
-
-                  >
-
-                    <Option value="all">Tất cả</Option>
-
-                    {tag2Options.map(option => (
-
-                      <Option key={option.value} value={option.value}>
-
-                        {option.label}
-
-                      </Option>
-
-                    ))}
-
-                  </Select>
-
-                </div>
-
-              )}
-
-
-
-              {/* Tag3 Filter - Only for caseTraining */}
-
-              {currentTab === 'caseTraining' && (
-
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-
-                  <span style={{ fontSize: '14px' }}>Series:</span>
-
-                  <Select
-
-                    value={tag3Filter}
-
-                    onChange={handleTag3FilterChange}
-
-                    style={{ width: 150 }}
-
-                    placeholder="Chọn series"
-
-                  >
-
-                    <Option value="all">Tất cả</Option>
-
-                    {tag3Options.map(option => (
-
-                      <Option key={option.value} value={option.value}>
-
-                        {option.label}
-
-                      </Option>
-
-                    ))}
-
-                  </Select>
-
-                </div>
-
-              )}
-
-
-
-
-
-
-              {/* Chapter Filter - For all tabs */}
-
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-
-                <span style={{ fontSize: '14px' }}>Số program:</span>
-
-                <Select
-
-                  value={chapterFilter}
-
-                  onChange={handleChapterFilterChange}
-
-                  style={{ width: 150 }}
-
-                  placeholder="Chọn số program"
-
-                >
-
-                  <Option value="all">Tất cả</Option>
-
-                  <Option value="has">Có program</Option>
-
-                  <Option value="no">Không có program</Option>
-
-                  <Option value="1">1 program</Option>
-
-                  <Option value="2">2 programs</Option>
-
-                  <Option value="3">3 programs</Option>
-
-                  <Option value="4">4 programs</Option>
-
-                  <Option value="5">5 programs</Option>
-
-                  <Option value="6">6 programs</Option>
-
-                  <Option value="7">7 programs</Option>
-                  <Option value="8">8 programs</Option>
-                  <Option value="9">9 programs</Option>
-                  <Option value="10+">10+ programs</Option>
-
-                </Select>
-
-              </div>
-
-              {/* Program Filters and Search - Grouped together at the end */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                {/* Program Filter (Single) */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <span style={{ fontSize: '14px' }}>Program (1):</span>
-                  <Select
-                    value={programFilter}
-                    onChange={handleProgramFilterChange}
-                    style={{ width: 200 }}
-                    placeholder="Chọn 1 program"
-                    showSearch
-                    filterOption={(input, option) =>
-                      (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
-                    }
-                  >
-                    <Option value="all">Tất cả</Option>
-                    <Option value="">Trống</Option>
-                    {programOptions.map(option => (
-                      <Option key={option.value} value={option.value}>
-                        {option.label}
-                      </Option>
-                    ))}
-                  </Select>
-                </div>
-
-                {/* Program Multi Filter (OR logic) */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <span style={{ fontSize: '14px' }}>Program (nhiều - OR):</span>
-                  <Select
-                    mode="multiple"
-                    value={programMultiFilter}
-                    onChange={handleProgramMultiFilterChange}
-                    style={{ width: 450 }}
-                    placeholder="Chọn nhiều program (chỉ cần có 1)"
-                    showSearch
-                    filterOption={(input, option) =>
-                      (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
-                    }
-                    maxTagCount="responsive"
-                  >
-                    {programOptions.map(option => (
-                      <Option key={option.value} value={option.value}>
-                        {option.label}
-                      </Option>
-                    ))}
-                  </Select>
-                </div>
-
-        
-              </div>
-
-
-              {/* Tag4 Filter (Program) - For all tabs */}
-
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-
-                <span style={{ fontSize: '14px' }}>Program (nhiều-In):</span>
-
-                <Select
-
-                  mode="multiple"
-
-                  value={tag4Filter}
-
-                  onChange={handleTag4FilterChange}
-
-                  style={{ width: 300 }}
-
-                  placeholder="Chọn program (chọn nhiều - chính xác)"
-
-                  maxTagCount="responsive"
-
-                  showSearch
-
-                  filterOption={(input, option) =>
-
-                    (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
-
-                  }
-
-                >
-
-                  {tag4Options.map(option => (
-
-                    <Option key={option.value} value={option.value} label={option.label}>
-
-                      {option.label}
-
-                    </Option>
-
-                  ))}
-
-                </Select>
-
-              </div>
-
-              {/* Related Case Filter - only for news tab */}
-              {currentTab === 'news' && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <span style={{ fontSize: '14px' }}>Case liên quan:</span>
-                  <Select
-                    value={relatedCaseFilter}
-                    onChange={handleRelatedCaseFilterChange}
-                    style={{ width: 140 }}
-                    placeholder="Chọn số case"
-                  >
-                    <Option value="all">Tất cả</Option>
-                    <Option value="0">Không có case</Option>
-                    {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15].map(num => (
-                      <Option key={num} value={String(num)}>{num} case</Option>
-                    ))}
-                  </Select>
-                </div>
-              )}
-
-              {/* Reset Filters Button */}
-
-              <Button
-
-                onClick={resetFilters}
-
-                style={{ marginLeft: '8px' }}
-
-                disabled={categoryFilter === 'all' && imageFilter === 'all' && diagramFilter === 'all' && quizFilter === 'all' && tag4Filter.length === 0 && chapterFilter === 'all' && programFilter === 'all' && programMultiFilter.length === 0 &&
-                  (currentTab === 'caseTraining' ? (tag1Filter === 'all' && tag2Filter === 'all' && tag3Filter === 'all') : true) &&
-                  (currentTab === 'news' ? relatedCaseFilter === 'all' : true) &&
-                  !searchText.trim()}
-
-              >
-
-                Xóa bộ lọc
-
-              </Button>
-
-
-
-
-
-
-
-              {/* Active Filters Display */}
-
-              {(categoryFilter !== 'all' || imageFilter !== 'all' || voiceFilter !== 'all' || diagramFilter !== 'all' || quizFilter !== 'all' || tag4Filter.length > 0 || chapterFilter !== 'all' || programFilter !== 'all' || programMultiFilter.length > 0 ||
-                (currentTab === 'caseTraining' && (tag1Filter !== 'all' || tag2Filter !== 'all' || tag3Filter !== 'all')) ||
-                (currentTab === 'news' && relatedCaseFilter !== 'all')) && (
-
-                  <div style={{
-
-                    display: 'flex',
-
-                    alignItems: 'center',
-
-                    gap: '8px',
-
-                    marginTop: '8px',
-
-                    flexWrap: 'wrap'
-
-                  }}>
-
-                    <span style={{ fontSize: '12px', color: '#666' }}>Bộ lọc đang hoạt động:</span>
-
-                    {categoryFilter !== 'all' && (
-
-                      <Tag color="blue" closable onClose={() => handleCategoryFilterChange('all')}>
-
-                        Danh mục: {categoryFilter}
-
-                      </Tag>
-
-                    )}
-
-                    {imageFilter !== 'all' && (
-
-                      <Tag color="green" closable onClose={() => handleImageFilterChange('all')}>
-
-                        Ảnh: {imageFilter === 'has' ? 'Có ảnh' : 'Không có ảnh'}
-
-                      </Tag>
-
-                    )}
-
-                    {voiceFilter !== 'all' && (
-
-                      <Tag color="orange" closable onClose={() => handleVoiceFilterChange('all')}>
-
-                        Voice: {voiceFilter === 'hasVoice' ? 'Có voice' : 'Không có voice'}
-
-                      </Tag>
-
-                    )}
-
-                    {diagramFilter !== 'all' && (
-                      <Tag color="purple" closable onClose={() => handleDiagramFilterChange('all')}>
-                        Diagram: {
-                          diagramFilter === 'not_created' ? 'Chưa tạo' :
-                            diagramFilter === 'html' ? 'Đã tạo bằng HTML' :
-                              diagramFilter === 'excalidraw' ? 'Đã tạo bằng Excalidraw' : ''
-                        }
-                      </Tag>
-                    )}
-                    {quizFilter !== 'all' && (
-
-                      <Tag color="orange" closable onClose={() => handleQuizFilterChange('all')}>
-
-                        Quiz: {quizFilter === 'has' ? 'Có quiz' : 'Không có quiz'}
-
-                      </Tag>
-
-                    )}
-
-                    {tag4Filter.length > 0 && (
-
-                      <Tag color="magenta" closable onClose={() => handleTag4FilterChange([])}>
-
-                        Program: {tag4Filter.length} đã chọn
-
-                      </Tag>
-
-                    )}
-
-                    {chapterFilter !== 'all' && (
-
-                      <Tag color="geekblue" closable onClose={() => handleChapterFilterChange('all')}>
-
-                        Số program: {
-
-                          chapterFilter === 'has' ? 'Có program' :
-
-                            chapterFilter === 'no' ? 'Không có program' :
-
-                              chapterFilter === '1' ? '1 program' :
-
-                                chapterFilter === '2' ? '2 programs' :
-
-                                  chapterFilter === '3' ? '3 programs' :
-
-                                    chapterFilter === '4+' ? '4+ programs' : ''
-
-                        }
-
-                      </Tag>
-
-                    )}
-
-                    {programFilter !== 'all' && (
-                      <Tag color="lime" closable onClose={() => handleProgramFilterChange('all')}>
-                        Program: {programFilter}
-                      </Tag>
-                    )}
-
-                    {programMultiFilter.length > 0 && (
-                      <Tag color="lime" closable onClose={() => handleProgramMultiFilterChange([])}>
-                        Program (nhiều): {programMultiFilter.join(', ')}
-                      </Tag>
-                    )}
-
-                    {currentTab === 'caseTraining' && tag1Filter !== 'all' && (
-
-                      <Tag color="purple" closable onClose={() => handleTag1FilterChange('all')}>
-
-                        Categories: {tag1Filter}
-
-                      </Tag>
-
-                    )}
-
-                    {currentTab === 'caseTraining' && tag2Filter !== 'all' && (
-
-                      <Tag color="cyan" closable onClose={() => handleTag2FilterChange('all')}>
-
-                        Levels: {tag2Filter}
-
-                      </Tag>
-
-                    )}
-
-                    {currentTab === 'caseTraining' && tag3Filter !== 'all' && (
-
-                      <Tag color="red" closable onClose={() => handleTag3FilterChange('all')}>
-
-                        Series: {tag3Filter}
-
-                      </Tag>
-
-                    )}
-
-                    {currentTab === 'news' && relatedCaseFilter !== 'all' && (
-                      <Tag color="blue" closable onClose={() => handleRelatedCaseFilterChange('all')}>
-                        Case liên quan: {relatedCaseFilter === '0' ? 'Không có case' : `${relatedCaseFilter} case`}
-                      </Tag>
-                    )}
-
-                  </div>
+                  </Tag>
 
                 )}
 
-            </div>
+                {imageFilter !== 'all' && (
 
-          </div>
+                  <Tag color="green" closable onClose={() => handleImageFilterChange('all')}>
 
-        )}
+                    Ảnh: {imageFilter === 'has' ? 'Có ảnh' : 'Không có ảnh'}
 
+                  </Tag>
 
+                )}
 
-        {/* Render different content based on current tab */}
+                {voiceFilter !== 'all' && (
 
-        {currentTab === 'report' ? (
+                  <Tag color="orange" closable onClose={() => handleVoiceFilterChange('all')}>
 
-          <Table
+                    Voice: {voiceFilter === 'hasVoice' ? 'Có voice' : 'Không có voice'}
 
-            key="ai-summary-table"
+                  </Tag>
 
-            virtual
+                )}
 
-            columns={getAISummaryColumns()}
+                {diagramFilter !== 'all' && (
+                  <Tag color="purple" closable onClose={() => handleDiagramFilterChange('all')}>
+                    Diagram: {
+                      diagramFilter === 'not_created' ? 'Chưa tạo' :
+                        diagramFilter === 'html' ? 'Đã tạo bằng HTML' :
+                          diagramFilter === 'excalidraw' ? 'Đã tạo bằng Excalidraw' : ''
+                    }
+                  </Tag>
+                )}
+                {quizFilter !== 'all' && (
 
-            dataSource={aiSummaryData}
+                  <Tag color="orange" closable onClose={() => handleQuizFilterChange('all')}>
 
-            rowKey="id"
+                    Quiz: {quizFilter === 'has' ? 'Có quiz' : 'Không có quiz'}
 
-            loading={aiSummaryLoading}
+                  </Tag>
 
-            pagination={{
+                )}
 
-              total: aiSummaryData.length,
+                {tag4Filter.length > 0 && (
 
-              pageSize: 500,
+                  <Tag color="magenta" closable onClose={() => handleTag4FilterChange([])}>
 
-              showSizeChanger: true,
+                    Program: {tag4Filter.length} đã chọn
 
-              showQuickJumper: true,
+                  </Tag>
 
-              showTotal: (total, range) =>
+                )}
 
-                `${range[0]}-${range[1]} của ${total} mục`
+                {chapterFilter !== 'all' && (
 
-            }}
+                  <Tag color="geekblue" closable onClose={() => handleChapterFilterChange('all')}>
 
-            scroll={{ x: 800, y: '60vh' }}
+                    Số program: {
 
-            className={styles.table}
+                      chapterFilter === 'has' ? 'Có program' :
 
-            rowSelection={{
+                        chapterFilter === 'no' ? 'Không có program' :
 
-              type: 'checkbox',
+                          chapterFilter === '1' ? '1 program' :
 
-              columnWidth: 48, // chỉnh size của cột checkbox
+                            chapterFilter === '2' ? '2 programs' :
 
-              selectedRowKeys,
+                              chapterFilter === '3' ? '3 programs' :
 
-              onChange: (newSelectedRowKeys) => {
+                                chapterFilter === '4+' ? '4+ programs' : ''
 
-                setSelectedRowKeys(newSelectedRowKeys);
+                    }
 
-              },
+                  </Tag>
 
-            }}
+                )}
 
-          />
+                {programFilter !== 'all' && (
+                  <Tag color="lime" closable onClose={() => handleProgramFilterChange('all')}>
+                    Program: {programFilter}
+                  </Tag>
+                )}
 
-        ) : currentTab === 'reportDN' ? (
+                {programMultiFilter.length > 0 && (
+                  <Tag color="lime" closable onClose={() => handleProgramMultiFilterChange([])}>
+                    Program (nhiều): {programMultiFilter.join(', ')}
+                  </Tag>
+                )}
 
-          <Table
+                {currentTab === 'caseTraining' && tag1Filter !== 'all' && (
 
-            key="report-dn-table"
+                  <Tag color="purple" closable onClose={() => handleTag1FilterChange('all')}>
 
-            virtual
+                    Categories: {tag1Filter}
 
-            columns={getAISummaryColumns()}
+                  </Tag>
 
-            dataSource={reportDNData}
+                )}
 
-            rowKey="id"
+                {currentTab === 'caseTraining' && tag2Filter !== 'all' && (
 
-            loading={reportDNLoading}
+                  <Tag color="cyan" closable onClose={() => handleTag2FilterChange('all')}>
 
-            pagination={{
+                    Levels: {tag2Filter}
 
-              total: reportDNData.length,
+                  </Tag>
 
-              pageSize: 500,
+                )}
 
-              showSizeChanger: true,
+                {currentTab === 'caseTraining' && tag3Filter !== 'all' && (
 
-              showQuickJumper: true,
+                  <Tag color="red" closable onClose={() => handleTag3FilterChange('all')}>
 
-              showTotal: (total, range) =>
+                    Series: {tag3Filter}
 
-                `${range[0]}-${range[1]} của ${total} mục`
+                  </Tag>
 
-            }}
+                )}
 
-            scroll={{ x: 800, y: '60vh' }}
+                {currentTab === 'news' && relatedCaseFilter !== 'all' && (
+                  <Tag color="blue" closable onClose={() => handleRelatedCaseFilterChange('all')}>
+                    Case liên quan: {relatedCaseFilter === '0' ? 'Không có case' : `${relatedCaseFilter} case`}
+                  </Tag>
+                )}
 
-            className={styles.table}
+              </div>
 
-            rowSelection={{
+            )}
 
-              type: 'checkbox',
+        </div>
 
-              columnWidth: 48, // chỉnh size của cột checkbox
+      </div>
 
-              selectedRowKeys,
+    )
+  }
 
-              onChange: (newSelectedRowKeys) => {
 
-                setSelectedRowKeys(newSelectedRowKeys);
 
-              },
+  {/* Render different content based on current tab */ }
 
-            }}
+  {
+    currentTab === 'report' ? (
 
-          />
+      <Table
 
-        ) : (
+        key="ai-summary-table"
 
-          <Table
+        virtual
 
-            key={tableKey}
+        columns={getAISummaryColumns()}
 
-            virtual
+        dataSource={aiSummaryData}
 
-            columns={getColumns()}
+        rowKey="id"
 
-            dataSource={data}
+        loading={aiSummaryLoading}
 
-            rowKey="id"
+        pagination={{
 
-            loading={loading}
+          total: aiSummaryData.length,
 
-            pagination={{
+          pageSize: 500,
 
-              total: data.length,
+          showSizeChanger: true,
 
-              pageSize: pageSize,
+          showQuickJumper: true,
 
-              pageSizeOptions: ['100', '500', '1000', '2000', '5000'],
+          showTotal: (total, range) =>
 
-              showSizeChanger: true,
+            `${range[0]}-${range[1]} của ${total} mục`
 
-              showQuickJumper: true,
+        }}
 
-              onShowSizeChange: (current, size) => {
+        scroll={{ x: 800, y: '60vh' }}
 
-                console.log('Page size changed to:', size);
+        className={styles.table}
 
-                setPageSize(size);
+        rowSelection={{
 
-              },
+          type: 'checkbox',
 
-              showTotal: (total, range) =>
+          columnWidth: 48, // chỉnh size của cột checkbox
 
-                `${range[0]}-${range[1]} của ${total} mục`
+          selectedRowKeys,
 
-            }}
+          onChange: (newSelectedRowKeys) => {
 
-            scroll={{ x: 3000, y: '50vh' }}
+            setSelectedRowKeys(newSelectedRowKeys);
 
-            className={styles.table}
+          },
 
-            rowSelection={{
-
-              type: 'checkbox',
-
-              columnWidth: 48, // chỉnh size của cột checkbox
-
-              selectedRowKeys,
-
-              onChange: (newSelectedRowKeys) => {
-
-                setSelectedRowKeys(newSelectedRowKeys);
-
-              },
-
-            }}
-
-          />
-
-        )}
-
-      </Card>
-
-
-
-      {/* Create/Edit Modal */}
-
-      {
-
-        modalVisible && <CreateEditModal
-
-          visible={modalVisible}
-
-          onOk={handleModalOk}
-
-          onCancel={handleModalCancel}
-
-          modalMode={modalMode}
-
-          formKey={formKey}
-
-          form={form}
-
-          getFormFields={getFormFields}
-
-        />
-
-      }
-
-
-
-
-
-      {/* View Detail Modal */}
-
-      {
-
-        viewModalVisible && <ViewDetailModal
-
-          visible={viewModalVisible}
-
-          onCancel={() => {
-
-            // Dừng audio khi đóng modal
-
-            if (audioRef.current) {
-
-              audioRef.current.pause();
-
-              setIsAudioPlaying(false);
-
-              setIsAudioLoading(false);
-
-            }
-
-            setViewModalVisible(false);
-
-          }}
-
-          selectedRecord={selectedRecord}
-
-          isAudioPlaying={isAudioPlaying}
-
-          isAudioLoading={isAudioLoading}
-
-          handlePlayAudio={handlePlayAudio}
-
-        />
-
-      }
-
-
-
-
-
-      {/* Import Excel Modal */}
-
-      <ImportDataExcel
-        handleImportExcel={handleImportExcel}
-
-        importModalVisible={importModalVisible}
-
-        setImportPreviewData={setImportPreviewData}
-
-        setImportModalVisible={setImportModalVisible}
-
-        importPreviewData={importPreviewData}
-
-        uploadingImport={uploadingImport}
-
-        handleConfirmImport={handleConfirmImport}
-
-        handleDownloadTemplate={handleDownloadTemplate}
-
-        currentTab={currentTab}
+        }}
 
       />
 
+    ) : currentTab === 'reportDN' ? (
 
+      <Table
 
-      {/* Background Audio Settings Modal */}
+        key="report-dn-table"
 
-      <BackgroundAudio
+        virtual
 
-        visible={bgAudioSettingsVisible}
+        columns={getAISummaryColumns()}
 
-        onCancel={() => setBgAudioSettingsVisible(false)}
+        dataSource={reportDNData}
 
-        onOk={saveBgAudioSettings}
+        rowKey="id"
 
-        bgAudioSettings={bgAudioSettings}
+        loading={reportDNLoading}
 
-        setBgAudioSettings={setBgAudioSettings}
+        pagination={{
 
-        bgAudioFile={bgAudioFile}
+          total: reportDNData.length,
 
-        bgAudioUploading={bgAudioUploading}
+          pageSize: 500,
 
-        handleBackgroundAudioUpload={handleBackgroundAudioUpload}
+          showSizeChanger: true,
+
+          showQuickJumper: true,
+
+          showTotal: (total, range) =>
+
+            `${range[0]}-${range[1]} của ${total} mục`
+
+        }}
+
+        scroll={{ x: 800, y: '60vh' }}
+
+        className={styles.table}
+
+        rowSelection={{
+
+          type: 'checkbox',
+
+          columnWidth: 48, // chỉnh size của cột checkbox
+
+          selectedRowKeys,
+
+          onChange: (newSelectedRowKeys) => {
+
+            setSelectedRowKeys(newSelectedRowKeys);
+
+          },
+
+        }}
 
       />
 
+    ) : (
 
+      <Table
 
-      {/* Guideline Settings Modal */}
+        key={tableKey}
 
-      <GuidelineSettingModal
+        virtual
 
-        visible={guidelineSettingsVisible}
+        columns={getColumns()}
 
-        onCancel={() => setGuidelineSettingsVisible(false)}
+        dataSource={data}
 
-        onOk={saveGuidelineSettings}
+        rowKey="id"
 
-        guidelineSettings={guidelineSettings}
+        loading={loading}
 
-        setGuidelineSettings={setGuidelineSettings}
+        pagination={{
 
-        guidelineImageFile={guidelineImageFile}
+          total: data.length,
 
-        guidelineImageUploading={guidelineImageUploading}
+          pageSize: pageSize,
 
-        handleGuidelineImageUpload={handleGuidelineImageUpload}
+          pageSizeOptions: ['100', '500', '1000', '2000', '5000'],
+
+          showSizeChanger: true,
+
+          showQuickJumper: true,
+
+          onShowSizeChange: (current, size) => {
+
+            console.log('Page size changed to:', size);
+
+            setPageSize(size);
+
+          },
+
+          showTotal: (total, range) =>
+
+            `${range[0]}-${range[1]} của ${total} mục`
+
+        }}
+
+        scroll={{ x: 3000, y: '50vh' }}
+
+        className={styles.table}
+
+        rowSelection={{
+
+          type: 'checkbox',
+
+          columnWidth: 48, // chỉnh size của cột checkbox
+
+          selectedRowKeys,
+
+          onChange: (newSelectedRowKeys) => {
+
+            setSelectedRowKeys(newSelectedRowKeys);
+
+          },
+
+        }}
 
       />
 
+    )
+  }
+
+      </Card >
 
 
-      {/* JSON Import Modal */}
 
-      {
+  {/* Create/Edit Modal */ }
 
-        jsonImportModalVisible && <ImportDataJson
+{
 
-          setJsonInput={setJsonInput}
+  modalVisible && <CreateEditModal
 
-          setJsonPreviewData={setJsonPreviewData}
+    visible={modalVisible}
 
-          jsonImportModalVisible={jsonImportModalVisible}
+    onOk={handleModalOk}
 
-          setJsonImportModalVisible={setJsonImportModalVisible}
+    onCancel={handleModalCancel}
 
-          jsonInput={jsonInput}
+    modalMode={modalMode}
 
-          jsonPreviewData={jsonPreviewData}
+    formKey={formKey}
 
-          uploadingJson={uploadingJson}
+    form={form}
 
-          currentTab={currentTab}
+    getFormFields={getFormFields}
 
-          handleJsonInputChange={handleJsonInputChange}
+  />
 
-          handleJsonPreview={handleJsonPreview}
-
-          handleConfirmJsonImport={handleConfirmJsonImport}
-
-          handleLoadJsonTemplate={handleLoadJsonTemplate}
-
-        />
-
-      }
+}
 
 
 
 
 
-      {/* AI Summary Modal */}
+{/* View Detail Modal */ }
 
-      {
+{
 
-        aiSummaryModalVisible && <AISummaryTable
+  viewModalVisible && <ViewDetailModal
 
-          aiSummaryModalVisible={aiSummaryModalVisible}
+    visible={viewModalVisible}
 
-          setAiSummaryModalVisible={setAiSummaryModalVisible}
+    onCancel={() => {
 
-          aiSummaryData={aiSummaryData}
+      // Dừng audio khi đóng modal
 
-          aiSummaryLoading={aiSummaryLoading}
+      if (audioRef.current) {
 
-          getAISummaryColumns={getAISummaryColumns}
+        audioRef.current.pause();
 
-          setSelectedAISummary={setSelectedAISummary}
+        setIsAudioPlaying(false);
 
-          setAISummaryDetailModalVisible={setAISummaryDetailModalVisible}
-
-        />
+        setIsAudioLoading(false);
 
       }
 
+      setViewModalVisible(false);
 
+    }}
 
+    selectedRecord={selectedRecord}
 
+    isAudioPlaying={isAudioPlaying}
 
-      {/* AI Summary Detail Modal */}
+    isAudioLoading={isAudioLoading}
 
-      {
+    handlePlayAudio={handlePlayAudio}
 
-        aiSummaryDetailModalVisible && <AISummaryDetailModal
+  />
 
-          visible={aiSummaryDetailModalVisible}
+}
 
-          onCancel={() => setAISummaryDetailModalVisible(false)}
 
-          selectedAISummary={selectedAISummary}
 
-        />
 
-      }
 
+{/* Import Excel Modal */ }
 
+<ImportDataExcel
+  handleImportExcel={handleImportExcel}
 
-      {/* AI Summary Edit Modal */}
+  importModalVisible={importModalVisible}
 
-      {
+  setImportPreviewData={setImportPreviewData}
 
-        aiSummaryEditModalVisible && <AISummaryEditModal
+  setImportModalVisible={setImportModalVisible}
 
-          visible={aiSummaryEditModalVisible}
+  importPreviewData={importPreviewData}
 
-          onCancel={() => {
+  uploadingImport={uploadingImport}
 
-            setAISummaryEditModalVisible(false);
+  handleConfirmImport={handleConfirmImport}
 
-            setSelectedAISummary(null);
+  handleDownloadTemplate={handleDownloadTemplate}
 
-            aiSummaryEditForm.resetFields();
+  currentTab={currentTab}
 
-            setTables([]); // Reset tables when closing modal
+/>
 
-            setUploadedFileUrls([]); // Reset file URLs
 
-            setSelectedFiles([]); // Reset selected files
 
-          }}
+{/* Background Audio Settings Modal */ }
 
-          onOk={handleUpdateAISummary}
+<BackgroundAudio
 
-          aiSummaryEditForm={aiSummaryEditForm}
+  visible={bgAudioSettingsVisible}
 
-          selectedFiles={selectedFiles}
+  onCancel={() => setBgAudioSettingsVisible(false)}
 
-          uploadingFiles={uploadingFiles}
+  onOk={saveBgAudioSettings}
 
-          uploadProgress={uploadProgress}
+  bgAudioSettings={bgAudioSettings}
 
-          tables={tables}
+  setBgAudioSettings={setBgAudioSettings}
 
-          handleFileUpload={handleFileUpload}
+  bgAudioFile={bgAudioFile}
 
-          handleAddTable={handleAddTable}
+  bgAudioUploading={bgAudioUploading}
 
-          handleEditTable={handleEditTable}
+  handleBackgroundAudioUpload={handleBackgroundAudioUpload}
 
-          handleDeleteTable={handleDeleteTable}
+/>
 
-        />
 
-      }
 
+{/* Guideline Settings Modal */ }
 
+<GuidelineSettingModal
 
+  visible={guidelineSettingsVisible}
 
+  onCancel={() => setGuidelineSettingsVisible(false)}
 
-      {imageConfigModalVisible &&
+  onOk={saveGuidelineSettings}
 
-        <CreateConfigImage
+  guidelineSettings={guidelineSettings}
 
-          imageConfigModalVisible={imageConfigModalVisible}
+  setGuidelineSettings={setGuidelineSettings}
 
-          setImageConfigModalVisible={setImageConfigModalVisible}
+  guidelineImageFile={guidelineImageFile}
 
-          imageConfig={imageConfig}
+  guidelineImageUploading={guidelineImageUploading}
 
-          setImageConfig={setImageConfig}
+  handleGuidelineImageUpload={handleGuidelineImageUpload}
 
-          saveImageConfig={saveImageConfig}
+/>
 
-        />
 
-      }
 
+{/* JSON Import Modal */ }
 
+{
 
+  jsonImportModalVisible && <ImportDataJson
 
+    setJsonInput={setJsonInput}
 
+    setJsonPreviewData={setJsonPreviewData}
 
+    jsonImportModalVisible={jsonImportModalVisible}
 
-      {/* Table Edit Modal */}
+    setJsonImportModalVisible={setJsonImportModalVisible}
 
-      {
+    jsonInput={jsonInput}
 
-        tableModalVisible && <TableEditModal
+    jsonPreviewData={jsonPreviewData}
 
-          visible={tableModalVisible}
+    uploadingJson={uploadingJson}
 
-          onCancel={() => {
+    currentTab={currentTab}
 
-            setTableModalVisible(false);
+    handleJsonInputChange={handleJsonInputChange}
 
-            setEditingTable(null);
+    handleJsonPreview={handleJsonPreview}
 
-          }}
+    handleConfirmJsonImport={handleConfirmJsonImport}
 
-          editingTable={editingTable}
+    handleLoadJsonTemplate={handleLoadJsonTemplate}
 
-          onSave={handleSaveTable}
+  />
 
-          generateTableDataStructure={generateTableDataStructure}
+}
 
-        />
 
-      }
 
 
 
-      {/* Report Overview Modal */}
+{/* AI Summary Modal */ }
 
-      {
+{
 
-        reportOverviewModalVisible && <ReportOverviewModal
+  aiSummaryModalVisible && <AISummaryTable
 
-          visible={reportOverviewModalVisible}
+    aiSummaryModalVisible={aiSummaryModalVisible}
 
-          onCancel={() => setReportOverviewModalVisible(false)}
+    setAiSummaryModalVisible={setAiSummaryModalVisible}
 
-          onSave={handleReportOverviewSave}
+    aiSummaryData={aiSummaryData}
 
-          currentOverview={reportOverviewData}
+    aiSummaryLoading={aiSummaryLoading}
 
-        />
+    getAISummaryColumns={getAISummaryColumns}
 
-      }
+    setSelectedAISummary={setSelectedAISummary}
 
+    setAISummaryDetailModalVisible={setAISummaryDetailModalVisible}
 
+  />
 
+}
 
 
-      {/* Company Summary Modal */}
 
-      {
 
-        companySummaryModalVisible && <CreateCompanyOverview
 
-          companySummaryModalVisible={companySummaryModalVisible}
+{/* AI Summary Detail Modal */ }
 
-          setCompanySummaryModalVisible={setCompanySummaryModalVisible}
+{
 
-          companySummarySearchTerm={companySummarySearchTerm}
+  aiSummaryDetailModalVisible && <AISummaryDetailModal
 
-          setCompanySummarySearchTerm={setCompanySummarySearchTerm}
+    visible={aiSummaryDetailModalVisible}
 
-          companySummaryLoading={companySummaryLoading}
+    onCancel={() => setAISummaryDetailModalVisible(false)}
 
-          companySummaryData={companySummaryData}
+    selectedAISummary={selectedAISummary}
 
-          handleCompanySummarySearch={handleCompanySummarySearch}
+  />
 
-          handleCreateCompanySummaryReport={handleCreateCompanySummaryReport}
+}
 
-        />
 
-      }
+
+{/* AI Summary Edit Modal */ }
+
+{
+
+  aiSummaryEditModalVisible && <AISummaryEditModal
+
+    visible={aiSummaryEditModalVisible}
+
+    onCancel={() => {
+
+      setAISummaryEditModalVisible(false);
+
+      setSelectedAISummary(null);
+
+      aiSummaryEditForm.resetFields();
+
+      setTables([]); // Reset tables when closing modal
+
+      setUploadedFileUrls([]); // Reset file URLs
+
+      setSelectedFiles([]); // Reset selected files
+
+    }}
+
+    onOk={handleUpdateAISummary}
+
+    aiSummaryEditForm={aiSummaryEditForm}
+
+    selectedFiles={selectedFiles}
+
+    uploadingFiles={uploadingFiles}
+
+    uploadProgress={uploadProgress}
+
+    tables={tables}
+
+    handleFileUpload={handleFileUpload}
+
+    handleAddTable={handleAddTable}
+
+    handleEditTable={handleEditTable}
+
+    handleDeleteTable={handleDeleteTable}
+
+  />
+
+}
+
+
+
+
+
+{
+  imageConfigModalVisible &&
+
+    <CreateConfigImage
+
+      imageConfigModalVisible={imageConfigModalVisible}
+
+      setImageConfigModalVisible={setImageConfigModalVisible}
+
+      imageConfig={imageConfig}
+
+      setImageConfig={setImageConfig}
+
+      saveImageConfig={saveImageConfig}
+
+    />
+
+}
+
+
+
+
+
+
+
+{/* Table Edit Modal */ }
+
+{
+
+  tableModalVisible && <TableEditModal
+
+    visible={tableModalVisible}
+
+    onCancel={() => {
+
+      setTableModalVisible(false);
+
+      setEditingTable(null);
+
+    }}
+
+    editingTable={editingTable}
+
+    onSave={handleSaveTable}
+
+    generateTableDataStructure={generateTableDataStructure}
+
+  />
+
+}
+
+
+
+{/* Report Overview Modal */ }
+
+{
+
+  reportOverviewModalVisible && <ReportOverviewModal
+
+    visible={reportOverviewModalVisible}
+
+    onCancel={() => setReportOverviewModalVisible(false)}
+
+    onSave={handleReportOverviewSave}
+
+    currentOverview={reportOverviewData}
+
+  />
+
+}
+
+
+
+
+
+{/* Company Summary Modal */ }
+
+{
+
+  companySummaryModalVisible && <CreateCompanyOverview
+
+    companySummaryModalVisible={companySummaryModalVisible}
+
+    setCompanySummaryModalVisible={setCompanySummaryModalVisible}
+
+    companySummarySearchTerm={companySummarySearchTerm}
+
+    setCompanySummarySearchTerm={setCompanySummarySearchTerm}
+
+    companySummaryLoading={companySummaryLoading}
+
+    companySummaryData={companySummaryData}
+
+    handleCompanySummarySearch={handleCompanySummarySearch}
+
+    handleCreateCompanySummaryReport={handleCreateCompanySummaryReport}
+
+  />
+
+}
 
 
 
@@ -18728,7 +18914,7 @@ Chỉ trả về nội dung theo đúng định dạng trên, không thêm phầ
         }}
       />
 
-      {/* Prompt Settings Modal */}
+{/* Prompt Settings Modal */ }
       <PromptSettingsModal
         visible={promptSettingsModalVisible}
         onCancel={() => setPromptSettingsModalVisible(false)}
@@ -18769,618 +18955,618 @@ Chỉ trả về nội dung theo đúng định dạng trên, không thêm phầ
         title="Chọn cài đặt Prompt - Tạo Case từ Learning Block"
       />
 
-      {/* User Class Modal */}
-      <Modal
-        title={`Gán User Class cho ${selectedRowKeys.length} bản ghi`}
-        open={userClassModalVisible}
-        onCancel={() => {
-          setUserClassModalVisible(false);
-          setSelectedUserClasses([]);
-        }}
-        onOk={handleBulkUpdateUserClasses}
-        okText="Cập nhật"
-        cancelText="Hủy"
-        width={600}
-        loading={loading}
-      >
-        <div style={{ marginTop: 20 }}>
-          <Space direction="vertical" style={{ width: '100%' }}>
-            <Select
-              mode="multiple"
-              placeholder="Chọn nhóm user class"
-              value={selectedUserClasses}
-              onChange={setSelectedUserClasses}
-              style={{ width: '100%' }}
-              showSearch
-              filterOption={(input, option) =>
-                (option?.children ?? '').toLowerCase().includes(input.toLowerCase())
-              }
-              allowClear
-            >
-              {userClasses.map(cls => (
-                <Option key={cls.id} value={cls.id}>
-                  {cls.name || `Class #${cls.id}`}
-                </Option>
-              ))}
-            </Select>
-            <div style={{ fontSize: '12px', color: '#999', marginTop: 8 }}>
-              Chọn các nhóm user class được phép xem. Để trống nếu muốn xóa giới hạn.
-            </div>
-          </Space>
-        </div>
-      </Modal>
-
-      {/* Tag Management Modal */}
-
-      {
-
-        tagManagementModalVisible && (
-
-          <TagManagementModal
-
-            visible={tagManagementModalVisible}
-
-            onClose={() => setTagManagementModalVisible(false)}
-
-            tag1Options={tag1Options}
-
-            tag2Options={tag2Options}
-
-            tag3Options={tag3Options}
-
-            onSave={saveTagOptions}
-
-          />
-
-        )
-
-      }
-
-      {/* Categories Management Modal */}
-
-      {
-
-        categoriesManagementModalVisible && (
-
-          <CategoriesManagementModal
-
-            visible={categoriesManagementModalVisible}
-
-            onClose={() => setCategoriesManagementModalVisible(false)}
-
-            categoriesOptions={categoriesOptions}
-
-            onSave={saveCategoriesOptions}
-
-          />
-
-        )
-
-      }
-
-
-
-      {
-
-        programManagementModalVisible && (
-
-          <TagProgramModal
-
-            visible={programManagementModalVisible}
-
-            onClose={() => setProgramManagementModalVisible(false)}
-
-            tag4Options={tag4Options}
-
-            onSave={handleSaveTags}
-
-            coursesOptions={coursesOptions}
-
-            onSaveCourses={handleSaveCourses}
-
-          />
-
-        )
-
-      }
-
-
-
-
-
-      {
-
-        quizEditorVisible && <QuizEditorModal
-
-          visible={quizEditorVisible}
-
-          onCancel={() => { setQuizEditorVisible(false); setQuizEditorRecord(null); }}
-
-          record={quizEditorRecord}
-
-          confirmLoading={savingQuiz}
-
-          onSave={async (questionContent) => {
-
-            if (!quizEditorRecord) return;
-
-            try {
-
-              setSavingQuiz(true);
-
-              await updateK9({ id: quizEditorRecord.id, questionContent });
-
-              message.success('Lưu quiz/essay thành công');
-
-              // Update local datasets
-
-              const updater = (list) => list.map(item => item.id === quizEditorRecord.id ? { ...item, questionContent } : item);
-
-              if (currentTab === 'report') {
-
-                setAiSummaryData(prev => updater(prev));
-
-              } else if (currentTab === 'reportDN') {
-
-                setReportDNData(prev => updater(prev));
-
-              } else {
-
-                setAllData(prev => ({ ...prev, [currentTab]: updater(prev[currentTab] || []) }));
-
-                setFilteredData(prev => ({ ...prev, [currentTab]: updater(prev[currentTab] || []) }));
-
-                setData(prev => updater(prev));
-
-              }
-
-              setQuizEditorVisible(false);
-
-              setQuizEditorRecord(null);
-
-            } catch (e) {
-
-              console.error(e);
-
-              message.error('Lưu quiz/essay thất bại');
-
-            } finally {
-
-              setSavingQuiz(false);
-
-            }
-
-          }}
-
-        />
-
-      }
-
-
-
-      {/* QuestionContent Modal */}
-
-      {
-
-        questionContentModalVisible && <QuestionContentModal
-
-          visible={questionContentModalVisible}
-
-          onCancel={() => {
-
-            setQuestionContentModalVisible(false);
-
-            setSelectedQuestionContent(null);
-
-            setSelectedQuestionContentTitle('');
-
-            setSelectedQuestionContentRecord(null);
-
-          }}
-
-          questionContent={selectedQuestionContent}
-
-          recordTitle={selectedQuestionContentTitle}
-
-          onUpdateQuestionContent={handleUpdateQuestionContent}
-
-        />
-
-      }
-
-
-
-      {/* Bulk Update Modal */}
-
-      <BulkUpdateModal
-
-        visible={bulkUpdateModalVisible}
-
-        onClose={() => setBulkUpdateModalVisible(false)}
-
-        selectedIds={selectedRowKeys}
-
-        fieldToUpdate={fieldToUpdate}
-
-        currentTab={currentTab}
-
-        onSuccess={handleBulkUpdateSuccess}
-
-        categoryOptions={categoriesOptions}
-
-        tagOptions={tag1Options}
-
-        levelOptions={tag2Options}
-
-        seriesOptions={tag3Options}
-
-        programOptions={programOptions}
-
-        setUpdateCategoryLoading={setUpdateCategoryLoading}
-
-      />
-
-
-
-      {/* Diagram Config Modal */}
-      <CreateConfigDiagram
-        diagramConfigModalVisible={diagramConfigModalVisible}
-        setDiagramConfigModalVisible={setDiagramConfigModalVisible}
-        diagramConfig={diagramConfig}
-        setDiagramConfig={setDiagramConfig}
-        saveDiagramConfig={saveDiagramConfig}
-      />
-
-      {/* Summary Detail Config Modal */}
-      <CreateConfigSummaryDetail
-        summaryDetailConfigModalVisible={summaryDetailConfigModalVisible}
-        setSummaryDetailConfigModalVisible={setSummaryDetailConfigModalVisible}
-        summaryDetailConfig={summaryDetailConfig}
-        setSummaryDetailConfig={setSummaryDetailConfig}
-        saveSummaryDetailConfig={saveSummaryDetailConfig}
-      />
-
-      {/* Diagram Preview Modal */}
-      {
-        diagramPreviewModalVisible && (
-          <DiagramPreviewModal
-            visible={diagramPreviewModalVisible}
-            onClose={() => setDiagramPreviewModalVisible(false)}
-            diagramData={selectedDiagramData}
-            onSave={handleDiagramSave}
-          />
-        )
-      }
-
-      {/* Diagram Progress Modal */}
-      <Modal
-        title={
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span>Tiến trình tạo {
-              diagramGenerationStats.type === 'html' ? 'HTML Code' :
-                diagramGenerationStats.type === 'excalidraw-react' ? 'Excalidraw React' :
-                  'Diagram'
-            }</span>
-          </div>
+{/* User Class Modal */ }
+<Modal
+  title={`Gán User Class cho ${selectedRowKeys.length} bản ghi`}
+  open={userClassModalVisible}
+  onCancel={() => {
+    setUserClassModalVisible(false);
+    setSelectedUserClasses([]);
+  }}
+  onOk={handleBulkUpdateUserClasses}
+  okText="Cập nhật"
+  cancelText="Hủy"
+  width={600}
+  loading={loading}
+>
+  <div style={{ marginTop: 20 }}>
+    <Space direction="vertical" style={{ width: '100%' }}>
+      <Select
+        mode="multiple"
+        placeholder="Chọn nhóm user class"
+        value={selectedUserClasses}
+        onChange={setSelectedUserClasses}
+        style={{ width: '100%' }}
+        showSearch
+        filterOption={(input, option) =>
+          (option?.children ?? '').toLowerCase().includes(input.toLowerCase())
         }
-        open={diagramProgressModalVisible}
-        onCancel={() => setDiagramProgressModalVisible(false)}
-        footer={[
-          processingDiagramQueue && (
-            <Button
-              key="stop"
-              danger
-              onClick={handleStopDiagramGeneration}
-              style={{ marginRight: '8px' }}
-            >
-              Dừng quá trình
-            </Button>
-          ),
-          <Button key="close" onClick={() => setDiagramProgressModalVisible(false)}>
-            Đóng
-          </Button>
-        ]}
-        width={800}
+        allowClear
       >
-        <div style={{ marginBottom: '16px' }}>
-          <div style={{ display: 'flex', gap: '16px', marginBottom: '16px' }}>
-            <div style={{ flex: 1, textAlign: 'center', padding: '12px', backgroundColor: '#f0f0f0', borderRadius: '6px' }}>
-              <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#1890ff' }}>
-                {diagramGenerationStats.total}
-              </div>
-              <div style={{ fontSize: '12px', color: '#666' }}>Tổng số</div>
-            </div>
-            <div style={{ flex: 1, textAlign: 'center', padding: '12px', backgroundColor: '#f6ffed', borderRadius: '6px' }}>
-              <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#52c41a' }}>
-                {diagramGenerationStats.success}
-              </div>
-              <div style={{ fontSize: '12px', color: '#666' }}>Thành công</div>
-            </div>
-            <div style={{ flex: 1, textAlign: 'center', padding: '12px', backgroundColor: '#fff2f0', borderRadius: '6px' }}>
-              <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#ff4d4f' }}>
-                {diagramGenerationStats.failed}
-              </div>
-              <div style={{ fontSize: '12px', color: '#666' }}>Thất bại</div>
-            </div>
-          </div>
+        {userClasses.map(cls => (
+          <Option key={cls.id} value={cls.id}>
+            {cls.name || `Class #${cls.id}`}
+          </Option>
+        ))}
+      </Select>
+      <div style={{ fontSize: '12px', color: '#999', marginTop: 8 }}>
+        Chọn các nhóm user class được phép xem. Để trống nếu muốn xóa giới hạn.
+      </div>
+    </Space>
+  </div>
+</Modal>
 
-          {processingDiagramQueue && currentDiagramProcessing && (
-            <div style={{
-              padding: '12px',
-              backgroundColor: '#fff7e6',
-              borderRadius: '6px',
-              border: '1px solid #ffd591',
-              marginBottom: '16px'
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                <LoadingOutlined style={{ color: '#fa8c16' }} />
-                <span style={{ fontWeight: 'bold' }}>Đang xử lý:</span>
-              </div>
-              <div style={{ fontSize: '14px', color: '#666' }}>
-                {currentDiagramProcessing.title}
-              </div>
-            </div>
-          )}
+{/* Tag Management Modal */ }
 
-        </div>
+{
 
-        <div>
-          <div style={{ fontWeight: 'bold', marginBottom: '12px' }}>Danh sách tất cả task:</div>
-          <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
+  tagManagementModalVisible && (
 
-            {/* Task đang xử lý */}
-            {processingDiagramQueue && currentDiagramProcessing && (
-              <div
-                style={{
-                  padding: '12px',
-                  marginBottom: '8px',
-                  borderRadius: '6px',
-                  backgroundColor: '#fff7e6',
-                  border: '1px solid #ffd591'
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                  <LoadingOutlined style={{ color: '#fa8c16' }} />
-                  <span style={{ fontWeight: 'bold' }}>Đang xử lý: {currentDiagramProcessing.title}</span>
-                  <span style={{
-                    fontSize: '12px',
-                    padding: '2px 6px',
-                    borderRadius: '4px',
-                    backgroundColor: currentDiagramProcessing.mode === 'html' ? '#e6f7ff' : '#fff7e6',
-                    color: currentDiagramProcessing.mode === 'html' ? '#1890ff' : '#fa8c16'
-                  }}>
-                    {currentDiagramProcessing.mode === 'html' ? 'HTML' : 'Kroki'}
-                  </span>
-                </div>
-                <div style={{ fontSize: '12px', color: '#666' }}>
-                  Đang tạo {currentDiagramProcessing.mode === 'html' ? 'HTML code' : 'diagram'}...
-                </div>
-              </div>
-            )}
+    <TagManagementModal
 
-            {/* Tasks trong queue */}
-            {diagramGenerationQueue.map((task, index) => (
-              <div
-                key={task.id}
-                style={{
-                  padding: '12px',
-                  marginBottom: '8px',
-                  borderRadius: '6px',
-                  backgroundColor: '#f0f0f0',
-                  border: '1px solid #d9d9d9'
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                  <span style={{
-                    fontSize: '12px',
-                    padding: '2px 6px',
-                    borderRadius: '4px',
-                    backgroundColor: '#e6f7ff',
-                    color: '#1890ff',
-                    fontWeight: 'bold'
-                  }}>
-                    #{index + 1}
-                  </span>
-                  <span style={{ fontWeight: 'bold' }}>Chờ xử lý: {task.title}</span>
-                  <span style={{
-                    fontSize: '12px',
-                    padding: '2px 6px',
-                    borderRadius: '4px',
-                    backgroundColor: task.mode === 'html' ? '#e6f7ff' : '#fff7e6',
-                    color: task.mode === 'html' ? '#1890ff' : '#fa8c16'
-                  }}>
-                    {task.mode === 'html' ? 'HTML' : 'Kroki'}
-                  </span>
-                </div>
-                <div style={{ fontSize: '12px', color: '#666' }}>
-                  Sẽ tạo {task.mode === 'html' ? 'HTML code' : 'diagram'} sau khi hoàn thành task trước
-                </div>
-              </div>
-            ))}
+      visible={tagManagementModalVisible}
 
-            {/* Kết quả đã hoàn thành */}
-            {diagramGenerationResults.length > 0 && (
-              <>
-                <div style={{
-                  fontWeight: 'bold',
-                  marginTop: '16px',
-                  marginBottom: '12px',
-                  padding: '8px',
-                  backgroundColor: '#f6ffed',
-                  borderRadius: '4px',
-                  border: '1px solid #b7eb8f'
-                }}>
-                  ✅ Kết quả đã hoàn thành ({diagramGenerationResults.length}):
-                </div>
-                {diagramGenerationResults.map((result, index) => (
-                  <div
-                    key={result.id}
-                    style={{
-                      padding: '12px',
-                      marginBottom: '8px',
-                      borderRadius: '6px',
-                      backgroundColor: result.status === 'success' ? '#f6ffed' : '#fff2f0',
-                      border: `1px solid ${result.status === 'success' ? '#b7eb8f' : '#ffccc7'}`
-                    }}
-                  >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                      {result.status === 'success' ? (
-                        <CheckCircleOutlined style={{ color: '#52c41a' }} />
-                      ) : (
-                        <span style={{ color: '#ff4d4f' }}>❌</span>
-                      )}
-                      <span style={{ fontWeight: 'bold' }}>✅ Hoàn thành: {result.title}</span>
-                      <span style={{
-                        fontSize: '12px',
-                        padding: '2px 6px',
-                        borderRadius: '4px',
-                        backgroundColor: result.type === 'html' ? '#e6f7ff' : '#fff7e6',
-                        color: result.type === 'html' ? '#1890ff' : '#fa8c16'
-                      }}>
-                        {result.type === 'html' ? 'HTML' : 'Kroki'}
-                      </span>
-                    </div>
-                    {result.status === 'success' ? (
-                      <div style={{ fontSize: '12px', color: '#666' }}>
-                        Tạo thành công {result.count} {result.type === 'html' ? 'HTML code' : 'diagram'}
-                      </div>
-                    ) : (
-                      <div style={{ fontSize: '12px', color: '#ff4d4f' }}>
-                        Lỗi: {result.error}
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </>
-            )}
-          </div>
-        </div>
-      </Modal>
+      onClose={() => setTagManagementModalVisible(false)}
 
-      {/* Case From Learning Block Progress Modal */}
-      <Modal
-        title="Tiến trình tạo Case Training từ Learning Block"
-        open={caseFromLearningProgressModalVisible}
-        onCancel={() => setCaseFromLearningProgressModalVisible(false)}
-        footer={[
-          <Button key="close" onClick={() => setCaseFromLearningProgressModalVisible(false)}>
-            Đóng
-          </Button>
-        ]}
-        width={800}
-      >
-        <div style={{ marginBottom: '16px' }}>
-          <div style={{ display: 'flex', gap: '16px', marginBottom: '16px' }}>
-            <div style={{ flex: 1, textAlign: 'center', padding: '12px', backgroundColor: '#f0f0f0', borderRadius: '6px' }}>
-              <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#1890ff' }}>
-                {caseFromLearningStats.total}
-              </div>
-              <div style={{ fontSize: '12px', color: '#666' }}>Tổng số Case dự kiến</div>
-            </div>
-            <div style={{ flex: 1, textAlign: 'center', padding: '12px', backgroundColor: '#f6ffed', borderRadius: '6px' }}>
-              <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#52c41a' }}>
-                {caseFromLearningStats.success}
-              </div>
-              <div style={{ fontSize: '12px', color: '#666' }}>Tạo thành công</div>
-            </div>
-            <div style={{ flex: 1, textAlign: 'center', padding: '12px', backgroundColor: '#fff2f0', borderRadius: '6px' }}>
-              <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#ff4d4f' }}>
-                {caseFromLearningStats.failed}
-              </div>
-              <div style={{ fontSize: '12px', color: '#666' }}>Thất bại</div>
-            </div>
-          </div>
-          {processingCaseFromLearningBlockQueue && (
-            <div style={{ marginBottom: '12px' }}>
-              <Spin size="small" />{' '}
-              <span style={{ marginLeft: 8 }}>Đang xử lý: {currentCaseFromLearningBlockProcessing?.title || '...'}</span>
-            </div>
-          )}
-        </div>
-        <div style={{ maxHeight: '400px', overflowY: 'auto', borderTop: '1px solid #f0f0f0', paddingTop: 12 }}>
-          {caseFromLearningResults.length === 0 ? (
-            <div style={{ textAlign: 'center', color: '#999' }}>Chưa có bản ghi nào được xử lý.</div>
-          ) : (
-            <Table
-              size="small"
-              pagination={false}
-              rowKey="id"
-              dataSource={caseFromLearningResults}
-              columns={[
-                {
-                  title: 'ID',
-                  dataIndex: 'recordId',
-                  key: 'recordId',
-                  width: 80
-                },
-                {
-                  title: 'Tiêu đề',
-                  dataIndex: 'title',
-                  key: 'title',
-                  render: (text) => <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'inline-block', maxWidth: 400 }}>{text}</span>
-                },
-                {
-                  title: 'Trạng thái',
-                  dataIndex: 'status',
-                  key: 'status',
-                  width: 120,
-                  render: (status) => {
-                    if (status === 'success') {
-                      return <Tag color="green">Thành công</Tag>;
-                    }
-                    if (status === 'failed') {
-                      return <Tag color="red">Thất bại</Tag>;
-                    }
-                    return <Tag>Khác</Tag>;
-                  }
-                },
-                {
-                  title: 'Lỗi',
-                  dataIndex: 'error',
-                  key: 'error',
-                  render: (error) => error ? <span style={{ color: '#ff4d4f' }}>{error}</span> : null
-                }
-              ]}
-            />
-          )}
-        </div>
-      </Modal>
+      tag1Options={tag1Options}
 
-      {/* Voice Settings Modal */}
-      <VoiceSettingsModal
-        visible={voiceSettingsVisible}
-        onCancel={() => setVoiceSettingsVisible(false)}
-        settings={voiceSettings}
-        onSave={(updatedSettings) => {
-          setVoiceSettings(updatedSettings);
-          saveVoiceSettings(updatedSettings);
-        }}
-      />
+      tag2Options={tag2Options}
 
-      {/* Voice Queue Modal */}
-      <VoiceQueueModal
-        visible={voiceQueueModalVisible}
-        onCancel={() => setVoiceQueueModalVisible(false)}
-        voiceQueue={voiceQueue}
-        currentProcessing={currentProcessing}
-        onStopTask={handleStopVoiceTask}
-      />
+      tag3Options={tag3Options}
 
-      {/* Related Case Training Modal */}
-      <RelatedCaseTrainingModal
-        visible={relatedCaseTrainingModalVisible}
-        onClose={() => {
-          setRelatedCaseTrainingModalVisible(false);
-          setSelectedNewsItemForCaseTraining(null);
-          setRelatedCaseTrainingList([]);
-        }}
-        selectedNewsItem={selectedNewsItemForCaseTraining}
-        relatedCaseTrainingList={relatedCaseTrainingList}
-        onRefresh={() => {
-          loadAllData();
-        }}
-      />
+      onSave={saveTagOptions}
+
+    />
+
+  )
+
+}
+
+{/* Categories Management Modal */ }
+
+{
+
+  categoriesManagementModalVisible && (
+
+    <CategoriesManagementModal
+
+      visible={categoriesManagementModalVisible}
+
+      onClose={() => setCategoriesManagementModalVisible(false)}
+
+      categoriesOptions={categoriesOptions}
+
+      onSave={saveCategoriesOptions}
+
+    />
+
+  )
+
+}
+
+
+
+{
+
+  programManagementModalVisible && (
+
+    <TagProgramModal
+
+      visible={programManagementModalVisible}
+
+      onClose={() => setProgramManagementModalVisible(false)}
+
+      tag4Options={tag4Options}
+
+      onSave={handleSaveTags}
+
+      coursesOptions={coursesOptions}
+
+      onSaveCourses={handleSaveCourses}
+
+    />
+
+  )
+
+}
+
+
+
+
+
+{
+
+  quizEditorVisible && <QuizEditorModal
+
+    visible={quizEditorVisible}
+
+    onCancel={() => { setQuizEditorVisible(false); setQuizEditorRecord(null); }}
+
+    record={quizEditorRecord}
+
+    confirmLoading={savingQuiz}
+
+    onSave={async (questionContent) => {
+
+      if (!quizEditorRecord) return;
+
+      try {
+
+        setSavingQuiz(true);
+
+        await updateK9({ id: quizEditorRecord.id, questionContent });
+
+        message.success('Lưu quiz/essay thành công');
+
+        // Update local datasets
+
+        const updater = (list) => list.map(item => item.id === quizEditorRecord.id ? { ...item, questionContent } : item);
+
+        if (currentTab === 'report') {
+
+          setAiSummaryData(prev => updater(prev));
+
+        } else if (currentTab === 'reportDN') {
+
+          setReportDNData(prev => updater(prev));
+
+        } else {
+
+          setAllData(prev => ({ ...prev, [currentTab]: updater(prev[currentTab] || []) }));
+
+          setFilteredData(prev => ({ ...prev, [currentTab]: updater(prev[currentTab] || []) }));
+
+          setData(prev => updater(prev));
+
+        }
+
+        setQuizEditorVisible(false);
+
+        setQuizEditorRecord(null);
+
+      } catch (e) {
+
+        console.error(e);
+
+        message.error('Lưu quiz/essay thất bại');
+
+      } finally {
+
+        setSavingQuiz(false);
+
+      }
+
+    }}
+
+  />
+
+}
+
+
+
+{/* QuestionContent Modal */ }
+
+{
+
+  questionContentModalVisible && <QuestionContentModal
+
+    visible={questionContentModalVisible}
+
+    onCancel={() => {
+
+      setQuestionContentModalVisible(false);
+
+      setSelectedQuestionContent(null);
+
+      setSelectedQuestionContentTitle('');
+
+      setSelectedQuestionContentRecord(null);
+
+    }}
+
+    questionContent={selectedQuestionContent}
+
+    recordTitle={selectedQuestionContentTitle}
+
+    onUpdateQuestionContent={handleUpdateQuestionContent}
+
+  />
+
+}
+
+
+
+{/* Bulk Update Modal */ }
+
+<BulkUpdateModal
+
+  visible={bulkUpdateModalVisible}
+
+  onClose={() => setBulkUpdateModalVisible(false)}
+
+  selectedIds={selectedRowKeys}
+
+  fieldToUpdate={fieldToUpdate}
+
+  currentTab={currentTab}
+
+  onSuccess={handleBulkUpdateSuccess}
+
+  categoryOptions={categoriesOptions}
+
+  tagOptions={tag1Options}
+
+  levelOptions={tag2Options}
+
+  seriesOptions={tag3Options}
+
+  programOptions={programOptions}
+
+  setUpdateCategoryLoading={setUpdateCategoryLoading}
+
+/>
+
+
+
+{/* Diagram Config Modal */ }
+<CreateConfigDiagram
+  diagramConfigModalVisible={diagramConfigModalVisible}
+  setDiagramConfigModalVisible={setDiagramConfigModalVisible}
+  diagramConfig={diagramConfig}
+  setDiagramConfig={setDiagramConfig}
+  saveDiagramConfig={saveDiagramConfig}
+/>
+
+{/* Summary Detail Config Modal */ }
+<CreateConfigSummaryDetail
+  summaryDetailConfigModalVisible={summaryDetailConfigModalVisible}
+  setSummaryDetailConfigModalVisible={setSummaryDetailConfigModalVisible}
+  summaryDetailConfig={summaryDetailConfig}
+  setSummaryDetailConfig={setSummaryDetailConfig}
+  saveSummaryDetailConfig={saveSummaryDetailConfig}
+/>
+
+{/* Diagram Preview Modal */ }
+{
+  diagramPreviewModalVisible && (
+    <DiagramPreviewModal
+      visible={diagramPreviewModalVisible}
+      onClose={() => setDiagramPreviewModalVisible(false)}
+      diagramData={selectedDiagramData}
+      onSave={handleDiagramSave}
+    />
+  )
+}
+
+{/* Diagram Progress Modal */ }
+<Modal
+  title={
+    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+      <span>Tiến trình tạo {
+        diagramGenerationStats.type === 'html' ? 'HTML Code' :
+          diagramGenerationStats.type === 'excalidraw-react' ? 'Excalidraw React' :
+            'Diagram'
+      }</span>
     </div>
+  }
+  open={diagramProgressModalVisible}
+  onCancel={() => setDiagramProgressModalVisible(false)}
+  footer={[
+    processingDiagramQueue && (
+      <Button
+        key="stop"
+        danger
+        onClick={handleStopDiagramGeneration}
+        style={{ marginRight: '8px' }}
+      >
+        Dừng quá trình
+      </Button>
+    ),
+    <Button key="close" onClick={() => setDiagramProgressModalVisible(false)}>
+      Đóng
+    </Button>
+  ]}
+  width={800}
+>
+  <div style={{ marginBottom: '16px' }}>
+    <div style={{ display: 'flex', gap: '16px', marginBottom: '16px' }}>
+      <div style={{ flex: 1, textAlign: 'center', padding: '12px', backgroundColor: '#f0f0f0', borderRadius: '6px' }}>
+        <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#1890ff' }}>
+          {diagramGenerationStats.total}
+        </div>
+        <div style={{ fontSize: '12px', color: '#666' }}>Tổng số</div>
+      </div>
+      <div style={{ flex: 1, textAlign: 'center', padding: '12px', backgroundColor: '#f6ffed', borderRadius: '6px' }}>
+        <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#52c41a' }}>
+          {diagramGenerationStats.success}
+        </div>
+        <div style={{ fontSize: '12px', color: '#666' }}>Thành công</div>
+      </div>
+      <div style={{ flex: 1, textAlign: 'center', padding: '12px', backgroundColor: '#fff2f0', borderRadius: '6px' }}>
+        <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#ff4d4f' }}>
+          {diagramGenerationStats.failed}
+        </div>
+        <div style={{ fontSize: '12px', color: '#666' }}>Thất bại</div>
+      </div>
+    </div>
+
+    {processingDiagramQueue && currentDiagramProcessing && (
+      <div style={{
+        padding: '12px',
+        backgroundColor: '#fff7e6',
+        borderRadius: '6px',
+        border: '1px solid #ffd591',
+        marginBottom: '16px'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+          <LoadingOutlined style={{ color: '#fa8c16' }} />
+          <span style={{ fontWeight: 'bold' }}>Đang xử lý:</span>
+        </div>
+        <div style={{ fontSize: '14px', color: '#666' }}>
+          {currentDiagramProcessing.title}
+        </div>
+      </div>
+    )}
+
+  </div>
+
+  <div>
+    <div style={{ fontWeight: 'bold', marginBottom: '12px' }}>Danh sách tất cả task:</div>
+    <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
+
+      {/* Task đang xử lý */}
+      {processingDiagramQueue && currentDiagramProcessing && (
+        <div
+          style={{
+            padding: '12px',
+            marginBottom: '8px',
+            borderRadius: '6px',
+            backgroundColor: '#fff7e6',
+            border: '1px solid #ffd591'
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+            <LoadingOutlined style={{ color: '#fa8c16' }} />
+            <span style={{ fontWeight: 'bold' }}>Đang xử lý: {currentDiagramProcessing.title}</span>
+            <span style={{
+              fontSize: '12px',
+              padding: '2px 6px',
+              borderRadius: '4px',
+              backgroundColor: currentDiagramProcessing.mode === 'html' ? '#e6f7ff' : '#fff7e6',
+              color: currentDiagramProcessing.mode === 'html' ? '#1890ff' : '#fa8c16'
+            }}>
+              {currentDiagramProcessing.mode === 'html' ? 'HTML' : 'Kroki'}
+            </span>
+          </div>
+          <div style={{ fontSize: '12px', color: '#666' }}>
+            Đang tạo {currentDiagramProcessing.mode === 'html' ? 'HTML code' : 'diagram'}...
+          </div>
+        </div>
+      )}
+
+      {/* Tasks trong queue */}
+      {diagramGenerationQueue.map((task, index) => (
+        <div
+          key={task.id}
+          style={{
+            padding: '12px',
+            marginBottom: '8px',
+            borderRadius: '6px',
+            backgroundColor: '#f0f0f0',
+            border: '1px solid #d9d9d9'
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+            <span style={{
+              fontSize: '12px',
+              padding: '2px 6px',
+              borderRadius: '4px',
+              backgroundColor: '#e6f7ff',
+              color: '#1890ff',
+              fontWeight: 'bold'
+            }}>
+              #{index + 1}
+            </span>
+            <span style={{ fontWeight: 'bold' }}>Chờ xử lý: {task.title}</span>
+            <span style={{
+              fontSize: '12px',
+              padding: '2px 6px',
+              borderRadius: '4px',
+              backgroundColor: task.mode === 'html' ? '#e6f7ff' : '#fff7e6',
+              color: task.mode === 'html' ? '#1890ff' : '#fa8c16'
+            }}>
+              {task.mode === 'html' ? 'HTML' : 'Kroki'}
+            </span>
+          </div>
+          <div style={{ fontSize: '12px', color: '#666' }}>
+            Sẽ tạo {task.mode === 'html' ? 'HTML code' : 'diagram'} sau khi hoàn thành task trước
+          </div>
+        </div>
+      ))}
+
+      {/* Kết quả đã hoàn thành */}
+      {diagramGenerationResults.length > 0 && (
+        <>
+          <div style={{
+            fontWeight: 'bold',
+            marginTop: '16px',
+            marginBottom: '12px',
+            padding: '8px',
+            backgroundColor: '#f6ffed',
+            borderRadius: '4px',
+            border: '1px solid #b7eb8f'
+          }}>
+            ✅ Kết quả đã hoàn thành ({diagramGenerationResults.length}):
+          </div>
+          {diagramGenerationResults.map((result, index) => (
+            <div
+              key={result.id}
+              style={{
+                padding: '12px',
+                marginBottom: '8px',
+                borderRadius: '6px',
+                backgroundColor: result.status === 'success' ? '#f6ffed' : '#fff2f0',
+                border: `1px solid ${result.status === 'success' ? '#b7eb8f' : '#ffccc7'}`
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                {result.status === 'success' ? (
+                  <CheckCircleOutlined style={{ color: '#52c41a' }} />
+                ) : (
+                  <span style={{ color: '#ff4d4f' }}>❌</span>
+                )}
+                <span style={{ fontWeight: 'bold' }}>✅ Hoàn thành: {result.title}</span>
+                <span style={{
+                  fontSize: '12px',
+                  padding: '2px 6px',
+                  borderRadius: '4px',
+                  backgroundColor: result.type === 'html' ? '#e6f7ff' : '#fff7e6',
+                  color: result.type === 'html' ? '#1890ff' : '#fa8c16'
+                }}>
+                  {result.type === 'html' ? 'HTML' : 'Kroki'}
+                </span>
+              </div>
+              {result.status === 'success' ? (
+                <div style={{ fontSize: '12px', color: '#666' }}>
+                  Tạo thành công {result.count} {result.type === 'html' ? 'HTML code' : 'diagram'}
+                </div>
+              ) : (
+                <div style={{ fontSize: '12px', color: '#ff4d4f' }}>
+                  Lỗi: {result.error}
+                </div>
+              )}
+            </div>
+          ))}
+        </>
+      )}
+    </div>
+  </div>
+</Modal>
+
+{/* Case From Learning Block Progress Modal */ }
+<Modal
+  title="Tiến trình tạo Case Training từ Learning Block"
+  open={caseFromLearningProgressModalVisible}
+  onCancel={() => setCaseFromLearningProgressModalVisible(false)}
+  footer={[
+    <Button key="close" onClick={() => setCaseFromLearningProgressModalVisible(false)}>
+      Đóng
+    </Button>
+  ]}
+  width={800}
+>
+  <div style={{ marginBottom: '16px' }}>
+    <div style={{ display: 'flex', gap: '16px', marginBottom: '16px' }}>
+      <div style={{ flex: 1, textAlign: 'center', padding: '12px', backgroundColor: '#f0f0f0', borderRadius: '6px' }}>
+        <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#1890ff' }}>
+          {caseFromLearningStats.total}
+        </div>
+        <div style={{ fontSize: '12px', color: '#666' }}>Tổng số Case dự kiến</div>
+      </div>
+      <div style={{ flex: 1, textAlign: 'center', padding: '12px', backgroundColor: '#f6ffed', borderRadius: '6px' }}>
+        <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#52c41a' }}>
+          {caseFromLearningStats.success}
+        </div>
+        <div style={{ fontSize: '12px', color: '#666' }}>Tạo thành công</div>
+      </div>
+      <div style={{ flex: 1, textAlign: 'center', padding: '12px', backgroundColor: '#fff2f0', borderRadius: '6px' }}>
+        <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#ff4d4f' }}>
+          {caseFromLearningStats.failed}
+        </div>
+        <div style={{ fontSize: '12px', color: '#666' }}>Thất bại</div>
+      </div>
+    </div>
+    {processingCaseFromLearningBlockQueue && (
+      <div style={{ marginBottom: '12px' }}>
+        <Spin size="small" />{' '}
+        <span style={{ marginLeft: 8 }}>Đang xử lý: {currentCaseFromLearningBlockProcessing?.title || '...'}</span>
+      </div>
+    )}
+  </div>
+  <div style={{ maxHeight: '400px', overflowY: 'auto', borderTop: '1px solid #f0f0f0', paddingTop: 12 }}>
+    {caseFromLearningResults.length === 0 ? (
+      <div style={{ textAlign: 'center', color: '#999' }}>Chưa có bản ghi nào được xử lý.</div>
+    ) : (
+      <Table
+        size="small"
+        pagination={false}
+        rowKey="id"
+        dataSource={caseFromLearningResults}
+        columns={[
+          {
+            title: 'ID',
+            dataIndex: 'recordId',
+            key: 'recordId',
+            width: 80
+          },
+          {
+            title: 'Tiêu đề',
+            dataIndex: 'title',
+            key: 'title',
+            render: (text) => <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'inline-block', maxWidth: 400 }}>{text}</span>
+          },
+          {
+            title: 'Trạng thái',
+            dataIndex: 'status',
+            key: 'status',
+            width: 120,
+            render: (status) => {
+              if (status === 'success') {
+                return <Tag color="green">Thành công</Tag>;
+              }
+              if (status === 'failed') {
+                return <Tag color="red">Thất bại</Tag>;
+              }
+              return <Tag>Khác</Tag>;
+            }
+          },
+          {
+            title: 'Lỗi',
+            dataIndex: 'error',
+            key: 'error',
+            render: (error) => error ? <span style={{ color: '#ff4d4f' }}>{error}</span> : null
+          }
+        ]}
+      />
+    )}
+  </div>
+</Modal>
+
+{/* Voice Settings Modal */ }
+<VoiceSettingsModal
+  visible={voiceSettingsVisible}
+  onCancel={() => setVoiceSettingsVisible(false)}
+  settings={voiceSettings}
+  onSave={(updatedSettings) => {
+    setVoiceSettings(updatedSettings);
+    saveVoiceSettings(updatedSettings);
+  }}
+/>
+
+{/* Voice Queue Modal */ }
+<VoiceQueueModal
+  visible={voiceQueueModalVisible}
+  onCancel={() => setVoiceQueueModalVisible(false)}
+  voiceQueue={voiceQueue}
+  currentProcessing={currentProcessing}
+  onStopTask={handleStopVoiceTask}
+/>
+
+{/* Related Case Training Modal */ }
+<RelatedCaseTrainingModal
+  visible={relatedCaseTrainingModalVisible}
+  onClose={() => {
+    setRelatedCaseTrainingModalVisible(false);
+    setSelectedNewsItemForCaseTraining(null);
+    setRelatedCaseTrainingList([]);
+  }}
+  selectedNewsItem={selectedNewsItemForCaseTraining}
+  relatedCaseTrainingList={relatedCaseTrainingList}
+  onRefresh={() => {
+    loadAllData();
+  }}
+/>
+    </div >
 
   );
 

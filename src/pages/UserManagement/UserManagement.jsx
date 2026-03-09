@@ -70,6 +70,7 @@ const UserManagement = () => {
   const [accountTypeFilter, setAccountTypeFilter] = useState(null);
   const [paymentHistoryModalVisible, setPaymentHistoryModalVisible] = useState(false);
   const [selectedUserPaymentHistory, setSelectedUserPaymentHistory] = useState(null);
+  const [isMobile, setIsMobile] = useState(false);
 
   // Hàm tìm kiếm users
   const handleSearch = (value) => {
@@ -292,6 +293,15 @@ const UserManagement = () => {
     fetchUserClasses();
   }, []);
 
+  // Detect mobile viewport for card layout
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 768px)');
+    const handleChange = (e) => setIsMobile(e.matches);
+    setIsMobile(mq.matches);
+    mq.addEventListener('change', handleChange);
+    return () => mq.removeEventListener('change', handleChange);
+  }, []);
+
   const fetchUserClasses = async () => {
     try {
       const classes = await getAllUserClass();
@@ -301,35 +311,48 @@ const UserManagement = () => {
     }
   };
 
+  // Hàm lấy account_type từ user (cột riêng hoặc từ info, hỗ trợ cả snake/camel)
+  const getUserAccountType = (user) => {
+    const type = user.account_type ?? user.accountType ?? null;
+    if (type) return String(type).trim();
+    try {
+      if (user.info) {
+        const infoObj = typeof user.info === 'string' ? JSON.parse(user.info) : user.info;
+        const t = infoObj.account_type ?? infoObj.accountType ?? null;
+        return t ? String(t).trim() : null;
+      }
+    } catch (_) {}
+    return null;
+  };
+
   // Cập nhật filteredUsers khi users, searchValue hoặc accountTypeFilter thay đổi
   useEffect(() => {
     let filtered = [...users];
 
-    // Lọc theo account_type
+    // Lọc theo account_type (Pro 365 ≡ M12, Pro 730 ≡ M24)
     if (accountTypeFilter) {
-      filtered = filtered.filter(user => user.account_type === accountTypeFilter);
+      const typeGroups = {
+        'Pro 365': ['Pro 365', 'M12'],
+        'M12': ['Pro 365', 'M12'],
+        'Pro 730': ['Pro 730', 'M24'],
+        'M24': ['Pro 730', 'M24'],
+      };
+      const typesToMatch = typeGroups[accountTypeFilter] || [accountTypeFilter];
+      filtered = filtered.filter(user => {
+        const type = getUserAccountType(user);
+        if (!type) return false;
+        return typesToMatch.includes(type);
+      });
     }
 
-    // Tìm kiếm theo text
+    // Tìm kiếm theo text: tên, email, tên đăng nhập, số điện thoại
     if (searchValue.trim()) {
       const searchTerm = searchValue.toLowerCase().trim();
       filtered = filtered.filter(user => {
-        // Tìm kiếm theo tên
-        if (user.name && user.name.toLowerCase().includes(searchTerm)) {
-          return true;
-        }
-        // Tìm kiếm theo email
-        if (user.email && user.email.toLowerCase().includes(searchTerm)) {
-          return true;
-        }
-        // Tìm kiếm theo username
-        if (user.username && user.username.toLowerCase().includes(searchTerm)) {
-          return true;
-        }
-        // Tìm kiếm theo số điện thoại
-        if (user.phone && user.phone.includes(searchTerm)) {
-          return true;
-        }
+        if (user.name && user.name.toLowerCase().includes(searchTerm)) return true;
+        if (user.email && user.email.toLowerCase().includes(searchTerm)) return true;
+        if (user.username && user.username.toLowerCase().includes(searchTerm)) return true;
+        if (user.phone && user.phone.includes(searchTerm)) return true;
         return false;
       });
     }
@@ -760,6 +783,67 @@ const UserManagement = () => {
     return colorMap[level] || '#1890ff';
   };
 
+  // Render nội dung thời hạn (dùng chung cho Table và Card mobile)
+  const renderExpiryContent = (record) => {
+    const expiryDate = getExpiryDate(record);
+    const startDate = getStartDate(record);
+    const durationDays = getDurationDays(record);
+    const isExpired = checkAccountExpiry(record);
+
+    if (record.isAdmin) {
+      return <Tag color="green">Không giới hạn</Tag>;
+    }
+    if (!isUserTimeSetup(record)) {
+      return (
+        <div>
+          <Tag color="orange">Chưa setup thời gian</Tag>
+          <br />
+          <small style={{ color: '#ff4d4f', fontSize: '11px' }}>⚠️ Cần thiết lập thời hạn sử dụng</small>
+        </div>
+      );
+    }
+    const endDate = new Date(expiryDate);
+    const startDateObj = startDate ? new Date(startDate) : null;
+    const now = new Date();
+    const timeDiff = endDate - now;
+    const daysLeft = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
+    const hoursLeft = Math.ceil(timeDiff / (1000 * 60 * 60));
+    const minutesLeft = Math.ceil(timeDiff / (1000 * 60));
+    const canUseNow = now >= startDateObj;
+    let color = 'green';
+    let timeDisplay = '';
+    if (!canUseNow) {
+      const daysUntilStart = Math.ceil((startDateObj - now) / (1000 * 60 * 60 * 24));
+      color = 'blue';
+      timeDisplay = `Bắt đầu sau ${daysUntilStart} ngày`;
+    } else if (isExpired) {
+      color = 'red';
+      timeDisplay = 'Đã hết hạn';
+    } else if (daysLeft <= 1) {
+      color = daysLeft === 1 ? 'orange' : 'red';
+      timeDisplay = daysLeft === 1 ? `${hoursLeft} giờ còn lại` : `${minutesLeft} phút còn lại`;
+    } else if (daysLeft <= 7) {
+      color = 'orange';
+      timeDisplay = `${daysLeft} ngày còn lại`;
+    } else if (daysLeft <= 30) {
+      color = 'gold';
+      timeDisplay = `${daysLeft} ngày còn lại`;
+    } else {
+      timeDisplay = `${daysLeft} ngày còn lại`;
+    }
+    return (
+      <div>
+        <Tag color={color}>{timeDisplay}</Tag>
+        <br />
+        <small style={{ color: '#666' }}>
+          Bắt đầu: {startDateObj && `${startDateObj.toLocaleDateString('vi-VN')}`}
+        </small>
+        <br />
+        <small style={{ color: '#999' }}>Hết hạn: {endDate.toLocaleDateString('vi-VN')}</small>
+      </div>
+    );
+  };
+
   // Hàm render user group tag với màu sắc và icon phù hợp
   const renderUserGroupTag = (userGroup) => {
     switch (userGroup) {
@@ -914,86 +998,7 @@ const UserManagement = () => {
     {
       title: 'Thời hạn',
       key: 'expiryDate',
-      render: (_, record) => {
-        const expiryDate = getExpiryDate(record);
-        const startDate = getStartDate(record);
-        const durationDays = getDurationDays(record);
-        const isExpired = checkAccountExpiry(record);
-
-        if (record.isAdmin) {
-          return <Tag color="green">Không giới hạn</Tag>;
-        }
-
-        // Kiểm tra xem user có được setup thời gian chưa
-        if (!isUserTimeSetup(record)) {
-          return (
-            <div>
-              <Tag color="orange">Chưa setup thời gian</Tag>
-              <br />
-              <small style={{ color: '#ff4d4f', fontSize: '11px' }}>
-                ⚠️ Cần thiết lập thời hạn sử dụng
-              </small>
-            </div>
-          );
-        }
-
-        const endDate = new Date(expiryDate);
-        const startDateObj = startDate ? new Date(startDate) : null;
-        const now = new Date();
-        const timeDiff = endDate - now;
-        const daysLeft = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
-        const hoursLeft = Math.ceil(timeDiff / (1000 * 60 * 60));
-        const minutesLeft = Math.ceil(timeDiff / (1000 * 60));
-
-        // Kiểm tra xem user có quyền sử dụng chưa (ngày hiện tại >= ngày bắt đầu)
-        const canUseNow = now >= startDateObj;
-
-        let color = 'green';
-        let timeDisplay = '';
-
-        if (!canUseNow) {
-          // Chưa đến ngày bắt đầu
-          const daysUntilStart = Math.ceil((startDateObj - now) / (1000 * 60 * 60 * 24));
-          color = 'blue';
-          timeDisplay = `Bắt đầu sau ${daysUntilStart} ngày`;
-        } else if (isExpired) {
-          color = 'red';
-          timeDisplay = 'Đã hết hạn';
-        } else if (daysLeft <= 1) {
-          // Còn 1 ngày hoặc ít hơn - hiển thị thời gian chi tiết
-          if (daysLeft === 1) {
-            color = 'orange';
-            timeDisplay = `${hoursLeft} giờ còn lại`;
-          } else {
-            color = 'red';
-            timeDisplay = `${minutesLeft} phút còn lại`;
-          }
-        } else if (daysLeft <= 7) {
-          color = 'orange';
-          timeDisplay = `${daysLeft} ngày còn lại`;
-        } else if (daysLeft <= 30) {
-          color = 'gold';
-          timeDisplay = `${daysLeft} ngày còn lại`;
-        } else {
-          timeDisplay = `${daysLeft} ngày còn lại`;
-        }
-
-        return (
-          <div>
-            <Tag color={color}>
-              {timeDisplay}
-            </Tag>
-            <br />
-            <small style={{ color: '#666' }}>
-              Ngày bắt đầu: {startDateObj && `${startDateObj.toLocaleDateString('vi-VN')} ${startDateObj.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}`}
-            </small>
-            <br />
-            <small style={{ color: '#999' }}>
-              Hết hạn: {endDate.toLocaleDateString('vi-VN')} {daysLeft <= 1 ? endDate.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : ''}
-            </small>
-          </div>
-        );
-      },
+      render: (_, record) => renderExpiryContent(record),
     },
     {
       title: 'Mã thanh toán',
@@ -1112,96 +1117,277 @@ const UserManagement = () => {
       {/* Back to Visao Button */}
 
       <Card>
-        <div className={styles.header}>
-          <Title level={2}>
-            👥 Quản lý người dùng
-          </Title>
-          <Space>
-            <Button
-              type="primary"
-              icon={<ArrowLeft size={16} />}
-              onClick={() => navigate('/home')}
-              style={{
-                boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
-                borderRadius: '6px',
-              }}
-            >
-              Back to Home
-            </Button>
-            <Input
-              placeholder="Tìm kiếm theo tên, email, username, số điện thoại..."
-              prefix={<SearchOutlined />}
-              value={searchValue}
-              onChange={(e) => handleSearch(e.target.value)}
-              style={{ width: 300 }}
-              allowClear
-            />
-            <Select
-              placeholder="Lọc theo gói tài khoản"
-              value={accountTypeFilter}
-              onChange={setAccountTypeFilter}
-              allowClear
-              style={{ width: 200 }}
-            >
-              <Option value="Dùng thử">Dùng thử</Option>
-              <Option value="Pro 90">Pro 90</Option>
-              <Option value="Pro 365">Pro 365</Option>
-              <Option value="Pro 730">Pro 730</Option>
-              <Option value="Pro Flex">Pro Flex</Option>
-            </Select>
-            <Button
-              icon={<ReloadOutlined />}
-              onClick={fetchUsers}
-              loading={loading}
-            >
-              Làm mới
-            </Button>
-            <Button
-              type="primary"
-              icon={<TagsOutlined />}
-              onClick={handleAddUserClass}
-              style={{ backgroundColor: '#52c41a', borderColor: '#52c41a' }}
-            >
-              Quản lý User Class
-            </Button>
-            <Button
-              type="primary"
-              icon={<PlusOutlined />}
-              onClick={handleAddUser}
-            >
-              Thêm người dùng
-            </Button>
-            {selectedRowKeys.length > 0 && (
-              <Popconfirm
-                title="Xác nhận xóa nhiều"
-                description={`Bạn có chắc chắn muốn xóa ${selectedRowKeys.length} người dùng đã chọn?`}
-                onConfirm={handleDeleteMultipleUsers}
-                okText="Xóa"
-                cancelText="Hủy"
-                okType="danger"
-              >
+        <div className={`${styles.header} ${isMobile ? styles.headerMobile : ''}`}>
+          {isMobile ? (
+            <>
+              <div className={styles.headerMobileTopRow}>
                 <Button
                   type="primary"
-                  danger
-                  icon={<DeleteOutlined />}
+                  icon={<ArrowLeft size={16} />}
+                  onClick={() => navigate('/home')}
+                  style={{
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+                    borderRadius: '6px',
+                  }}
+                />
+                <Title level={2} className={styles.title}>
+                  👥 Quản lý người dùng
+                </Title>
+                <Button
+                  icon={<ReloadOutlined />}
+                  onClick={fetchUsers}
+                  loading={loading}
+                />
+              </div>
+              <Space direction="vertical" wrap className={styles.headerActions}>
+                <Input
+                  placeholder="Tìm theo tên, email, tên đăng nhập hoặc số điện thoại"
+                  prefix={<SearchOutlined />}
+                  value={searchValue}
+                  onChange={(e) => handleSearch(e.target.value)}
+                  className={styles.searchInput}
+                  allowClear
+                />
+                <div className={styles.headerMobileFilterRow}>
+                  <Select
+                    placeholder="Lọc theo gói tài khoản"
+                    value={accountTypeFilter}
+                    onChange={setAccountTypeFilter}
+                    allowClear
+                    className={styles.filterSelect}
+                  >
+                    <Option value="Dùng thử">Dùng thử</Option>
+                    <Option value="Pro 90">Pro 90</Option>
+                    <Option value="Pro 365">Pro 365 (gồm M12)</Option>
+                    <Option value="Pro 730">Pro 730 (gồm M24)</Option>
+                    <Option value="Pro Flex">Pro Flex</Option>
+                  </Select>
+                  <Button
+                    type="primary"
+                    icon={<TagsOutlined />}
+                    onClick={handleAddUserClass}
+                    style={{ backgroundColor: '#52c41a', borderColor: '#52c41a' }}
+                    title="User Class"
+                  />
+                  <Button
+                    type="primary"
+                    icon={<PlusOutlined />}
+                    onClick={handleAddUser}
+                    title="Thêm người dùng"
+                  />
+                  {selectedRowKeys.length > 0 && (
+                    <Popconfirm
+                      title="Xác nhận xóa nhiều"
+                      description={`Xóa ${selectedRowKeys.length} người dùng đã chọn?`}
+                      onConfirm={handleDeleteMultipleUsers}
+                      okText="Xóa"
+                      cancelText="Hủy"
+                      okType="danger"
+                    >
+                      <Button type="primary" danger icon={<DeleteOutlined />} title={`Xóa ${selectedRowKeys.length}`} />
+                    </Popconfirm>
+                  )}
+                </div>
+              </Space>
+            </>
+          ) : (
+            <>
+              <Button
+                type="primary"
+                icon={<ArrowLeft size={16} />}
+                onClick={() => navigate('/home')}
+                style={{
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+                  borderRadius: '6px',
+                }}
+              >
+                Back to Home
+              </Button>
+              <Title level={2} className={styles.title}>
+                👥 Quản lý người dùng
+              </Title>
+              <Button
+                icon={<ReloadOutlined />}
+                onClick={fetchUsers}
+                loading={loading}
+              >
+                Làm mới
+              </Button>
+              <Space direction="horizontal" wrap={false} className={styles.headerActions}>
+                <Input
+                  placeholder="Tìm theo tên, email, tên đăng nhập hoặc số điện thoại"
+                  prefix={<SearchOutlined />}
+                  value={searchValue}
+                  onChange={(e) => handleSearch(e.target.value)}
+                  className={styles.searchInput}
+                  allowClear
+                />
+                <Select
+                  placeholder="Lọc theo gói tài khoản"
+                  value={accountTypeFilter}
+                  onChange={setAccountTypeFilter}
+                  allowClear
+                  className={styles.filterSelect}
                 >
-                  Xóa {selectedRowKeys.length} người dùng
-                </Button>
-              </Popconfirm>
-            )}
-          </Space>
+                  <Option value="Dùng thử">Dùng thử</Option>
+                  <Option value="Pro 90">Pro 90</Option>
+                  <Option value="Pro 365">Pro 365 (gồm M12)</Option>
+                  <Option value="Pro 730">Pro 730 (gồm M24)</Option>
+                  <Option value="Pro Flex">Pro Flex</Option>
+                </Select>
+                <Space wrap={false}>
+                  <Button
+                    type="primary"
+                    icon={<TagsOutlined />}
+                    onClick={handleAddUserClass}
+                    style={{ backgroundColor: '#52c41a', borderColor: '#52c41a' }}
+                  >
+                    User Class
+                  </Button>
+                  <Button
+                    type="primary"
+                    icon={<PlusOutlined />}
+                    onClick={handleAddUser}
+                  >
+                    Thêm người dùng
+                  </Button>
+                  {selectedRowKeys.length > 0 && (
+                    <Popconfirm
+                      title="Xác nhận xóa nhiều"
+                      description={`Xóa ${selectedRowKeys.length} người dùng đã chọn?`}
+                      onConfirm={handleDeleteMultipleUsers}
+                      okText="Xóa"
+                      cancelText="Hủy"
+                      okType="danger"
+                    >
+                      <Button type="primary" danger icon={<DeleteOutlined />}>
+                        Xóa {selectedRowKeys.length}
+                      </Button>
+                    </Popconfirm>
+                  )}
+                </Space>
+              </Space>
+            </>
+          )}
+
         </div>
 
-        <Table
-          rowSelection={rowSelection}
-          columns={columns}
-          dataSource={filteredUsers || []}
-          rowKey="id"
-          loading={loading}
-          pagination={false}
-          scroll={{ x: 1400, y: 'calc(100vh - 200px)' }}
-          size="small"
-        />
+        {isMobile ? (
+          <div className={styles.userCardList}>
+            {loading ? (
+              <div className={styles.cardListLoading}>
+                <Typography.Text>Đang tải...</Typography.Text>
+              </div>
+            ) : (filteredUsers || []).length === 0 ? (
+              <div className={styles.cardListEmpty}>
+                <Typography.Text type="secondary">Không có người dùng nào</Typography.Text>
+              </div>
+            ) : (
+              (filteredUsers || []).map((user) => (
+                <Card key={user.id} size="small" className={styles.userCard}>
+                  <div className={styles.userCardHeader}>
+                    <div className={styles.userCardName}>
+                      <UserOutlined className={styles.userIcon} />
+                      <span>{user.name || 'Chưa có tên'}</span>
+                    </div>
+                    <Space size={4}>
+                      <Tag color={user.isAdmin ? 'red' : 'blue'} icon={user.isAdmin ? <CrownOutlined /> : <UserOutlined />}>
+                        {user.isAdmin ? 'Admin' : 'User'}
+                      </Tag>
+                      {user.account_type && (
+                        <Tag color={
+                          { 'Dùng thử': 'default', 'Pro 90': 'blue', 'Pro 365': 'cyan', 'Pro 730': 'purple', 'Pro Flex': 'gold', 'M12': 'cyan', 'M24': 'purple' }[user.account_type] || 'default'
+                        }>
+                          {user.account_type}
+                        </Tag>
+                      )}
+                    </Space>
+                  </div>
+                  <div className={styles.userCardBody}>
+                    {user.email && (
+                      <div className={styles.userCardRow}>
+                        <MailOutlined className={styles.userCardIcon} />
+                        <span className={styles.userCardText}>{user.email}</span>
+                      </div>
+                    )}
+                    {getPhone(user) && (
+                      <div className={styles.userCardRow}>
+                        <span className={styles.userCardLabel}>SĐT:</span>
+                        <span className={styles.userCardText}>{getPhone(user)}</span>
+                      </div>
+                    )}
+                    <div className={styles.userCardRow}>
+                      <span className={styles.userCardLabel}>Thời hạn:</span>
+                      <div className={styles.userCardExpiry}>{renderExpiryContent(user)}</div>
+                    </div>
+                    {getNote(user) && (
+                      <div className={styles.userCardRow}>
+                        <span className={styles.userCardLabel}>Ghi chú:</span>
+                        <Tooltip title={getNote(user)}>
+                          <span className={styles.userCardNote}>{getNote(user).length > 40 ? `${getNote(user).substring(0, 40)}...` : getNote(user)}</span>
+                        </Tooltip>
+                      </div>
+                    )}
+                    {getHistoryPayment(user)?.length > 0 && (
+                      <div className={styles.userCardRow}>
+                        <Button
+                          type="link"
+                          size="small"
+                          onClick={() => {
+                            setSelectedUserPaymentHistory({ user, history: getHistoryPayment(user) });
+                            setPaymentHistoryModalVisible(true);
+                          }}
+                          style={{ padding: 0 }}
+                        >
+                          <Tag color="blue">{getHistoryPayment(user).length} giao dịch</Tag>
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                  <div className={styles.userCardActions}>
+                    <Button
+                      type="primary"
+                      icon={<EditOutlined />}
+                      size="small"
+                      onClick={() => handleEditUser(user)}
+                    >
+                      Sửa
+                    </Button>
+                    <Popconfirm
+                      title="Xóa người dùng?"
+                      description="Bạn có chắc chắn muốn xóa?"
+                      onConfirm={() => handleDeleteUser(user.id)}
+                      okText="Xóa"
+                      cancelText="Hủy"
+                      okType="danger"
+                    >
+                      <Button
+                        type="primary"
+                        danger
+                        icon={<DeleteOutlined />}
+                        size="small"
+                        disabled={user.id === currentUser?.id}
+                      >
+                        Xóa
+                      </Button>
+                    </Popconfirm>
+                  </div>
+                </Card>
+              ))
+            )}
+          </div>
+        ) : (
+          <Table
+            rowSelection={rowSelection}
+            columns={columns}
+            dataSource={filteredUsers || []}
+            rowKey="id"
+            loading={loading}
+            pagination={false}
+            scroll={{ x: 1400, y: 'calc(100vh - 200px)' }}
+            size="small"
+          />
+        )}
       </Card>
 
       <Modal

@@ -44,6 +44,8 @@ const CaseTrainingContentPanel = ({
   postprocessLatex,
   activeTab,
   fetchItem,
+  hideQuiz = false,
+  hideEdit = false,
 }) => {
   const [ratingPopupVisible, setRatingPopupVisible] = useState(false);
 
@@ -73,8 +75,8 @@ const CaseTrainingContentPanel = ({
   return (
     <>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', width: '100%', gap: '8px' }}>
-        {/* Rating button */}
-        {currentUser?.id && (
+        {/* Rating button - hidden in Grid View since it's on the title bar */}
+        {currentUser?.id && !hideEdit && (
           <Button
             type="text"
             size="small"
@@ -100,7 +102,8 @@ const CaseTrainingContentPanel = ({
             )}
           </Button>
         )}
-        {currentUser?.isAdmin && !isMobile && (
+
+        {currentUser?.isAdmin && !isMobile && !hideEdit && (
           <Button
             type="text"
             size="small"
@@ -153,6 +156,7 @@ const CaseTrainingContentPanel = ({
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginLeft: 'auto', marginTop: '20px', flexWrap: 'wrap' }}>
             <span style={{ fontSize: '13px', color: '#6b7280', fontWeight: '500', }}>ID: {item.id}</span>
 
+            <ShareButton onShare={() => onShare(selectedItem)} />
 
 
             {/* Hiển thị thông tin CID source nếu có */}
@@ -180,7 +184,6 @@ const CaseTrainingContentPanel = ({
               ))
             )}
 
-            <ShareButton onShare={() => onShare(selectedItem)} />
           </div>
         </div>
 
@@ -731,7 +734,7 @@ const CaseTrainingContentPanel = ({
             )}
 
             {/* Quiz Component - Hiển thị cuối cùng khi xem chi tiết */}
-            {item.questionContent && (
+            {item.questionContent && !hideQuiz && (
               <QuizComponent
                 allowRetake={item.allow_retake}
                 quizData={item.questionContent}
@@ -744,7 +747,7 @@ const CaseTrainingContentPanel = ({
       </div>
 
       {/* Rating Popup */}
-      {currentUser?.id && (
+      {currentUser?.id && !hideEdit && (
         <RatingPopup
           fetchItem={fetchItem}
           visible={ratingPopupVisible}
@@ -755,7 +758,6 @@ const CaseTrainingContentPanel = ({
           currentAverageRating={Number(item.scoreFeedback || 0)}
           currentRatingCount={item?.feedbackCount || 0}
           activeTab={activeTab || 'caseTraining'}
-
         />
       )}
     </>

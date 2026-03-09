@@ -620,14 +620,6 @@ const QuestionContentModal = ({ visible, onCancel, questionContent, recordTitle,
                 <Text type="secondary">Câu hỏi tự luận</Text>
               </div>
             </Col>
-            <Col span={6}>
-              <div style={{ textAlign: 'center' }}>
-                <Title level={3} style={{ margin: 0, color: '#722ed1' }}>
-                  {totalPoints}
-                </Title>
-                <Text type="secondary">Tổng điểm</Text>
-              </div>
-            </Col>
           </Row>
         </Card>
     );

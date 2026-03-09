@@ -1061,6 +1061,8 @@ const K9 = () => {
 		setViewMode(newMode);
 		try {
 			localStorage.setItem('k9_view_mode', newMode);
+			// Update URL to persist viewMode
+			updateURL({ viewMode: newMode });
 		} catch (e) {
 			console.error('Error saving view mode:', e);
 		}
@@ -1143,16 +1145,22 @@ const K9 = () => {
 	const [showFullOverview, setShowFullOverview] = useState(false);
 
 	// URL State Management Functions
-	const updateURL = (newState) => {
+	const updateURL = (newState = {}) => {
 		const url = new URL(window.location);
-		if (newState.item !== undefined) {
-			if (newState.item) url.searchParams.set('item', newState.item);
-			else url.searchParams.delete('item');
-		}
+
+		// Current state values (for fallback)
+		const currentTab = newState.tab || activeTab;
+		const currentItem = newState.item !== undefined ? newState.item : expandedItem;
+		const currentProgram = newState.program || selectedProgram;
+		const currentViewMode = newState.viewMode || viewMode;
+
 		// Update URL parameters
-		if (newState.tab) url.searchParams.set('tab', newState.tab);
-		if (newState.item) url.searchParams.set('item', newState.item);
-		if (newState.program) url.searchParams.set('program', newState.program);
+		if (currentTab) url.searchParams.set('tab', currentTab);
+		if (currentItem) url.searchParams.set('item', currentItem);
+		else url.searchParams.delete('item');
+
+		if (currentProgram) url.searchParams.set('program', currentProgram);
+		if (currentViewMode) url.searchParams.set('viewMode', currentViewMode);
 
 		// Remove empty parameters
 		Array.from(url.searchParams.entries()).forEach(([key, value]) => {
@@ -1173,6 +1181,7 @@ const K9 = () => {
 		params.tab = url.searchParams.get('tab') || 'home';
 		params.item = url.searchParams.get('item');
 		params.program = url.searchParams.get('program');
+		params.viewMode = url.searchParams.get('viewMode');
 
 		return params;
 	};
@@ -1188,6 +1197,11 @@ const K9 = () => {
 
 		}
 
+		if (params.viewMode && params.viewMode !== viewMode) {
+			setViewMode(params.viewMode);
+			localStorage.setItem('k9_view_mode', params.viewMode);
+		}
+
 		if (params.item) {
 			setExpandedItem(params.item);
 		}
@@ -1200,6 +1214,7 @@ const K9 = () => {
 		url.searchParams.set('tab', activeTab);
 		if (selectedProgram) url.searchParams.set('program', selectedProgram);
 		if (item) url.searchParams.set('item', item.id);
+		if (viewMode) url.searchParams.set('viewMode', viewMode);
 
 		return url.toString();
 	};
@@ -1303,6 +1318,7 @@ const K9 = () => {
 					currentUser={currentUser}
 					tag4Options={tag4Options}
 					expandedItem={expandedItem}
+					onShare={copyShareableLink}
 				/>
 			) : (
 				<>
@@ -1311,6 +1327,7 @@ const K9 = () => {
 						onTabChange={handleTabChange}
 						tabOptions={tabOptions}
 						newsItems={newsItems}
+						homeItems={homeItems}
 						caseTrainingItems={caseTrainingItems}
 						longFormItems={longFormItems}
 						selectedProgram={selectedProgram}
@@ -1327,276 +1344,276 @@ const K9 = () => {
 
 					{/* Home Tab */}
 					{activeTab === 'home' && (
-				<HomeTab
-					loading={loading}
-					filteredNews={filteredHome}
-					filters={homeFilters}
-					expandedItem={expandedItem}
-					showDetailId={showDetailId}
-					onFilterChange={handleHomeFilterChange}
-					onSearchChange={handleHomeSearchChange}
-					onItemClick={handleItemClick}
-					onShowDetail={showDetail}
-					onOpenSource={openSource}
-					onShare={copyShareableLink}
-					activeTab={activeTab}
-					totalCount={homeItems.filter(item => item.status === 'published').length}
-					newsItems={homeItems}
-					isHome={true}
-					viewMode={viewMode}
-					updateURL={updateURL}
-					getTabDisplayName={getTabDisplayName}
-				/>
-			)}
+						<HomeTab
+							loading={loading}
+							filteredNews={filteredHome}
+							filters={homeFilters}
+							expandedItem={expandedItem}
+							showDetailId={showDetailId}
+							onFilterChange={handleHomeFilterChange}
+							onSearchChange={handleHomeSearchChange}
+							onItemClick={handleItemClick}
+							onShowDetail={showDetail}
+							onOpenSource={openSource}
+							onShare={copyShareableLink}
+							activeTab={activeTab}
+							totalCount={homeItems.filter(item => item.status === 'published').length}
+							newsItems={homeItems}
+							isHome={true}
+							viewMode={viewMode}
+							updateURL={updateURL}
+							getTabDisplayName={getTabDisplayName}
+						/>
+					)}
 
-			{/* Story Tab */}
-			{activeTab === 'story' && (
-				<StoryTab
-					loading={loading}
-					filteredStories={filteredStories}
-					filters={storyFilters}
-					expandedItem={expandedItem}
-					showDetailId={showDetailId}
-					currentPlayingId={currentPlayingId}
-					isPlaying={isPlaying}
-					isLoading={isLoading}
-					onFilterChange={handleStoryFilterChange}
-					onSearchChange={handleStorySearchChange}
-					onItemClick={handleItemClick}
-					onShowDetail={showDetail}
-					onPlayStory={playStory}
-					onStopStory={stopStory}
-					totalCount={storyItems.filter(item => item.status === 'published').length}
-					storyItems={storyItems}
-				/>
-			)}
+					{/* Story Tab */}
+					{activeTab === 'story' && (
+						<StoryTab
+							loading={loading}
+							filteredStories={filteredStories}
+							filters={storyFilters}
+							expandedItem={expandedItem}
+							showDetailId={showDetailId}
+							currentPlayingId={currentPlayingId}
+							isPlaying={isPlaying}
+							isLoading={isLoading}
+							onFilterChange={handleStoryFilterChange}
+							onSearchChange={handleStorySearchChange}
+							onItemClick={handleItemClick}
+							onShowDetail={showDetail}
+							onPlayStory={playStory}
+							onStopStory={stopStory}
+							totalCount={storyItems.filter(item => item.status === 'published').length}
+							storyItems={storyItems}
+						/>
+					)}
 
-			{/* Stream News Tab */}
-			{activeTab === 'stream' && (
-				<NewsTab
-					currentTab={activeTab}
-					setExpandedItem={setExpandedItem}
-					updateURL={updateURL}
-					selectedProgram={selectedProgram}
-					loading={loading}
-					filteredNews={filteredNews}
-					filters={streamFilters}
-					expandedItem={expandedItem}
-					showDetailId={showDetailId}
-					onFilterChange={handleStreamFilterChange}
-					onSearchChange={handleStreamSearchChange}
-					onItemClick={handleItemClick}
-					onShowDetail={showDetail}
-					onOpenSource={openSource}
-					onShare={copyShareableLink}
-					activeTab={activeTab}
-					totalCount={newsItems.filter(item => item.status === 'published').length}
-					newsItems={newsItems}
-					showSearchSection={showSearchSection}
-					viewMode={viewMode}
-					getTabDisplayName={getTabDisplayName}
-				/>
-			)}
+					{/* Stream News Tab */}
+					{activeTab === 'stream' && (
+						<NewsTab
+							currentTab={activeTab}
+							setExpandedItem={setExpandedItem}
+							updateURL={updateURL}
+							selectedProgram={selectedProgram}
+							loading={loading}
+							filteredNews={filteredNews}
+							filters={streamFilters}
+							expandedItem={expandedItem}
+							showDetailId={showDetailId}
+							onFilterChange={handleStreamFilterChange}
+							onSearchChange={handleStreamSearchChange}
+							onItemClick={handleItemClick}
+							onShowDetail={showDetail}
+							onOpenSource={openSource}
+							onShare={copyShareableLink}
+							activeTab={activeTab}
+							totalCount={newsItems.filter(item => item.status === 'published').length}
+							newsItems={newsItems}
+							showSearchSection={showSearchSection}
+							viewMode={viewMode}
+							getTabDisplayName={getTabDisplayName}
+						/>
+					)}
 
-			{activeTab === 'longForm' && (
-				<NewsTab
-					currentTab={activeTab}
-					setExpandedItem={setExpandedItem}
-					updateURL={updateURL}
-					selectedProgram={selectedProgram}
-					loading={loading}
-					filteredNews={filteredLongForm}
-					filters={longFormFilters}
-					expandedItem={expandedItem}
-					showDetailId={showDetailId}
-					onFilterChange={handleLongFormFilterChange}
-					onSearchChange={handleLongFormSearchChange}
-					onItemClick={handleItemClick}
-					onShowDetail={showDetail}
-					onOpenSource={openSource}
-					onShare={copyShareableLink}
-					activeTab={activeTab}
-					totalCount={longFormItems.filter(item => item.status === 'published').length}
-					newsItems={longFormItems}
-					showSearchSection={showSearchSection}
-					viewMode={viewMode}
-					getTabDisplayName={getTabDisplayName}
-				/>
-			)}
-			{/* Case Training Tab */}
-			{activeTab === 'caseTraining' && (
-				<CaseTrainingTab
-					setExpandedItem={setExpandedItem}
-					updateURL={updateURL}
-					selectedProgram={selectedProgram}
-					tag4Filter={tag4Filter}
-					loading={loading}
-					filteredCaseTraining={filteredCaseTraining}
-					filters={caseTrainingFilters}
-					expandedItem={expandedItem}
-					showDetailId={showDetailId}
-					onFilterChange={handleCaseTrainingFilterChange}
-					onSearchChange={handleCaseTrainingSearchChange}
-					onItemClick={handleItemClick}
-					onShowDetail={showDetail}
-					onOpenSource={openSource}
-					activeTab={activeTab}
-					totalCount={caseTrainingItems.filter(item => item.status === 'published').length}
-					caseTrainingItems={caseTrainingItems}
-					tag1Options={tag1Options}
-					tag2Options={tag2Options}
-					tag3Options={tag3Options}
-					onShare={copyShareableLink}
-					showSearchSection={showSearchSection}
-					viewMode={viewMode}
-					getTabDisplayName={getTabDisplayName}
-				/>
-			)}
+					{activeTab === 'longForm' && (
+						<NewsTab
+							currentTab={activeTab}
+							setExpandedItem={setExpandedItem}
+							updateURL={updateURL}
+							selectedProgram={selectedProgram}
+							loading={loading}
+							filteredNews={filteredLongForm}
+							filters={longFormFilters}
+							expandedItem={expandedItem}
+							showDetailId={showDetailId}
+							onFilterChange={handleLongFormFilterChange}
+							onSearchChange={handleLongFormSearchChange}
+							onItemClick={handleItemClick}
+							onShowDetail={showDetail}
+							onOpenSource={openSource}
+							onShare={copyShareableLink}
+							activeTab={activeTab}
+							totalCount={longFormItems.filter(item => item.status === 'published').length}
+							newsItems={longFormItems}
+							showSearchSection={showSearchSection}
+							viewMode={viewMode}
+							getTabDisplayName={getTabDisplayName}
+						/>
+					)}
+					{/* Case Training Tab */}
+					{activeTab === 'caseTraining' && (
+						<CaseTrainingTab
+							setExpandedItem={setExpandedItem}
+							updateURL={updateURL}
+							selectedProgram={selectedProgram}
+							tag4Filter={tag4Filter}
+							loading={loading}
+							filteredCaseTraining={filteredCaseTraining}
+							filters={caseTrainingFilters}
+							expandedItem={expandedItem}
+							showDetailId={showDetailId}
+							onFilterChange={handleCaseTrainingFilterChange}
+							onSearchChange={handleCaseTrainingSearchChange}
+							onItemClick={handleItemClick}
+							onShowDetail={showDetail}
+							onOpenSource={openSource}
+							activeTab={activeTab}
+							totalCount={caseTrainingItems.filter(item => item.status === 'published').length}
+							caseTrainingItems={caseTrainingItems}
+							tag1Options={tag1Options}
+							tag2Options={tag2Options}
+							tag3Options={tag3Options}
+							onShare={copyShareableLink}
+							showSearchSection={showSearchSection}
+							viewMode={viewMode}
+							getTabDisplayName={getTabDisplayName}
+						/>
+					)}
 
-			{activeTab === 'caseUser' && (
-				<CaseUser
-					loading={loading}
-					filteredNews={filteredLongForm}
-					filters={longFormFilters}
-					showDetailId={showDetailId}
-					onFilterChange={handleLongFormFilterChange}
-					onSearchChange={handleLongFormSearchChange}
-					onItemClick={handleItemClick}
-					onShowDetail={showDetail}
-					onOpenSource={openSource}
-					activeTab={activeTab}
-					totalCount={longFormItems.filter(item => item.status === 'published').length}
-					newsItems={longFormItems}
-				/>
-			)}
+					{activeTab === 'caseUser' && (
+						<CaseUser
+							loading={loading}
+							filteredNews={filteredLongForm}
+							filters={longFormFilters}
+							showDetailId={showDetailId}
+							onFilterChange={handleLongFormFilterChange}
+							onSearchChange={handleLongFormSearchChange}
+							onItemClick={handleItemClick}
+							onShowDetail={showDetail}
+							onOpenSource={openSource}
+							activeTab={activeTab}
+							totalCount={longFormItems.filter(item => item.status === 'published').length}
+							newsItems={longFormItems}
+						/>
+					)}
 
 
-			{/* Library Tab */}
-			{activeTab === 'library' && (
-				<LibraryTab
-					loading={loading}
-					filteredLibrary={filteredLibrary}
-					filters={libraryFilters}
-					onFilterChange={handleLibraryFilterChange}
-					onSearchChange={handleLibrarySearchChange}
-					onItemClick={handleItemClick}
-					totalCount={libraryItems.filter(item => item.status === 'published').length}
-					libraryItems={libraryItems}
-				/>
-			)}
+					{/* Library Tab */}
+					{activeTab === 'library' && (
+						<LibraryTab
+							loading={loading}
+							filteredLibrary={filteredLibrary}
+							filters={libraryFilters}
+							onFilterChange={handleLibraryFilterChange}
+							onSearchChange={handleLibrarySearchChange}
+							onItemClick={handleItemClick}
+							totalCount={libraryItems.filter(item => item.status === 'published').length}
+							libraryItems={libraryItems}
+						/>
+					)}
 
-			{/* Report Tab */}
-			{activeTab === 'report' && (
-				<div>
-					{/* Report Overview Section */}
-					{reportOverviewData && (
-						<div style={{
-							borderBottom: '1px solid #e8e8e8',
-							marginBottom: '10px',
-						}}>
-							<div style={{
-								maxWidth: '1200px',
-								margin: '0 auto',
-							}}>
-								{/* Overview Text */}
-								{reportOverviewData.overview && (
+					{/* Report Tab */}
+					{activeTab === 'report' && (
+						<div>
+							{/* Report Overview Section */}
+							{reportOverviewData && (
+								<div style={{
+									borderBottom: '1px solid #e8e8e8',
+									marginBottom: '10px',
+								}}>
 									<div style={{
-										marginBottom: '10px',
-										padding: '16px',
-										backgroundColor: '#fff',
-										borderRadius: '8px',
-										border: '1px solid #e8e8e8',
+										maxWidth: '1200px',
+										margin: '0 auto',
 									}}>
-										{overviewTitle && (
+										{/* Overview Text */}
+										{reportOverviewData.overview && (
 											<div style={{
-												fontSize: 20,
-												fontWeight: 700,
-												color: '#454545',
-												padding: '5px 10px',
-												background: 'rgba(189,196,189,0.3)',
-												marginLeft: '10px',
+												marginBottom: '10px',
+												padding: '16px',
+												backgroundColor: '#fff',
+												borderRadius: '8px',
 												border: '1px solid #e8e8e8',
-												display: 'inline-block',
-												borderRadius: '5px',
 											}}>
-												{overviewTitle}
+												{overviewTitle && (
+													<div style={{
+														fontSize: 20,
+														fontWeight: 700,
+														color: '#454545',
+														padding: '5px 10px',
+														background: 'rgba(189,196,189,0.3)',
+														marginLeft: '10px',
+														border: '1px solid #e8e8e8',
+														display: 'inline-block',
+														borderRadius: '5px',
+													}}>
+														{overviewTitle}
+													</div>
+												)}
+												<div style={{ padding: '8px 48px' }}>
+													<div
+														className={styles.markdownContent}
+														dangerouslySetInnerHTML={{
+															__html: DOMPurify.sanitize(marked.parse(displayedContent)),
+														}}
+													/>
+													{isLong && !showFullOverview && (
+														<button
+															style={{
+																marginTop: 8,
+																background: 'none',
+																border: 'none',
+																color: '#1890ff',
+																cursor: 'pointer',
+																padding: 0,
+																fontSize: 14,
+															}}
+															onClick={() => setShowFullOverview(true)}
+														>
+															Xem thêm
+														</button>
+													)}
+													{isLong && showFullOverview && (
+														<button
+															style={{
+																marginTop: 8,
+																background: 'none',
+																border: 'none',
+																color: '#1890ff',
+																cursor: 'pointer',
+																padding: 0,
+																fontSize: 14,
+															}}
+															onClick={() => setShowFullOverview(false)}
+														>
+															Thu gọn
+														</button>
+													)}
+												</div>
 											</div>
 										)}
-										<div style={{ padding: '8px 48px' }}>
-											<div
-												className={styles.markdownContent}
-												dangerouslySetInnerHTML={{
-													__html: DOMPurify.sanitize(marked.parse(displayedContent)),
-												}}
-											/>
-											{isLong && !showFullOverview && (
-												<button
-													style={{
-														marginTop: 8,
-														background: 'none',
-														border: 'none',
-														color: '#1890ff',
-														cursor: 'pointer',
-														padding: 0,
-														fontSize: 14,
-													}}
-													onClick={() => setShowFullOverview(true)}
-												>
-													Xem thêm
-												</button>
-											)}
-											{isLong && showFullOverview && (
-												<button
-													style={{
-														marginTop: 8,
-														background: 'none',
-														border: 'none',
-														color: '#1890ff',
-														cursor: 'pointer',
-														padding: 0,
-														fontSize: 14,
-													}}
-													onClick={() => setShowFullOverview(false)}
-												>
-													Thu gọn
-												</button>
-											)}
-										</div>
+										{/* Overview Charts */}
+										<ReportOverviewCharts overviewData={reportOverviewData} />
 									</div>
-								)}
-								{/* Overview Charts */}
-								<ReportOverviewCharts overviewData={reportOverviewData} />
-							</div>
+								</div>
+							)}
+							{/* Report List */}
+							<ReportTab
+								loading={reportLoading}
+								filteredReports={filteredReports}
+								filters={reportFilters}
+								expandedItem={expandedItem}
+								showDetailId={showDetailId}
+								onFilterChange={handleReportFilterChange}
+								onSearchChange={handleReportSearchChange}
+								onItemClick={handleItemClick}
+								onShowDetail={showDetail}
+								onOpenFile={handleOpenFile}
+								activeTab={activeTab}
+								totalCount={reportItems.length}
+								reportItems={reportItems}
+							/>
 						</div>
 					)}
-					{/* Report List */}
-					<ReportTab
-						loading={reportLoading}
-						filteredReports={filteredReports}
-						filters={reportFilters}
-						expandedItem={expandedItem}
-						showDetailId={showDetailId}
-						onFilterChange={handleReportFilterChange}
-						onSearchChange={handleReportSearchChange}
-						onItemClick={handleItemClick}
-						onShowDetail={showDetail}
-						onOpenFile={handleOpenFile}
-						activeTab={activeTab}
-						totalCount={reportItems.length}
-						reportItems={reportItems}
-					/>
-				</div>
-			)}
 
-			{/* Thesis Tab */}
-			{activeTab === 'thesis' && (
-				<ThesisTab />
-			)}
+					{/* Thesis Tab */}
+					{activeTab === 'thesis' && (
+						<ThesisTab />
+					)}
 
-			{/* AI Chat Tab */}
-			{activeTab === 'ai' && (
-				<AiChatTab />
-			)}
+					{/* AI Chat Tab */}
+					{activeTab === 'ai' && (
+						<AiChatTab />
+					)}
 				</>
 			)}
 

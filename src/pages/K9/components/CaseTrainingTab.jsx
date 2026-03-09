@@ -1,16 +1,11 @@
 import {
+  CloseOutlined,
+  EyeOutlined,
   FilterOutlined,
   SearchOutlined,
-  CloseOutlined,
-  MenuOutlined,
-  LockOutlined,
-  EditOutlined,
-  LeftOutlined,
-  RightOutlined,
-  EyeOutlined
+  StarOutlined
 } from '@ant-design/icons';
 import { Menu } from 'lucide-react';
-import { Customize_Icon, Document_Icon, FeedBack_Icon, Expand_Icon, Close_Icon } from '../../../icon/IconSvg.jsx';
 
 import {
   Button,
@@ -23,67 +18,56 @@ import {
   Space,
   Spin,
   Tag,
-  Typography,
-  Pagination
+  Typography
 } from 'antd';
-import React, { useEffect, useState, useRef, useContext, useMemo } from 'react';
-import DOMPurify from 'dompurify';
-import { marked } from 'marked';
-import markedKatex from 'marked-katex-extension';
 import katex from 'katex';
 import 'katex/dist/katex.min.css';
-import { getSettingByType } from '../../../apis/settingService';
-import { getSettingByTypePublic } from '../../../apis/public/publicService.jsx';
+import { marked } from 'marked';
+import markedKatex from 'marked-katex-extension';
+import { useContext, useEffect, useMemo, useRef, useState } from 'react';
+import { getK9ByCidTypePublic, getK9ByIdPublic, getSettingByTypePublic } from '../../../apis/public/publicService.jsx';
 import { getListQuestionHistoryByUser } from '../../../apis/questionHistoryService.jsx';
-import { getCurrentUserLogin } from '../../../apis/userService';
 import { getAllUserClass } from '../../../apis/userClassService';
+import { getCurrentUserLogin } from '../../../apis/userService';
 import { MyContext } from '../../../MyContext';
 import styles from './CaseTrainingTab.module.css';
 import newsTabStyles from './NewsTab.module.css';
 import QuizComponent from './QuizComponent.jsx';
-import { IconButton } from '@mui/material';
-import { InfoMore_Icon } from '../../../icon/IconSvg.jsx';
-import { getK9ById, getK9ByCidType } from '../../../apis/k9Service.jsx';
-import { getK9ByIdPublic, getK9ByCidTypePublic } from '../../../apis/public/publicService.jsx';
 
-import ShareButton from './ShareButton.jsx';
+import PaymentModal from '../../../components/PaymentModal/PaymentModal';
 import PreviewFileModal from '../../../components/PreviewFile/PreviewFileModal';
-import AccessDenied from './AccessDenied.jsx';
-import AudioPlayer from '../../../components/AudioPlayer/AudioPlayer.jsx';
+import CaseTrainingContentPanel from './CaseTrainingContentPanel.jsx';
 import EditDetailModal from './EditDetailModal.jsx';
 import FeedbackModal from './FeedbackModal.jsx';
-import PaymentModal from '../../../components/PaymentModal/PaymentModal';
-import ExcalidrawViewer from '../../K9Management/components/ExcalidrawViewer';
-import CaseTrainingContentPanel from './CaseTrainingContentPanel.jsx';
+import RatingPopup from './RatingPopup.jsx';
 const { Option } = Select;
 const { Text, Title } = Typography;
-import { useNavigate } from 'react-router-dom';
 const CaseTrainingTab = ({
-                           setExpandedItem,
-                           updateURL,
-                           selectedProgram,
-                           tag4Filter,
-                           loading,
-                           filteredCaseTraining,
-                           filters,
-                           expandedItem,
-                           showDetailId,
-                           onFilterChange,
-                           onSearchChange,
-                           onItemClick,
-                           onShowDetail,
-                           onOpenSource,
-                           activeTab,
-                           totalCount,
-                           caseTrainingItems,
-                           tag1Options: propTag1Options,
-                           tag2Options: propTag2Options,
-                           tag3Options: propTag3Options,
-                           onShare,
-                           showSearchSection = true,
-                           viewMode = 'list',
-                           getTabDisplayName // Function to get tab display name from parent
-                         }) => {
+  setExpandedItem,
+  updateURL,
+  selectedProgram,
+  tag4Filter,
+  loading,
+  filteredCaseTraining,
+  filters,
+  expandedItem,
+  showDetailId,
+  onFilterChange,
+  onSearchChange,
+  onItemClick,
+  onShowDetail,
+  onOpenSource,
+  activeTab,
+  totalCount,
+  caseTrainingItems,
+  tag1Options: propTag1Options,
+  tag2Options: propTag2Options,
+  tag3Options: propTag3Options,
+  onShare,
+  showSearchSection = true,
+  viewMode = 'list',
+  getTabDisplayName // Function to get tab display name from parent
+}) => {
   const { currentUser } = useContext(MyContext);
 
   // Configure marked with katex extension
@@ -158,6 +142,7 @@ const CaseTrainingTab = ({
 
   // Feedback modal states
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+  const [ratingPopupVisible, setRatingPopupVisible] = useState(false);
 
   // Package purchase modal states
   const [isPackageModalOpen, setIsPackageModalOpen] = useState(false);
@@ -212,6 +197,11 @@ const CaseTrainingTab = ({
   const [visibleItems, setVisibleItems] = useState([]);
   const [renderedCount, setRenderedCount] = useState(20);
 
+  // PC modal split states
+  const [modalPcSplitRatio, setModalPcSplitRatio] = useState(0.6);
+  const [modalResizeStartRatio, setModalResizeStartRatio] = useState(null);
+  const resizableContainerRef = useRef(null);
+
   // Search in content states
   const [searchText, setSearchText] = useState('');
   const [searchResults, setSearchResults] = useState([]);
@@ -221,6 +211,34 @@ const CaseTrainingTab = ({
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const panelRef = useRef(null);
+
+  // Handle resizing of PC modal panels
+  useEffect(() => {
+    const handleMouseMove = (e) => {
+      if (modalResizeStartRatio !== null && resizableContainerRef.current) {
+        const rect = resizableContainerRef.current.getBoundingClientRect();
+        const newRatio = (e.clientX - rect.left) / rect.width;
+        // Limit range between 30% and 70%
+        if (newRatio > 0.3 && newRatio < 0.7) {
+          setModalPcSplitRatio(newRatio);
+        }
+      }
+    };
+
+    const handleMouseUp = () => {
+      setModalResizeStartRatio(null);
+    };
+
+    if (modalResizeStartRatio !== null) {
+      window.addEventListener('mousemove', handleMouseMove);
+      window.addEventListener('mouseup', handleMouseUp);
+    }
+
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [modalResizeStartRatio]);
 
   // Persist filters for CaseTraining
   const CASE_FILTERS_KEY = 'k9_case_training_filters_v1';
@@ -247,11 +265,11 @@ const CaseTrainingTab = ({
               return acc;
             }, {});
             const scoreMap = Object.fromEntries(
-                Object.entries(map).map(([qid, hist]) => {
-                  const raw = hist.score;
-                  const num = typeof raw === 'number' ? raw : parseFloat(raw);
-                  return [qid, isNaN(num) ? undefined : num];
-                })
+              Object.entries(map).map(([qid, hist]) => {
+                const raw = hist.score;
+                const num = typeof raw === 'number' ? raw : parseFloat(raw);
+                return [qid, isNaN(num) ? undefined : num];
+              })
             );
             setQuizScores(scoreMap);
           } else {
@@ -369,9 +387,9 @@ const CaseTrainingTab = ({
 
     // Get all text nodes
     const walker = document.createTreeWalker(
-        container,
-        NodeFilter.SHOW_TEXT,
-        null
+      container,
+      NodeFilter.SHOW_TEXT,
+      null
     );
 
     const textNodes = [];
@@ -460,7 +478,7 @@ const CaseTrainingTab = ({
           while (current && current !== document.body) {
             const style = window.getComputedStyle(current);
             const hasOverflow = style.overflow === 'auto' || style.overflowY === 'auto' ||
-                style.overflow === 'scroll' || style.overflowY === 'scroll';
+              style.overflow === 'scroll' || style.overflowY === 'scroll';
 
             if (hasOverflow && current.style.height && current.style.height.includes('75vh')) {
               scrollContainer = current;
@@ -476,8 +494,8 @@ const CaseTrainingTab = ({
 
           if (!scrollContainer) {
             scrollContainer = markdownContentRef.current.closest('.ant-modal-body') ||
-                markdownContentRef.current.closest('[style*="overflow"]') ||
-                document.querySelector('.ant-modal-body');
+              markdownContentRef.current.closest('[style*="overflow"]') ||
+              document.querySelector('.ant-modal-body');
           }
 
           const rect = range.getBoundingClientRect();
@@ -580,9 +598,9 @@ const CaseTrainingTab = ({
       } else {
         if (markdownContentRef.current) {
           const walker = document.createTreeWalker(
-              markdownContentRef.current,
-              NodeFilter.SHOW_TEXT,
-              null
+            markdownContentRef.current,
+            NodeFilter.SHOW_TEXT,
+            null
           );
 
           let node;
@@ -1089,18 +1107,18 @@ const CaseTrainingTab = ({
     if (!item) return null;
     if (item.questionContent === undefined || item.questionContent === null) {
       return (
-          <span
-              style={{
-                padding: '2px 8px',
-                borderRadius: '6px',
-                fontSize: 12,
-                fontWeight: 600,
-                backgroundColor: '#E9FBFF',
-                color: '#88B7CD',
-                border: '1px solid #9ED5D8',
-              }}
-              title='Tham khảo'
-          >
+        <span
+          style={{
+            padding: '2px 8px',
+            borderRadius: '6px',
+            fontSize: 12,
+            fontWeight: 600,
+            backgroundColor: '#E9FBFF',
+            color: '#88B7CD',
+            border: '1px solid #9ED5D8',
+          }}
+          title='Tham khảo'
+        >
           Tham khảo
         </span>
       );
@@ -1110,37 +1128,37 @@ const CaseTrainingTab = ({
 
     if (quizScore === undefined || quizScore === null) {
       return (
-          <span
-              style={{
-                padding: '2px 8px',
-                borderRadius: '6px',
-                fontSize: 12,
-                fontWeight: 600,
-                backgroundColor: '#FFE9ED',
-                color: '#E39191',
-                border: '1px solid #F3B2B2',
-              }}
-              title='Chưa làm'
-          >
+        <span
+          style={{
+            padding: '2px 8px',
+            borderRadius: '6px',
+            fontSize: 12,
+            fontWeight: 600,
+            backgroundColor: '#FFE9ED',
+            color: '#E39191',
+            border: '1px solid #F3B2B2',
+          }}
+          title='Chưa làm'
+        >
           Chưa làm
         </span>);
     }
     const numeric = Number(quizScore);
     const pass = !isNaN(numeric) && numeric >= 70;
     return (
-        <span
-            style={{
-              marginLeft: 8,
-              padding: '2px 8px',
-              borderRadius: '6px',
-              fontSize: 12,
-              fontWeight: 600,
-              backgroundColor: pass ? '#E5F6DD' : '#E9EEFF',
-              color: pass ? '#75C341' : '#7A8ED7',
-              border: pass ? '1px solid #9FDE7D' : '1px solid #B9C4F7',
-            }}
-            title={'Đạt ' + numeric + '/' + 100}
-        >
+      <span
+        style={{
+          marginLeft: 8,
+          padding: '2px 8px',
+          borderRadius: '6px',
+          fontSize: 12,
+          fontWeight: 600,
+          backgroundColor: pass ? '#E5F6DD' : '#E9EEFF',
+          color: pass ? '#75C341' : '#7A8ED7',
+          border: pass ? '1px solid #9FDE7D' : '1px solid #B9C4F7',
+        }}
+        title={'Đạt ' + numeric + '/' + 100}
+      >
         {'Đạt ' + numeric + '/' + 100}
       </span>
     );
@@ -1163,7 +1181,7 @@ const CaseTrainingTab = ({
     const handleClickOutside = (event) => {
       // Check if click is outside the dropdown menu and not on a dropdown item
       if (!event.target.closest(`.${styles.dropdownMenu}`) &&
-          !event.target.closest(`.${styles.dropdownToggle}`)) {
+        !event.target.closest(`.${styles.dropdownToggle}`)) {
         setDropdownOpen(null);
       }
     };
@@ -1184,8 +1202,8 @@ const CaseTrainingTab = ({
   const handleTagToggle = (filterType, tagValue) => {
     const currentTags = localFilters[filterType] || [];
     const newTags = currentTags.includes(tagValue)
-        ? currentTags.filter(tag => tag !== tagValue)
-        : [...currentTags, tagValue];
+      ? currentTags.filter(tag => tag !== tagValue)
+      : [...currentTags, tagValue];
 
     const newFilters = {
       ...localFilters,
@@ -1254,151 +1272,151 @@ const CaseTrainingTab = ({
   };
 
   const renderMobileFiltersContent = () => (
-      <div className={styles.filterPopoverContent}>
-        <div className={styles.filterPopoverHeader}>
-          <Title level={5} className={styles.filterPopoverTitle}>Bộ lọc tìm kiếm</Title>
-          <Text type="secondary" className={styles.filterPopoverDescription}>Chọn các tiêu chí để lọc case training</Text>
+    <div className={styles.filterPopoverContent}>
+      <div className={styles.filterPopoverHeader}>
+        <Title level={5} className={styles.filterPopoverTitle}>Bộ lọc tìm kiếm</Title>
+        <Text type="secondary" className={styles.filterPopoverDescription}>Chọn các tiêu chí để lọc case training</Text>
+      </div>
+
+      <div className={styles.filterSection}>
+        <div className={styles.filterSectionHeader}>
+          <span className={styles.filterSectionIcon}>📂</span>
+          <Text strong className={styles.filterSectionTitle}>Phân loại</Text>
         </div>
 
-        <div className={styles.filterSection}>
-          <div className={styles.filterSectionHeader}>
-            <span className={styles.filterSectionIcon}>📂</span>
-            <Text strong className={styles.filterSectionTitle}>Phân loại</Text>
-          </div>
+        <div className={styles.categoryFilterGroup}>
+          {/* Danh mục */}
+          {
+            isMobile && (
+              <>   <div className={styles.categoryFilterCard}>
+                <div className={styles.categoryFilterHeader}>
+                  <span className={`${styles.categoryFilterIndicator} ${styles.tag1}`}></span>
+                  <Text strong className={styles.categoryFilterLabel}>Danh mục</Text>
+                </div>
+                <div className={styles.categoryFilterTags}>
+                  {finalTag1Options.map(option => {
+                    const titlesInTag = getTitlesForTag('tag1', option.value);
+                    const hasItems = titlesInTag.length > 0;
+                    const tagCount = getTagCount('tag1', option.value);
 
-          <div className={styles.categoryFilterGroup}>
-            {/* Danh mục */}
-            {
-                isMobile && (
-                    <>   <div className={styles.categoryFilterCard}>
-                      <div className={styles.categoryFilterHeader}>
-                        <span className={`${styles.categoryFilterIndicator} ${styles.tag1}`}></span>
-                        <Text strong className={styles.categoryFilterLabel}>Danh mục</Text>
-                      </div>
-                      <div className={styles.categoryFilterTags}>
-                        {finalTag1Options.map(option => {
-                          const titlesInTag = getTitlesForTag('tag1', option.value);
-                          const hasItems = titlesInTag.length > 0;
-                          const tagCount = getTagCount('tag1', option.value);
-
-                          return (
-                              <div key={option.value} className={styles.categoryButtonContainer}>
-                                <Tag
-                                    color={localFilters.tag1?.includes(option.value) ? 'blue' : 'default'}
-                                    className={`${styles.categoryFilterTag} ${localFilters.tag1?.includes(option.value) ? styles.tag1Selected : styles.tag1Unselected}`}
-                                    onClick={() => handleTagToggle('tag1', option.value)}
-                                >   {tagCount > 0 && (
-                                    <span style={{
-                                      marginLeft: '4px',
-                                      fontSize: '11px',
-                                      fontWeight: '600',
-                                      color: localFilters.tag1?.includes(option.value) ? '#0958d9' : '#666'
-                                    }}>
+                    return (
+                      <div key={option.value} className={styles.categoryButtonContainer}>
+                        <Tag
+                          color={localFilters.tag1?.includes(option.value) ? 'blue' : 'default'}
+                          className={`${styles.categoryFilterTag} ${localFilters.tag1?.includes(option.value) ? styles.tag1Selected : styles.tag1Unselected}`}
+                          onClick={() => handleTagToggle('tag1', option.value)}
+                        >   {tagCount > 0 && (
+                          <span style={{
+                            marginLeft: '4px',
+                            fontSize: '11px',
+                            fontWeight: '600',
+                            color: localFilters.tag1?.includes(option.value) ? '#0958d9' : '#666'
+                          }}>
                             ({tagCount})
                           </span>
-                                )}
-                                  {option.label}
+                        )}
+                          {option.label}
 
-                                  {hasItems && (
-                                      <button
-                                          className={styles.dropdownToggle}
-                                          onClick={(e) => toggleDropdown('tag1', option.value, e)}
-                                          title={`Xem danh sách ${option.label}`}
-                                      >
-                                        <Menu size={14} color={localFilters.tag1?.includes(option.value) ? '#0958d9' : '#000'} />
-                                      </button>
+                          {hasItems && (
+                            <button
+                              className={styles.dropdownToggle}
+                              onClick={(e) => toggleDropdown('tag1', option.value, e)}
+                              title={`Xem danh sách ${option.label}`}
+                            >
+                              <Menu size={14} color={localFilters.tag1?.includes(option.value) ? '#0958d9' : '#000'} />
+                            </button>
+                          )}
+                        </Tag>
+
+                        {hasItems && dropdownOpen === `tag1-${option.value}` && (
+                          <div className={styles.dropdownMenu}>
+                            <div className={styles.dropdownHeader}>
+                              <span>{option.label}</span>
+                              <button
+                                className={styles.closeDropdown}
+                                onClick={(e) => toggleDropdown('tag1', option.value, e)}
+                              >
+                                ×
+                              </button>
+                            </div>
+                            <div className={styles.dropdownItems}>
+                              {titlesInTag.map(item => (
+                                <button
+                                  key={item.id}
+                                  className={styles.dropdownItem}
+                                  onClick={(e) => handleItemSelectFromDropdown(item.id, e)}
+                                >
+                                  {item.lessonNumber && (
+                                    <>
+                                      {item.lessonNumber}:
+                                    </>
                                   )}
-                                </Tag>
-
-                                {hasItems && dropdownOpen === `tag1-${option.value}` && (
-                                    <div className={styles.dropdownMenu}>
-                                      <div className={styles.dropdownHeader}>
-                                        <span>{option.label}</span>
-                                        <button
-                                            className={styles.closeDropdown}
-                                            onClick={(e) => toggleDropdown('tag1', option.value, e)}
-                                        >
-                                          ×
-                                        </button>
-                                      </div>
-                                      <div className={styles.dropdownItems}>
-                                        {titlesInTag.map(item => (
-                                            <button
-                                                key={item.id}
-                                                className={styles.dropdownItem}
-                                                onClick={(e) => handleItemSelectFromDropdown(item.id, e)}
-                                            >
-                                              {item.lessonNumber && (
-                                                  <>
-                                                    {item.lessonNumber}:
-                                                  </>
-                                              )}
-                                              {currentUser?.account_type === 'Dùng thử' && item.isPublic !== true && (
-                                                  <span style={{ marginRight: '4px', fontSize: '12px' }}>🔒</span>
-                                              )}
-                                              < > {item.title}</>
-                                            </button>
-                                        ))}
-                                      </div>
-                                    </div>
-                                )}
-                              </div>
-                          );
-                        })}
+                                  {currentUser?.account_type === 'Dùng thử' && item.isPublic !== true && (
+                                    <span style={{ marginRight: '4px', fontSize: '12px' }}>🔒</span>
+                                  )}
+                                  < > {item.title}</>
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        )}
                       </div>
-                    </div>
-                    </>
-                )
-            }
+                    );
+                  })}
+                </div>
+              </div>
+              </>
+            )
+          }
 
 
-            {/* Cấp độ */}
-            <div className={styles.categoryFilterCard}>
-              <div className={styles.categoryFilterHeader}>
-                <span className={`${styles.categoryFilterIndicator} ${styles.tag2}`}></span>
-                <Text strong className={styles.categoryFilterLabel}>Cấp độ</Text>
-              </div>
-              <div className={styles.categoryFilterTags}>
-                {finalTag2Options.map(option => (
-                    <Tag
-                        key={option.value}
-                        color={localFilters.tag2?.includes(option.value) ? 'green' : 'default'}
-                        className={`${styles.categoryFilterTag} ${localFilters.tag2?.includes(option.value) ? styles.tag2Selected : styles.tag2Unselected
-                        }`}
-                        onClick={() => handleTagToggle('tag2', option.value)}
-                    >
-                      {option.label}
-                    </Tag>
-                ))}
-              </div>
+          {/* Cấp độ */}
+          <div className={styles.categoryFilterCard}>
+            <div className={styles.categoryFilterHeader}>
+              <span className={`${styles.categoryFilterIndicator} ${styles.tag2}`}></span>
+              <Text strong className={styles.categoryFilterLabel}>Cấp độ</Text>
             </div>
-
-            {/* Loại bài - chỉ hiển thị trên mobile */}
-            {/*{isMobile && (*/}
-            {/*  <div className={styles.categoryFilterCard}>*/}
-            {/*    <div className={styles.categoryFilterHeader}>*/}
-            {/*      <span className={`${styles.categoryFilterIndicator} ${styles.tag3}`}></span>*/}
-            {/*      <Text strong className={styles.categoryFilterLabel}>Loại bài</Text>*/}
-            {/*    </div>*/}
-            {/*    <div className={styles.categoryFilterTags}>*/}
-            {/*      {finalTag3Options.map(option => (*/}
-            {/*        <Tag*/}
-            {/*          key={option.value}*/}
-            {/*          color={localFilters.tag3?.includes(option.value) ? 'orange' : 'default'}*/}
-            {/*          className={`${styles.categoryFilterTag} ${localFilters.tag3?.includes(option.value) ? styles.tag3Selected : styles.tag3Unselected*/}
-            {/*            }`}*/}
-            {/*          onClick={() => handleTagToggle('tag3', option.value)}*/}
-            {/*        >*/}
-            {/*          {option.label}*/}
-            {/*        </Tag>*/}
-            {/*      ))}*/}
-            {/*    </div>*/}
-            {/*  </div>*/}
-            {/*)}*/}
+            <div className={styles.categoryFilterTags}>
+              {finalTag2Options.map(option => (
+                <Tag
+                  key={option.value}
+                  color={localFilters.tag2?.includes(option.value) ? 'green' : 'default'}
+                  className={`${styles.categoryFilterTag} ${localFilters.tag2?.includes(option.value) ? styles.tag2Selected : styles.tag2Unselected
+                    }`}
+                  onClick={() => handleTagToggle('tag2', option.value)}
+                >
+                  {option.label}
+                </Tag>
+              ))}
+            </div>
           </div>
-        </div>
 
-        {/* <div className={styles.filterSection}>
+          {/* Loại bài - chỉ hiển thị trên mobile */}
+          {/*{isMobile && (*/}
+          {/*  <div className={styles.categoryFilterCard}>*/}
+          {/*    <div className={styles.categoryFilterHeader}>*/}
+          {/*      <span className={`${styles.categoryFilterIndicator} ${styles.tag3}`}></span>*/}
+          {/*      <Text strong className={styles.categoryFilterLabel}>Loại bài</Text>*/}
+          {/*    </div>*/}
+          {/*    <div className={styles.categoryFilterTags}>*/}
+          {/*      {finalTag3Options.map(option => (*/}
+          {/*        <Tag*/}
+          {/*          key={option.value}*/}
+          {/*          color={localFilters.tag3?.includes(option.value) ? 'orange' : 'default'}*/}
+          {/*          className={`${styles.categoryFilterTag} ${localFilters.tag3?.includes(option.value) ? styles.tag3Selected : styles.tag3Unselected*/}
+          {/*            }`}*/}
+          {/*          onClick={() => handleTagToggle('tag3', option.value)}*/}
+          {/*        >*/}
+          {/*          {option.label}*/}
+          {/*        </Tag>*/}
+          {/*      ))}*/}
+          {/*    </div>*/}
+          {/*  </div>*/}
+          {/*)}*/}
+        </div>
+      </div>
+
+      {/* <div className={styles.filterSection}>
         <div className={styles.filterSectionHeader}>
           <span className={styles.filterSectionIcon}>🎯</span>
           <Text strong className={styles.filterSectionTitle}>Độ phức tạp</Text>
@@ -1432,45 +1450,45 @@ const CaseTrainingTab = ({
           </Space>
         </div>
       </div> */}
-        {
-            isMobile && (
-                <> <div className={styles.filterSection}>
-                  <div className={styles.filterSectionHeader}>
-                    <span className={styles.filterSectionIcon}>📝</span>
-                    <Text strong className={styles.filterSectionTitle}>Trạng thái Quiz</Text>
-                  </div>
-                  <div className={styles.quizStatusFilterContainer}>
-                    <Select
-                        value={localFilters.quizStatus}
-                        onChange={(value) => handleFilterChange('quizStatus', value)}
-                        placeholder="Chọn trạng thái Quiz"
-                        className={styles.quizStatusSelect}
-                        size="middle"
-                    >
-                      <Option value="all">Tất cả trạng thái</Option>
-                      <Option value="completed">✅ Đã hoàn thành Quiz</Option>
-                      <Option value="incomplete">⏳ Chưa hoàn thành Quiz</Option>
-                    </Select>
-                  </div>
-                </div>
-                </>
-            )
-        }
+      {
+        isMobile && (
+          <> <div className={styles.filterSection}>
+            <div className={styles.filterSectionHeader}>
+              <span className={styles.filterSectionIcon}>📝</span>
+              <Text strong className={styles.filterSectionTitle}>Trạng thái Quiz</Text>
+            </div>
+            <div className={styles.quizStatusFilterContainer}>
+              <Select
+                value={localFilters.quizStatus}
+                onChange={(value) => handleFilterChange('quizStatus', value)}
+                placeholder="Chọn trạng thái Quiz"
+                className={styles.quizStatusSelect}
+                size="middle"
+              >
+                <Option value="all">Tất cả trạng thái</Option>
+                <Option value="completed">✅ Đã hoàn thành Quiz</Option>
+                <Option value="incomplete">⏳ Chưa hoàn thành Quiz</Option>
+              </Select>
+            </div>
+          </div>
+          </>
+        )
+      }
 
-        {
-            isMobile && (
-                <div className={styles.filterActions}>
-                  <Button
-                      onClick={resetFilters}
-                      size="middle"
-                      className={styles.filterResetButton}
-                  >
-                    <span style={{ fontSize: '13px' }}>🗑️ Xóa tất cả bộ lọc</span>
-                  </Button>
-                </div>
-            )
-        }
-      </div>
+      {
+        isMobile && (
+          <div className={styles.filterActions}>
+            <Button
+              onClick={resetFilters}
+              size="middle"
+              className={styles.filterResetButton}
+            >
+              <span style={{ fontSize: '13px' }}>🗑️ Xóa tất cả bộ lọc</span>
+            </Button>
+          </div>
+        )
+      }
+    </div>
   );
 
   const resetFilters = () => {
@@ -1490,7 +1508,7 @@ const CaseTrainingTab = ({
 
   const getFilteredItems = () => {
     let filtered = caseTrainingItems.filter(item =>
-        item.status === 'published' && item.impact !== 'skip'
+      item.status === 'published' && item.impact !== 'skip'
     );
 
     if (selectedProgram && selectedProgram !== 'all') {
@@ -1608,15 +1626,15 @@ const CaseTrainingTab = ({
     if (!lastItemRef.current) return;
 
     const observer = new IntersectionObserver(
-        (entries) => {
-          if (entries[0].isIntersecting && renderedCount < filteredItems.length) {
-            loadMoreItems();
-          }
-        },
-        {
-          threshold: 0.1,
-          rootMargin: '100px' // Trigger 100px before reaching the element
+      (entries) => {
+        if (entries[0].isIntersecting && renderedCount < filteredItems.length) {
+          loadMoreItems();
         }
+      },
+      {
+        threshold: 0.1,
+        rootMargin: '100px' // Trigger 100px before reaching the element
+      }
     );
 
     observer.observe(lastItemRef.current);
@@ -1786,53 +1804,53 @@ const CaseTrainingTab = ({
     if (headings.length === 0) return null;
 
     return (
-        <>
-          {/* Sidebar */}
-          <div className={`${newsTabStyles.tocSidebar} ${showTOCSidebar ? newsTabStyles.show : ''}`}>
-            <div className={newsTabStyles.tocSidebarHeader}>
-              <h4>Mục lục</h4>
-              {/* <Button
+      <>
+        {/* Sidebar */}
+        <div className={`${newsTabStyles.tocSidebar} ${showTOCSidebar ? newsTabStyles.show : ''}`}>
+          <div className={newsTabStyles.tocSidebarHeader}>
+            <h4>Mục lục</h4>
+            {/* <Button
               type="text"
               icon={<CloseOutlined />}
               onClick={toggleTOCSidebar}
               title="Đóng mục lục"
               className={newsTabStyles.tocSidebarCloseButton}
             /> */}
-            </div>
-            <div className={newsTabStyles.tocSidebarList}>
-              {headings.map((heading, index) => (
-                  <div
-                      key={index}
-                      className={`${newsTabStyles.tocSidebarItem} ${newsTabStyles[`tocSidebarLevel${heading.level}`]} ${activeHeadingIndex === index ? newsTabStyles.tocSidebarItemActive : ''
-                      }`}
-                      onClick={() => scrollToHeading(index)}
-                      title={`Cuộn đến: ${heading.text}`}
-                  >
-                    {heading.text}
-                  </div>
-              ))}
-            </div>
           </div>
-        </>
+          <div className={newsTabStyles.tocSidebarList}>
+            {headings.map((heading, index) => (
+              <div
+                key={index}
+                className={`${newsTabStyles.tocSidebarItem} ${newsTabStyles[`tocSidebarLevel${heading.level}`]} ${activeHeadingIndex === index ? newsTabStyles.tocSidebarItemActive : ''
+                  }`}
+                onClick={() => scrollToHeading(index)}
+                title={`Cuộn đến: ${heading.text}`}
+              >
+                {heading.text}
+              </div>
+            ))}
+          </div>
+        </div>
+      </>
     );
   };
 
   // Render content panel
   const renderSkeleton = () => (
-      <div className={`${styles.contentPanel} ${newsTabStyles.contentPanel}`}>
-        <div className={`${styles.contentHeader} ${newsTabStyles.contentHeader}`}>
-          <div className={`${newsTabStyles.skeleton} ${newsTabStyles.skeletonText}`} style={{ width: '70%' }}></div>
-          <div className={`${newsTabStyles.skeleton} ${newsTabStyles.skeletonText}`} style={{ width: '20%' }}></div>
-        </div>
-
-        <div className={`${newsTabStyles.skeleton} ${newsTabStyles.skeletonImage}`}></div>
-
-        <div className={`${styles.contentBody} ${newsTabStyles.contentBody}`}>
-          <div className={`${newsTabStyles.skeleton} ${newsTabStyles.skeletonText}`}></div>
-          <div className={`${newsTabStyles.skeleton} ${newsTabStyles.skeletonText}`}></div>
-          <div className={`${newsTabStyles.skeleton} ${newsTabStyles.skeletonText}`} style={{ width: '80%' }}></div>
-        </div>
+    <div className={`${styles.contentPanel} ${newsTabStyles.contentPanel}`}>
+      <div className={`${styles.contentHeader} ${newsTabStyles.contentHeader}`}>
+        <div className={`${newsTabStyles.skeleton} ${newsTabStyles.skeletonText}`} style={{ width: '70%' }}></div>
+        <div className={`${newsTabStyles.skeleton} ${newsTabStyles.skeletonText}`} style={{ width: '20%' }}></div>
       </div>
+
+      <div className={`${newsTabStyles.skeleton} ${newsTabStyles.skeletonImage}`}></div>
+
+      <div className={`${styles.contentBody} ${newsTabStyles.contentBody}`}>
+        <div className={`${newsTabStyles.skeleton} ${newsTabStyles.skeletonText}`}></div>
+        <div className={`${newsTabStyles.skeleton} ${newsTabStyles.skeletonText}`}></div>
+        <div className={`${newsTabStyles.skeleton} ${newsTabStyles.skeletonText}`} style={{ width: '80%' }}></div>
+      </div>
+    </div>
   );
 
   // Check if user has access to the item
@@ -1866,1296 +1884,1424 @@ const CaseTrainingTab = ({
     return false;
   };
   // Render content panel - now using CaseTrainingContentPanel component
-  const renderContentPanel = (item) => {
+  const renderContentPanel = (item, hideQuiz = false, hideEdit = false) => {
     return (
-        <CaseTrainingContentPanel
-            item={item}
-            currentUser={currentUser}
-            isMobile={isMobile}
-            isAnimating={isAnimating}
-            showSummaryDetail={showSummaryDetail}
-            selectedDetailImageIndex={selectedDetailImageIndex}
-            searchText={searchText}
-            cidSourceInfo={cidSourceInfo}
-            selectedItem={selectedItem}
-            contentPanelRef={contentPanelRef}
-            markdownContentRef={markdownContentRef}
-            hasAccess={hasAccess}
-            renderSkeleton={renderSkeleton}
-            highlightTextInContent={highlightTextInContent}
-            getFileIcon={getFileIcon}
-            openFilePreview={openFilePreview}
-            handleEditClick={handleEditClick}
-            handleCidSourceInfoClick={handleCidSourceInfoClick}
-            onShare={onShare}
-            setShowSummaryDetail={setShowSummaryDetail}
-            setSelectedDetailImageIndex={setSelectedDetailImageIndex}
-            setShowFeedbackModal={setShowFeedbackModal}
-            setIsPackageModalOpen={setIsPackageModalOpen}
-            setQuizScores={setQuizScores}
-            preprocessLatex={preprocessLatex}
-            postprocessLatex={postprocessLatex}
-            activeTab={activeTab}
-            fetchItem={fetchItem}
-        />
+      <CaseTrainingContentPanel
+        item={item}
+        currentUser={currentUser}
+        isMobile={isMobile}
+        isAnimating={isAnimating}
+        showSummaryDetail={showSummaryDetail}
+        selectedDetailImageIndex={selectedDetailImageIndex}
+        searchText={searchText}
+        cidSourceInfo={cidSourceInfo}
+        selectedItem={selectedItem}
+        contentPanelRef={contentPanelRef}
+        markdownContentRef={markdownContentRef}
+        hasAccess={hasAccess}
+        renderSkeleton={renderSkeleton}
+        highlightTextInContent={highlightTextInContent}
+        getFileIcon={getFileIcon}
+        openFilePreview={openFilePreview}
+        handleEditClick={handleEditClick}
+        handleCidSourceInfoClick={handleCidSourceInfoClick}
+        onShare={onShare}
+        setShowSummaryDetail={setShowSummaryDetail}
+        setSelectedDetailImageIndex={setSelectedDetailImageIndex}
+        setShowFeedbackModal={setShowFeedbackModal}
+        setIsPackageModalOpen={setIsPackageModalOpen}
+        setQuizScores={setQuizScores}
+        preprocessLatex={preprocessLatex}
+        postprocessLatex={postprocessLatex}
+        activeTab={activeTab}
+        fetchItem={fetchItem}
+        hideQuiz={hideQuiz}
+        hideEdit={hideEdit}
+      />
     );
   };
 
+  // --- Render Functions ---
+
+  const renderMobileView = () => (
+    <div className={styles.caseTrainingPanel}>
+      {visibleItems.length === 0 ? (
+        <Empty
+          description="No case training items found"
+          className={styles.emptyState}
+        />
+      ) : (
+        visibleItems.map((item, index) => (
+          <div
+            key={item.id}
+            ref={index === visibleItems.length - 1 ? lastItemRef : null}
+            className={`${styles.caseTrainingItem} ${expandedItem === item.id ? styles.expanded : ''}`}
+            onClick={() => handleItemSelect(item)}
+            data-item-id={item.id}
+          >
+            <div className={styles.itemContent}>
+              <div className={styles.itemHeader}>
+                <div style={{ display: 'flex', alignItems: 'start', gap: '10px' }}>
+                  {item.avatarUrl && (
+                    <div className={styles.avatarWrapper} onClick={(e) => { e.stopPropagation() }}>
+                      <Image
+                        src={item.avatarUrl}
+                        alt="Avatar"
+                        style={{
+                          width: '120px',
+                          height: '120px',
+                          objectFit: 'cover',
+                          objectPosition: 'center',
+                          display: 'block',
+                        }}
+                        loading="lazy"
+                        placeholder={
+                          <div style={{
+                            width: '120px',
+                            height: '120px',
+                            backgroundColor: '#f0f0f0',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            color: '#999'
+                          }}>
+                            📷
+                          </div>
+                        }
+                      />
+                    </div>
+                  )}
+                  <div style={{ flex: 1, position: 'relative' }}>
+                    {/* ID - Top right corner */}
+                    {item.id && (
+                      <div style={{
+                        position: 'absolute',
+                        top: '0',
+                        right: '0',
+                        fontSize: '10px',
+                        color: '#9F9F9F',
+                        backgroundColor: '#f5f5f5',
+                        padding: '2px 6px',
+                        borderRadius: '4px',
+                        zIndex: 1
+                      }}>
+                        ID: {item.id}
+                      </div>
+                    )}
+
+                    {/* Lesson Number - Above title */}
+                    {item.lessonNumber && (
+                      <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        marginBottom: '6px',
+                        width: '100%'
+                      }}>
+                        <div style={{
+                          backgroundColor: '#b0b2c6',
+                          color: '#ffffff',
+                          padding: '2px 10px',
+                          borderRadius: '4px',
+                          fontSize: '12px',
+                          fontWeight: '500',
+                          width: 'fit-content'
+                        }}>
+                          {item.lessonNumber}
+                        </div>
+                        {/* Check mark for score >= 70 */}
+                        {(() => {
+                          const score = quizScores[item.id];
+                          const numeric = typeof score === 'number' ? score : parseFloat(score);
+                          const hasPassed = !isNaN(numeric) && numeric >= 70;
+                          return hasPassed ? (
+                            <div style={{
+                              width: 20,
+                              height: 20,
+                              borderRadius: '50%',
+                              background: '#52c41a',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              flexShrink: 0,
+                              boxShadow: '0 2px 8px rgba(82, 196, 26, 0.3)'
+                            }}>
+                              <span style={{ color: 'white', fontSize: '12px', fontWeight: 'bold' }}>✓</span>
+                            </div>
+                          ) : null;
+                        })()}
+                      </div>
+                    )}
+
+                    <Title level={5} className={styles.title} style={{ paddingRight: (item.id && !isMobile) ? '50px' : '0' }}>
+                      {currentUser?.account_type === 'Dùng thử' && item.isPublic !== true && (
+                        <span style={{ marginRight: '6px', fontSize: '14px', verticalAlign: 'middle' }}>🔒</span>
+                      )}
+                      {item.title}
+                    </Title>
+                    <div className={styles.metaInfo}>
+                      {renderQuizStatus(item)}
+                      <Space size="small">
+                        {/* {item.tag1 && <Tag color="purple">{item.tag1}</Tag>} */}
+                        {/* {item.tag2 && <Tag color="cyan">{item.tag2}</Tag>} */}
+                        {/* {item.tag3 && <Tag color="red">{item.tag3}</Tag>} */}
+                      </Space>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {item.summary && (
+                <div className={styles.summary}>
+                  <p>{item.summary}</p>
+                </div>
+              )}
+
+              {item.description && (
+                <div className={styles.description}>
+                  <Text type="secondary">{item.description}</Text>
+                </div>
+              )}
+            </div>
+          </div>
+        ))
+      )}
+
+      {/* Loading indicator when loading more */}
+      {renderedCount < filteredItems.length && (
+        <div style={{ padding: '20px', textAlign: 'center' }}>
+          <Spin size="small" /> Loading more items...
+        </div>
+      )}
+
+      <Modal
+        open={showMobileModal && selectedItem}
+        onCancel={closeMobileModal}
+        footer={null}
+        width={'100%'}
+        style={{
+          top: '10'
+        }}
+        destroyOnClose={true}
+        maskClosable={true}
+        closable={true}
+        centered={true}
+        className={styles.modalContent}
+      >
+        <div style={{ height: '100%', overflowY: 'auto' }}>
+          {renderContentPanel(selectedItem)}
+        </div>
+      </Modal>
+    </div>
+  );
+
+  const renderGridItem = (item, index) => {
+    const isSelected = selectedItem?.id === item.id;
+    return (
+      <div
+        key={item.id}
+        ref={index === visibleItems.length - 1 ? lastItemRef : null}
+        title={`${item.title}${item.summary ? '\n\n' + item.summary : ''}`}
+        style={{
+          height: '210px',
+          overflow: 'hidden',
+          cursor: 'pointer',
+          border: isSelected ? '2px solid #1890ff' : '1px solid #f0f0f0',
+          borderRadius: '8px',
+          transition: 'all 0.3s ease',
+          backgroundColor: isSelected ? '#e6f7ff' : '#fff',
+          padding: '16px 16px 5px 16px',
+          boxShadow: isSelected ? '0 4px 12px rgba(24, 144, 255, 0.2)' : 'none'
+        }}
+        onMouseEnter={(e) => {
+          if (!isSelected) {
+            e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+            e.currentTarget.style.transform = 'translateY(-2px)';
+          }
+        }}
+        onMouseLeave={(e) => {
+          if (!isSelected) {
+            e.currentTarget.style.boxShadow = 'none';
+            e.currentTarget.style.transform = 'translateY(0)';
+          }
+        }}
+        data-item-id={item.id}
+      >
+        {/* Bên trong card: chia 2 hàng dọc giống NewsItem grid */}
+        <div
+          style={{
+            height: '100%',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '0x'
+          }}
+        >
+          {/* Hàng trên: Ảnh + Title + Summary */}
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'row',
+              gap: '16px',
+              flex: 1,
+              minHeight: 0
+            }}
+          >
+            {/* Image - Bên trái */}
+            {item.avatarUrl && (
+              <div
+                className={styles.avatarGridWrapper}
+                style={{ position: 'relative' }}
+              >
+                <Image
+                  src={item.avatarUrl}
+                  alt={item.title}
+                  preview={{
+                    mask: false
+                  }}
+                />
+                <div
+                  style={{
+                    position: 'absolute',
+                    bottom: '8px',
+                    right: '8px',
+                    width: '24px',
+                    height: '24px',
+                    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                    borderRadius: '50%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer',
+                    zIndex: 10,
+                    transition: 'all 0.2s',
+                    backdropFilter: 'blur(4px)'
+                  }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    // Trigger image preview by finding and clicking the ant-image element
+                    const imageWrapper = e.currentTarget.parentElement;
+                    const imageElement = imageWrapper?.querySelector('.ant-image');
+                    if (imageElement) {
+                      const clickEvent = new MouseEvent('click', {
+                        bubbles: true,
+                        cancelable: true,
+                        view: window
+                      });
+                      imageElement.dispatchEvent(clickEvent);
+                    }
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+                    e.currentTarget.style.transform = 'scale(1.1)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+                    e.currentTarget.style.transform = 'scale(1)';
+                  }}
+                >
+                  <EyeOutlined style={{ color: '#fff', fontSize: '12px', opacity: 0.7 }} />
+                </div>
+              </div>
+            )}
+
+            {/* Content - Bên phải */}
+            <div
+              style={{
+                flex: 1,
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '8px',
+                minWidth: 0,
+                overflow: 'hidden',
+                position: 'relative'
+              }}
+              onClick={() => handleGridItemClick(item)}
+            >
+              {/* Lesson Number - Above title */}
+              {item.lessonNumber && (
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  marginBottom: '4px',
+                  width: '100%'
+                }}>
+                  <div style={{
+                    backgroundColor: '#b0b2c6',
+                    color: '#ffffff',
+                    padding: '2px 10px',
+                    borderRadius: '4px',
+                    fontSize: '12px',
+                    fontWeight: '500',
+                    width: 'fit-content'
+                  }}>
+                    {item.lessonNumber}
+                  </div>
+                  {/* Check mark for score >= 70 */}
+                  {(() => {
+                    const score = quizScores[item.id];
+                    const numeric = typeof score === 'number' ? score : parseFloat(score);
+                    const hasPassed = !isNaN(numeric) && numeric >= 70;
+                    return hasPassed ? (
+                      <div style={{
+                        width: 20,
+                        height: 20,
+                        borderRadius: '50%',
+                        background: '#52c41a',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        flexShrink: 0,
+                        boxShadow: '0 2px 8px rgba(82, 196, 26, 0.3)'
+                      }}>
+                        <span style={{ color: 'white', fontSize: '12px', fontWeight: 'bold' }}>✓</span>
+                      </div>
+                    ) : null;
+                  })()}
+                </div>
+              )}
+
+              {/* Title */}
+              <div
+                style={{
+                  fontSize: '16px',
+                  fontWeight: '600',
+                  lineHeight: '1.4',
+                  overflow: 'hidden',
+                  display: '-webkit-box',
+                  WebkitLineClamp: 2,
+                  WebkitBoxOrient: 'vertical',
+                  color: '#1f2937'
+                }}
+              >
+                {currentUser?.account_type === 'Dùng thử' && item.isPublic !== true && (
+                  <span style={{ marginRight: '6px', fontSize: '14px', verticalAlign: 'middle' }}>🔒</span>
+                )}
+                {item.title}
+              </div>
+
+              {/* Summary */}
+              {item.summary && (
+                <div
+                  style={{
+                    fontSize: '13px',
+                    color: '#6b7280',
+                    overflow: 'hidden',
+                    display: '-webkit-box',
+                    WebkitLineClamp: 3,
+                    WebkitBoxOrient: 'vertical',
+                    lineHeight: '1.5'
+                  }}
+                >
+                  {item.summary}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Hàng dưới: Meta (CID + trạng thái quiz / tag) dưới cả ảnh + title + summary */}
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: '8px',
+              marginTop: 'auto',
+              width: '100%'
+            }}
+          >
+            {/* CID và ID bên trái */}
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                color: '#868686',
+                fontSize: '11px',
+                fontWeight: '500',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+                flex: 1
+              }}
+            >
+              {item.cid && <span>CID: {item.cid}</span>}
+              {item.id && item.cid && <span>|</span>}
+              {item.id && <span>ID: {item.id}</span>}
+            </div>
+
+            {/* Trạng thái quiz + tag bên phải */}
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                flexWrap: 'wrap',
+                justifyContent: 'flex-end'
+              }}
+            >
+              {renderQuizStatus(item)}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const renderGridModalTitle = () => {
+    if (!selectedItem) return null;
+    return (
+      <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px' }}>
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+          fontWeight: '600',
+          color: '#262626'
+        }}>
+          <span style={{ fontSize: '18px', width: 'max-content' }}>{getTabDisplayName(activeTab)}</span>
+          <span>/</span>
+          <span style={{
+            fontSize: '16px',
+            maxWidth: '900px',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap'
+          }}>
+            {selectedItem.title}
+          </span>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+
+          <Input
+            placeholder="Tìm kiếm trong nội dung..."
+            prefix={<SearchOutlined />}
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+            allowClear
+            style={{ flex: 1, maxWidth: '400px' }}
+            onPressEnter={() => {
+              if (searchResults.length > 0) {
+                scrollToSearchResult(highlightedIndex >= 0 ? highlightedIndex : 0);
+              }
+            }}
+          />
+          {searchResults.length > 0 && (
+            <>
+              <Button
+                size="small"
+                onClick={() => navigateSearchResult(-1)}
+                disabled={searchResults.length === 0}
+                style={{ minWidth: '32px', padding: '0 8px' }}
+              >
+                ↑
+              </Button>
+              <span
+                style={{
+                  fontSize: '12px',
+                  color: '#666',
+                  minWidth: '50px',
+                  textAlign: 'center',
+                  cursor: 'pointer'
+                }}
+                onClick={() => setShowSearchResultsPanel(!showSearchResultsPanel)}
+                title="Xem danh sách kết quả"
+              >
+                {highlightedIndex + 1} / {searchResults.length}
+              </span>
+              <Button
+                size="small"
+                onClick={() => navigateSearchResult(1)}
+                disabled={searchResults.length === 0}
+                style={{ minWidth: '32px', padding: '0 8px' }}
+              >
+                ↓
+              </Button>
+            </>
+          )}
+          {/* Rating button in title bar */}
+          {currentUser?.id && selectedItem && (
+            <Button
+              type="text"
+              size="small"
+              icon={<StarOutlined style={{ color: '#faad14' }} />}
+              onClick={() => setRatingPopupVisible(true)}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+                color: '#faad14',
+                border: 'none',
+                boxShadow: 'none',
+                flexShrink: 0
+              }}
+              title="Đánh giá bài viết"
+            >
+              {selectedItem.scoreFeedback != null ? (
+                <span style={{ fontSize: '13px' }}>
+                  {Number(selectedItem.scoreFeedback || 0).toFixed(2)}
+                </span>
+              ) : (
+                <span style={{ fontSize: '13px' }}>Đánh giá</span>
+              )}
+            </Button>
+          )}
+
+          {currentUser?.isAdmin && (
+            <Button
+              type="text"
+              size="small"
+              onClick={handleEditClick}
+              className={newsTabStyles.modalTitleEdit}
+            >
+              Edit
+            </Button>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  // Render Grid View Modal - with resizable panels (left: content, right: quiz)
+  const renderGridModal = () => (
+    <Modal
+      title={renderGridModalTitle()}
+      open={selectedItem !== null && viewMode === 'grid'}
+      onCancel={() => { setSelectedItem(null); updateURL({ item: null }), setExpandedItem(null) }}
+      footer={null}
+      width={selectedItem ? 1400 : 1200}
+      destroyOnClose={true}
+      maskClosable={true}
+      closable={true}
+      className={newsTabStyles.modalContent}
+      style={{
+        top: '0px',
+        paddingBottom: '0px'
+      }}
+    >
+      <div
+        className={newsTabStyles.resizablePanel}
+        ref={resizableContainerRef}
+      >
+        {/* Khối chính chứa bài học và quiz */}
+        <div style={{
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'row',
+          overflow: 'hidden'
+        }}>
+          {/* Panel bên trái: Thông tin bài bài học (không có quiz) */}
+          <div
+            className={newsTabStyles.modalSidebarPanel}
+            style={{
+              height: '100%',
+              width: selectedItem?.questionContent ? `${modalPcSplitRatio * 100}%` : '100%',
+              padding: '24px',
+              overflowY: 'auto',
+              backgroundColor: '#fff',
+              borderRight: 'none' // Remove default border-right since we use the resizer
+            }}
+          >
+            {renderContentPanel(selectedItem, true, true)}
+          </div>
+
+          {/* Resizer - only show if quiz content exists */}
+          {selectedItem?.questionContent && (
+            <div
+              className={`${newsTabStyles.resizer} ${modalResizeStartRatio !== null ? newsTabStyles.resizerActive : ''}`}
+              onMouseDown={(e) => {
+                setModalResizeStartRatio(modalPcSplitRatio);
+                e.preventDefault();
+              }}
+              style={{
+                marginLeft: '10px' // Override the negative/weird margin from NewsTab.module.css if needed
+              }}
+            />
+          )}
+
+          {/* Panel bên phải: Quiz */}
+          {selectedItem?.questionContent && (
+            <div
+              className={newsTabStyles.modalContentPanel}
+              style={{
+                width: `${(1 - modalPcSplitRatio) * 100}%`,
+
+              }}
+            >
+              <div style={{ backgroundColor: '#fff', borderRadius: '12px', padding: '16px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
+                <QuizComponent
+                  allowRetake={selectedItem.allow_retake}
+                  quizData={selectedItem.questionContent}
+                  questionId={selectedItem.id}
+                  onScoreUpdate={(qid, score) => setQuizScores(prev => ({ ...prev, [qid]: score }))}
+                />
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Mục lục Sidebar (nếu có) - Cố định 20% bên phải */}
+        {selectedItem?.hasTitle && hasAccess(selectedItem) && (
+          <div
+            style={{
+              width: '20%',
+              borderLeft: '1px solid #f0f0f0',
+              backgroundColor: '#fff',
+              overflowY: 'auto'
+            }}
+          >
+            <div style={{ padding: '24px 16px' }}>
+              <div style={{ marginBottom: '16px', fontWeight: 'bold', fontSize: '16px', color: '#262626' }}>
+                Mục lục
+              </div>
+              {renderTOCSidebar()}
+            </div>
+          </div>
+        )}
+
+        {/* Floating Search Results Panel */}
+        {searchResults.length > 0 && showSearchResultsPanel && (
+          <div
+            ref={panelRef}
+            style={{
+              position: 'fixed',
+              top: `${panelPosition.y}px`,
+              left: `${panelPosition.x}px`,
+              width: '350px',
+              maxHeight: '70vh',
+              backgroundColor: '#fff',
+              border: '1px solid #d9d9d9',
+              borderRadius: '8px',
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+              zIndex: 1000,
+              display: 'flex',
+              flexDirection: 'column',
+              overflow: 'hidden',
+              cursor: isDragging ? 'grabbing' : 'default',
+              userSelect: 'none',
+              willChange: isDragging ? 'transform' : 'auto',
+              transition: isDragging ? 'none' : 'box-shadow 0.2s'
+            }}
+          >
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '12px 16px',
+                borderBottom: '1px solid #f0f0f0',
+                backgroundColor: '#fafafa',
+                cursor: 'move',
+                userSelect: 'none'
+              }}
+              onMouseDown={handleMouseDown}
+            >
+              <div style={{
+                fontSize: '14px',
+                fontWeight: '600',
+                color: '#262626',
+                flex: 1
+              }}>
+                Kết quả tìm kiếm ({searchResults.length})
+              </div>
+              <Button
+                type="text"
+                size="small"
+                icon={<CloseOutlined />}
+                onClick={() => setShowSearchResultsPanel(false)}
+                style={{ minWidth: 'auto', padding: '0 4px' }}
+                onMouseDown={(e) => e.stopPropagation()}
+              />
+            </div>
+            <div style={{
+              overflowY: 'auto',
+              padding: '12px',
+              flex: 1
+            }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {searchResults.map((result, index) => (
+                  <div
+                    key={index}
+                    onClick={() => {
+                      scrollToSearchResult(index);
+                    }}
+                    style={{
+                      padding: '8px 12px',
+                      cursor: 'pointer',
+                      borderRadius: '4px',
+                      backgroundColor: highlightedIndex === index ? '#e6f7ff' : '#fff',
+                      border: highlightedIndex === index ? '1px solid #1890ff' : '1px solid #f0f0f0',
+                      fontSize: '12px',
+                      lineHeight: '1.5',
+                      transition: 'all 0.2s'
+                    }}
+                    onMouseEnter={(e) => {
+                      if (highlightedIndex !== index) {
+                        e.currentTarget.style.backgroundColor = '#f5f5f5';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (highlightedIndex !== index) {
+                        e.currentTarget.style.backgroundColor = '#fff';
+                      }
+                    }}
+                  >
+                    <div style={{
+                      color: '#666',
+                      marginBottom: '4px',
+                      fontSize: '11px'
+                    }}>
+                      Kết quả {index + 1}
+                    </div>
+                    <div
+                      style={{
+                        color: '#262626',
+                        lineHeight: '1.6'
+                      }}
+                      dangerouslySetInnerHTML={{
+                        __html: `...${result.context.replace(
+                          new RegExp(`(${result.match.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi'),
+                          '<mark style="background-color: #fff3cd; padding: 2px 0; border-radius: 2px;">$1</mark>'
+                        )}...`
+                      }}
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </Modal>
+  );
+
+  const renderGridView = () => (
+    <div style={{ padding: '20px', flex: 1 }}>
+      {visibleItems.length === 0 ? (
+        <Empty
+          description="No case training items found"
+          className={styles.emptyState}
+        />
+      ) : (
+        <>
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(3, 1fr)',
+            gap: '20px',
+            padding: '10px'
+          }}>
+            {visibleItems.map((item, index) => renderGridItem(item, index))}
+          </div>
+
+          {renderedCount < filteredItems.length && (
+            <div style={{ padding: '20px', textAlign: 'center', color: '#999' }}>
+              <Spin size="small" /> Đang tải thêm...
+            </div>
+          )}
+        </>
+      )}
+
+      {renderGridModal()}
+    </div>
+  );
+
+  const renderListView = () => (
+    <div className={styles.dualPanelContainer}>
+      <div className={styles.leftPanel}>
+        {visibleItems.length === 0 ? (
+          <Empty
+            description="No case training items found"
+            className={styles.emptyState}
+          />
+        ) : (
+          visibleItems.map((item, index) => (
+            <div
+              key={item.id}
+              ref={index === visibleItems.length - 1 ? lastItemRef : null}
+              className={`${styles.caseTrainingItem} ${expandedItem === item.id ? styles.expanded : ''} ${selectedItem?.id === item.id ? styles.selected : ''}`}
+              onClick={() => handleItemSelect(item)}
+              data-item-id={item.id}
+            >
+              {/* Hover Popup */}
+              {showHoverPopup && hoveredItemId === item.id && (item.summary || item.description || item.source) && (
+                <div
+                  style={{
+                    left: `${popupPosition.x}px`,
+                    top: `${popupPosition.y}px`,
+                    transform: 'translateX(-50%) translateY(-100%)',
+                    zIndex: 9999,
+                    backgroundColor: '#ffffff',
+                    borderRadius: '12px',
+                    boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(0, 0, 0, 0.05)',
+                    padding: '16px',
+                    maxWidth: '350px',
+                    minWidth: '280px',
+                    pointerEvents: 'none',
+                    backdropFilter: 'blur(8px)',
+                    border: '1px solid rgba(229, 231, 235, 0.9)',
+                    isolation: 'isolate',
+                    position: 'fixed',
+                    transformOrigin: 'bottom center',
+                  }}
+                >
+                  {/* Arrow pointing down */}
+                  <div
+                    style={{
+                      position: 'absolute',
+                      bottom: '-8px',
+                      left: '50%',
+                      transform: 'translateX(-50%)',
+                      width: 0,
+                      height: 0,
+                      borderLeft: '8px solid transparent',
+                      borderRight: '8px solid transparent',
+                      borderTop: '8px solid #ffffff',
+                      filter: 'drop-shadow(0 2px 2px rgba(0,0,0,0.1))',
+                    }}
+                  />
+
+                  {/* Summary */}
+                  {item.summary && (
+                    <div style={{
+                      marginBottom: (item.description || item.source || item.createdAt) ? '12px' : '0',
+                      paddingBottom: (item.description || item.source || item.createdAt) ? '12px' : '0',
+                      borderBottom: (item.description || item.source || item.createdAt) ? '1px solid #f1f5f9' : 'none'
+                    }}>
+                      <div style={{
+                        fontSize: '13px',
+                        lineHeight: '1.5',
+                        color: '#374151',
+                        fontWeight: '400'
+                      }}>
+                        {item.summary}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Description */}
+                  {item.description && (
+                    <div style={{
+                      marginBottom: (item.source || item.createdAt) ? '12px' : '0',
+                      paddingBottom: (item.source || item.createdAt) ? '12px' : '0',
+                      borderBottom: (item.source || item.createdAt) ? '1px solid #f1f5f9' : 'none'
+                    }}>
+                      <div style={{
+                        fontSize: '12px',
+                        lineHeight: '1.4',
+                        color: '#6b7280',
+                        fontStyle: 'italic'
+                      }}>
+                        {item.description}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Time */}
+                  {item.createdAt && (
+                    <div style={{
+                      fontSize: '11px',
+                      color: '#9ca3af',
+                      marginBottom: item.source ? '8px' : '0',
+                      fontStyle: 'italic',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px'
+                    }}>
+                      <span>🕒</span>
+                      {getTimeAgo(item.createdAt)}
+                    </div>
+                  )}
+
+                  {/* Source */}
+                  {item.source && (
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      paddingTop: (item.summary || item.description || item.createdAt) ? '8px' : '0',
+                      borderTop: (item.summary || item.description || item.createdAt) ? '1px solid #f1f5f9' : 'none'
+                    }}>
+                      <span style={{ fontSize: '11px', color: '#9ca3af', fontWeight: '500' }}>
+                        🔗 Nguồn:
+                      </span>
+                      <span style={{
+                        fontSize: '11px',
+                        color: '#3b82f6',
+                        fontWeight: '600',
+                        textDecoration: 'underline',
+                        cursor: 'pointer'
+                      }}>
+                        {item.source}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              <div className={styles.itemContent}>
+                {/* Lesson Number - Separate row above image and title */}
+                {item.lessonNumber && (
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    marginBottom: '8px',
+                    width: '100%'
+                  }}>
+                    <div style={{
+                      backgroundColor: '#b0b2c6',
+                      color: '#ffffff',
+                      padding: '2px 10px',
+                      borderRadius: '4px',
+                      fontSize: '12px',
+                      fontWeight: '500',
+                      width: 'fit-content'
+                    }}>
+                      {item.lessonNumber}
+                    </div>
+                    {/* Check mark for score >= 70 */}
+                    {(() => {
+                      const score = quizScores[item.id];
+                      const numeric = typeof score === 'number' ? score : parseFloat(score);
+                      const hasPassed = !isNaN(numeric) && numeric >= 70;
+                      return hasPassed ? (
+                        <div style={{
+                          width: 20,
+                          height: 20,
+                          borderRadius: '50%',
+                          background: '#52c41a',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          flexShrink: 0,
+                          boxShadow: '0 2px 8px rgba(82, 196, 26, 0.3)'
+                        }}>
+                          <span style={{ color: 'white', fontSize: '12px', fontWeight: 'bold' }}>✓</span>
+                        </div>
+                      ) : null;
+                    })()}
+                  </div>
+                )}
+
+                <div className={styles.itemHeader}>
+                  <div style={{ display: 'flex', alignItems: 'start', gap: '10px' }}>
+                    {item.avatarUrl && (
+                      <div className={styles.avatarWrapper}>
+                        <Image
+                          src={item.avatarUrl}
+                          alt="Avatar"
+                          style={{
+                            width: '120px',
+                            height: '120px',
+                            objectFit: 'cover',
+                            objectPosition: 'center',
+                            display: 'block',
+                          }}
+                          loading="lazy"
+                          placeholder={
+                            <div style={{
+                              width: '120px',
+                              height: '120px',
+                              backgroundColor: '#f0f0f0',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              color: '#999'
+                            }}>
+                              📷
+                            </div>
+                          }
+                        />
+                      </div>
+                    )}
+                    <div style={{ flex: 1 }}>
+                      <div className={styles.title}>
+                        {currentUser?.account_type === 'Dùng thử' && item.isPublic !== true && (
+                          <span style={{ marginRight: '6px', fontSize: '14px', verticalAlign: 'middle' }}>🔒</span>
+                        )}
+                        {item.title}
+                      </div>
+                      {item.summary && (
+                        <div className={styles.summary}>
+                          <p title={item.summary}>{item.summary}</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                </div>
+
+                <div className={styles.metaInfo} style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  flexWrap: 'wrap',
+                  gap: '8px'
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', justifyContent: 'space-between', width: '100%' }}>
+                    {/* CID và ID - trước điểm */}
+                    {(item.cid || item.id) && (
+                      <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        color: '#868686',
+                        fontSize: '11px',
+                        fontWeight: '500'
+                      }}>
+                        {item.cid && <span>CID: {item.cid}</span>}
+                        {item.id && item.cid && <span>|</span>}
+                        {item.id && <span>ID: {item.id}</span>}
+                      </div>
+                    )}
+
+                    {
+                      (item.tag1 || item.tag2) && (
+                        <Space size="small">
+                          {item.tag1 && <Tag color="purple">{item.tag1}</Tag>}
+                          {/* {item.tag3 && <Tag color="red">{item.tag3}</Tag>} */}
+                        </Space>
+                      )
+                    }
+                    {renderQuizStatus(item)}
+
+                  </div>
+
+                  {/* {(item.summary || item.description || item.source) && (
+                    <IconButton
+                      onMouseEnter={(e) => handleIconMouseEnter(e, item.id)}
+                      onMouseLeave={handleIconMouseLeave}
+                      title="Xem thêm thông tin"
+                      style={{ zIndex: 10 }}
+                    >
+                      <InfoMore_Icon
+                        width={16}
+                        height={16}
+                      />
+                    </IconButton>
+                  )} */}
+                </div>
+              </div>
+            </div>
+          ))
+        )}
+
+        {/* Loading indicator when loading more */}
+        {renderedCount < filteredItems.length && (
+          <div style={{ padding: '20px', textAlign: 'center', borderTop: '1px solid #f0f0f0' }}>
+            <Spin size="small" /> Loading more items...
+          </div>
+        )}
+      </div>
+
+      <div className={styles.rightPanel} style={{ padding: selectedItem?.hasTitle ? '20px 55px 20px 55px' : '20px 175px' }}>
+        {selectedItem ? (
+          renderContentPanel(selectedItem)
+        ) : (
+          <div className={styles.emptyContentState}>
+            <div className={styles.emptyContentIcon}>📚</div>
+            <h3>Chọn một case training để xem nội dung</h3>
+            <p>Nhấp vào bất kỳ case training nào ở bên trái để xem chi tiết</p>
+          </div>
+        )}
+      </div>
+      {selectedItem?.hasTitle && hasAccess(selectedItem) && renderTOCSidebar()}
+    </div>
+  );
+
   if (loading) {
     return (
-        <div className={styles.loadingContainer}>
-          <Spin size="large" />
-          <Text>Loading case training data...</Text>
-        </div>
+      <div className={styles.loadingContainer}>
+        <Spin size="large" />
+        <Text>Loading case training data...</Text>
+      </div>
     );
   }
 
   return (
-      <div className={styles.tabContent}>
-        <PreviewFileModal
-            open={previewModalVisible}
-            onClose={() => setPreviewModalVisible(false)}
-            fileUrl={previewFile?.url}
-            fileName={previewFile?.name}
-            title={previewFile ? `${getFileIcon(previewFile.extension)} ${previewFile.name}` : 'Preview File'}
-        />
-        {
-            showFeedbackModal && (
-                <FeedbackModal
-                    visible={showFeedbackModal}
-                    onClose={() => setShowFeedbackModal(false)}
-                    item={selectedItem}
-                    currentUser={currentUser}
-                    activeTab={activeTab}
-                />
-            )
-        }
-        {/* Edit Detail Modal */}
-        {
-            editModalVisible && (
-                <EditDetailModal
-                    visible={editModalVisible}
-                    onClose={closeEditModal}
-                    item={editingItem}
-                    onUpdate={handleDetailUpdate}
-                />
-            )
-        }
-
-        {/* Package Purchase Modal */}
-        <PaymentModal
-            open={isPackageModalOpen}
-            onCancel={() => setIsPackageModalOpen(false)}
+    <div className={styles.tabContent}>
+      <PreviewFileModal
+        open={previewModalVisible}
+        onClose={() => setPreviewModalVisible(false)}
+        fileUrl={previewFile?.url}
+        fileName={previewFile?.name}
+        title={previewFile ? `${getFileIcon(previewFile.extension)} ${previewFile.name}` : 'Preview File'}
+      />
+      {
+        showFeedbackModal && (
+          <FeedbackModal
+            visible={showFeedbackModal}
+            onClose={() => setShowFeedbackModal(false)}
+            item={selectedItem}
             currentUser={currentUser}
-            isMobile={isMobile}
-            onTrialActivated={() => {
-              // Reload user data để cập nhật quyền truy cập
-              window.location.reload();
-            }}
+            activeTab={activeTab}
+          />
+        )
+      }
+      {/* Edit Detail Modal */}
+      {
+        editModalVisible && (
+          <EditDetailModal
+            visible={editModalVisible}
+            onClose={closeEditModal}
+            item={editingItem}
+            onUpdate={handleDetailUpdate}
+          />
+        )
+      }
+
+      {/* Package Purchase Modal */}
+      <PaymentModal
+        open={isPackageModalOpen}
+        onCancel={() => setIsPackageModalOpen(false)}
+        currentUser={currentUser}
+        isMobile={isMobile}
+        onTrialActivated={() => {
+          // Reload user data để cập nhật quyền truy cập
+          window.location.reload();
+        }}
+      />
+
+      {/* Rating Popup */}
+      {currentUser?.id && selectedItem && (
+        <RatingPopup
+          fetchItem={fetchItem}
+          visible={ratingPopupVisible}
+          onCancel={() => setRatingPopupVisible(false)}
+          contentId={selectedItem.id}
+          contentTitle={selectedItem.title}
+          currentUser={currentUser}
+          currentAverageRating={Number(selectedItem.scoreFeedback || 0)}
+          currentRatingCount={selectedItem?.feedbackCount || 0}
+          activeTab={activeTab || 'caseTraining'}
         />
-        {/* Header with count */}
+      )}
+      {/* Header with count */}
 
-        {/* Filters Section - Matching NewsTab.jsx Layout */}
-        {showSearchSection && (
-            <div className={styles.filters}>
-              {/* Search Row */}
-              <div className={styles.searchRow}>
-                <div className={styles.searchGroup}>
-                  <Input
-                      placeholder="Tìm kiếm case training..."
-                      value={localFilters.search}
-                      onChange={(e) => handleFilterChange('search', e.target.value)}
-                      prefix={<SearchOutlined />}
-                      allowClear
-                      size="large"
-                      style={{
-                        width: '100%',
-                        ...(localFilters.search && { backgroundColor: 'rgb(245, 231, 231)' })
-                      }}
-                  />
-                </div>
-                {
-                  isMobile ? (
-                          <>   {isFilterPopoverOpen && isMobile && (
-                              <div className={styles.popoverOverlay} onClick={() => setIsFilterPopoverOpen(false)} />
-                          )}
-                            <Popover
-                                placement="bottomRight"
-                                trigger="click"
-                                open={isFilterPopoverOpen}
-                                onOpenChange={setIsFilterPopoverOpen}
-                                overlayStyle={{ zIndex: 1001 }}
-                                content={renderMobileFiltersContent()}
-                            >
-                              <Button icon={<FilterOutlined />} size="large">
-                                <span style={{ fontSize: '13px' }}>Bộ lọc{getActiveFilterCount() > 0 ? ` (${getActiveFilterCount()})` : ''}</span>
-                              </Button>
-                            </Popover>
-                          </>
-                      )
-                      : (
-                          <>
-                            {/* Loại bài filter cho PC */}
-                            {/*<div className={styles.filterGroup}>*/}
-                            {/*  <strong>Loại bài:</strong>*/}
-                            {/*  <div className={styles.filterTags}>*/}
-                            {/*    {finalTag3Options.map(option => (*/}
-                            {/*      <Tag*/}
-                            {/*        key={option.value}*/}
-                            {/*        color={localFilters.tag3?.includes(option.value) ? 'orange' : 'default'}*/}
-                            {/*        className={`${styles.filterTag} ${localFilters.tag3?.includes(option.value) ? styles.tagSelected : styles.tagUnselected}`}*/}
-                            {/*        onClick={() => handleTagToggle('tag3', option.value)}*/}
-                            {/*        style={{*/}
-                            {/*          cursor: 'pointer',*/}
-                            {/*          height: '35px'*/}
-                            {/*        }}*/}
-                            {/*      >*/}
-                            {/*        <span style={{ fontSize: '13px' }}>{option.label}</span>*/}
-                            {/*      </Tag>*/}
-                            {/*    ))}*/}
-                            {/*  </div>*/}
-                            {/*</div>*/}
+      {/* Filters Section - Matching NewsTab.jsx Layout */}
+      {showSearchSection && (
+        <div className={styles.filters}>
+          {/* Search Row */}
+          <div className={styles.searchRow}>
+            <div className={styles.searchGroup}>
+              <Input
+                placeholder="Tìm kiếm case training..."
+                value={localFilters.search}
+                onChange={(e) => handleFilterChange('search', e.target.value)}
+                prefix={<SearchOutlined />}
+                allowClear
+                size="large"
+                style={{
+                  width: '100%',
+                  ...(localFilters.search && { backgroundColor: 'rgb(245, 231, 231)' })
+                }}
+              />
+            </div>
+            {
+              isMobile ? (
+                <>   {isFilterPopoverOpen && isMobile && (
+                  <div className={styles.popoverOverlay} onClick={() => setIsFilterPopoverOpen(false)} />
+                )}
+                  <Popover
+                    placement="bottomRight"
+                    trigger="click"
+                    open={isFilterPopoverOpen}
+                    onOpenChange={setIsFilterPopoverOpen}
+                    overlayStyle={{ zIndex: 1001 }}
+                    content={renderMobileFiltersContent()}
+                  >
+                    <Button icon={<FilterOutlined />} size="large">
+                      <span style={{ fontSize: '13px' }}>Bộ lọc{getActiveFilterCount() > 0 ? ` (${getActiveFilterCount()})` : ''}</span>
+                    </Button>
+                  </Popover>
+                </>
+              )
+                : (
+                  <>
+                    {/* Loại bài filter cho PC */}
+                    {/*<div className={styles.filterGroup}>*/}
+                    {/*  <strong>Loại bài:</strong>*/}
+                    {/*  <div className={styles.filterTags}>*/}
+                    {/*    {finalTag3Options.map(option => (*/}
+                    {/*      <Tag*/}
+                    {/*        key={option.value}*/}
+                    {/*        color={localFilters.tag3?.includes(option.value) ? 'orange' : 'default'}*/}
+                    {/*        className={`${styles.filterTag} ${localFilters.tag3?.includes(option.value) ? styles.tagSelected : styles.tagUnselected}`}*/}
+                    {/*        onClick={() => handleTagToggle('tag3', option.value)}*/}
+                    {/*        style={{*/}
+                    {/*          cursor: 'pointer',*/}
+                    {/*          height: '35px'*/}
+                    {/*        }}*/}
+                    {/*      >*/}
+                    {/*        <span style={{ fontSize: '13px' }}>{option.label}</span>*/}
+                    {/*      </Tag>*/}
+                    {/*    ))}*/}
+                    {/*  </div>*/}
+                    {/*</div>*/}
 
-                            <div className={styles.filterGroup}>
-                              <strong>Trạng thái Quiz:</strong>
-                              <Select
-                                  value={localFilters.quizStatus}
-                                  onChange={(value) => handleFilterChange('quizStatus', value)}
-                                  placeholder="Chọn trạng thái"
-                                  size="middle"
-                                  style={{ minWidth: '160px' }}
-                              >
-                                <Option value="all">Tất cả trạng thái</Option>
-                                <Option value="completed">✅ Đã hoàn thành</Option>
-                                <Option value="incomplete">⏳ Chưa hoàn thành</Option>
-                              </Select>
-                            </div>
+                    <div className={styles.filterGroup}>
+                      <strong>Trạng thái Quiz:</strong>
+                      <Select
+                        value={localFilters.quizStatus}
+                        onChange={(value) => handleFilterChange('quizStatus', value)}
+                        placeholder="Chọn trạng thái"
+                        size="middle"
+                        style={{ minWidth: '160px' }}
+                      >
+                        <Option value="all">Tất cả trạng thái</Option>
+                        <Option value="completed">✅ Đã hoàn thành</Option>
+                        <Option value="incomplete">⏳ Chưa hoàn thành</Option>
+                      </Select>
+                    </div>
 
-                            {/* Advanced Filters Button */}
-                            <div className={styles.actionGroup}>
-                              <Popover
-                                  content={renderMobileFiltersContent}
-                                  trigger="click"
-                                  placement="bottomRight"
-                                  overlayClassName={styles.filterPopover}
-                              >
-                                <Button
-                                    icon={<FilterOutlined />}
-                                    size="large"
-                                >
-                                  <span style={{ fontSize: '13px' }}>Bộ lọc{getActiveFilterCount() > 0 ? ` (${getActiveFilterCount()})` : ''}</span>
-                                </Button>
-                              </Popover>
+                    {/* Advanced Filters Button */}
+                    <div className={styles.actionGroup}>
+                      <Popover
+                        content={renderMobileFiltersContent}
+                        trigger="click"
+                        placement="bottomRight"
+                        overlayClassName={styles.filterPopover}
+                      >
+                        <Button
+                          icon={<FilterOutlined />}
+                          size="large"
+                        >
+                          <span style={{ fontSize: '13px' }}>Bộ lọc{getActiveFilterCount() > 0 ? ` (${getActiveFilterCount()})` : ''}</span>
+                        </Button>
+                      </Popover>
 
-                            </div>
-                            <div>
-                              <Button
-                                  onClick={resetFilters}
-                                  size="middle"
-                                  className={styles.filterResetButton}
-                              >
-                                <span style={{ fontSize: '13px' }}>🗑️ Xóa tất cả bộ lọc</span>
-                              </Button>
-                            </div>
-                          </>
-                      )
-                }
+                    </div>
+                    <div>
+                      <Button
+                        onClick={resetFilters}
+                        size="middle"
+                        className={styles.filterResetButton}
+                      >
+                        <span style={{ fontSize: '13px' }}>🗑️ Xóa tất cả bộ lọc</span>
+                      </Button>
+                    </div>
+                  </>
+                )
+            }
 
 
-                {/* Controls Row */}
+            {/* Controls Row */}
 
-              </div>
-              {
-                  !isMobile && (
-                      <>   <div className={styles.controlsRow}>
-                        {/* Category Filter */}
-                        <div className={styles.filterGroup}>
-                          <strong>Danh mục:</strong>
-                          <div className={styles.filterTags}>
-                            {finalTag1Options.slice(0, showAllCategories ? finalTag1Options.length : 5).map(option => {
-                              const titlesInTag = getTitlesForTag('tag1', option.value);
-                              const hasItems = titlesInTag.length > 0;
-                              const tagCount = getTagCount('tag1', option.value);
+          </div>
+          {
+            !isMobile && (
+              <>   <div className={styles.controlsRow}>
+                {/* Category Filter */}
+                <div className={styles.filterGroup}>
+                  <strong>Danh mục:</strong>
+                  <div className={styles.filterTags}>
+                    {finalTag1Options.slice(0, showAllCategories ? finalTag1Options.length : 5).map(option => {
+                      const titlesInTag = getTitlesForTag('tag1', option.value);
+                      const hasItems = titlesInTag.length > 0;
+                      const tagCount = getTagCount('tag1', option.value);
 
-                              return (
-                                  <div key={option.value} className={styles.categoryButtonContainer}>
-                                    <Tag
-                                        color={localFilters.tag1?.includes(option.value) ? 'blue' : 'default'}
-                                        className={`${styles.filterTag} ${localFilters.tag1?.includes(option.value) ? styles.tagSelected : styles.tagUnselected}`}
-                                        onClick={() => handleTagToggle('tag1', option.value)}
-                                        style={{
-                                          cursor: 'pointer',
-                                          height: '35px'
-                                        }}
-                                    >
-                                      {tagCount > 0 && (
-                                          <span style={{
-                                            marginLeft: '4px',
-                                            fontSize: '13px',
-                                            fontWeight: '600',
-                                            color: localFilters.tag1?.includes(option.value) ? '#0958d9' : '#666'
-                                          }}>
+                      return (
+                        <div key={option.value} className={styles.categoryButtonContainer}>
+                          <Tag
+                            color={localFilters.tag1?.includes(option.value) ? 'blue' : 'default'}
+                            className={`${styles.filterTag} ${localFilters.tag1?.includes(option.value) ? styles.tagSelected : styles.tagUnselected}`}
+                            onClick={() => handleTagToggle('tag1', option.value)}
+                            style={{
+                              cursor: 'pointer',
+                              height: '35px'
+                            }}
+                          >
+                            {tagCount > 0 && (
+                              <span style={{
+                                marginLeft: '4px',
+                                fontSize: '13px',
+                                fontWeight: '600',
+                                color: localFilters.tag1?.includes(option.value) ? '#0958d9' : '#666'
+                              }}>
                                 ({tagCount})
                               </span>
-                                      )}
-                                      <span style={{ fontSize: '13px' }}>
+                            )}
+                            <span style={{ fontSize: '13px' }}>
                               {option.label}
                             </span>
-                                      {hasItems && (
-                                          <button
-                                              className={styles.dropdownToggle}
-                                              onClick={(e) => toggleDropdown('tag1', option.value, e)}
-                                              title={`Xem danh sách ${option.label}`}
-                                          >
-                                            <Menu size={14} color={localFilters.tag1?.includes(option.value) ? '#0958d9' : '#000'} />
-                                          </button>
-                                      )}
-                                    </Tag>
-
-                                    {hasItems && dropdownOpen === `tag1-${option.value}` && (
-                                        <div className={styles.dropdownMenu}>
-                                          <div className={styles.dropdownHeader}>
-                                            <span>{option.label}</span>
-                                            <button
-                                                className={styles.closeDropdown}
-                                                onClick={(e) => toggleDropdown('tag1', option.value, e)}
-                                            >
-                                              ×
-                                            </button>
-                                          </div>
-                                          <div className={styles.dropdownItems}>
-                                            {titlesInTag.map(item => (
-                                                <button
-                                                    key={item.id}
-                                                    className={styles.dropdownItem}
-                                                    onClick={(e) => handleItemSelectFromDropdown(item.id, e)}
-                                                >
-                                                  {item.lessonNumber && (
-                                                      <>
-                                                        {item.lessonNumber}:
-                                                      </>
-                                                  )}
-                                                  {currentUser?.account_type === 'Dùng thử' && item.isPublic !== true && (
-                                                      <span style={{ marginRight: '4px', fontSize: '12px' }}>🔒</span>
-                                                  )}
-                                                  < > {item.title}</>
-                                                </button>
-                                            ))}
-                                          </div>
-                                        </div>
-                                    )}
-                                  </div>
-                              );
-                            })}
-
-                            {/* Show more/less button */}
-                            {finalTag1Options.length > 5 && (
-                                <Button
-                                    type="text"
-                                    size="small"
-                                    onClick={() => setShowAllCategories(!showAllCategories)}
-                                    style={{
-                                      marginLeft: '8px',
-                                      fontSize: '12px',
-                                      color: '#1890ff',
-                                      padding: '4px 8px',
-                                      height: 'auto'
-                                    }}
-                                >
-                                  {showAllCategories ? 'Thu gọn' : `Xem thêm (${finalTag1Options.length - 5})`}
-                                </Button>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-
-                      </>
-                  )
-              }
-            </div>
-        )}
-
-
-        {isMobile ? (
-            // Mobile view: Single panel with modal
-            <div className={styles.caseTrainingPanel}>
-              {visibleItems.length === 0 ? (
-                  <Empty
-                      description="No case training items found"
-                      className={styles.emptyState}
-                  />
-              ) : (
-                  visibleItems.map((item, index) => (
-                      <div
-                          key={item.id}
-                          ref={index === visibleItems.length - 1 ? lastItemRef : null}
-                          className={`${styles.caseTrainingItem} ${expandedItem === item.id ? styles.expanded : ''}`}
-                          onClick={() => handleItemSelect(item)}
-                          data-item-id={item.id}
-                      >
-                        <div className={styles.itemContent}>
-                          <div className={styles.itemHeader}>
-                            <div style={{ display: 'flex', alignItems: 'start', gap: '10px' }}>
-                              {item.avatarUrl && (
-                                  <div className={styles.avatarWrapper} onClick={(e) => { e.stopPropagation() }}>
-                                    <Image
-                                        src={item.avatarUrl}
-                                        alt="Avatar"
-                                        style={{
-                                          width: '120px',
-                                          height: '120px',
-                                          objectFit: 'cover',
-                                          objectPosition: 'center',
-                                          display: 'block',
-                                        }}
-                                        loading="lazy"
-                                        placeholder={
-                                          <div style={{
-                                            width: '120px',
-                                            height: '120px',
-                                            backgroundColor: '#f0f0f0',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                            color: '#999'
-                                          }}>
-                                            📷
-                                          </div>
-                                        }
-                                    />
-                                  </div>
-                              )}
-                              <div style={{ flex: 1, position: 'relative' }}>
-                                {/* ID - Top right corner */}
-                                {item.id && (
-                                    <div style={{
-                                      position: 'absolute',
-                                      top: '0',
-                                      right: '0',
-                                      fontSize: '10px',
-                                      color: '#9F9F9F',
-                                      backgroundColor: '#f5f5f5',
-                                      padding: '2px 6px',
-                                      borderRadius: '4px',
-                                      zIndex: 1
-                                    }}>
-                                      ID: {item.id}
-                                    </div>
-                                )}
-
-                                {/* Lesson Number - Above title */}
-                                {item.lessonNumber && (
-                                    <div style={{
-                                      display: 'flex',
-                                      alignItems: 'center',
-                                      justifyContent: 'space-between',
-                                      marginBottom: '6px',
-                                      width: '100%'
-                                    }}>
-                                      <div style={{
-                                        backgroundColor: '#b0b2c6',
-                                        color: '#ffffff',
-                                        padding: '2px 10px',
-                                        borderRadius: '4px',
-                                        fontSize: '12px',
-                                        fontWeight: '500',
-                                        width: 'fit-content'
-                                      }}>
-                                        {item.lessonNumber}
-                                      </div>
-                                      {/* Check mark for score >= 70 */}
-                                      {(() => {
-                                        const score = quizScores[item.id];
-                                        const numeric = typeof score === 'number' ? score : parseFloat(score);
-                                        const hasPassed = !isNaN(numeric) && numeric >= 70;
-                                        return hasPassed ? (
-                                            <div style={{
-                                              width: 20,
-                                              height: 20,
-                                              borderRadius: '50%',
-                                              background: '#52c41a',
-                                              display: 'flex',
-                                              alignItems: 'center',
-                                              justifyContent: 'center',
-                                              flexShrink: 0,
-                                              boxShadow: '0 2px 8px rgba(82, 196, 26, 0.3)'
-                                            }}>
-                                              <span style={{ color: 'white', fontSize: '12px', fontWeight: 'bold' }}>✓</span>
-                                            </div>
-                                        ) : null;
-                                      })()}
-                                    </div>
-                                )}
-
-                                <Title level={5} className={styles.title} style={{ paddingRight: (item.id && !isMobile) ? '50px' : '0' }}>
-                                  {currentUser?.account_type === 'Dùng thử' && item.isPublic !== true && (
-                                      <span style={{ marginRight: '6px', fontSize: '14px', verticalAlign: 'middle' }}>🔒</span>
-                                  )}
-                                  {item.title}
-                                </Title>
-                                <div className={styles.metaInfo}>
-                                  {renderQuizStatus(item)}
-                                  <Space size="small">
-                                    {/* {item.tag1 && <Tag color="purple">{item.tag1}</Tag>} */}
-                                    {/* {item.tag2 && <Tag color="cyan">{item.tag2}</Tag>} */}
-                                    {/* {item.tag3 && <Tag color="red">{item.tag3}</Tag>} */}
-                                  </Space>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-
-                          {item.summary && (
-                              <div className={styles.summary}>
-                                <p>{item.summary}</p>
-                              </div>
-                          )}
-
-                          {item.description && (
-                              <div className={styles.description}>
-                                <Text type="secondary">{item.description}</Text>
-                              </div>
-                          )}
-                        </div>
-                      </div>
-                  ))
-              )}
-
-              {/* Loading indicator when loading more */}
-              {renderedCount < filteredItems.length && (
-                  <div style={{ padding: '20px', textAlign: 'center' }}>
-                    <Spin size="small" /> Loading more items...
-                  </div>
-              )}
-
-              <Modal
-                  open={showMobileModal && selectedItem}
-                  onCancel={closeMobileModal}
-                  footer={null}
-                  width={'100%'}
-                  style={{
-                    top: '10'
-                  }}
-                  destroyOnClose={true}
-                  maskClosable={true}
-                  closable={true}
-                  centered={true}
-                  className={styles.modalContent}
-              >
-                <div style={{ height: '100%', overflowY: 'auto' }}>
-                  {renderContentPanel(selectedItem)}
-                </div>
-              </Modal>
-            </div>
-        ) : viewMode === 'grid' ? (
-            // Desktop Grid view
-            <div style={{ padding: '20px', flex: 1 }}>
-
-              {visibleItems.length === 0 ? (
-                  <Empty
-                      description="No case training items found"
-                      className={styles.emptyState}
-                  />
-              ) : (
-                  <>
-                    <div style={{
-                      display: 'grid',
-                      gridTemplateColumns: 'repeat(3, 1fr)',
-                      gap: '20px',
-                      padding: '10px'
-                    }}>
-                      {visibleItems.map((item, index) => {
-                        const isSelected = selectedItem?.id === item.id;
-                        return (
-                            <div
-                                key={item.id}
-                                ref={index === visibleItems.length - 1 ? lastItemRef : null}
-                                title={`${item.title}${item.summary ? '\n\n' + item.summary : ''}`}
-                                style={{
-                                  height: '210px',
-                                  overflow: 'hidden',
-                                  cursor: 'pointer',
-                                  border: isSelected ? '2px solid #1890ff' : '1px solid #f0f0f0',
-                                  borderRadius: '8px',
-                                  transition: 'all 0.3s ease',
-                                  backgroundColor: isSelected ? '#e6f7ff' : '#fff',
-                                  padding: '16px 16px 5px 16px',
-                                  boxShadow: isSelected ? '0 4px 12px rgba(24, 144, 255, 0.2)' : 'none'
-                                }}
-                                onMouseEnter={(e) => {
-                                  if (!isSelected) {
-                                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
-                                    e.currentTarget.style.transform = 'translateY(-2px)';
-                                  }
-                                }}
-                                onMouseLeave={(e) => {
-                                  if (!isSelected) {
-                                    e.currentTarget.style.boxShadow = 'none';
-                                    e.currentTarget.style.transform = 'translateY(0)';
-                                  }
-                                }}
-                                data-item-id={item.id}
-                            >
-                              {/* Bên trong card: chia 2 hàng dọc giống NewsItem grid */}
-                              <div
-                                  style={{
-                                    height: '100%',
-                                    display: 'flex',
-                                    flexDirection: 'column',
-                                    gap: '0x'
-                                  }}
+                            {hasItems && (
+                              <button
+                                className={styles.dropdownToggle}
+                                onClick={(e) => toggleDropdown('tag1', option.value, e)}
+                                title={`Xem danh sách ${option.label}`}
                               >
-                                {/* Hàng trên: Ảnh + Title + Summary */}
-                                <div
-                                    style={{
-                                      display: 'flex',
-                                      flexDirection: 'row',
-                                      gap: '16px',
-                                      flex: 1,
-                                      minHeight: 0
-                                    }}
-                                >
-                                  {/* Image - Bên trái */}
-                                  {item.avatarUrl && (
-                                      <div
-                                          className={styles.avatarGridWrapper}
-                                          style={{ position: 'relative' }}
-                                      >
-                                        <Image
-                                            src={item.avatarUrl}
-                                            alt={item.title}
-                                            preview={{
-                                              mask: false
-                                            }}
-                                        />
-                                        <div
-                                            style={{
-                                              position: 'absolute',
-                                              bottom: '8px',
-                                              right: '8px',
-                                              width: '24px',
-                                              height: '24px',
-                                              backgroundColor: 'rgba(0, 0, 0, 0.5)',
-                                              borderRadius: '50%',
-                                              display: 'flex',
-                                              alignItems: 'center',
-                                              justifyContent: 'center',
-                                              cursor: 'pointer',
-                                              zIndex: 10,
-                                              transition: 'all 0.2s',
-                                              backdropFilter: 'blur(4px)'
-                                            }}
-                                            onClick={(e) => {
-                                              e.stopPropagation();
-                                              // Trigger image preview by finding and clicking the ant-image element
-                                              const imageWrapper = e.currentTarget.parentElement;
-                                              const imageElement = imageWrapper?.querySelector('.ant-image');
-                                              if (imageElement) {
-                                                const clickEvent = new MouseEvent('click', {
-                                                  bubbles: true,
-                                                  cancelable: true,
-                                                  view: window
-                                                });
-                                                imageElement.dispatchEvent(clickEvent);
-                                              }
-                                            }}
-                                            onMouseEnter={(e) => {
-                                              e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
-                                              e.currentTarget.style.transform = 'scale(1.1)';
-                                            }}
-                                            onMouseLeave={(e) => {
-                                              e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
-                                              e.currentTarget.style.transform = 'scale(1)';
-                                            }}
-                                        >
-                                          <EyeOutlined style={{ color: '#fff', fontSize: '12px', opacity: 0.7 }} />
-                                        </div>
-                                      </div>
-                                  )}
+                                <Menu size={14} color={localFilters.tag1?.includes(option.value) ? '#0958d9' : '#000'} />
+                              </button>
+                            )}
+                          </Tag>
 
-                                  {/* Content - Bên phải */}
-                                  <div
-                                      style={{
-                                        flex: 1,
-                                        display: 'flex',
-                                        flexDirection: 'column',
-                                        gap: '8px',
-                                        minWidth: 0,
-                                        overflow: 'hidden',
-                                        position: 'relative'
-                                      }}
-                                      onClick={() => handleGridItemClick(item)}
+                          {hasItems && dropdownOpen === `tag1-${option.value}` && (
+                            <div className={styles.dropdownMenu}>
+                              <div className={styles.dropdownHeader}>
+                                <span>{option.label}</span>
+                                <button
+                                  className={styles.closeDropdown}
+                                  onClick={(e) => toggleDropdown('tag1', option.value, e)}
+                                >
+                                  ×
+                                </button>
+                              </div>
+                              <div className={styles.dropdownItems}>
+                                {titlesInTag.map(item => (
+                                  <button
+                                    key={item.id}
+                                    className={styles.dropdownItem}
+                                    onClick={(e) => handleItemSelectFromDropdown(item.id, e)}
                                   >
-                                    {/* Lesson Number - Above title */}
                                     {item.lessonNumber && (
-                                        <div style={{
-                                          display: 'flex',
-                                          alignItems: 'center',
-                                          justifyContent: 'space-between',
-                                          marginBottom: '4px',
-                                          width: '100%'
-                                        }}>
-                                          <div style={{
-                                            backgroundColor: '#b0b2c6',
-                                            color: '#ffffff',
-                                            padding: '2px 10px',
-                                            borderRadius: '4px',
-                                            fontSize: '12px',
-                                            fontWeight: '500',
-                                            width: 'fit-content'
-                                          }}>
-                                            {item.lessonNumber}
-                                          </div>
-                                          {/* Check mark for score >= 70 */}
-                                          {(() => {
-                                            const score = quizScores[item.id];
-                                            const numeric = typeof score === 'number' ? score : parseFloat(score);
-                                            const hasPassed = !isNaN(numeric) && numeric >= 70;
-                                            return hasPassed ? (
-                                                <div style={{
-                                                  width: 20,
-                                                  height: 20,
-                                                  borderRadius: '50%',
-                                                  background: '#52c41a',
-                                                  display: 'flex',
-                                                  alignItems: 'center',
-                                                  justifyContent: 'center',
-                                                  flexShrink: 0,
-                                                  boxShadow: '0 2px 8px rgba(82, 196, 26, 0.3)'
-                                                }}>
-                                                  <span style={{ color: 'white', fontSize: '12px', fontWeight: 'bold' }}>✓</span>
-                                                </div>
-                                            ) : null;
-                                          })()}
-                                        </div>
+                                      <>
+                                        {item.lessonNumber}:
+                                      </>
                                     )}
-
-                                    {/* Title */}
-                                    <div
-                                        style={{
-                                          fontSize: '16px',
-                                          fontWeight: '600',
-                                          lineHeight: '1.4',
-                                          overflow: 'hidden',
-                                          display: '-webkit-box',
-                                          WebkitLineClamp: 2,
-                                          WebkitBoxOrient: 'vertical',
-                                          color: '#1f2937'
-                                        }}
-                                    >
-                                      {currentUser?.account_type === 'Dùng thử' && item.isPublic !== true && (
-                                          <span style={{ marginRight: '6px', fontSize: '14px', verticalAlign: 'middle' }}>🔒</span>
-                                      )}
-                                      {item.title}
-                                    </div>
-
-                                    {/* Summary */}
-                                    {item.summary && (
-                                        <div
-                                            style={{
-                                              fontSize: '13px',
-                                              color: '#6b7280',
-                                              overflow: 'hidden',
-                                              display: '-webkit-box',
-                                              WebkitLineClamp: 3,
-                                              WebkitBoxOrient: 'vertical',
-                                              lineHeight: '1.5'
-                                            }}
-                                        >
-                                          {item.summary}
-                                        </div>
-                                    )}
-                                  </div>
-                                </div>
-
-                                {/* Hàng dưới: Meta (CID + trạng thái quiz / tag) dưới cả ảnh + title + summary */}
-                                <div
-                                    style={{
-                                      display: 'flex',
-                                      alignItems: 'center',
-                                      justifyContent: 'space-between',
-                                      gap: '8px',
-                                      marginTop: 'auto',
-                                      width: '100%'
-                                    }}
-                                >
-                                  {/* CID và ID bên trái */}
-                                  <div
-                                      style={{
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        gap: '6px',
-                                        color: '#868686',
-                                        fontSize: '11px',
-                                        fontWeight: '500',
-                                        overflow: 'hidden',
-                                        textOverflow: 'ellipsis',
-                                        whiteSpace: 'nowrap',
-                                        flex: 1
-                                      }}
-                                  >
-                                    {item.cid && <span>CID: {item.cid}</span>}
-                                    {item.id && item.cid && <span>|</span>}
-                                    {item.id && <span>ID: {item.id}</span>}
-                                  </div>
-
-                                  {/* Trạng thái quiz + tag bên phải */}
-                                  <div
-                                      style={{
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        gap: '6px',
-                                        flexWrap: 'wrap',
-                                        justifyContent: 'flex-end'
-                                      }}
-                                  >
-                                    {renderQuizStatus(item)}
-                                    {/* {item.tag1 && (
-                              <Tag color="purple" style={{ margin: 0, fontSize: '11px' }}>
-                                {item.tag1}
-                              </Tag>
-                            )}
-                            {item.tag3 && (
-                              <Tag color="red" style={{ margin: 0, fontSize: '11px' }}>
-                                {item.tag3}
-                              </Tag>
-                            )} */}
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                        );
-                      })}
-                    </div>
-
-                    {/* Loading indicator */}
-                    {renderedCount < filteredItems.length && (
-                        <div style={{ padding: '20px', textAlign: 'center', color: '#999' }}>
-                          <Spin size="small" /> Đang tải thêm...
-                        </div>
-                    )}
-                  </>
-              )}
-
-              {/* Grid Modal */}
-              <Modal
-                  title={
-                      selectedItem && (
-                          <div style={{ display: 'flex', gap: '12px' }}>
-                            <div style={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: '8px',
-                              fontWeight: '600',
-                              color: '#262626'
-                            }}>
-                              <span style={{ fontSize: '18px', width: 'max-content' }}>{getTabDisplayName(activeTab)}</span>
-                              <span>{'>'}</span>
-                              <span style={{
-                                fontSize: '16px',
-                                maxWidth: '600px',
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis',
-                                whiteSpace: 'nowrap'
-                              }}>
-                      {selectedItem.title}
-                    </span>
-                            </div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                              <Input
-                                  placeholder="Tìm kiếm trong nội dung..."
-                                  prefix={<SearchOutlined />}
-                                  value={searchText}
-                                  onChange={(e) => setSearchText(e.target.value)}
-                                  allowClear
-                                  style={{ flex: 1, maxWidth: '400px' }}
-                                  onPressEnter={() => {
-                                    if (searchResults.length > 0) {
-                                      scrollToSearchResult(highlightedIndex >= 0 ? highlightedIndex : 0);
-                                    }
-                                  }}
-                              />
-                              {searchResults.length > 0 && (
-                                  <>
-                                    <Button
-                                        size="small"
-                                        onClick={() => navigateSearchResult(-1)}
-                                        disabled={searchResults.length === 0}
-                                        style={{ minWidth: '32px', padding: '0 8px' }}
-                                    >
-                                      ↑
-                                    </Button>
-                                    <span
-                                        style={{
-                                          fontSize: '12px',
-                                          color: '#666',
-                                          minWidth: '50px',
-                                          textAlign: 'center',
-                                          cursor: 'pointer'
-                                        }}
-                                        onClick={() => setShowSearchResultsPanel(!showSearchResultsPanel)}
-                                        title="Xem danh sách kết quả"
-                                    >
-                          {highlightedIndex + 1} / {searchResults.length}
-                        </span>
-                                    <Button
-                                        size="small"
-                                        onClick={() => navigateSearchResult(1)}
-                                        disabled={searchResults.length === 0}
-                                        style={{ minWidth: '32px', padding: '0 8px' }}
-                                    >
-                                      ↓
-                                    </Button>
-                                  </>
-                              )}
-                            </div>
-                          </div>
-                      )
-                  }
-                  open={selectedItem !== null && viewMode === 'grid'}
-                  onCancel={() => { setSelectedItem(null); updateURL({ item: null }), setExpandedItem(null) }}
-                  footer={null}
-                  width={selectedItem?.hasTitle ? 1500 : 1000}
-                  destroyOnClose={true}
-                  maskClosable={true}
-                  closable={true}
-                  className={newsTabStyles.modalContent}
-                  style={{
-                    top: '0px',
-                    paddingBottom: '0px'
-                  }}
-              >
-                <div style={{ display: 'flex', height: '100%', width: '100%', overflow: 'auto', position: 'relative' }}>
-                  <div style={{ flex: 1, padding: '20px' }}>
-                    {renderContentPanel(selectedItem)}
-                  </div>
-                  {selectedItem?.hasTitle && hasAccess(selectedItem) && (
-                      <div style={{ width: '25%', borderLeft: '1px solid #f0f0f0', overflowY: 'auto' }}>
-                        {renderTOCSidebar()}
-                      </div>
-                  )}
-
-                  {/* Floating Search Results Panel */}
-                  {searchResults.length > 0 && showSearchResultsPanel && (
-                      <div
-                          ref={panelRef}
-                          style={{
-                            position: 'fixed',
-                            top: `${panelPosition.y}px`,
-                            left: `${panelPosition.x}px`,
-                            width: '350px',
-                            maxHeight: '70vh',
-                            backgroundColor: '#fff',
-                            border: '1px solid #d9d9d9',
-                            borderRadius: '8px',
-                            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-                            zIndex: 1000,
-                            display: 'flex',
-                            flexDirection: 'column',
-                            overflow: 'hidden',
-                            cursor: isDragging ? 'grabbing' : 'default',
-                            userSelect: 'none',
-                            willChange: isDragging ? 'transform' : 'auto',
-                            transition: isDragging ? 'none' : 'box-shadow 0.2s'
-                          }}
-                      >
-                        <div
-                            style={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'space-between',
-                              padding: '12px 16px',
-                              borderBottom: '1px solid #f0f0f0',
-                              backgroundColor: '#fafafa',
-                              cursor: 'move',
-                              userSelect: 'none'
-                            }}
-                            onMouseDown={handleMouseDown}
-                        >
-                          <div style={{
-                            fontSize: '14px',
-                            fontWeight: '600',
-                            color: '#262626',
-                            flex: 1
-                          }}>
-                            Kết quả tìm kiếm ({searchResults.length})
-                          </div>
-                          <Button
-                              type="text"
-                              size="small"
-                              icon={<CloseOutlined />}
-                              onClick={() => setShowSearchResultsPanel(false)}
-                              style={{ minWidth: 'auto', padding: '0 4px' }}
-                              onMouseDown={(e) => e.stopPropagation()}
-                          />
-                        </div>
-                        <div style={{
-                          overflowY: 'auto',
-                          padding: '12px',
-                          flex: 1
-                        }}>
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                            {searchResults.map((result, index) => (
-                                <div
-                                    key={index}
-                                    onClick={() => {
-                                      scrollToSearchResult(index);
-                                    }}
-                                    style={{
-                                      padding: '8px 12px',
-                                      cursor: 'pointer',
-                                      borderRadius: '4px',
-                                      backgroundColor: highlightedIndex === index ? '#e6f7ff' : '#fff',
-                                      border: highlightedIndex === index ? '1px solid #1890ff' : '1px solid #f0f0f0',
-                                      fontSize: '12px',
-                                      lineHeight: '1.5',
-                                      transition: 'all 0.2s'
-                                    }}
-                                    onMouseEnter={(e) => {
-                                      if (highlightedIndex !== index) {
-                                        e.currentTarget.style.backgroundColor = '#f5f5f5';
-                                      }
-                                    }}
-                                    onMouseLeave={(e) => {
-                                      if (highlightedIndex !== index) {
-                                        e.currentTarget.style.backgroundColor = '#fff';
-                                      }
-                                    }}
-                                >
-                                  <div style={{
-                                    color: '#666',
-                                    marginBottom: '4px',
-                                    fontSize: '11px'
-                                  }}>
-                                    Kết quả {index + 1}
-                                  </div>
-                                  <div
-                                      style={{
-                                        color: '#262626',
-                                        lineHeight: '1.6'
-                                      }}
-                                      dangerouslySetInnerHTML={{
-                                        __html: `...${result.context.replace(
-                                            new RegExp(`(${result.match.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi'),
-                                            '<mark style="background-color: #fff3cd; padding: 2px 0; border-radius: 2px;">$1</mark>'
-                                        )}...`
-                                      }}
-                                  />
-                                </div>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-                  )}
-                </div>
-              </Modal>
-            </div>
-        ) : (
-            // Desktop view: Dual panel (List mode)
-            <div className={styles.dualPanelContainer}>
-              <div className={styles.leftPanel}>
-                {visibleItems.length === 0 ? (
-                    <Empty
-                        description="No case training items found"
-                        className={styles.emptyState}
-                    />
-                ) : (
-                    visibleItems.map((item, index) => (
-                        <div
-                            key={item.id}
-                            ref={index === visibleItems.length - 1 ? lastItemRef : null}
-                            className={`${styles.caseTrainingItem} ${expandedItem === item.id ? styles.expanded : ''} ${selectedItem?.id === item.id ? styles.selected : ''}`}
-                            onClick={() => handleItemSelect(item)}
-                            data-item-id={item.id}
-                        >
-                          {/* Hover Popup */}
-                          {showHoverPopup && hoveredItemId === item.id && (item.summary || item.description || item.source) && (
-                              <div
-                                  style={{
-                                    left: `${popupPosition.x}px`,
-                                    top: `${popupPosition.y}px`,
-                                    transform: 'translateX(-50%) translateY(-100%)',
-                                    zIndex: 9999,
-                                    backgroundColor: '#ffffff',
-                                    borderRadius: '12px',
-                                    boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(0, 0, 0, 0.05)',
-                                    padding: '16px',
-                                    maxWidth: '350px',
-                                    minWidth: '280px',
-                                    pointerEvents: 'none',
-                                    backdropFilter: 'blur(8px)',
-                                    border: '1px solid rgba(229, 231, 235, 0.9)',
-                                    isolation: 'isolate',
-                                    position: 'fixed',
-                                    transformOrigin: 'bottom center',
-                                  }}
-                              >
-                                {/* Arrow pointing down */}
-                                <div
-                                    style={{
-                                      position: 'absolute',
-                                      bottom: '-8px',
-                                      left: '50%',
-                                      transform: 'translateX(-50%)',
-                                      width: 0,
-                                      height: 0,
-                                      borderLeft: '8px solid transparent',
-                                      borderRight: '8px solid transparent',
-                                      borderTop: '8px solid #ffffff',
-                                      filter: 'drop-shadow(0 2px 2px rgba(0,0,0,0.1))',
-                                    }}
-                                />
-
-                                {/* Summary */}
-                                {item.summary && (
-                                    <div style={{
-                                      marginBottom: (item.description || item.source || item.createdAt) ? '12px' : '0',
-                                      paddingBottom: (item.description || item.source || item.createdAt) ? '12px' : '0',
-                                      borderBottom: (item.description || item.source || item.createdAt) ? '1px solid #f1f5f9' : 'none'
-                                    }}>
-                                      <div style={{
-                                        fontSize: '13px',
-                                        lineHeight: '1.5',
-                                        color: '#374151',
-                                        fontWeight: '400'
-                                      }}>
-                                        {item.summary}
-                                      </div>
-                                    </div>
-                                )}
-
-                                {/* Description */}
-                                {item.description && (
-                                    <div style={{
-                                      marginBottom: (item.source || item.createdAt) ? '12px' : '0',
-                                      paddingBottom: (item.source || item.createdAt) ? '12px' : '0',
-                                      borderBottom: (item.source || item.createdAt) ? '1px solid #f1f5f9' : 'none'
-                                    }}>
-                                      <div style={{
-                                        fontSize: '12px',
-                                        lineHeight: '1.4',
-                                        color: '#6b7280',
-                                        fontStyle: 'italic'
-                                      }}>
-                                        {item.description}
-                                      </div>
-                                    </div>
-                                )}
-
-                                {/* Time */}
-                                {item.createdAt && (
-                                    <div style={{
-                                      fontSize: '11px',
-                                      color: '#9ca3af',
-                                      marginBottom: item.source ? '8px' : '0',
-                                      fontStyle: 'italic',
-                                      display: 'flex',
-                                      alignItems: 'center',
-                                      gap: '4px'
-                                    }}>
-                                      <span>🕒</span>
-                                      {getTimeAgo(item.createdAt)}
-                                    </div>
-                                )}
-
-                                {/* Source */}
-                                {item.source && (
-                                    <div style={{
-                                      display: 'flex',
-                                      alignItems: 'center',
-                                      gap: '6px',
-                                      paddingTop: (item.summary || item.description || item.createdAt) ? '8px' : '0',
-                                      borderTop: (item.summary || item.description || item.createdAt) ? '1px solid #f1f5f9' : 'none'
-                                    }}>
-                          <span style={{ fontSize: '11px', color: '#9ca3af', fontWeight: '500' }}>
-                            🔗 Nguồn:
-                          </span>
-                                      <span style={{
-                                        fontSize: '11px',
-                                        color: '#3b82f6',
-                                        fontWeight: '600',
-                                        textDecoration: 'underline',
-                                        cursor: 'pointer'
-                                      }}>
-                            {item.source}
-                          </span>
-                                    </div>
-                                )}
-                              </div>
-                          )}
-
-                          <div className={styles.itemContent}>
-                            {/* Lesson Number - Separate row above image and title */}
-                            {item.lessonNumber && (
-                                <div style={{
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  justifyContent: 'space-between',
-                                  marginBottom: '8px',
-                                  width: '100%'
-                                }}>
-                                  <div style={{
-                                    backgroundColor: '#b0b2c6',
-                                    color: '#ffffff',
-                                    padding: '2px 10px',
-                                    borderRadius: '4px',
-                                    fontSize: '12px',
-                                    fontWeight: '500',
-                                    width: 'fit-content'
-                                  }}>
-                                    {item.lessonNumber}
-                                  </div>
-                                  {/* Check mark for score >= 70 */}
-                                  {(() => {
-                                    const score = quizScores[item.id];
-                                    const numeric = typeof score === 'number' ? score : parseFloat(score);
-                                    const hasPassed = !isNaN(numeric) && numeric >= 70;
-                                    return hasPassed ? (
-                                        <div style={{
-                                          width: 20,
-                                          height: 20,
-                                          borderRadius: '50%',
-                                          background: '#52c41a',
-                                          display: 'flex',
-                                          alignItems: 'center',
-                                          justifyContent: 'center',
-                                          flexShrink: 0,
-                                          boxShadow: '0 2px 8px rgba(82, 196, 26, 0.3)'
-                                        }}>
-                                          <span style={{ color: 'white', fontSize: '12px', fontWeight: 'bold' }}>✓</span>
-                                        </div>
-                                    ) : null;
-                                  })()}
-                                </div>
-                            )}
-
-                            <div className={styles.itemHeader}>
-                              <div style={{ display: 'flex', alignItems: 'start', gap: '10px' }}>
-                                {item.avatarUrl && (
-                                    <div className={styles.avatarWrapper}>
-                                      <Image
-                                          src={item.avatarUrl}
-                                          alt="Avatar"
-                                          style={{
-                                            width: '120px',
-                                            height: '120px',
-                                            objectFit: 'cover',
-                                            objectPosition: 'center',
-                                            display: 'block',
-                                          }}
-                                          loading="lazy"
-                                          placeholder={
-                                            <div style={{
-                                              width: '120px',
-                                              height: '120px',
-                                              backgroundColor: '#f0f0f0',
-                                              display: 'flex',
-                                              alignItems: 'center',
-                                              justifyContent: 'center',
-                                              color: '#999'
-                                            }}>
-                                              📷
-                                            </div>
-                                          }
-                                      />
-                                    </div>
-                                )}
-                                <div style={{ flex: 1 }}>
-                                  <div className={styles.title}>
                                     {currentUser?.account_type === 'Dùng thử' && item.isPublic !== true && (
-                                        <span style={{ marginRight: '6px', fontSize: '14px', verticalAlign: 'middle' }}>🔒</span>
+                                      <span style={{ marginRight: '4px', fontSize: '12px' }}>🔒</span>
                                     )}
-                                    {item.title}
-                                  </div>
-                                  {item.summary && (
-                                      <div className={styles.summary}>
-                                        <p title={item.summary}>{item.summary}</p>
-                                      </div>
-                                  )}
-                                </div>
+                                    < > {item.title}</>
+                                  </button>
+                                ))}
                               </div>
-
                             </div>
-
-                            <div className={styles.metaInfo} style={{
-                              display: 'flex',
-                              justifyContent: 'space-between',
-                              alignItems: 'center',
-                              flexWrap: 'wrap',
-                              gap: '8px'
-                            }}>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', justifyContent: 'space-between', width: '100%' }}>
-                                {/* CID và ID - trước điểm */}
-                                {(item.cid || item.id) && (
-                                    <div style={{
-                                      display: 'flex',
-                                      alignItems: 'center',
-                                      gap: '6px',
-                                      color: '#868686',
-                                      fontSize: '11px',
-                                      fontWeight: '500'
-                                    }}>
-                                      {item.cid && <span>CID: {item.cid}</span>}
-                                      {item.id && item.cid && <span>|</span>}
-                                      {item.id && <span>ID: {item.id}</span>}
-                                    </div>
-                                )}
-
-                                {
-                                    (item.tag1 || item.tag2) && (
-                                        <Space size="small">
-                                          {item.tag1 && <Tag color="purple">{item.tag1}</Tag>}
-                                          {/* {item.tag3 && <Tag color="red">{item.tag3}</Tag>} */}
-                                        </Space>
-                                    )
-                                }
-                                {renderQuizStatus(item)}
-
-                              </div>
-
-                              {/* {(item.summary || item.description || item.source) && (
-                        <IconButton
-                          onMouseEnter={(e) => handleIconMouseEnter(e, item.id)}
-                          onMouseLeave={handleIconMouseLeave}
-                          title="Xem thêm thông tin"
-                          style={{ zIndex: 10 }}
-                        >
-                          <InfoMore_Icon
-                            width={16}
-                            height={16}
-                          />
-                        </IconButton>
-                      )} */}
-                            </div>
-                          </div>
+                          )}
                         </div>
-                    ))
-                )}
+                      );
+                    })}
 
-                {/* Loading indicator when loading more */}
-                {renderedCount < filteredItems.length && (
-                    <div style={{ padding: '20px', textAlign: 'center', borderTop: '1px solid #f0f0f0' }}>
-                      <Spin size="small" /> Loading more items...
-                    </div>
-                )}
+                    {/* Show more/less button */}
+                    {finalTag1Options.length > 5 && (
+                      <Button
+                        type="text"
+                        size="small"
+                        onClick={() => setShowAllCategories(!showAllCategories)}
+                        style={{
+                          marginLeft: '8px',
+                          fontSize: '12px',
+                          color: '#1890ff',
+                          padding: '4px 8px',
+                          height: 'auto'
+                        }}
+                      >
+                        {showAllCategories ? 'Thu gọn' : `Xem thêm (${finalTag1Options.length - 5})`}
+                      </Button>
+                    )}
+                  </div>
+                </div>
               </div>
 
-              <div className={styles.rightPanel} style={{ padding: selectedItem?.hasTitle ? '20px 55px 20px 55px' : '20px 175px' }}>
-                {selectedItem ? (
-                    renderContentPanel(selectedItem)
-                ) : (
-                    <div className={styles.emptyContentState}>
-                      <div className={styles.emptyContentIcon}>📚</div>
-                      <h3>Chọn một case training để xem nội dung</h3>
-                      <p>Nhấp vào bất kỳ case training nào ở bên trái để xem chi tiết</p>
-                    </div>
-                )}
-              </div>
-              {selectedItem?.hasTitle && hasAccess(selectedItem) && renderTOCSidebar()}
-            </div>
-        )}
+              </>
+            )
+          }
+        </div>
+      )}
 
-      </div>
+
+      {isMobile ? renderMobileView() : (viewMode === 'grid' ? renderGridView() : renderListView())}
+
+    </div>
   );
 };
 

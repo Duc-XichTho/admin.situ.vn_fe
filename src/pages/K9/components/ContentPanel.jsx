@@ -45,10 +45,11 @@ const ContentPanel = ({
   postprocessLatex,
   isRead = false,
   onToggleRead,
+  hideHeaderMeta = false,
+  hideSummaryDetailToggle = false,
 }) => {
   const [quizPopoverVisible, setQuizPopoverVisible] = useState(false);
   const [ratingPopupVisible, setRatingPopupVisible] = useState(false);
-  console.log(item);
   if (!item) return null;
 
   const handleQuizItemClick = (quizItem) => {
@@ -88,7 +89,7 @@ const ContentPanel = ({
           color: '#262626',
           marginBottom: '4px'
         }}>
-          Quiz / Practice ({quizItems.length})
+          Bài kiểm tra liên quan ({quizItems.length})
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
           {quizItems.map((quizItem) => {
@@ -231,151 +232,153 @@ const ContentPanel = ({
       ref={contentPanelRef}
       className={`${styles.contentPanel} ${newsTabStyles.contentPanel}`}
     >
-      <div className={`${styles.contentHeader} ${newsTabStyles.contentHeader}`}
-        style={{
-          display: 'flex',
-          flexDirection: isMobile ? 'column' : 'row',
-          alignItems: isMobile ? 'flex-start' : 'center',
-          justifyContent: 'space-between',
-          width: '100%',
-          gap: isMobile ? '12px' : '0'
-        }}>
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '8px',
-          marginLeft: isMobile ? '0' : '10px',
-          flex: isMobile ? '1 1 100%' : 1,
-          minWidth: 0,
-          width: isMobile ? '100%' : 'auto',
-          flexWrap: isMobile ? 'wrap' : 'nowrap'
-        }}>
-          <span style={{
-            fontSize: '13px',
-            color: '#9F9F9F',
-            marginLeft: isMobile ? '0' : '40px',
-            width: 'max-content',
-            flexShrink: 0
-          }}>ID: {item.id}</span>
-
-          <ShareButton onShare={() => onShare(item)} />
-
-          {item.updatedAt && (
-            <Button
-              type="text"
-              icon={<Clock_Icon width={13} height={13} />}
-              size={'small'}
-              style={{ color: '#9F9F9F', fontSize: '13px', flexShrink: 0 }}
-            >
-              {formatDateFromTimestamp(item.updatedAt)}
-            </Button>
-          )}
-          {item.tag4 && Array.isArray(item.tag4) && item.tag4.length > 0 && (
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '4px',
+      {!hideHeaderMeta && (
+        <div className={`${styles.contentHeader} ${newsTabStyles.contentHeader}`}
+          style={{
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            alignItems: isMobile ? 'flex-start' : 'center',
+            justifyContent: 'space-between',
+            width: '100%',
+            gap: isMobile ? '12px' : '0'
+          }}>
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            marginLeft: isMobile ? '0' : '10px',
+            flex: isMobile ? '1 1 100%' : 1,
+            minWidth: 0,
+            width: isMobile ? '100%' : 'auto',
+            flexWrap: isMobile ? 'wrap' : 'nowrap'
+          }}>
+            <span style={{
               fontSize: '13px',
               color: '#9F9F9F',
-              minWidth: 0,
-              flex: isMobile ? '1 1 100%' : '1 1 auto',
-              overflow: 'hidden',
-              maxWidth: isMobile ? '100%' : 'none',
-              width: isMobile ? '100%' : 'auto'
-            }}>
-              <span style={{ whiteSpace: 'nowrap', flexShrink: 0 }}>Related module:</span>
-              <span style={{
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                whiteSpace: 'nowrap',
-                minWidth: 0,
-                flex: '1 1 auto',
-                maxWidth: '100%'
-              }} title={item.tag4.join(', ')}>
-                {item.tag4.join(', ')}
-              </span>
-            </div>
-          )}
+              marginLeft: isMobile ? '0' : '40px',
+              width: 'max-content',
+              flexShrink: 0
+            }}>ID: {item.id}</span>
 
-        </div>
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '8px',
-          justifyContent: isMobile ? 'flex-start' : 'flex-end',
-          flexShrink: 0,
-          whiteSpace: 'nowrap',
-          marginLeft: isMobile ? '0' : '8px',
-          marginTop: isMobile ? '8px' : '0',
-          width: isMobile ? '100%' : 'auto'
-        }}>
-          {/* Rating button */}
-          {currentUser?.id && (
-            <Button
-              type="text"
-              size="small"
-              icon={<StarOutlined style={{ color: '#faad14' }} />}
-              onClick={() => setRatingPopupVisible(true)}
-              style={{
+            <ShareButton onShare={() => onShare(item)} />
+
+            {item.updatedAt && (
+              <Button
+                type="text"
+                icon={<Clock_Icon width={13} height={13} />}
+                size={'small'}
+                style={{ color: '#9F9F9F', fontSize: '13px', flexShrink: 0 }}
+              >
+                {formatDateFromTimestamp(item.updatedAt)}
+              </Button>
+            )}
+            {item.tag4 && Array.isArray(item.tag4) && item.tag4.length > 0 && (
+              <div style={{
                 display: 'flex',
                 alignItems: 'center',
                 gap: '4px',
-                color: '#faad14',
-                border: 'none',
-                boxShadow: 'none',
-                flexShrink: 0
-              }}
-              title="Đánh giá bài viết"
-            >
-              {item.scoreFeedback != null ? (
-                <span style={{ fontSize: '13px' }}>
-                  {Number(item.scoreFeedback || 0).toFixed(2)}
-                </span>
-              ) : (
-                <span style={{ fontSize: '13px' }}>Đánh giá</span>
-              )}
-            </Button>
-          )}
-          {/* Read status toggle */}
-          {onToggleRead && (
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              padding: '2px 6px',
-              borderRadius: '4px',
-              backgroundColor: isRead ? '#f0f9ff' : '#fafafa',
-              transition: 'all 0.2s',
-              flexShrink: 0
-            }}>
-              <Switch
-                checked={isRead}
-                onChange={(checked) => {
-                  onToggleRead(item);
-                }}
-                size="small"
-                checkedChildren="Đã đọc"
-                unCheckedChildren="Chưa đọc"
-              />
-            </div>
-          )}
-          {currentUser?.isAdmin && !isMobile && (
-            <Button
-              type="text"
-              size="small"
-              onClick={handleEditClick}
-              style={{
+                fontSize: '13px',
                 color: '#9F9F9F',
-                border: 'none',
-                boxShadow: 'none',
+                minWidth: 0,
+                flex: isMobile ? '1 1 100%' : '1 1 auto',
+                overflow: 'hidden',
+                maxWidth: isMobile ? '100%' : 'none',
+                width: isMobile ? '100%' : 'auto'
+              }}>
+                <span style={{ whiteSpace: 'nowrap', flexShrink: 0 }}>Related module:</span>
+                <span style={{
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                  minWidth: 0,
+                  flex: '1 1 auto',
+                  maxWidth: '100%'
+                }} title={item.tag4.join(', ')}>
+                  {item.tag4.join(', ')}
+                </span>
+              </div>
+            )}
+
+          </div>
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            justifyContent: isMobile ? 'flex-start' : 'flex-end',
+            flexShrink: 0,
+            whiteSpace: 'nowrap',
+            marginLeft: isMobile ? '0' : '8px',
+            marginTop: isMobile ? '8px' : '0',
+            width: isMobile ? '100%' : 'auto'
+          }}>
+            {/* Rating button */}
+            {currentUser?.id && (
+              <Button
+                type="text"
+                size="small"
+                icon={<StarOutlined style={{ color: '#faad14' }} />}
+                onClick={() => setRatingPopupVisible(true)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  color: '#faad14',
+                  border: 'none',
+                  boxShadow: 'none',
+                  flexShrink: 0
+                }}
+                title="Đánh giá bài viết"
+              >
+                {item.scoreFeedback != null ? (
+                  <span style={{ fontSize: '13px' }}>
+                    {Number(item.scoreFeedback || 0).toFixed(2)}
+                  </span>
+                ) : (
+                  <span style={{ fontSize: '13px' }}>Đánh giá</span>
+                )}
+              </Button>
+            )}
+            {/* Read status toggle */}
+            {onToggleRead && (
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '2px 6px',
+                borderRadius: '4px',
+                backgroundColor: isRead ? '#f0f9ff' : '#fafafa',
+                transition: 'all 0.2s',
                 flexShrink: 0
-              }}
-            >
-              Edit
-            </Button>
-          )}
+              }}>
+                <Switch
+                  checked={isRead}
+                  onChange={(checked) => {
+                    onToggleRead(item);
+                  }}
+                  size="small"
+                  checkedChildren="Đã đọc"
+                  unCheckedChildren="Chưa đọc"
+                />
+              </div>
+            )}
+            {currentUser?.isAdmin && !isMobile && (
+              <Button
+                type="text"
+                size="small"
+                onClick={handleEditClick}
+                style={{
+                  color: '#9F9F9F',
+                  border: 'none',
+                  boxShadow: 'none',
+                  flexShrink: 0
+                }}
+              >
+                Edit
+              </Button>
+            )}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* File URLs Section */}
       <div className={newsTabStyles.contentMain} style={{ padding: isMobile ? '0px' : viewMode === 'grid' ? '0 50px' : '0 100px' }}>
@@ -385,7 +388,7 @@ const ContentPanel = ({
               <span className={`${styles.contentTitle} ${newsTabStyles.contentTitle}`}>{item.title}</span>
             </div>
           </div>
-          {item.summary && (
+          {item.summary && !hideHeaderMeta && (
             <div className={`${styles.contentDetail} ${newsTabStyles.contentDetail}`} style={{ marginTop: '12px', marginBottom: '12px' }}>
               <div
                 className={styles.markdownContent}
@@ -438,7 +441,7 @@ const ContentPanel = ({
             flexDirection: isMobile ? 'column' : 'row',
             alignItems: isMobile ? 'flex-start' : 'center'
           }}>
-            {item.summaryDetail && (
+            {!hideSummaryDetailToggle && item.summaryDetail && (
               <Button
                 type="text"
                 size="small"
@@ -478,7 +481,7 @@ const ContentPanel = ({
               {/*)}*/}
             </div>
             {
-              activeTab === 'stream' && relatedCaseTrainingItems.length > 0 && (
+              !hideHeaderMeta && activeTab === 'stream' && relatedCaseTrainingItems.length > 0 && (
                 <Popover
                   content={renderQuizPopoverContent}
                   title={null}
@@ -496,9 +499,9 @@ const ContentPanel = ({
                       cursor: 'pointer',
                       color: '#9F9F9F'
                     }}
-                    title="Quiz / Practice"
+                    title="Bài kiểm tra liên quan"
                   >
-                    <span style={{ fontSize: '17px' }}>📝</span> Quiz / Practice
+                    <span style={{ fontSize: '17px' }}>📝</span> Bài kiểm tra liên quan
                   </span>
                 </Popover>
               )

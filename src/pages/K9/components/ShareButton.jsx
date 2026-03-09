@@ -9,7 +9,7 @@ const ShareButton = ({ onShare, item = null, size = 'small', style = {} }) => {
 	};
 
 	return (
-		<Tooltip title={item ? `Chia sẻ "${item.title}"` : 'Chia sẻ trạng thái hiện tại'}>
+		<Tooltip title={item ? `Chia sẻ "${item.title}"` : 'Chia sẻ bài viết hiện tại'}>
 			<Button
 				type="text"
 				icon={<ShareAltOutlined style={{ fontSize: '16px' }} />}

@@ -15,14 +15,94 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 24px;
-  flex-wrap: wrap;
   gap: 16px;
+}
+
+/* PC: một hàng, không xuống dòng */
+@media (min-width: 769px) {
+  .header {
+    flex-wrap: nowrap;
+  }
+  .headerActions {
+    width: auto;
+    flex: 0 1 auto;
+  }
+}
+
+.headerMobile {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.headerMobileTopRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.headerMobileTopRow .title {
+  flex: 1;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.headerMobile .title {
+  margin-bottom: 0;
+}
+
+.headerMobileFilterRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.headerMobileFilterRow .filterSelect {
+  flex: 1;
+  min-width: 0;
+}
+
+.headerActions {
+  width: 100%;
+}
+
+.headerActions .searchInput {
+  width: 100%;
+  max-width: 300px;
+}
+
+.headerActions .filterSelect {
+  width: 100%;
+  max-width: 200px;
+}
+
+@media (min-width: 769px) {
+  .headerActions .searchInput {
+    width: 300px;
+  }
+  .headerActions .filterSelect {
+    width: 200px;
+  }
 }
 
 .header h2 {
   margin: 0;
   color: #333;
   font-weight: 600;
+}
+
+.title,
+.header .title {
+  white-space: nowrap;
+}
+
+@media (min-width: 769px) {
+  .title,
+  .header .title {
+    flex-shrink: 0;
+  }
 }
 
 .userInfo {
@@ -97,6 +177,120 @@
   .noteInfo {
     max-width: 120px;
   }
+}
+
+/* Mobile card list */
+.userCardList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 4px 0;
+}
+
+.cardListLoading,
+.cardListEmpty {
+  text-align: center;
+  padding: 32px 16px;
+}
+
+.userCard {
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border: 1px solid #f0f0f0;
+}
+
+.userCard :global(.ant-card-body) {
+  padding: 12px 16px;
+}
+
+.userCardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.userCardName {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  font-size: 15px;
+  color: #333;
+  flex: 1;
+  min-width: 0;
+}
+
+.userCardName span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.userCardBody {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.userCardRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.userCardLabel {
+  color: #666;
+  flex-shrink: 0;
+  min-width: 64px;
+}
+
+.userCardText {
+  color: #333;
+  word-break: break-word;
+}
+
+.userCardIcon {
+  color: #52c41a;
+  margin-right: 4px;
+  flex-shrink: 0;
+}
+
+.userCardExpiry {
+  flex: 1;
+}
+
+.userCardExpiry small {
+  display: block;
+  font-size: 12px;
+}
+
+.userCardNote {
+  color: #666;
+  font-style: italic;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 200px;
+}
+
+.userCardActions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding-top: 10px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.userCardActions button {
+  flex: 1;
+  min-width: 80px;
 }
 
 /* Table customizations */

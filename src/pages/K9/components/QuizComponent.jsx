@@ -974,7 +974,7 @@ LƯU Ý: Chỉ dùng số nguyên từ 1-10, không dùng 7.5, 8.3, v.v.`;
                 cursor: 'pointer'
               }}
               >
-                {allowRetake ? 'Cho phép làm lại bài Quiz' : 'Bài Quiz không hỗ trợ làm lại - Bạn chỉ có thể chấm điểm 1 lần'}
+                {allowRetake ? 'Cho phép làm lại bài' : 'Không hỗ trợ làm lại'}
               </span>
                   <Button type="primary" onClick={handleSubmitQuiz} loading={isSubmitting}>
                     {isSubmitting ? 'Đang nộp bài...' : 'Nộp bài'}
@@ -1002,7 +1002,7 @@ LƯU Ý: Chỉ dùng số nguyên từ 1-10, không dùng 7.5, 8.3, v.v.`;
                       cursor: 'pointer'
                     }}
                     >
-                {allowRetake ? 'Cho phép làm lại bài Quiz' : 'Bài Quiz không hỗ trợ làm lại - Bạn chỉ có thể chấm điểm 1 lần'}
+                {allowRetake ? 'Cho phép làm lại bài' : 'Không hỗ trợ làm lại'}
               </span>
                 )
             }
