@@ -76,7 +76,7 @@ import {
   Tooltip,
   Upload
 } from 'antd';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import * as XLSX from 'xlsx';
 import { aiGen, aiGen2, aiGenImageDiagram, generateAudio, generateText } from '../../apis/aiGen/botService.jsx';
@@ -550,6 +550,8 @@ const K9Management = () => {
   const [tag3Filter, setTag3Filter] = useState('all');
 
   const [relatedCaseFilter, setRelatedCaseFilter] = useState('all'); // 'all', '0', '1', '2', ..., '15'
+
+  const [datasetFilterNews, setDatasetFilterNews] = useState([]); // Multi-select filter for Bộ dữ liệu (tag1) - news tab only, OR logic
 
   const [processingCompanySummaryQueue, setProcessingCompanySummaryQueue] = useState(false);
 
@@ -1388,6 +1390,11 @@ Format your response as:
     // applyFilters will be called automatically by useEffect when relatedCaseFilter changes
   };
 
+  const handleDatasetFilterNewsChange = (value) => {
+    setDatasetFilterNews(value || []);
+    // applyFilters will be called automatically by useEffect when datasetFilterNews changes
+  };
+
   const handleTag3FilterChange = (value) => {
 
     setTag3Filter(value);
@@ -1599,7 +1606,7 @@ Format your response as:
 
     }
 
-  }, [categoryFilter, imageFilter, diagramFilter, quizFilter, tag4Filter, chapterFilter, tag1Filter, tag2Filter, tag3Filter, searchText, programFilter, programMultiFilter, voiceFilter, relatedCaseFilter, currentTab]);
+  }, [categoryFilter, imageFilter, diagramFilter, quizFilter, tag4Filter, chapterFilter, tag1Filter, tag2Filter, tag3Filter, searchText, programFilter, programMultiFilter, voiceFilter, relatedCaseFilter, datasetFilterNews, currentTab]);
 
 
   // Apply filters when tab changes (to ensure fresh data is displayed)
@@ -3488,6 +3495,38 @@ Format your response as:
       });
     }
 
+    // Apply Bộ dữ liệu (tag1) multi-filter for news tab - OR logic: item satisfies if it has at least one of the selected values
+    if (currentTab === 'news' && datasetFilterNews && datasetFilterNews.length > 0) {
+      filteredData = filteredData.filter(item => {
+        let parsedTags = [];
+        if (Array.isArray(item.tag1)) {
+          parsedTags = item.tag1;
+        } else if (typeof item.tag1 === 'string') {
+          try {
+            parsedTags = JSON.parse(item.tag1);
+            if (!Array.isArray(parsedTags)) parsedTags = [item.tag1];
+          } catch (e) {
+            parsedTags = [item.tag1];
+          }
+        } else if (item.tag1) {
+          parsedTags = [String(item.tag1)];
+        }
+        parsedTags = parsedTags.flatMap(t => {
+          if (typeof t === 'string' && t.trim().startsWith('[') && t.trim().endsWith(']')) {
+            try {
+              const p = JSON.parse(t);
+              if (Array.isArray(p)) return p;
+            } catch (e) { }
+          }
+          return [t];
+        });
+        return datasetFilterNews.some(selected => {
+          if (selected === '__empty__') return !parsedTags || parsedTags.length === 0;
+          return parsedTags.includes(selected);
+        });
+      });
+    }
+
     setFilteredData({
 
       ...allData,
@@ -3675,6 +3714,65 @@ Format your response as:
 
 
 
+  // Get dataset (tag1) options for news tab - used by Bộ dữ liệu multi-select filter
+
+  const getDatasetOptionsForNews = () => {
+
+    const tabData = allData.news || [];
+
+    const filters = generateTag1Filters(tabData);
+
+    return filters.map(f => ({ value: f.value === null ? '__empty__' : f.value, label: f.text }));
+
+  };
+
+
+
+  // Get program/tag4 options for filter dropdowns - when news tab + Bộ dữ liệu selected: only programs that exist in settings AND in data matching dataset filter
+  const getProgramOptionsForFilters = useMemo(() => {
+    const baseOptions = tag4Options; // from settings
+    if (currentTab !== 'news' || !datasetFilterNews || datasetFilterNews.length === 0) {
+      return baseOptions;
+    }
+    const newsData = allData.news || [];
+    const matchingItems = newsData.filter(item => {
+      let parsedTags = [];
+      if (Array.isArray(item.tag1)) {
+        parsedTags = item.tag1;
+      } else if (typeof item.tag1 === 'string') {
+        try {
+          parsedTags = JSON.parse(item.tag1);
+          if (!Array.isArray(parsedTags)) parsedTags = [item.tag1];
+        } catch (e) {
+          parsedTags = [item.tag1];
+        }
+      } else if (item.tag1) {
+        parsedTags = [String(item.tag1)];
+      }
+      parsedTags = parsedTags.flatMap(t => {
+        if (typeof t === 'string' && t.trim().startsWith('[') && t.trim().endsWith(']')) {
+          try {
+            const p = JSON.parse(t);
+            if (Array.isArray(p)) return p;
+          } catch (e) { }
+        }
+        return [t];
+      });
+      return datasetFilterNews.some(selected => {
+        if (selected === '__empty__') return !parsedTags || parsedTags.length === 0;
+        return parsedTags.includes(selected);
+      });
+    });
+    const programsInFilteredData = new Set();
+    matchingItems.forEach(item => {
+      const tag4Arr = Array.isArray(item.tag4) ? item.tag4 : [];
+      tag4Arr.forEach(p => programsInFilteredData.add(p));
+    });
+    return baseOptions.filter(opt => programsInFilteredData.has(opt.value));
+  }, [currentTab, datasetFilterNews, allData.news, tag4Options]);
+
+
+
   // Get current tab's tag2 filters
 
   const getCurrentTabTag2Filters = () => {
@@ -3732,6 +3830,8 @@ Format your response as:
     setProgramMultiFilter([]);
 
     setRelatedCaseFilter('all');
+
+    setDatasetFilterNews([]);
 
     if (currentTab === 'caseTraining') {
 
@@ -17517,6 +17617,31 @@ Chỉ trả về nội dung theo đúng định dạng trên, không thêm phầ
 
           </div>
 
+          {/* Bộ dữ liệu Filter - only for news tab, multi-select, OR logic */}
+          {currentTab === 'news' && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ fontSize: '14px' }}>Bộ dữ liệu:</span>
+              <Select
+                mode="multiple"
+                value={datasetFilterNews}
+                onChange={handleDatasetFilterNewsChange}
+                style={{ width: 300 }}
+                placeholder="Chọn nhiều (chỉ cần có 1)"
+                showSearch
+                filterOption={(input, option) =>
+                  (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+                }
+                maxTagCount="responsive"
+              >
+                {getDatasetOptionsForNews().map(opt => (
+                  <Option key={opt.value} value={opt.value} label={opt.label}>
+                    {opt.label}
+                  </Option>
+                ))}
+              </Select>
+            </div>
+          )}
+
           {/* Image Filter */}
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -17815,7 +17940,7 @@ Chỉ trả về nội dung theo đúng định dạng trên, không thêm phầ
               >
                 <Option value="all">Tất cả</Option>
                 <Option value="">Trống</Option>
-                {programOptions.map(option => (
+                {getProgramOptionsForFilters.map(option => (
                   <Option key={option.value} value={option.value}>
                     {option.label}
                   </Option>
@@ -17838,7 +17963,7 @@ Chỉ trả về nội dung theo đúng định dạng trên, không thêm phầ
                 }
                 maxTagCount="responsive"
               >
-                {programOptions.map(option => (
+                {getProgramOptionsForFilters.map(option => (
                   <Option key={option.value} value={option.value}>
                     {option.label}
                   </Option>
@@ -17880,7 +18005,7 @@ Chỉ trả về nội dung theo đúng định dạng trên, không thêm phầ
 
             >
 
-              {tag4Options.map(option => (
+              {getProgramOptionsForFilters.map(option => (
 
                 <Option key={option.value} value={option.value} label={option.label}>
 
@@ -17923,7 +18048,7 @@ Chỉ trả về nội dung theo đúng định dạng trên, không thêm phầ
 
             disabled={categoryFilter === 'all' && imageFilter === 'all' && diagramFilter === 'all' && quizFilter === 'all' && tag4Filter.length === 0 && chapterFilter === 'all' && programFilter === 'all' && programMultiFilter.length === 0 &&
               (currentTab === 'caseTraining' ? (tag1Filter === 'all' && tag2Filter === 'all' && tag3Filter === 'all') : true) &&
-              (currentTab === 'news' ? relatedCaseFilter === 'all' : true) &&
+              (currentTab === 'news' ? (relatedCaseFilter === 'all' && datasetFilterNews.length === 0) : true) &&
               !searchText.trim()}
 
           >
@@ -17942,7 +18067,7 @@ Chỉ trả về nội dung theo đúng định dạng trên, không thêm phầ
 
           {(categoryFilter !== 'all' || imageFilter !== 'all' || voiceFilter !== 'all' || diagramFilter !== 'all' || quizFilter !== 'all' || tag4Filter.length > 0 || chapterFilter !== 'all' || programFilter !== 'all' || programMultiFilter.length > 0 ||
             (currentTab === 'caseTraining' && (tag1Filter !== 'all' || tag2Filter !== 'all' || tag3Filter !== 'all')) ||
-            (currentTab === 'news' && relatedCaseFilter !== 'all')) && (
+            (currentTab === 'news' && (relatedCaseFilter !== 'all' || datasetFilterNews.length > 0))) && (
 
               <div style={{
 
@@ -18088,6 +18213,12 @@ Chỉ trả về nội dung theo đúng định dạng trên, không thêm phầ
                 {currentTab === 'news' && relatedCaseFilter !== 'all' && (
                   <Tag color="blue" closable onClose={() => handleRelatedCaseFilterChange('all')}>
                     Case liên quan: {relatedCaseFilter === '0' ? 'Không có case' : `${relatedCaseFilter} case`}
+                  </Tag>
+                )}
+
+                {currentTab === 'news' && datasetFilterNews.length > 0 && (
+                  <Tag color="geekblue" closable onClose={() => handleDatasetFilterNewsChange([])}>
+                    Bộ dữ liệu: {datasetFilterNews.map(v => v === '__empty__' ? 'Trống' : v).join(', ')}
                   </Tag>
                 )}
 
