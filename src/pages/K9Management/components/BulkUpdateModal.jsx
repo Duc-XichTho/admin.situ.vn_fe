@@ -113,8 +113,12 @@ const BulkUpdateModal = ({
 
       let finalValue = values[fieldToUpdate];
       if (currentTab === 'news' && fieldToUpdate === 'tag1' && Array.isArray(finalValue)) {
-        finalValue = JSON.stringify(finalValue);
-      } else if (!finalValue) {
+        if (finalValue.length === 0) {
+          finalValue = null;
+        } else {
+          finalValue = JSON.stringify(finalValue);
+        }
+      } else if (!finalValue || (Array.isArray(finalValue) && finalValue.length === 0)) {
         finalValue = null;
       }
 
@@ -210,7 +214,7 @@ const BulkUpdateModal = ({
         <Form.Item
           label={`Chọn ${getFieldLabel()} mới`}
           name={fieldToUpdate}
-          rules={[{ required: true, message: `Vui lòng chọn ${getFieldLabel()}` }]}
+          rules={[{ required: !(currentTab === 'news' && fieldToUpdate === 'tag1'), message: `Vui lòng chọn hoặc nhập ${getFieldLabel()}` }]}
         >
           <Select
             placeholder={getFieldPlaceholder()}
@@ -242,8 +246,8 @@ const BulkUpdateModal = ({
         borderRadius: 6
       }}>
         <Text type="secondary" style={{ fontSize: '12px' }}>
-          <strong>Lưu ý:</strong> Hành động này sẽ cập nhật {selectedIds.length} bản ghi cùng lúc.
-          Vui lòng kiểm tra kỹ trước khi thực hiện.
+          <strong>Lưu ý:</strong> Hành động này sẽ cập nhật giá trị cho {selectedIds.length} bản ghi cùng lúc.
+          {currentTab === 'news' && fieldToUpdate === 'tag1' && ' Nếu để trống, toàn bộ bộ dữ liệu của các bản ghi đã chọn sẽ bị xóa (Clear).'} Vui lòng kiểm tra kỹ trước khi thực hiện.
         </Text>
         <br />
         <Text type="secondary" style={{ fontSize: '12px', marginTop: '8px' }}>
