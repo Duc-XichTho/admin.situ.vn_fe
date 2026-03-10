@@ -25,6 +25,7 @@ const K9Header = ({
 	setHeaderStats,
 	updateURL,
 	newsItems,
+	documentItems,
 	caseTrainingItems,
 	longFormItems,
 	tag4Filter,
@@ -236,10 +237,10 @@ const K9Header = ({
 	};
 
 	useEffect(() => {
-		if (currentUser?.id && newsItems && caseTrainingItems) {
+		if (currentUser?.id && newsItems && documentItems && caseTrainingItems) {
 			loadHeaderStats();
 		}
-	}, [currentUser?.id, newsItems, caseTrainingItems, loadQuiz, selectedProgram]);
+	}, [currentUser?.id, newsItems, documentItems, caseTrainingItems, loadQuiz, selectedProgram]);
 
 	// Reload historyData when loadQuiz changes (quiz completed) to sync progress bar
 	useEffect(() => {
@@ -455,8 +456,10 @@ const K9Header = ({
 			// Create a set of current question IDs for fast lookup
 			const currentQuestionIds = new Set();
 
-			// Add news items with questions, filtered by selectedProgram
-			newsItems.forEach(item => {
+			// Add news & document items with questions, filtered by selectedProgram
+			const theorySources = [...newsItems, ...documentItems];
+
+			theorySources.forEach(item => {
 				if (item.questionContent != null && item.questionContent != undefined) {
 					const itemTag4Array = Array.isArray(item.tag4) ? item.tag4 : [];
 					if (matchesSelectedProgram(itemTag4Array)) {
@@ -497,8 +500,8 @@ const K9Header = ({
 			// Calculate high score count from valid history
 			const highScoreCount = validHistoryData.filter(item => (item.score || 0) >= 60).length;
 
-			// Tính toán thống kê lý thuyết
-			const totalTheory = newsItems.filter(item =>
+			// Tính toán thống kê lý thuyết (news + document)
+			const totalTheory = [...newsItems, ...documentItems].filter(item =>
 				item.questionContent != null &&
 				item.questionContent != undefined &&
 				currentQuestionIds.has(item.id)
@@ -669,8 +672,10 @@ const K9Header = ({
 		// Create a set of current question IDs for fast lookup
 		const currentQuestionIds = new Set();
 
-		// Add news items with questions, filtered by selectedProgram
-		newsItems.forEach(item => {
+		// Add news & document items with questions, filtered by selectedProgram
+		const theorySources = [...newsItems, ...documentItems];
+
+		theorySources.forEach(item => {
 			if (item.questionContent != null && item.questionContent != undefined) {
 				const itemTag4Array = Array.isArray(item.tag4) ? item.tag4 : [];
 				if (matchesSelectedProgram(itemTag4Array)) {
@@ -770,8 +775,10 @@ const K9Header = ({
 			? selectedPortfolioProgram
 			: selectedProgram;
 
-		// Add news items with questions, filtered by program
-		newsItems.forEach(item => {
+		// Add news & document items with questions, filtered by program
+		const theorySources = [...newsItems, ...documentItems];
+
+		theorySources.forEach(item => {
 			if (item.questionContent != null && item.questionContent != undefined) {
 				const itemTag4Array = Array.isArray(item.tag4) ? item.tag4 : [];
 				// Check if programToFilter matches (supports string and array)
@@ -1108,7 +1115,8 @@ const K9Header = ({
 		// Combine all items
 		const allItems = [
 			...caseTrainingItems,
-			...newsItems
+			...newsItems,
+			...documentItems
 		];
 
 		// Filter items by program
@@ -1183,7 +1191,7 @@ const K9Header = ({
 		}
 
 		// Get all items for this program
-		const allItems = [...newsItems, ...caseTrainingItems];
+		const allItems = [...newsItems, ...documentItems, ...caseTrainingItems];
 		const theoryItems = [];
 		const quizItems = [];
 
@@ -1275,7 +1283,7 @@ const K9Header = ({
 
 		// Get all questions for this program - calculate total first (doesn't need historyData)
 		const currentQuestionIds = new Set();
-		const allItems = [...newsItems, ...caseTrainingItems];
+		const allItems = [...newsItems, ...documentItems, ...caseTrainingItems];
 
 		allItems.forEach(item => {
 			if (item.questionContent != null && item.questionContent != undefined) {
@@ -1333,7 +1341,7 @@ const K9Header = ({
 
 
 	// Only show tag4 filter for specific tabs
-	const shouldShowTag4Filter = ['stream', 'longForm', 'caseTraining', 'home', 'caseUser', 'ai'].includes(activeTab);
+	const shouldShowTag4Filter = ['stream', 'document', 'longForm', 'caseTraining', 'home', 'caseUser', 'ai'].includes(activeTab);
 
 	// Helper function to render account type tag
 	const renderAccountTypeTag = (accountType, isAdmin, size = 'normal') => {
@@ -1570,7 +1578,7 @@ const K9Header = ({
 						{/* Program Filter Button */}
 
 						{/* Search Section Toggle Button */}
-						{['stream', 'longForm', 'caseTraining'].includes(activeTab) && !isMobile && (
+						{['stream', 'document', 'longForm', 'caseTraining'].includes(activeTab) && !isMobile && (
 							<Button
 								onClick={toggleSearchSection}
 								size="middle"

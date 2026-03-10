@@ -326,6 +326,8 @@ const K9Management = () => {
 
     news: [],
 
+    document: [],
+
     library: [],
 
     story: [],
@@ -345,6 +347,21 @@ const K9Management = () => {
   const [filterHistory, setFilterHistory] = useState({
 
     news: {
+
+      categoryFilter: 'all',
+
+      imageFilter: 'all',
+
+      diagramFilter: 'all',
+      quizFilter: 'all',
+
+      tag4Filter: [],
+
+      searchText: ''
+
+    },
+
+    document: {
 
       categoryFilter: 'all',
 
@@ -755,79 +772,44 @@ Format your response as:
   const [fieldToUpdate, setFieldToUpdate] = useState('category');
 
   const [allData, setAllData] = useState({
-
     news: [],
-
+    document: [],
     library: [],
-
     story: [],
-
     caseTraining: [],
-
     longForm: []
-
   });
 
 
 
   const [filteredData, setFilteredData] = useState({
-
     news: [],
-
+    document: [],
     library: [],
-
     story: [],
-
     caseTraining: [],
-
     longForm: []
-
   });
 
-
-
   const [audioText, setAudioText] = useState('');
-
-
-
   const [selectedAISummary, setSelectedAISummary] = useState(null);
-
   const [aiSummaryDetailModalVisible, setAISummaryDetailModalVisible] = useState(false);
-
   const [aiSummaryEditModalVisible, setAISummaryEditModalVisible] = useState(false);
-
   const [aiSummaryEditForm] = Form.useForm();
-
-
-
   // QuestionContent Modal states
-
   const [questionContentModalVisible, setQuestionContentModalVisible] = useState(false);
-
   const [selectedQuestionContent, setSelectedQuestionContent] = useState(null);
-
   const [selectedQuestionContentTitle, setSelectedQuestionContentTitle] = useState('');
-
   const [selectedQuestionContentRecord, setSelectedQuestionContentRecord] = useState(null);
 
-
-
   useEffect(() => {
-
     setSelectedRowKeys([]);
-
   }, [currentTab]);
 
-
-
   // Load search history from localStorage
-
   const loadSearchHistory = () => {
-
     try {
-
       const savedHistory = localStorage.getItem('k9management_search_history');
-
       if (savedHistory) {
 
         const parsedHistory = JSON.parse(savedHistory);
@@ -1271,7 +1253,7 @@ Format your response as:
     saveFilterHistory(updatedHistory);
 
     // Apply filters after changing program filter
-    if (['home', 'news', 'caseTraining', 'longForm'].includes(currentTab)) {
+    if (['home', 'news', 'document', 'caseTraining', 'longForm'].includes(currentTab)) {
       applyFilters();
     }
 
@@ -1322,7 +1304,7 @@ Format your response as:
     saveFilterHistory(updatedHistory);
 
     // Apply filters after changing voice filter
-    if (['home', 'news', 'caseTraining', 'longForm'].includes(currentTab)) {
+    if (['home', 'news', 'document', 'caseTraining', 'longForm'].includes(currentTab)) {
       applyFilters();
     }
   };
@@ -1551,7 +1533,7 @@ Format your response as:
 
       }).finally(() => setReportDNLoading(false));
 
-    } else if (['home', 'news', 'caseTraining', 'longForm', 'library', 'story'].includes(currentTab) && (!allData[currentTab] || allData[currentTab].length === 0)) {
+    } else if (['home', 'news', 'document', 'caseTraining', 'longForm', 'library', 'story'].includes(currentTab) && (!allData[currentTab] || allData[currentTab].length === 0)) {
 
       loadAllData();
 
@@ -1565,7 +1547,7 @@ Format your response as:
 
   useEffect(() => {
 
-    if (['home', 'news', 'caseTraining', 'longForm', 'library', 'story'].includes(currentTab)) {
+    if (['home', 'news', 'document', 'caseTraining', 'longForm', 'library', 'story'].includes(currentTab)) {
 
       setData(filteredData[currentTab] || allData[currentTab] || []);
 
@@ -1575,32 +1557,9 @@ Format your response as:
 
 
 
-  // Apply filters when filter states change
-
   useEffect(() => {
 
-    if (currentTab === 'home' || currentTab === 'news' || currentTab === 'caseTraining' || currentTab === 'longForm') {
-
-      applyFilters();
-
-    }
-
-  }, [categoryFilter, imageFilter, diagramFilter, quizFilter, tag4Filter, chapterFilter,
-    currentTab === 'caseTraining' ? tag1Filter : null,
-
-    currentTab === 'caseTraining' ? tag2Filter : null,
-
-    currentTab === 'caseTraining' ? tag3Filter : null,
-
-    searchText, currentTab, programFilter, programMultiFilter, voiceFilter]);
-
-
-
-  // Apply filters when any filter changes
-
-  useEffect(() => {
-
-    if (['home', 'news', 'caseTraining', 'longForm'].includes(currentTab)) {
+    if (['home', 'news', 'document', 'caseTraining', 'longForm'].includes(currentTab)) {
 
       applyFilters();
 
@@ -1613,7 +1572,7 @@ Format your response as:
 
   useEffect(() => {
 
-    if (['home', 'news', 'caseTraining', 'longForm'].includes(currentTab)) {
+    if (['home', 'news', 'document', 'caseTraining', 'longForm'].includes(currentTab)) {
 
       applyFilters();
 
@@ -1627,7 +1586,7 @@ Format your response as:
 
   useEffect(() => {
 
-    if (['home', 'news', 'caseTraining', 'longForm'].includes(currentTab)) {
+    if (['home', 'news', 'document', 'caseTraining', 'longForm'].includes(currentTab)) {
 
       // Force re-render table to reset column filters
 
@@ -1740,6 +1699,8 @@ Format your response as:
 
       const newsData = await getK9ByType('news');
 
+      const documentData = await getK9ByType('document');
+
       const caseTrainingData = await getK9ByType('caseTraining');
 
       const longFormData = await getK9ByType('longForm');
@@ -1759,6 +1720,8 @@ Format your response as:
         home: homeData || [],
 
         news: newsData || [],
+
+        document: documentData || [],
 
         caseTraining: caseTrainingData || [],
 
@@ -2976,9 +2939,9 @@ Format your response as:
 
 
 
-    if (currentTab === 'home' || currentTab === 'news' || currentTab === 'caseTraining' || currentTab === 'longForm') {
+    if (currentTab === 'home' || currentTab === 'news' || currentTab === 'document' || currentTab === 'caseTraining' || currentTab === 'longForm') {
 
-      // For home, news, caseTraining, and longForm tabs, apply filters which will include search
+      // For home, news, document, caseTraining, and longForm tabs, apply filters which will include search
 
       applyFilters();
 
@@ -3019,6 +2982,24 @@ Format your response as:
         ),
 
         news: allData.news.filter(item =>
+
+          item.id?.toString().toLowerCase().includes(searchLower) ||
+
+          item.cid?.toLowerCase().includes(searchLower) ||
+
+          item.title?.toLowerCase().includes(searchLower) ||
+
+          item.summary?.toLowerCase().includes(searchLower) ||
+
+          item.detail?.toLowerCase().includes(searchLower) ||
+
+          item.category?.toLowerCase().includes(searchLower) ||
+
+          item.source?.toLowerCase().includes(searchLower)
+
+        ),
+
+        document: (allData.document || []).filter(item =>
 
           item.id?.toString().toLowerCase().includes(searchLower) ||
 
@@ -3140,11 +3121,11 @@ Format your response as:
 
 
 
-  // Filter functions for home, news, caseTraining, and longForm tabs
+  // Filter functions for home, news, document, caseTraining, and longForm tabs
 
   const applyFilters = () => {
 
-    if (currentTab !== 'home' && currentTab !== 'news' && currentTab !== 'caseTraining' && currentTab !== 'longForm') {
+    if (currentTab !== 'home' && currentTab !== 'news' && currentTab !== 'document' && currentTab !== 'caseTraining' && currentTab !== 'longForm') {
 
       setFilteredData(allData);
 
@@ -3163,6 +3144,10 @@ Format your response as:
     } else if (currentTab === 'news') {
 
       filteredData = allData.news || [];
+
+    } else if (currentTab === 'document') {
+
+      filteredData = allData.document || [];
 
     } else if (currentTab === 'caseTraining') {
 
@@ -3486,8 +3471,8 @@ Format your response as:
       }
     }
 
-    // Apply related case filter (only for news tab)
-    if (currentTab === 'news' && relatedCaseFilter !== 'all') {
+    // Apply related case filter (only for news & document tabs)
+    if ((currentTab === 'news' || currentTab === 'document') && relatedCaseFilter !== 'all') {
       filteredData = filteredData.filter(item => {
         const caseCount = getRelatedCaseTrainingCount(item);
         if (relatedCaseFilter === '0') {
@@ -3499,8 +3484,8 @@ Format your response as:
       });
     }
 
-    // Apply Bộ dữ liệu (tag1) multi-filter for news tab - OR logic: item satisfies if it has at least one of the selected values
-    if (currentTab === 'news' && datasetFilterNews && datasetFilterNews.length > 0) {
+    // Apply Bộ dữ liệu (tag1) multi-filter for news & document tabs - OR logic: item satisfies if it has at least one of the selected values
+    if ((currentTab === 'news' || currentTab === 'document') && datasetFilterNews && datasetFilterNews.length > 0) {
       filteredData = filteredData.filter(item => {
         let parsedTags = [];
         if (Array.isArray(item.tag1)) {
@@ -3732,14 +3717,14 @@ Format your response as:
 
 
 
-  // Get program/tag4 options for filter dropdowns - when news tab + Bộ dữ liệu selected: only programs that exist in settings AND in data matching dataset filter
+  // Get program/tag4 options for filter dropdowns - when news/document tab + Bộ dữ liệu selected: only programs that exist in settings AND in data matching dataset filter
   const getProgramOptionsForFilters = useMemo(() => {
     const baseOptions = tag4Options; // from settings
-    if (currentTab !== 'news' || !datasetFilterNews || datasetFilterNews.length === 0) {
+    if ((currentTab !== 'news' && currentTab !== 'document') || !datasetFilterNews || datasetFilterNews.length === 0) {
       return baseOptions;
     }
-    const newsData = allData.news || [];
-    const matchingItems = newsData.filter(item => {
+    const baseData = currentTab === 'document' ? (allData.document || []) : (allData.news || []);
+    const matchingItems = baseData.filter(item => {
       let parsedTags = [];
       if (Array.isArray(item.tag1)) {
         parsedTags = item.tag1;
@@ -7338,8 +7323,8 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
         render: (cid) => cid || '-'
 
       },
-      // Case liên quan - chỉ hiển thị ở tab news
-      ...(currentTab === 'news' ? [{
+      // Case liên quan - hiển thị ở tab news & document
+      ...((currentTab === 'news' || currentTab === 'document') ? [{
         title: 'Case liên quan',
         key: 'relatedCaseTraining',
         width: 120,
@@ -7867,7 +7852,7 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
 
         ] : []),
 
-      ...(currentTab === 'news' ? [
+      ...((currentTab === 'news' || currentTab === 'document') ? [
         {
           title: 'Bộ dữ liệu',
           dataIndex: 'tag1',
@@ -7993,7 +7978,7 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
 
     // Add specific columns based on content type
 
-    if (currentTab === 'home' || currentTab === 'news' || currentTab === 'caseTraining' || currentTab === 'longForm') {
+    if (currentTab === 'home' || currentTab === 'news' || currentTab === 'document' || currentTab === 'caseTraining' || currentTab === 'longForm') {
 
       baseColumns.splice(5, 0,
 
@@ -8927,7 +8912,7 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
 
           {/* Embedding button - show different buttons based on embedding status */}
 
-          {(currentTab === 'news' || currentTab === 'caseTraining' || currentTab === 'report') && (
+          {((currentTab === 'news' || currentTab === 'document' || currentTab === 'caseTraining' || currentTab === 'report')) && (
 
             embeddedItems.has(record.id) ? (
 
@@ -8991,7 +8976,7 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
 
           )}
 
-          {(currentTab === 'home' || currentTab === 'news' || currentTab === 'caseTraining' || currentTab === 'longForm') && (
+          {(currentTab === 'home' || currentTab === 'news' || currentTab === 'document' || currentTab === 'caseTraining' || currentTab === 'longForm') && (
 
             <>
 
@@ -9993,7 +9978,7 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
 
             // Specific fields based on type
 
-            ...(currentTab === 'news' && {
+            ...((currentTab === 'news' || currentTab === 'document') && {
 
               source: record.source || '',
 
@@ -10139,7 +10124,7 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
 
 
 
-    if (currentTab === 'news') {
+    if (currentTab === 'news' || currentTab === 'document') {
 
       headers = ['Title', 'CID', 'Summary', 'Detail', 'Category', 'Source', 'Sentiment', 'Impact', 'Tag4'];
 
@@ -10656,7 +10641,7 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
 
       ['3. GIÁ TRỊ HỢP LỆ CHO CATEGORY:'],
 
-      ...((currentTab === 'home' || currentTab === 'news' || currentTab === 'caseTraining' || currentTab === 'longForm') ? [
+      ...((currentTab === 'home' || currentTab === 'news' || currentTab === 'document' || currentTab === 'caseTraining' || currentTab === 'longForm') ? [
 
         ['   - Lý thuyết (Theory)'],
 
@@ -10706,7 +10691,7 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
 
       [''],
 
-      ...(currentTab === 'home' || currentTab === 'news' ? [
+      ...(currentTab === 'home' || currentTab === 'news' || currentTab === 'document' ? [
 
         ['4. CÁC CỘT ĐẶC BIỆT CHO NEWS:'],
 
@@ -10870,7 +10855,7 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
 
 ]`;
 
-    } else if (currentTab === 'news' || currentTab === 'longForm') {
+    } else if (currentTab === 'news' || currentTab === 'document' || currentTab === 'longForm') {
 
       return `[
 
@@ -11369,7 +11354,7 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
 
             // Specific fields based on type
 
-            ...((currentTab === 'news' || currentTab === 'caseTraining' || currentTab === 'longForm') && {
+      ...((currentTab === 'news' || currentTab === 'document' || currentTab === 'caseTraining' || currentTab === 'longForm') && {
 
               source: record.source || '',
 
@@ -12415,7 +12400,7 @@ Chỉ trả về JSON, không thêm text khác.`;
     }
 
     let tag1Parsed = record.tag1;
-    if (currentTab === 'news' && record.tag1) {
+    if ((currentTab === 'news' || currentTab === 'document') && record.tag1) {
       if (typeof record.tag1 === 'string') {
         try {
           tag1Parsed = JSON.parse(record.tag1);
@@ -12601,7 +12586,7 @@ Chỉ trả về JSON, không thêm text khác.`;
       }
     }
 
-    if (record.type === 'news' || record.type === 'home' || record.type === 'longForm' || record.type === 'caseTraining') {
+    if (record.type === 'news' || record.type === 'document' || record.type === 'home' || record.type === 'longForm' || record.type === 'caseTraining') {
       // Load existing files for news type
 
       if (record.fileUrls && Array.isArray(record.fileUrls)) {
@@ -13091,7 +13076,7 @@ Chỉ trả về JSON, không thêm text khác.`;
 
       };
 
-      if (contentType === 'news' && recordData.tag1 !== undefined) {
+      if ((contentType === 'news' || contentType === 'document') && recordData.tag1 !== undefined) {
         if (Array.isArray(recordData.tag1)) {
           recordData.tag1 = JSON.stringify(recordData.tag1);
         } else if (!recordData.tag1) {
@@ -13122,7 +13107,7 @@ Chỉ trả về JSON, không thêm text khác.`;
 
         }
 
-      } else if (contentType === 'news' || contentType === 'home' || contentType === 'longForm') {
+      } else if (contentType === 'news' || contentType === 'document' || contentType === 'home' || contentType === 'longForm') {
 
         if (uploadedFileUrls.length > 0) {
 
@@ -13427,7 +13412,7 @@ Chỉ trả về JSON, không thêm text khác.`;
 
     let categoryOptions = [];
 
-    if (contentType === 'news' || contentType === 'caseTraining' || contentType === 'longForm') {
+    if (contentType === 'news' || contentType === 'document' || contentType === 'caseTraining' || contentType === 'longForm') {
 
       categoryOptions = categoriesOptions;
 
@@ -13455,7 +13440,7 @@ Chỉ trả về JSON, không thêm text khác.`;
 
     }
 
-    if (contentType === 'news' || contentType === 'home' || contentType === 'longForm') {
+    if (contentType === 'news' || contentType === 'document' || contentType === 'home' || contentType === 'longForm') {
 
       fields.push(
 
@@ -13481,7 +13466,7 @@ Chỉ trả về JSON, không thêm text khác.`;
 
     }
 
-    if (contentType === 'news') {
+    if (contentType === 'news' || contentType === 'document') {
 
       fields.push(
 
@@ -13540,9 +13525,9 @@ Chỉ trả về JSON, không thêm text khác.`;
 
 
 
-    // Type-specific fields for news, caseTraining, longForm, and home
+    // Type-specific fields for news, document, caseTraining, longForm, and home
 
-    if (contentType === 'news' || contentType === 'caseTraining' || contentType === 'longForm' || contentType === 'home') {
+    if (contentType === 'news' || contentType === 'document' || contentType === 'caseTraining' || contentType === 'longForm' || contentType === 'home') {
 
       // Sentiment field
 
@@ -14983,7 +14968,9 @@ Chỉ trả về JSON, không thêm text khác.`;
 
     { key: 'home', label: 'Home', count: allData.home?.length || 0 },
 
-    { key: 'news', label: 'Learning Block', count: allData.news?.length || 0 },
+    { key: 'news', label: 'Learning Company', count: allData.news?.length || 0 },
+    { key: 'document', label: 'Learning Materials', count: allData.document?.length || 0 },
+
 
     { key: 'caseTraining', label: 'Case Training', count: allData.caseTraining?.length || 0 },
 
@@ -15284,7 +15271,7 @@ Chỉ trả về JSON, không thêm text khác.`;
 
     if (selectedRowKeys.length === 0) {
 
-      const tabLabel = currentTab === 'news' ? 'news' : currentTab === 'caseTraining' ? 'case training' : currentTab === 'longForm' ? 'longForm' : 'item';
+      const tabLabel = currentTab === 'news' ? 'news' : currentTab === 'document' ? 'document' : currentTab === 'caseTraining' ? 'case training' : currentTab === 'longForm' ? 'longForm' : 'item';
 
       message.warning(`Vui lòng chọn ít nhất một ${tabLabel} để tạo ảnh!`);
 
@@ -15310,7 +15297,7 @@ Chỉ trả về JSON, không thêm text khác.`;
 
     if (selectedItems.length === 0) {
 
-      const tabLabel = currentTab === 'news' ? 'news' : currentTab === 'caseTraining' ? 'case training' : currentTab === 'longForm' ? 'longForm' : 'item';
+      const tabLabel = currentTab === 'news' ? 'news' : currentTab === 'document' ? 'document' : currentTab === 'caseTraining' ? 'case training' : currentTab === 'longForm' ? 'longForm' : 'item';
 
       message.warning(`Không có ${tabLabel} nào được chọn hoặc tất cả đã có ảnh!`);
 
@@ -15336,7 +15323,7 @@ Chỉ trả về JSON, không thêm text khác.`;
 
     if (itemsNotInQueue.length === 0) {
 
-      const tabLabel = currentTab === 'news' ? 'news' : currentTab === 'caseTraining' ? 'case training' : currentTab === 'longForm' ? 'longForm' : 'item';
+      const tabLabel = currentTab === 'news' ? 'news' : currentTab === 'document' ? 'document' : currentTab === 'caseTraining' ? 'case training' : currentTab === 'longForm' ? 'longForm' : 'item';
 
       message.warning(`Tất cả ${tabLabel} đã có trong hàng đợi hoặc đang được xử lý!`);
 
@@ -15374,13 +15361,13 @@ Chỉ trả về JSON, không thêm text khác.`;
 
     if (addedCount > 0) {
 
-      const tabLabel = currentTab === 'news' ? 'news' : currentTab === 'caseTraining' ? 'case training' : currentTab === 'longForm' ? 'longForm' : 'item';
+      const tabLabel = currentTab === 'news' ? 'news' : currentTab === 'document' ? 'document' : currentTab === 'caseTraining' ? 'case training' : currentTab === 'longForm' ? 'longForm' : 'item';
 
       message.success(`📝 Đã thêm ${addedCount} ${tabLabel} vào hàng đợi tạo ảnh!`);
 
     } else {
 
-      const tabLabel = currentTab === 'news' ? 'news' : currentTab === 'caseTraining' ? 'case training' : currentTab === 'longForm' ? 'longForm' : 'item';
+      const tabLabel = currentTab === 'news' ? 'news' : currentTab === 'document' ? 'document' : currentTab === 'caseTraining' ? 'case training' : currentTab === 'longForm' ? 'longForm' : 'item';
 
       message.warning(`Không có ${tabLabel} nào có tóm tắt để tạo ảnh!`);
 
@@ -15392,7 +15379,7 @@ Chỉ trả về JSON, không thêm text khác.`;
   // Bulk diagram creation function - QUEUE VERSION
   const handleBulkCreateDiagram = async (mode = 'kroki') => {
     if (selectedRowKeys.length === 0) {
-      const tabLabel = currentTab === 'news' ? 'news' : currentTab === 'caseTraining' ? 'case training' : currentTab === 'longForm' ? 'longForm' : 'item';
+      const tabLabel = currentTab === 'news' ? 'news' : currentTab === 'document' ? 'document' : currentTab === 'caseTraining' ? 'case training' : currentTab === 'longForm' ? 'longForm' : 'item';
       message.warning(`Vui lòng chọn ít nhất một ${tabLabel} để tạo ${mode === 'html' ? 'HTML code' : 'diagram'}!`);
       return;
     }
@@ -15430,7 +15417,7 @@ Chỉ trả về JSON, không thêm text khác.`;
     });
 
     if (selectedItems.length === 0) {
-      const tabLabel = currentTab === 'news' ? 'news' : currentTab === 'caseTraining' ? 'case training' : currentTab === 'longForm' ? 'longForm' : 'item';
+      const tabLabel = currentTab === 'news' ? 'news' : currentTab === 'document' ? 'document' : currentTab === 'caseTraining' ? 'case training' : currentTab === 'longForm' ? 'longForm' : 'item';
       const modeText = mode === 'html' ? 'HTML code' : mode === 'excalidraw-react' ? 'Excalidraw diagram' : 'diagram';
       message.warning(`Không có ${tabLabel} nào được chọn hoặc tất cả đã có ${modeText}!`);
       return;
@@ -15450,7 +15437,7 @@ Chỉ trả về JSON, không thêm text khác.`;
     });
 
     if (itemsNotInQueue.length === 0) {
-      const tabLabel = currentTab === 'news' ? 'news' : currentTab === 'caseTraining' ? 'case training' : currentTab === 'longForm' ? 'longForm' : 'item';
+      const tabLabel = currentTab === 'news' ? 'news' : currentTab === 'document' ? 'document' : currentTab === 'caseTraining' ? 'case training' : currentTab === 'longForm' ? 'longForm' : 'item';
       message.warning(`Tất cả ${tabLabel} đã có trong hàng đợi hoặc đang được xử lý!`);
       return;
     }
@@ -15516,10 +15503,10 @@ Chỉ trả về JSON, không thêm text khác.`;
     setPendingDiagramRecords([]);
 
     if (addedCount > 0) {
-      const tabLabel = currentTab === 'news' ? 'news' : currentTab === 'caseTraining' ? 'case training' : currentTab === 'longForm' ? 'longForm' : 'item';
+      const tabLabel = currentTab === 'news' ? 'news' : currentTab === 'document' ? 'document' : currentTab === 'caseTraining' ? 'case training' : currentTab === 'longForm' ? 'longForm' : 'item';
       message.success(`📝 Đã thêm ${addedCount} ${tabLabel} vào hàng đợi tạo ${mode === 'html' ? 'HTML code' : 'diagram'}!`);
     } else {
-      const tabLabel = currentTab === 'news' ? 'news' : currentTab === 'caseTraining' ? 'case training' : currentTab === 'longForm' ? 'longForm' : 'item';
+      const tabLabel = currentTab === 'news' ? 'news' : currentTab === 'document' ? 'document' : currentTab === 'caseTraining' ? 'case training' : currentTab === 'longForm' ? 'longForm' : 'item';
       message.warning(`Không có ${tabLabel} nào có nội dung detail để tạo ${mode === 'html' ? 'HTML code' : 'diagram'}!`);
     }
   };
@@ -16384,7 +16371,7 @@ Chỉ trả về nội dung theo đúng định dạng trên, không thêm phầ
 
               </Tooltip>
 
-              {(currentTab === 'home' || currentTab === 'news' || currentTab === 'caseTraining' || currentTab === 'longForm') && (
+              {(currentTab === 'home' || currentTab === 'news' || currentTab === 'document' || currentTab === 'caseTraining' || currentTab === 'longForm') && (
 
                 <>
 
@@ -16736,7 +16723,7 @@ Chỉ trả về nội dung theo đúng định dạng trên, không thêm phầ
 
 
 
-            {(currentTab === 'news' || currentTab === 'report' || currentTab === 'reportDN') &&
+            {(currentTab === 'news' || currentTab === 'document' || currentTab === 'report' || currentTab === 'reportDN') &&
 
               <Button
 
@@ -16816,7 +16803,7 @@ Chỉ trả về nội dung theo đúng định dạng trên, không thêm phầ
 
             </Button>
 
-            {(currentTab === 'news' || currentTab === 'caseTraining') && (
+            {(currentTab === 'news' || currentTab === 'document' || currentTab === 'caseTraining') && (
 
               <>
 
@@ -16985,7 +16972,7 @@ Chỉ trả về nội dung theo đúng định dạng trên, không thêm phầ
                   </Button>
                 </Popconfirm> */}
 
-                {(currentTab === 'home' || currentTab === 'news' || currentTab === 'caseTraining' || currentTab === 'longForm') && (
+                {(currentTab === 'home' || currentTab === 'news' || currentTab === 'document' || currentTab === 'caseTraining' || currentTab === 'longForm') && (
 
                   <>
                     <Popconfirm
@@ -17091,7 +17078,7 @@ Chỉ trả về nội dung theo đúng định dạng trên, không thêm phầ
                 </Button>
 
 
-                {(currentTab === 'home' || currentTab === 'news' || currentTab === 'caseTraining' || currentTab === 'longForm') && (
+                {(currentTab === 'home' || currentTab === 'news' || currentTab === 'document' || currentTab === 'caseTraining' || currentTab === 'longForm') && (
 
                   <>
 
@@ -17121,7 +17108,7 @@ Chỉ trả về nội dung theo đúng định dạng trên, không thêm phầ
 
                     </Button>
 
-                    {currentTab === 'news' && (
+                    {(currentTab === 'news' || currentTab === 'document') && (
                       <Space>
                         <Button
                           type="primary"
@@ -17280,7 +17267,7 @@ Chỉ trả về nội dung theo đúng định dạng trên, không thêm phầ
 
                 {/* Bulk Update Buttons for different tabs */}
 
-                {(currentTab === 'news' || currentTab === 'longForm' || currentTab === 'home' || currentTab === 'report' || currentTab === 'reportDN') && (
+                {((currentTab === 'news' || currentTab === 'document' || currentTab === 'longForm' || currentTab === 'home' || currentTab === 'report' || currentTab === 'reportDN')) && (
 
                   <>
 
@@ -17312,7 +17299,7 @@ Chỉ trả về nội dung theo đúng định dạng trên, không thêm phầ
 
                     </Button>
 
-                    {currentTab === 'news' && (
+                    {(currentTab === 'news' || currentTab === 'document') && (
                       <Button
                         type="primary"
                         disabled={false}
@@ -17493,10 +17480,10 @@ Chỉ trả về nội dung theo đúng định dạng trên, không thêm phầ
 
 
 
-        {/* Filter section for home, news, caseTraining, and longForm tabs */}
+        {/* Filter section for home, news, document, caseTraining, and longForm tabs */}
 
         {
-          (currentTab === 'home' || currentTab === 'news' || currentTab === 'caseTraining' || currentTab === 'longForm') && (
+          (currentTab === 'home' || currentTab === 'news' || currentTab === 'document' || currentTab === 'caseTraining' || currentTab === 'longForm') && (
 
             <div style={{
 
@@ -17608,8 +17595,8 @@ Chỉ trả về nội dung theo đúng định dạng trên, không thêm phầ
 
                 </div>
 
-                {/* Bộ dữ liệu Filter - only for news tab, multi-select, OR logic */}
-                {currentTab === 'news' && (
+                {/* Bộ dữ liệu Filter - only for news/document tab, multi-select, OR logic */}
+                {(currentTab === 'news' || currentTab === 'document') && (
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <span style={{ fontSize: '14px' }}>Bộ dữ liệu:</span>
                     <Select
@@ -18010,8 +17997,8 @@ Chỉ trả về nội dung theo đúng định dạng trên, không thêm phầ
 
                 </div>
 
-                {/* Related Case Filter - only for news tab */}
-                {currentTab === 'news' && (
+                {/* Related Case Filter - only for news/document tab */}
+                {(currentTab === 'news' || currentTab === 'document') && (
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <span style={{ fontSize: '14px' }}>Case liên quan:</span>
                     <Select
@@ -18039,7 +18026,7 @@ Chỉ trả về nội dung theo đúng định dạng trên, không thêm phầ
 
                   disabled={categoryFilter === 'all' && imageFilter === 'all' && diagramFilter === 'all' && quizFilter === 'all' && tag4Filter.length === 0 && chapterFilter === 'all' && programFilter === 'all' && programMultiFilter.length === 0 &&
                     (currentTab === 'caseTraining' ? (tag1Filter === 'all' && tag2Filter === 'all' && tag3Filter === 'all') : true) &&
-                    (currentTab === 'news' ? (relatedCaseFilter === 'all' && datasetFilterNews.length === 0) : true) &&
+                    ((currentTab === 'news' || currentTab === 'document') ? (relatedCaseFilter === 'all' && datasetFilterNews.length === 0) : true) &&
                     !searchText.trim()}
 
                 >
@@ -18058,7 +18045,7 @@ Chỉ trả về nội dung theo đúng định dạng trên, không thêm phầ
 
                 {(categoryFilter !== 'all' || imageFilter !== 'all' || voiceFilter !== 'all' || diagramFilter !== 'all' || quizFilter !== 'all' || tag4Filter.length > 0 || chapterFilter !== 'all' || programFilter !== 'all' || programMultiFilter.length > 0 ||
                   (currentTab === 'caseTraining' && (tag1Filter !== 'all' || tag2Filter !== 'all' || tag3Filter !== 'all')) ||
-                  (currentTab === 'news' && (relatedCaseFilter !== 'all' || datasetFilterNews.length > 0))) && (
+                  ((currentTab === 'news' || currentTab === 'document') && (relatedCaseFilter !== 'all' || datasetFilterNews.length > 0))) && (
 
                     <div style={{
 
@@ -18201,13 +18188,13 @@ Chỉ trả về nội dung theo đúng định dạng trên, không thêm phầ
 
                       )}
 
-                      {currentTab === 'news' && relatedCaseFilter !== 'all' && (
+                      {(currentTab === 'news' || currentTab === 'document') && relatedCaseFilter !== 'all' && (
                         <Tag color="blue" closable onClose={() => handleRelatedCaseFilterChange('all')}>
                           Case liên quan: {relatedCaseFilter === '0' ? 'Không có case' : `${relatedCaseFilter} case`}
                         </Tag>
                       )}
 
-                      {currentTab === 'news' && datasetFilterNews.length > 0 && (
+                      {(currentTab === 'news' || currentTab === 'document') && datasetFilterNews.length > 0 && (
                         <Tag color="geekblue" closable onClose={() => handleDatasetFilterNewsChange([])}>
                           Bộ dữ liệu: {datasetFilterNews.map(v => v === '__empty__' ? 'Trống' : v).join(', ')}
                         </Tag>

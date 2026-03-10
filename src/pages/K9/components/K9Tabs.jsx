@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import styles from '../K9.module.css';
 
-const K9Tabs = ({ activeTab, onTabChange, tabOptions, homeItems ,newsItems, caseTrainingItems, longFormItems, selectedProgram }) => {
+const K9Tabs = ({ activeTab, onTabChange, tabOptions, homeItems ,newsItems, documentItems, caseTrainingItems, longFormItems, selectedProgram }) => {
 
 	// State to store question counts for each tab
 	const [questionCounts, setQuestionCounts] = useState({
 		stream: 0,
+		document: 0,
 		caseTraining: 0,
 		longForm: 0
 	});
@@ -20,6 +21,9 @@ const K9Tabs = ({ activeTab, onTabChange, tabOptions, homeItems ,newsItems, case
 		switch (tabKey) {
 			case 'stream':
 				items = newsItems || [];
+				break;
+			case 'document':
+				items = documentItems || [];
 				break;
 			case 'caseTraining':
 				items = caseTrainingItems || [];
@@ -82,11 +86,12 @@ const K9Tabs = ({ activeTab, onTabChange, tabOptions, homeItems ,newsItems, case
 	useEffect(() => {
 		const newCounts = {
 			stream: getQuestionCount('stream'),
+			document: getQuestionCount('document'),
 			caseTraining: getQuestionCount('caseTraining'),
 			longForm: getQuestionCount('longForm')
 		};
 		setQuestionCounts(newCounts);
-	}, [selectedProgram, newsItems, caseTrainingItems, longFormItems]);
+	}, [selectedProgram, newsItems, documentItems, caseTrainingItems, longFormItems]);
 
 	return (
 		<div className={styles.tabsWrapper}>
@@ -103,7 +108,7 @@ const K9Tabs = ({ activeTab, onTabChange, tabOptions, homeItems ,newsItems, case
 						>
 							<span>{tab.label}</span>
 							{/* Show question count badge for specific tabs */}
-							{(tab.key === 'stream' || tab.key === 'caseTraining' || tab.key === 'longForm') && questionCount > 0 && (
+							{(tab.key === 'stream' || tab.key === 'document' || tab.key === 'caseTraining' || tab.key === 'longForm') && questionCount > 0 && (
 								<span className={styles.questionCountBadge}>
 									{questionCount}
 								</span>
@@ -126,7 +131,7 @@ const K9Tabs = ({ activeTab, onTabChange, tabOptions, homeItems ,newsItems, case
 								>
 									<span>{tab.label}</span>
 									{/* Show question count badge for specific tabs */}
-									{(tab.key === 'stream' || tab.key === 'caseTraining' || tab.key === 'longForm') && questionCount > 0 && (
+									{(tab.key === 'stream' || tab.key === 'document' || tab.key === 'caseTraining' || tab.key === 'longForm') && questionCount > 0 && (
 										<span className={styles.questionCountBadge}>
 											{questionCount}
 										</span>
@@ -159,7 +164,7 @@ const K9Tabs = ({ activeTab, onTabChange, tabOptions, homeItems ,newsItems, case
 												title={tab.label}
 											>
 												<span>{tab.label}</span>
-												{(tab.key === 'stream' || tab.key === 'caseTraining' || tab.key === 'longForm') && questionCount > 0 && (
+												{(tab.key === 'stream' || tab.key === 'document' || tab.key === 'caseTraining' || tab.key === 'longForm') && questionCount > 0 && (
 													<span className={styles.questionCountBadge}>
 														{questionCount}
 													</span>

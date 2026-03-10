@@ -38,6 +38,7 @@ const MapView = ({
 	headerStats,
 	setHeaderStats,
 	newsItems = [],
+	documentItems = [],
 	caseTrainingItems = [],
 	longFormItems = [],
 	homeItems = [],
@@ -92,6 +93,7 @@ const MapView = ({
 	const [theoryModalVisible, setTheoryModalVisible] = useState(false); // Modal visibility for theory item
 	const [theoryModalItem, setTheoryModalItem] = useState(null); // Full item data for theory modal
 	const [theoryModalLoading, setTheoryModalLoading] = useState(false); // Loading state for theory modal
+	const [theorySourceType, setTheorySourceType] = useState('news'); // 'news' | 'document'
 	const theoryItemRefs = useRef({}); // Refs for theory items
 	const theoryContainerRef = useRef(null); // Container ref for theory column
 
@@ -990,7 +992,15 @@ const MapView = ({
 
 	// Panel 1: Theory column - Filter and sort items
 	const theoryBaseFilteredList = useMemo(() => {
-		let filtered = (newsItems || []).filter(item => item.status === 'published');
+		let baseItems = [];
+
+		if (theorySourceType === 'news') {
+			baseItems = newsItems || [];
+		} else if (theorySourceType === 'document') {
+			baseItems = documentItems || [];
+		}
+
+		let filtered = baseItems.filter(item => item.status === 'published');
 
 		// Filter by selectedProgram
 		if (selectedProgram && selectedProgram !== 'all') {
@@ -1046,7 +1056,7 @@ const MapView = ({
 		}
 
 		return filtered;
-	}, [newsItems, selectedProgram, selectedTag5, theorySearchText, theoryFilters.readStatus, theoryFilters.bookmarked, theoryFilters.quizStatus, readItems, bookmarkedItems, quizScores]);
+	}, [newsItems, documentItems, selectedProgram, selectedTag5, theorySearchText, theoryFilters.readStatus, theoryFilters.bookmarked, theoryFilters.quizStatus, readItems, bookmarkedItems, quizScores, theorySourceType]);
 
 	const filteredTheoryItems = useMemo(() => {
 		if (theoryFilters.category === 'all') return theoryBaseFilteredList;
@@ -2747,9 +2757,18 @@ const MapView = ({
 							<div className={styles.panel1Column} ref={theoryContainerRef}>
 								<div className={styles.rightPanelHeader}>
 									<div className={styles.rightPanelTitle}>
-										Lý thuyết ({filteredTheoryItems.length})
+										{theorySourceType === 'document' ? 'Tài liệu học tập' : 'Lý thuyết'} ({filteredTheoryItems.length})
 									</div>
-									<div style={{ display: 'flex', alignItems: 'center' }}>
+									<div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+										<Select
+											size="small"
+											value={theorySourceType}
+											onChange={setTheorySourceType}
+											style={{ width: 150 }}
+										>
+											<Select.Option value="news">Lý thuyết</Select.Option>
+											<Select.Option value="document">Tài liệu học tập</Select.Option>
+										</Select>
 										<Input
 											placeholder='Tìm kiếm...'
 											prefix={<SearchOutlined />}

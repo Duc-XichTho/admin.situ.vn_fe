@@ -38,6 +38,7 @@ const K9 = () => {
 	const [showDetailId, setShowDetailId] = useState(null);
 	const [loading, setLoading] = useState(false);
 	const [newsItems, setNewsItems] = useState([]);
+	const [documentItems, setDocumentItems] = useState([]);
 	const [longFormItems, setLongFormItems] = useState([]);
 	const [libraryItems, setLibraryItems] = useState([]);
 	const [storyItems, setStoryItems] = useState([]);
@@ -151,6 +152,13 @@ const K9 = () => {
 		search: '',
 	});
 
+	const [documentFilters, setDocumentFilters] = useState({
+		time: 'all',
+		category: 'all',
+		filter: 'all',
+		search: '',
+	});
+
 	const [libraryFilters, setLibraryFilters] = useState({
 		category: 'all',
 		search: '',
@@ -188,8 +196,9 @@ const K9 = () => {
 	const loadData = async () => {
 		setLoading(true);
 		try {
-			const [newsData, libraryData, storyData, caseTrainingData, longFormData, homeData] = await Promise.all([
+			const [newsData, documentData, libraryData, storyData, caseTrainingData, longFormData, homeData] = await Promise.all([
 				getK9ByTypePublic('news'),
+				getK9ByTypePublic('document'),
 				getK9ByTypePublic('library'),
 				getK9ByTypePublic('story'),
 				getK9ByTypePublic('caseTraining'),
@@ -200,11 +209,13 @@ const K9 = () => {
 				// Sort: isPublic = true lên trước, isPublic = false xuống sau
 				// b.isPublic - a.isPublic: true (1) - false (0) = 1, nên true sẽ đứng trước
 				newsData.sort((a, b) => (b.isPublic ? 1 : 0) - (a.isPublic ? 1 : 0));
+				documentData.sort((a, b) => (b.isPublic ? 1 : 0) - (a.isPublic ? 1 : 0));
 				caseTrainingData.sort((a, b) => (b.isPublic ? 1 : 0) - (a.isPublic ? 1 : 0));
 				longFormData.sort((a, b) => (b.isPublic ? 1 : 0) - (a.isPublic ? 1 : 0));
 				homeData.sort((a, b) => (b.isPublic ? 1 : 0) - (a.isPublic ? 1 : 0));
 			}
 			setNewsItems(newsData || []);
+			setDocumentItems(documentData || []);
 			// setLibraryItems(libraryData || []);
 			// setStoryItems(storyData || []);
 			setCaseTrainingItems(caseTrainingData || []);
@@ -214,6 +225,7 @@ const K9 = () => {
 			console.error('Error loading K9 data:', error);
 			// Set empty arrays as fallback
 			setNewsItems([]);
+			setDocumentItems([]);
 			setLibraryItems([]);
 			setStoryItems([]);
 			setCaseTrainingItems([]);
@@ -593,6 +605,13 @@ const K9 = () => {
 		}));
 	};
 
+	const handleDocumentFilterChange = (filterType, value) => {
+		setDocumentFilters(prev => ({
+			...prev,
+			[filterType]: value,
+		}));
+	};
+
 
 	const handleStreamSearchChange = (e) => {
 		setStreamFilters(prev => ({
@@ -603,6 +622,13 @@ const K9 = () => {
 
 	const handleLongFormSearchChange = (e) => {
 		setLongFormFilters(prev => ({
+			...prev,
+			search: e.target.value,
+		}));
+	};
+
+	const handleDocumentSearchChange = (e) => {
+		setDocumentFilters(prev => ({
 			...prev,
 			search: e.target.value,
 		}));
@@ -988,6 +1014,7 @@ const K9 = () => {
 	}, []);
 
 	const filteredNews = getFilteredItems(newsItems, streamFilters, tag4Filter);
+	const filteredDocuments = getFilteredItems(documentItems, documentFilters, tag4Filter);
 	const filteredLongForm = getFilteredItems(longFormItems, longFormFilters, tag4Filter);
 	const filteredLibrary = getFilteredItems(libraryItems, libraryFilters);
 	const filteredStories = getFilteredItems(storyItems, storyFilters);
@@ -997,6 +1024,7 @@ const K9 = () => {
 	// Tab options (đã tách tab Phân tích doanh nghiệp ra khỏi đây, chỉ còn trong header menu)
 	const tabOptions = [
 		{ key: 'stream', label: 'Lý thuyết' },
+		{ key: 'document', label: 'Tài liệu học tập' },
 		{ key: 'caseTraining', label: 'Case Study' },
 		{ key: 'longForm', label: 'Business Wiki' },
 		{ key: 'home', label: 'Về AiMBA' },
@@ -1279,6 +1307,7 @@ const K9 = () => {
 				selectedProgram={selectedProgram}
 				setSelectedProgram={setSelectedProgram}
 				newsItems={newsItems}
+				documentItems={documentItems}
 				caseTrainingItems={caseTrainingItems}
 				longFormItems={longFormItems}
 				tag4Filter={tag4Filter}
@@ -1309,6 +1338,7 @@ const K9 = () => {
 					headerStats={headerStats}
 					setHeaderStats={setHeaderStats}
 					newsItems={newsItems}
+					documentItems={documentItems}
 					caseTrainingItems={caseTrainingItems}
 					longFormItems={longFormItems}
 					homeItems={homeItems}
@@ -1327,6 +1357,7 @@ const K9 = () => {
 						onTabChange={handleTabChange}
 						tabOptions={tabOptions}
 						newsItems={newsItems}
+						documentItems={documentItems}
 						homeItems={homeItems}
 						caseTrainingItems={caseTrainingItems}
 						longFormItems={longFormItems}
@@ -1409,6 +1440,33 @@ const K9 = () => {
 							activeTab={activeTab}
 							totalCount={newsItems.filter(item => item.status === 'published').length}
 							newsItems={newsItems}
+							showSearchSection={showSearchSection}
+							viewMode={viewMode}
+							getTabDisplayName={getTabDisplayName}
+						/>
+					)}
+
+					{/* Document Tab (dùng dữ liệu type document, UI giống news) */}
+					{activeTab === 'document' && (
+						<NewsTab
+							currentTab={activeTab}
+							setExpandedItem={setExpandedItem}
+							updateURL={updateURL}
+							selectedProgram={selectedProgram}
+							loading={loading}
+							filteredNews={filteredDocuments}
+							filters={documentFilters}
+							expandedItem={expandedItem}
+							showDetailId={showDetailId}
+							onFilterChange={handleDocumentFilterChange}
+							onSearchChange={handleDocumentSearchChange}
+							onItemClick={handleItemClick}
+							onShowDetail={showDetail}
+							onOpenSource={openSource}
+							onShare={copyShareableLink}
+							activeTab={activeTab}
+							totalCount={documentItems.filter(item => item.status === 'published').length}
+							newsItems={documentItems}
 							showSearchSection={showSearchSection}
 							viewMode={viewMode}
 							getTabDisplayName={getTabDisplayName}
