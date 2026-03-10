@@ -5,12 +5,14 @@ import {
     DeleteOutlined,
     FileImageOutlined,
     FileTextOutlined,
+    FilterOutlined,
     ReloadOutlined,
+    SearchOutlined,
     SettingOutlined,
     UnorderedListOutlined
 } from '@ant-design/icons';
-import { Button, Card, Empty, Image, Input, message, Modal, Popconfirm, Progress, Select, Space, Spin, Switch, Table, Tag, Tabs, Tooltip, Typography } from 'antd';
-import React, { useEffect, useState } from 'react';
+import { Button, Card, Collapse, Empty, Image, Input, message, Modal, Popconfirm, Progress, Select, Space, Spin, Switch, Table, Tag, Tabs, Tooltip, Typography } from 'antd';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { aiGen, ocrFileInstruction } from '../../../apis/aiGen/botService';
 import { getAllImages, updateK9, getK9ById } from '../../../apis/k9Service';
@@ -45,6 +47,7 @@ const ImageSpellCheck = () => {
     const [ocrFilter, setOcrFilter] = useState('all'); // 'all', 'hasOcr', 'noOcr'
     const [scoreFilter, setScoreFilter] = useState('all'); // 'all', 'hasScore', 'noScore'
     const [needsReviewFilter, setNeedsReviewFilter] = useState('all'); // 'all', 'needsReview', 'noReview'
+    const [datasetFilter, setDatasetFilter] = useState([]); // Multi-select Bộ dữ liệu (tag1), OR logic
     const [detailModalVisible, setDetailModalVisible] = useState(false);
     const [detailContent, setDetailContent] = useState('');
     const [detailTitle, setDetailTitle] = useState('');
@@ -93,23 +96,102 @@ const ImageSpellCheck = () => {
         }
     };
 
+    // Current tab images (by type)
+    const currentTabImages = useMemo(() => {
+        const typeMap = { news: 'news', caseTraining: 'caseTraining', longForm: 'longForm' };
+        return imageData.filter(img => img.type === typeMap[activeTab]);
+    }, [imageData, activeTab]);
+
+
+    // Dataset (tag1) options from current tab images
+    const datasetOptions = useMemo(() => {
+        const tabData = currentTabImages;
+        if (!tabData || !Array.isArray(tabData)) return [];
+        const flattenedTag1s = tabData.reduce((acc, item) => {
+            if (!item.tag1) return acc;
+            let tags = [];
+            if (Array.isArray(item.tag1)) {
+                tags = item.tag1;
+            } else if (typeof item.tag1 === 'string') {
+                try {
+                    tags = JSON.parse(item.tag1);
+                    if (!Array.isArray(tags)) tags = [item.tag1];
+                } catch (e) {
+                    tags = [item.tag1];
+                }
+            } else {
+                tags = [String(item.tag1)];
+            }
+            tags = tags.flatMap(t => {
+                if (typeof t === 'string' && t.trim().startsWith('[') && t.trim().endsWith(']')) {
+                    try {
+                        const parsed = JSON.parse(t);
+                        if (Array.isArray(parsed)) return parsed;
+                    } catch (e) { }
+                }
+                return [t];
+            });
+            if (tags.length === 0) return acc;
+            acc.push(...tags);
+            return acc;
+        }, []);
+        const tag1s = [...new Set(flattenedTag1s)];
+        const hasEmpty = tabData.some(item => {
+            if (!item.tag1) return true;
+            if (Array.isArray(item.tag1) && item.tag1.length === 0) return true;
+            if (item.tag1 === '[]') return true;
+            return false;
+        });
+        const opts = tag1s.map(t => ({ value: t, label: t }));
+        if (hasEmpty) opts.push({ value: '__empty__', label: 'Trống' });
+        return opts;
+    }, [currentTabImages]);
+
     // Filter images
     useEffect(() => {
-        let filtered = [...imageData];
+        let filtered = [...currentTabImages];
 
-        if (searchText) {
-            filtered = filtered.filter(img =>
-                img.title.toLowerCase().includes(searchText.toLowerCase())
-            );
+        if (searchText.trim()) {
+            const searchLower = searchText.toLowerCase();
+            filtered = filtered.filter(img => {
+                const title = String(img.title || '').toLowerCase();
+                const url = String(img.url || '').toLowerCase();
+                const ocrText = String(img.ocrText || '').toLowerCase();
+                return title.includes(searchLower) || url.includes(searchLower) || ocrText.includes(searchLower);
+            });
         }
 
-        // Filter by tab (type)
-        const typeMap = {
-            'news': 'news',
-            'caseTraining': 'caseTraining',
-            'longForm': 'longForm'
-        };
-        filtered = filtered.filter(img => img.type === typeMap[activeTab]);
+        // Filter by Bộ dữ liệu (tag1) - OR logic
+        if (datasetFilter && datasetFilter.length > 0) {
+            filtered = filtered.filter(item => {
+                let parsedTags = [];
+                if (Array.isArray(item.tag1)) {
+                    parsedTags = item.tag1;
+                } else if (typeof item.tag1 === 'string') {
+                    try {
+                        parsedTags = JSON.parse(item.tag1);
+                        if (!Array.isArray(parsedTags)) parsedTags = [item.tag1];
+                    } catch (e) {
+                        parsedTags = [item.tag1];
+                    }
+                } else if (item.tag1) {
+                    parsedTags = [String(item.tag1)];
+                }
+                parsedTags = parsedTags.flatMap(t => {
+                    if (typeof t === 'string' && t.trim().startsWith('[') && t.trim().endsWith(']')) {
+                        try {
+                            const p = JSON.parse(t);
+                            if (Array.isArray(p)) return p;
+                        } catch (e) { }
+                    }
+                    return [t];
+                });
+                return datasetFilter.some(selected => {
+                    if (selected === '__empty__') return !parsedTags || parsedTags.length === 0;
+                    return parsedTags.includes(selected);
+                });
+            });
+        }
 
         // Filter by approved status
         if (approvedFilter === 'approved') {
@@ -149,8 +231,8 @@ const ImageSpellCheck = () => {
         }
 
         setFilteredImageData(filtered);
-        setCurrentPage(1); // Reset to first page when filter changes
-    }, [searchText, activeTab, imageData, approvedFilter, ocrFilter, scoreFilter, needsReviewFilter]);
+        setCurrentPage(1);
+    }, [searchText, currentTabImages, datasetFilter, approvedFilter, ocrFilter, scoreFilter, needsReviewFilter]);
 
     // Helper function để cập nhật Score vào mảng image URLs (imgUrls hoặc detailImageUrls)
     const updateImageArrayWithScore = async (recordId, imageUrl, score, arrayFieldName) => {
@@ -1430,7 +1512,8 @@ const ImageSpellCheck = () => {
     return (
         <div style={{ padding: '24px', maxWidth: '100%', margin: '0 auto', }}>
             <Card>
-                <div style={{ marginBottom: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+                {/* Row 1: Title, Search, Actions */}
+                <div style={{ marginBottom: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                         <Button
                             type="default"
@@ -1443,56 +1526,17 @@ const ImageSpellCheck = () => {
                         <Title level={3} style={{ margin: 0 }}>
                             <FileImageOutlined /> Kiểm tra lỗi chính tả ảnh
                         </Title>
-                    </div>
-                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
                         <Input
-                            placeholder="Tìm kiếm theo tiêu đề, URL hoặc OCR text..."
+                            placeholder="Tìm tiêu đề, URL, OCR..."
+                            prefix={<SearchOutlined />}
                             value={searchText}
                             onChange={(e) => setSearchText(e.target.value)}
-                            style={{ width: 300 }}
+                            style={{ width: 260 }}
                             allowClear
                             size="small"
                         />
-                        <Select
-                            value={approvedFilter}
-                            onChange={setApprovedFilter}
-                            style={{ width: 150 }}
-                            size="small"
-                        >
-                            <Select.Option value="all">Tất cả duyệt</Select.Option>
-                            <Select.Option value="approved">Đã duyệt</Select.Option>
-                            <Select.Option value="notApproved">Chưa duyệt</Select.Option>
-                        </Select>
-                        <Select
-                            value={ocrFilter}
-                            onChange={setOcrFilter}
-                            style={{ width: 150 }}
-                            size="small"
-                        >
-                            <Select.Option value="all">Tất cả OCR</Select.Option>
-                            <Select.Option value="hasOcr">Đã OCR</Select.Option>
-                            <Select.Option value="noOcr">Chưa OCR</Select.Option>
-                        </Select>
-                        <Select
-                            value={scoreFilter}
-                            onChange={setScoreFilter}
-                            style={{ width: 150 }}
-                            size="small"
-                        >
-                            <Select.Option value="all">Tất cả Score</Select.Option>
-                            <Select.Option value="hasScore">Đã chấm điểm</Select.Option>
-                            <Select.Option value="noScore">Chưa chấm điểm</Select.Option>
-                        </Select>
-                        <Select
-                            value={needsReviewFilter}
-                            onChange={setNeedsReviewFilter}
-                            style={{ width: 150 }}
-                            size="small"
-                        >
-                            <Select.Option value="all">Tất cả Review</Select.Option>
-                            <Select.Option value="needsReview">Cần review</Select.Option>
-                            <Select.Option value="noReview">Không cần review</Select.Option>
-                        </Select>
+                    </div>
+                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                         {processLogs.length > 0 && (
                             <Button
                                 icon={<FileTextOutlined />}
@@ -1520,6 +1564,107 @@ const ImageSpellCheck = () => {
                         </Button>
                     </div>
                 </div>
+
+                {/* Row 2: Bộ lọc - Collapsible */}
+                <Collapse
+                    ghost
+                    size="small"
+                    defaultActiveKey={['filters']}
+                    style={{ marginBottom: '12px', background: '#fafafa', borderRadius: '8px', border: '1px solid #f0f0f0' }}
+                    items={[{
+                        key: 'filters',
+                        label: (
+                            <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <FilterOutlined />
+                                <span style={{ fontWeight: 500 }}>Bộ lọc</span>
+                            </span>
+                        ),
+                        children: (
+                            <div style={{
+                                display: 'flex',
+                                flexWrap: 'wrap',
+                                gap: '12px 20px',
+                                padding: '4px 0',
+                                alignItems: 'center'
+                            }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                    <span style={{ fontSize: '13px', fontWeight: 500 }}>Duyệt:</span>
+                                    <Select
+                                        value={approvedFilter}
+                                        onChange={setApprovedFilter}
+                                        style={{ width: 110 }}
+                                        size="small"
+                                    >
+                                        <Select.Option value="all">Tất cả</Select.Option>
+                                        <Select.Option value="approved">Đã duyệt</Select.Option>
+                                        <Select.Option value="notApproved">Chưa duyệt</Select.Option>
+                                    </Select>
+                                </div>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                    <span style={{ fontSize: '13px', fontWeight: 500 }}>OCR:</span>
+                                    <Select
+                                        value={ocrFilter}
+                                        onChange={setOcrFilter}
+                                        style={{ width: 110 }}
+                                        size="small"
+                                    >
+                                        <Select.Option value="all">Tất cả</Select.Option>
+                                        <Select.Option value="hasOcr">Đã OCR</Select.Option>
+                                        <Select.Option value="noOcr">Chưa OCR</Select.Option>
+                                    </Select>
+                                </div>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                    <span style={{ fontSize: '13px', fontWeight: 500 }}>Score:</span>
+                                    <Select
+                                        value={scoreFilter}
+                                        onChange={setScoreFilter}
+                                        style={{ width: 110 }}
+                                        size="small"
+                                    >
+                                        <Select.Option value="all">Tất cả</Select.Option>
+                                        <Select.Option value="hasScore">Đã chấm</Select.Option>
+                                        <Select.Option value="noScore">Chưa chấm</Select.Option>
+                                    </Select>
+                                </div>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                    <span style={{ fontSize: '13px', fontWeight: 500 }}>Review:</span>
+                                    <Select
+                                        value={needsReviewFilter}
+                                        onChange={setNeedsReviewFilter}
+                                        style={{ width: 110 }}
+                                        size="small"
+                                    >
+                                        <Select.Option value="all">Tất cả</Select.Option>
+                                        <Select.Option value="needsReview">Cần review</Select.Option>
+                                        <Select.Option value="noReview">Không cần</Select.Option>
+                                    </Select>
+                                </div>
+                                {
+                                    activeTab === 'news' && (
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' , flex: 1 }}>
+                                            <span style={{ fontSize: '13px', fontWeight: 500 , minWidth: '90px'}}>Bộ dữ liệu:</span>
+                                            <Select
+                                                mode="multiple"
+                                                value={datasetFilter}
+                                                onChange={setDatasetFilter}
+                                                style={{ width: '100%' }}
+                                                placeholder="Chọn bộ dữ liệu (chỉ cần có 1)"
+                                                showSearch
+                                                filterOption={(input, option) =>
+                                                    (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+                                                }
+                                                maxTagCount="responsive"
+                                                options={datasetOptions}
+                                                size="small"
+                                            />
+                                        </div>
+                                    )
+                                }
+
+                            </div>
+                        ),
+                    }]}
+                />
 
                 {/* Hướng dẫn sử dụng */}
                 <div style={{

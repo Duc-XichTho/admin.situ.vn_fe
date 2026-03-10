@@ -1,5 +1,5 @@
-import { CheckCircleOutlined, CloseCircleOutlined, DeleteOutlined, FileImageOutlined, FileTextOutlined, HomeOutlined, LoadingOutlined, PictureOutlined, SearchOutlined, SettingOutlined, ThunderboltOutlined, UploadOutlined } from '@ant-design/icons';
-import { Badge, Button, Card, Dropdown, Empty, Image, Input, message, Modal, Popconfirm, Select, Space, Switch, Table, Tabs, Tag, Tooltip } from 'antd';
+import { CheckCircleOutlined, CloseCircleOutlined, DeleteOutlined, FileImageOutlined, FileTextOutlined, FilterOutlined, HomeOutlined, LoadingOutlined, PictureOutlined, SearchOutlined, SettingOutlined, ThunderboltOutlined, UploadOutlined } from '@ant-design/icons';
+import { Badge, Button, Card, Collapse, Dropdown, Empty, Image, Input, message, Modal, Popconfirm, Select, Space, Switch, Table, Tabs, Tag, Tooltip } from 'antd';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { aiGen, aiGen2 } from '../../apis/aiGen/botService.jsx';
@@ -75,6 +75,7 @@ const AISummaryDetailGeneration = () => {
     const [lessonNumberFilter, setLessonNumberFilter] = useState(''); // Text search for lessonNumber
     const [relatedCaseFilter, setRelatedCaseFilter] = useState('all'); // 'all', '0', '1', '2', ..., '10'
     const [programFilter, setProgramFilter] = useState([]); // Array of selected program values
+    const [datasetFilter, setDatasetFilter] = useState([]); // Multi-select Bộ dữ liệu (tag1), OR logic
     const [tag4Options, setTag4Options] = useState([]); // List of available programs
     const programTagsContainerRef = useRef(null); // Ref for tags container
     const [visibleTagsCount, setVisibleTagsCount] = useState(tag4Options.length); // Count of visible tags
@@ -2166,10 +2167,54 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
         return [];
     }, [activeTab, k9Data.news, k9Data.caseTraining, k9Data.longForm, k9Data.home]);
 
+    // Get dataset (tag1) options from current tab data
+    const datasetOptions = useMemo(() => {
+        const tabData = currentTabData;
+        if (!tabData || !Array.isArray(tabData)) return [];
+        const flattenedTag1s = tabData.reduce((acc, item) => {
+            if (!item.tag1) return acc;
+            let tags = [];
+            if (Array.isArray(item.tag1)) {
+                tags = item.tag1;
+            } else if (typeof item.tag1 === 'string') {
+                try {
+                    tags = JSON.parse(item.tag1);
+                    if (!Array.isArray(tags)) tags = [item.tag1];
+                } catch (e) {
+                    tags = [item.tag1];
+                }
+            } else {
+                tags = [String(item.tag1)];
+            }
+            tags = tags.flatMap(t => {
+                if (typeof t === 'string' && t.trim().startsWith('[') && t.trim().endsWith(']')) {
+                    try {
+                        const parsed = JSON.parse(t);
+                        if (Array.isArray(parsed)) return parsed;
+                    } catch (e) { }
+                }
+                return [t];
+            });
+            if (tags.length === 0) return acc;
+            acc.push(...tags);
+            return acc;
+        }, []);
+        const tag1s = [...new Set(flattenedTag1s)];
+        const hasEmpty = tabData.some(item => {
+            if (!item.tag1) return true;
+            if (Array.isArray(item.tag1) && item.tag1.length === 0) return true;
+            if (item.tag1 === '[]') return true;
+            return false;
+        });
+        const opts = tag1s.map(t => ({ value: t, label: t }));
+        if (hasEmpty) opts.push({ value: '__empty__', label: 'Trống' });
+        return opts;
+    }, [currentTabData]);
+
     // Reset to page 1 when tab, search, or filters change
     useEffect(() => {
         setCurrentPage(1);
-    }, [activeTab, searchText, summaryDetailFilter, diagramHtmlFilter, diagramExcalidrawFilter, imgUrlsFilter, detailImageUrlsFilter, showDetailFilter, lessonNumberFilter, relatedCaseFilter, programFilter]);
+    }, [activeTab, searchText, summaryDetailFilter, diagramHtmlFilter, diagramExcalidrawFilter, imgUrlsFilter, detailImageUrlsFilter, showDetailFilter, lessonNumberFilter, relatedCaseFilter, programFilter, datasetFilter]);
 
     // Calculate how many tags can fit in the container
     useEffect(() => {
@@ -2328,6 +2373,38 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
     const filteredData = useMemo(() => {
         let data = [...currentTabData];
 
+        // Filter by Bộ dữ liệu (tag1) - OR logic: item satisfies if it has at least one of the selected values
+        if (datasetFilter && datasetFilter.length > 0) {
+            data = data.filter(item => {
+                let parsedTags = [];
+                if (Array.isArray(item.tag1)) {
+                    parsedTags = item.tag1;
+                } else if (typeof item.tag1 === 'string') {
+                    try {
+                        parsedTags = JSON.parse(item.tag1);
+                        if (!Array.isArray(parsedTags)) parsedTags = [item.tag1];
+                    } catch (e) {
+                        parsedTags = [item.tag1];
+                    }
+                } else if (item.tag1) {
+                    parsedTags = [String(item.tag1)];
+                }
+                parsedTags = parsedTags.flatMap(t => {
+                    if (typeof t === 'string' && t.trim().startsWith('[') && t.trim().endsWith(']')) {
+                        try {
+                            const p = JSON.parse(t);
+                            if (Array.isArray(p)) return p;
+                        } catch (e) { }
+                    }
+                    return [t];
+                });
+                return datasetFilter.some(selected => {
+                    if (selected === '__empty__') return !parsedTags || parsedTags.length === 0;
+                    return parsedTags.includes(selected);
+                });
+            });
+        }
+
         // Filter by summaryDetail status (has/none)
         if (summaryDetailFilter === 'has') {
             data = data.filter(item => item.summaryDetail && item.summaryDetail.trim());
@@ -2434,7 +2511,7 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
         }
 
         return data;
-    }, [searchText, summaryDetailFilter, diagramHtmlFilter, diagramExcalidrawFilter, imgUrlsFilter, detailImageUrlsFilter, showDetailFilter, lessonNumberFilter, relatedCaseFilter, programFilter, activeTab, currentTabData, getRelatedCaseTrainingCount]);
+    }, [searchText, summaryDetailFilter, diagramHtmlFilter, diagramExcalidrawFilter, imgUrlsFilter, detailImageUrlsFilter, showDetailFilter, lessonNumberFilter, relatedCaseFilter, programFilter, datasetFilter, activeTab, currentTabData, getRelatedCaseTrainingCount]);
 
     const renderDetail = useCallback((text, record) => {
         if (!text) return '-';
@@ -2804,7 +2881,7 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
                         backgroundColor: '#f0f0f0',
                         borderRadius: '4px'
                     }}
-                         title="Chưa tạo diagram HTML từ SummaryDetail"
+                        title="Chưa tạo diagram HTML từ SummaryDetail"
                     >
                         <FileTextOutlined style={{ fontSize: '16px', color: '#999' }} />
                     </div>
@@ -2848,7 +2925,7 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
                         backgroundColor: '#f0f0f0',
                         borderRadius: '4px'
                     }}
-                         title="Chưa tạo diagram Excalidraw từ SummaryDetail"
+                        title="Chưa tạo diagram Excalidraw từ SummaryDetail"
                     >
                         <PictureOutlined style={{ fontSize: '16px', color: '#999' }} />
                     </div>
@@ -2946,7 +3023,7 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
                         backgroundColor: '#f0f0f0',
                         borderRadius: '4px'
                     }}
-                         title="Chưa tạo imgUrls từ SummaryDetail"
+                        title="Chưa tạo imgUrls từ SummaryDetail"
                     >
                         <FileImageOutlined style={{ fontSize: '16px', color: '#999' }} />
                     </div>
@@ -3044,7 +3121,7 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
                         backgroundColor: '#f0f0f0',
                         borderRadius: '4px'
                     }}
-                         title="Chưa tạo detailImageUrls từ Detail"
+                        title="Chưa tạo detailImageUrls từ Detail"
                     >
                         <FileImageOutlined style={{ fontSize: '16px', color: '#999' }} />
                     </div>
@@ -3296,101 +3373,161 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
                             </Button>
                         </Tooltip>
                     </div>
-                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
-                        <span style={{ fontSize: '13px', fontWeight: 500 }}>Lọc SummaryDetail:</span>
-                        <Select
-                            value={summaryDetailFilter}
-                            onChange={setSummaryDetailFilter}
-                            style={{ width: 140 }}
-                            size="small"
-                        >
-                            <Select.Option value="all">Tất cả</Select.Option>
-                            <Select.Option value="has">Đã có</Select.Option>
-                            <Select.Option value="none">Chưa có</Select.Option>
-                        </Select>
-                        <span style={{ fontSize: '13px', fontWeight: 500 }}>Lọc DiagramHtml:</span>
-                        <Select
-                            value={diagramHtmlFilter}
-                            onChange={setDiagramHtmlFilter}
-                            style={{ width: 140 }}
-                            size="small"
-                        >
-                            <Select.Option value="all">Tất cả</Select.Option>
-                            <Select.Option value="has">Đã có</Select.Option>
-                            <Select.Option value="none">Chưa có</Select.Option>
-                        </Select>
-                        <span style={{ fontSize: '13px', fontWeight: 500 }}>Lọc DiagramExcalidraw:</span>
-                        <Select
-                            value={diagramExcalidrawFilter}
-                            onChange={setDiagramExcalidrawFilter}
-                            style={{ width: 140 }}
-                            size="small"
-                        >
-                            <Select.Option value="all">Tất cả</Select.Option>
-                            <Select.Option value="has">Đã có</Select.Option>
-                            <Select.Option value="none">Chưa có</Select.Option>
-                        </Select>
-                        <span style={{ fontSize: '13px', fontWeight: 500 }}>Lọc ImgUrls:</span>
-                        <Select
-                            value={imgUrlsFilter}
-                            onChange={setImgUrlsFilter}
-                            style={{ width: 140 }}
-                            size="small"
-                        >
-                            <Select.Option value="all">Tất cả</Select.Option>
-                            <Select.Option value="has">Đã có</Select.Option>
-                            <Select.Option value="none">Chưa có</Select.Option>
-                        </Select>
-                        <span style={{ fontSize: '13px', fontWeight: 500 }}>Lọc detailImageUrls:</span>
-                        <Select
-                            value={detailImageUrlsFilter}
-                            onChange={setDetailImageUrlsFilter}
-                            style={{ width: 140 }}
-                            size="small"
-                        >
-                            <Select.Option value="all">Tất cả</Select.Option>
-                            <Select.Option value="has">Đã có</Select.Option>
-                            <Select.Option value="none">Chưa có</Select.Option>
-                        </Select>
-                        <span style={{ fontSize: '13px', fontWeight: 500 }}>Lọc ShowDetail:</span>
-                        <Select
-                            value={showDetailFilter}
-                            onChange={setShowDetailFilter}
-                            style={{ width: 140 }}
-                            size="small"
-                        >
-                            <Select.Option value="all">Tất cả</Select.Option>
-                            <Select.Option value="has">Đã có</Select.Option>
-                            <Select.Option value="none">Chưa có</Select.Option>
-                        </Select>
-                        <span style={{ fontSize: '13px', fontWeight: 500 }}>Tìm LessonNumber:</span>
-                        <Input
-                            placeholder="Nhập lessonNumber..."
-                            value={lessonNumberFilter}
-                            onChange={(e) => setLessonNumberFilter(e.target.value)}
-                            style={{ width: 150 }}
-                            allowClear
-                            size="small"
-                        />
-                        {activeTab === 'news' && (
-                            <>
-                                <span style={{ fontSize: '13px', fontWeight: 500 }}>Case liên quan:</span>
-                                <Select
-                                    value={relatedCaseFilter}
-                                    onChange={setRelatedCaseFilter}
-                                    style={{ width: 140 }}
-                                    size="small"
-                                >
-                                    <Select.Option value="all">Tất cả</Select.Option>
-                                    <Select.Option value="0">Không có case</Select.Option>
-                                    {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15].map(num => (
-                                        <Select.Option key={num} value={String(num)}>{num} case</Select.Option>
-                                    ))}
-                                </Select>
-                            </>
-                        )}
-                    </div>
                 </div>
+
+                {/* Row 2: Bộ lọc - Collapsible */}
+                <Collapse
+                    ghost
+                    size="small"
+                    defaultActiveKey={['filters']}
+                    style={{ marginBottom: '12px', background: '#fafafa', borderRadius: '8px', border: '1px solid #f0f0f0' }}
+                    items={[{
+                        key: 'filters',
+                        label: (
+                            <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <FilterOutlined />
+                                <span style={{ fontWeight: 500 }}>Bộ lọc</span>
+                            </span>
+                        ),
+                        children: (
+                            <div style={{
+                                display: 'grid',
+                                gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+                                gap: '12px 24px',
+                                padding: '4px 0'
+                            }}>
+                                {
+                                    activeTab === 'news' && (
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                            <span style={{ fontSize: '13px', fontWeight: 500, minWidth: '90px' }}>Bộ dữ liệu:</span>
+                                            <Select
+                                                mode="multiple"
+                                                value={datasetFilter}
+                                                onChange={setDatasetFilter}
+                                                style={{ flex: 1, minWidth: 160 }}
+                                                placeholder="Chọn bộ dữ liệu (chỉ cần có 1)"
+                                                showSearch
+                                                filterOption={(input, option) =>
+                                                    (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+                                                }
+                                                maxTagCount="responsive"
+                                                options={datasetOptions}
+                                                size="small"
+                                            />
+                                        </div>
+                                    )
+                                }
+
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <span style={{ fontSize: '13px', fontWeight: 500, minWidth: '90px' }}>SummaryDetail:</span>
+                                    <Select
+                                        value={summaryDetailFilter}
+                                        onChange={setSummaryDetailFilter}
+                                        style={{ width: 120 }}
+                                        size="small"
+                                    >
+                                        <Select.Option value="all">Tất cả</Select.Option>
+                                        <Select.Option value="has">Đã có</Select.Option>
+                                        <Select.Option value="none">Chưa có</Select.Option>
+                                    </Select>
+                                </div>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <span style={{ fontSize: '13px', fontWeight: 500, minWidth: '90px' }}>DiagramHtml:</span>
+                                    <Select
+                                        value={diagramHtmlFilter}
+                                        onChange={setDiagramHtmlFilter}
+                                        style={{ width: 120 }}
+                                        size="small"
+                                    >
+                                        <Select.Option value="all">Tất cả</Select.Option>
+                                        <Select.Option value="has">Đã có</Select.Option>
+                                        <Select.Option value="none">Chưa có</Select.Option>
+                                    </Select>
+                                </div>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <span style={{ fontSize: '13px', fontWeight: 500, minWidth: '90px' }}>DiagramExcalidraw:</span>
+                                    <Select
+                                        value={diagramExcalidrawFilter}
+                                        onChange={setDiagramExcalidrawFilter}
+                                        style={{ width: 120 }}
+                                        size="small"
+                                    >
+                                        <Select.Option value="all">Tất cả</Select.Option>
+                                        <Select.Option value="has">Đã có</Select.Option>
+                                        <Select.Option value="none">Chưa có</Select.Option>
+                                    </Select>
+                                </div>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <span style={{ fontSize: '13px', fontWeight: 500, minWidth: '90px' }}>ImgUrls:</span>
+                                    <Select
+                                        value={imgUrlsFilter}
+                                        onChange={setImgUrlsFilter}
+                                        style={{ width: 120 }}
+                                        size="small"
+                                    >
+                                        <Select.Option value="all">Tất cả</Select.Option>
+                                        <Select.Option value="has">Đã có</Select.Option>
+                                        <Select.Option value="none">Chưa có</Select.Option>
+                                    </Select>
+                                </div>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <span style={{ fontSize: '13px', fontWeight: 500, minWidth: '90px' }}>detailImageUrls:</span>
+                                    <Select
+                                        value={detailImageUrlsFilter}
+                                        onChange={setDetailImageUrlsFilter}
+                                        style={{ width: 120 }}
+                                        size="small"
+                                    >
+                                        <Select.Option value="all">Tất cả</Select.Option>
+                                        <Select.Option value="has">Đã có</Select.Option>
+                                        <Select.Option value="none">Chưa có</Select.Option>
+                                    </Select>
+                                </div>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <span style={{ fontSize: '13px', fontWeight: 500, minWidth: '90px' }}>ShowDetail:</span>
+                                    <Select
+                                        value={showDetailFilter}
+                                        onChange={setShowDetailFilter}
+                                        style={{ width: 120 }}
+                                        size="small"
+                                    >
+                                        <Select.Option value="all">Tất cả</Select.Option>
+                                        <Select.Option value="has">Đã có</Select.Option>
+                                        <Select.Option value="none">Chưa có</Select.Option>
+                                    </Select>
+                                </div>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <span style={{ fontSize: '13px', fontWeight: 500, minWidth: '90px' }}>LessonNumber:</span>
+                                    <Input
+                                        placeholder="Tìm..."
+                                        value={lessonNumberFilter}
+                                        onChange={(e) => setLessonNumberFilter(e.target.value)}
+                                        style={{ width: 120 }}
+                                        allowClear
+                                        size="small"
+                                    />
+                                </div>
+                                {activeTab === 'news' && (
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                        <span style={{ fontSize: '13px', fontWeight: 500, minWidth: '90px' }}>Case liên quan:</span>
+                                        <Select
+                                            value={relatedCaseFilter}
+                                            onChange={setRelatedCaseFilter}
+                                            style={{ width: 120 }}
+                                            size="small"
+                                        >
+                                            <Select.Option value="all">Tất cả</Select.Option>
+                                            <Select.Option value="0">Không có</Select.Option>
+                                            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15].map(num => (
+                                                <Select.Option key={num} value={String(num)}>{num} case</Select.Option>
+                                            ))}
+                                        </Select>
+                                    </div>
+                                )}
+                            </div>
+                        ),
+                    }]}
+                />
 
                 {/* Row 2: Program Filter Tags */}
                 {tag4Options.length > 0 && (
@@ -4622,10 +4759,10 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
 
                 {previewingRecord?.imgUrls && Array.isArray(previewingRecord.imgUrls) && previewingRecord.imgUrls.length > 0 ? (
                     <div style={{
-                        height : '100%',
+                        height: '100%',
                         width: '100%',
                         overflow: 'auto',
-                        position: 'relative'    ,
+                        position: 'relative',
                         marginTop: '16px'
                     }}>
                         {previewingRecord.imgUrls.map((imgItem, index) => {
@@ -4908,10 +5045,10 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
 
                 {previewingDetailImageUrlsRecord?.detailImageUrls && Array.isArray(previewingDetailImageUrlsRecord.detailImageUrls) && previewingDetailImageUrlsRecord.detailImageUrls.length > 0 ? (
                     <div style={{
-                        height : '100%',
+                        height: '100%',
                         width: '100%',
                         overflow: 'auto',
-                        position: 'relative'    ,
+                        position: 'relative',
                         marginTop: '16px'
                     }}>
                         {previewingDetailImageUrlsRecord.detailImageUrls.map((imgItem, index) => {

@@ -430,7 +430,7 @@ const AIQuestionEvaluation = () => {
             const quizCount = Array.isArray(questionContent.questionQuiz) ? questionContent.questionQuiz.length : 0;
             const essayCount = Array.isArray(questionContent.questionEssay) ? questionContent.questionEssay.length : 0;
             const hasQuiz = quizCount > 0 || essayCount > 0;
-            
+
             return (
                 <div>
                     {hasQuiz ? (
@@ -531,9 +531,9 @@ const AIQuestionEvaluation = () => {
     const renderAction = useCallback((_, record) => {
         const questionContent = record.questionContent || record.quizContent || record.quizzContent;
         const hasQuiz = questionContent && (
-            (typeof questionContent === 'object' && !Array.isArray(questionContent) && 
-             ((questionContent.questionQuiz && questionContent.questionQuiz.length > 0) ||
-              (questionContent.questionEssay && questionContent.questionEssay.length > 0))) ||
+            (typeof questionContent === 'object' && !Array.isArray(questionContent) &&
+                ((questionContent.questionQuiz && questionContent.questionQuiz.length > 0) ||
+                    (questionContent.questionEssay && questionContent.questionEssay.length > 0))) ||
             (typeof questionContent === 'string' && questionContent.trim())
         );
 
@@ -788,7 +788,7 @@ const AIQuestionEvaluation = () => {
     }, [activeTab, handleOpenTheoryModal, loadingTheoryId, tag4Options, renderQuestionContent, renderDetail, renderFeedback, renderAction]);
 
     return (
-        <div style={{ padding: '24px',width: '100%', margin: '0 auto' }}>
+        <div style={{ padding: '24px', width: '100%', margin: '0 auto' }}>
             <Card>
                 {/* Header: Tiêu đề + Đánh giá AI + Cài đặt */}
                 <div style={{
@@ -881,40 +881,44 @@ const AIQuestionEvaluation = () => {
                             <Radio.Button value="none">Chưa đánh giá</Radio.Button>
                         </Radio.Group>
                     </div>
-                 
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' , flex: 1  }}>
-                        <span style={{ fontSize: '14px', fontWeight: 500, minWidth: '90px' }}>Bộ dữ liệu:</span>
-                        <Select
-                            mode="multiple"
-                            value={datasetFilter}
-                            onChange={setDatasetFilter}
-                            style={{ width: '100%' }}
-                            placeholder="Chọn bộ dữ liệu (chỉ cần có 1)"
-                            showSearch
-                            filterOption={(input, option) =>
-                                (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
-                            }
-                            maxTagCount="responsive"
-                            options={datasetOptions}
-                        />
-                    </div>
+                    {
+                        activeTab === 'news' && (
+
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1 }}>
+                                <span style={{ fontSize: '14px', fontWeight: 500, minWidth: '90px' }}>Bộ dữ liệu:</span>
+                                <Select
+                                    mode="multiple"
+                                    value={datasetFilter}
+                                    onChange={setDatasetFilter}
+                                    style={{ width: '100%' }}
+                                    placeholder="Chọn bộ dữ liệu (chỉ cần có 1)"
+                                    showSearch
+                                    filterOption={(input, option) =>
+                                        (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+                                    }
+                                    maxTagCount="responsive"
+                                    options={datasetOptions}
+                                />
+                            </div>)
+                    }
+
                 </div>
 
-                    {/* Tabs */}
-                    <Tabs activeKey={activeTab} onChange={setActiveTab}>
-                        <TabPane
-                            tab={<span>Lý thuyết <Badge count={k9Data.news?.length || 0} size="small" /></span>}
-                            key="news"
-                        />
-                        <TabPane
-                            tab={<span>Case Training <Badge count={k9Data.caseTraining?.length || 0} size="small" /></span>}
-                            key="caseTraining"
-                        />
-                        <TabPane
-                            tab={<span>Kho tài nguyên <Badge count={k9Data.longForm?.length || 0} size="small" /></span>}
-                            key="longForm"
-                        />
-                    </Tabs>
+                {/* Tabs */}
+                <Tabs activeKey={activeTab} onChange={setActiveTab}>
+                    <TabPane
+                        tab={<span>Lý thuyết <Badge count={k9Data.news?.length || 0} size="small" /></span>}
+                        key="news"
+                    />
+                    <TabPane
+                        tab={<span>Case Training <Badge count={k9Data.caseTraining?.length || 0} size="small" /></span>}
+                        key="caseTraining"
+                    />
+                    <TabPane
+                        tab={<span>Kho tài nguyên <Badge count={k9Data.longForm?.length || 0} size="small" /></span>}
+                        key="longForm"
+                    />
+                </Tabs>
 
                 {/* Table */}
                 <Table
@@ -1130,9 +1134,9 @@ const AIQuestionEvaluation = () => {
                 ]}
                 width={900}
             >
-                <div style={{ 
-                    padding: '16px', 
-                    whiteSpace: 'pre-wrap', 
+                <div style={{
+                    padding: '16px',
+                    whiteSpace: 'pre-wrap',
                     wordBreak: 'break-word',
                     maxHeight: '70vh',
                     overflowY: 'auto',
