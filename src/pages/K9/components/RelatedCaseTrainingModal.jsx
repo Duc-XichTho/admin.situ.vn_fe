@@ -171,15 +171,18 @@ const RelatedCaseTrainingModal = ({
                     {/* File URLs Section */}
                     {item.fileUrls && item.fileUrls.length > 0 && (
                         <div className={`${styles.fileTagsContainer} ${newsTabStyles.fileTagsContainer}`}>
-                            {item.fileUrls.map((fileUrl, index) => {
-                                const fileName = fileUrl.split('/').pop() || `file-${index + 1}`;
+                            {item.fileUrls.map((fileItem, index) => {
+                                const url = typeof fileItem === 'string' ? fileItem : (fileItem?.url || '');
+                                const fileName = typeof fileItem === 'string'
+                                    ? (url.split('/').pop() || `file-${index + 1}`)
+                                    : (fileItem?.name || url.split('/').pop() || `file-${index + 1}`);
                                 const fileExtension = fileName.split('.').pop()?.toLowerCase() || '';
 
                                 return (
                                     <div
                                         key={index}
                                         className={`${styles.fileTag} ${newsTabStyles.fileTag}`}
-                                        onClick={() => openFilePreview(fileUrl, fileName)}
+                                        onClick={() => openFilePreview(url, fileName)}
                                         title={fileName}
                                     >
                                         <span className={`${styles.fileTagIcon} ${newsTabStyles.fileTagIcon}`}>

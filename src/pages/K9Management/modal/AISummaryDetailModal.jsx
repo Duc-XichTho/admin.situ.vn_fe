@@ -49,8 +49,11 @@ export default function AISummaryDetailModal({
             <div style={{ margin: '12px 0' }}>
               <b>📎 File đính kèm:</b><br />
               <div style={{ marginTop: '8px' }}>
-                {selectedAISummary.fileUrls.map((url, index) => {
-                  const fileName = url.split('/').pop() || `file-${index + 1}`;
+                {selectedAISummary.fileUrls.map((fileItem, index) => {
+                  const url = typeof fileItem === 'string' ? fileItem : (fileItem?.url || '');
+                  const fileName = typeof fileItem === 'string'
+                    ? (url.split('/').pop() || `file-${index + 1}`)
+                    : (fileItem?.name || url.split('/').pop() || `file-${index + 1}`);
                   return (
                     <div key={index} style={{
                       background: '#f6f8fa',
