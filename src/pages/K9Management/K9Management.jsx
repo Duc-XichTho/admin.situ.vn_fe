@@ -7261,7 +7261,7 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
 
   // Get related case training count by cid (only for news tab)
   const getRelatedCaseTrainingCount = (record) => {
-    if (!record.cid || currentTab !== 'news') return 0;
+    if (!record.cid || (currentTab !== 'news' && currentTab !== 'document')) return 0;
     const relatedCases = allData.caseTraining?.filter(item => item.cid === record.cid) || [];
     return relatedCases.length;
   };
@@ -15450,24 +15450,25 @@ Chỉ trả về JSON, không thêm text khác.`;
 
   // Bulk: tạo Case Training từ Learning Block (news)
   const handleBulkCreateCaseFromLearningBlock = async () => {
-    if (currentTab !== 'news') {
-      message.warning('Chức năng này chỉ dùng trong tab Learning Block!');
+    console.log('currentTab', currentTab);
+    if (currentTab != 'news' && currentTab != 'document') {
+      message.warning('Chức năng này chỉ dùng trong tab Learning Block hoặc Learning Material!');
       return;
     }
 
     if (selectedRowKeys.length === 0) {
-      message.warning('Vui lòng chọn ít nhất một Learning Block để tạo Case Training!');
+      message.warning('Vui lòng chọn ít nhất một Learning Block hoặc Learning Material để tạo Case Training!');
       return;
     }
 
     // Chỉ lấy các bản ghi thuộc loại news (Learning Block)
     const selectedItems = data.filter(item =>
       selectedRowKeys.includes(item.id) &&
-      item.type === 'news'
+      (item.type === 'news' || item.type === 'document')
     );
 
     if (selectedItems.length === 0) {
-      message.warning('Không có Learning Block hợp lệ nào được chọn!');
+      message.warning('Không có Learning Block hoặc Learning Material hợp lệ nào được chọn!');
       return;
     }
 
