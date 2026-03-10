@@ -45,6 +45,7 @@ const AIQuestionEvaluation = () => {
     const [selectedFeedback, setSelectedFeedback] = useState('');
     const [feedbackFilter, setFeedbackFilter] = useState('all'); // 'all', 'has', 'none'
     const [feedbackSearchText, setFeedbackSearchText] = useState('');
+    const [datasetFilter, setDatasetFilter] = useState([]); // Multi-select Bộ dữ liệu (tag1), OR logic
     const [tag4Options, setTag4Options] = useState([]);
 
     // K9 data for each tab
@@ -272,11 +273,87 @@ const AIQuestionEvaluation = () => {
     // Reset to page 1 when tab, search, or filters change
     useEffect(() => {
         setCurrentPage(1);
-    }, [activeTab, searchText, feedbackFilter, feedbackSearchText]);
+    }, [activeTab, searchText, feedbackFilter, feedbackSearchText, datasetFilter]);
 
-    // Optimize filter with useMemo - only recalculate when searchText, feedbackFilter, feedbackSearchText or currentTabData changes
+    // Get dataset (tag1) options from current tab data
+    const datasetOptions = useMemo(() => {
+        const tabData = currentTabData;
+        if (!tabData || !Array.isArray(tabData)) return [];
+        const flattenedTag1s = tabData.reduce((acc, item) => {
+            if (!item.tag1) return acc;
+            let tags = [];
+            if (Array.isArray(item.tag1)) {
+                tags = item.tag1;
+            } else if (typeof item.tag1 === 'string') {
+                try {
+                    tags = JSON.parse(item.tag1);
+                    if (!Array.isArray(tags)) tags = [item.tag1];
+                } catch (e) {
+                    tags = [item.tag1];
+                }
+            } else {
+                tags = [String(item.tag1)];
+            }
+            tags = tags.flatMap(t => {
+                if (typeof t === 'string' && t.trim().startsWith('[') && t.trim().endsWith(']')) {
+                    try {
+                        const parsed = JSON.parse(t);
+                        if (Array.isArray(parsed)) return parsed;
+                    } catch (e) { }
+                }
+                return [t];
+            });
+            if (tags.length === 0) return acc;
+            acc.push(...tags);
+            return acc;
+        }, []);
+        const tag1s = [...new Set(flattenedTag1s)];
+        const hasEmpty = tabData.some(item => {
+            if (!item.tag1) return true;
+            if (Array.isArray(item.tag1) && item.tag1.length === 0) return true;
+            if (item.tag1 === '[]') return true;
+            return false;
+        });
+        const opts = tag1s.map(t => ({ value: t, label: t }));
+        if (hasEmpty) opts.push({ value: '__empty__', label: 'Trống' });
+        return opts;
+    }, [currentTabData]);
+
+    // Optimize filter with useMemo - only recalculate when searchText, feedbackFilter, feedbackSearchText, datasetFilter or currentTabData changes
     const filteredData = useMemo(() => {
         let data = [...currentTabData];
+
+        // Filter by Bộ dữ liệu (tag1) - OR logic: item satisfies if it has at least one of the selected values
+        if (datasetFilter && datasetFilter.length > 0) {
+            data = data.filter(item => {
+                let parsedTags = [];
+                if (Array.isArray(item.tag1)) {
+                    parsedTags = item.tag1;
+                } else if (typeof item.tag1 === 'string') {
+                    try {
+                        parsedTags = JSON.parse(item.tag1);
+                        if (!Array.isArray(parsedTags)) parsedTags = [item.tag1];
+                    } catch (e) {
+                        parsedTags = [item.tag1];
+                    }
+                } else if (item.tag1) {
+                    parsedTags = [String(item.tag1)];
+                }
+                parsedTags = parsedTags.flatMap(t => {
+                    if (typeof t === 'string' && t.trim().startsWith('[') && t.trim().endsWith(']')) {
+                        try {
+                            const p = JSON.parse(t);
+                            if (Array.isArray(p)) return p;
+                        } catch (e) { }
+                    }
+                    return [t];
+                });
+                return datasetFilter.some(selected => {
+                    if (selected === '__empty__') return !parsedTags || parsedTags.length === 0;
+                    return parsedTags.includes(selected);
+                });
+            });
+        }
 
         // Filter by feedback status (has/none)
         if (feedbackFilter === 'has') {
@@ -327,7 +404,7 @@ const AIQuestionEvaluation = () => {
         }
 
         return data;
-    }, [searchText, feedbackFilter, feedbackSearchText, currentTabData]);
+    }, [searchText, feedbackFilter, feedbackSearchText, datasetFilter, currentTabData]);
 
     // Handle quiz view - memoized to prevent re-renders
     const handleViewQuestionContent = useCallback((record) => {
@@ -711,9 +788,17 @@ const AIQuestionEvaluation = () => {
     }, [activeTab, handleOpenTheoryModal, loadingTheoryId, tag4Options, renderQuestionContent, renderDetail, renderFeedback, renderAction]);
 
     return (
-        <div style={{ padding: '24px', maxWidth: '1700px', margin: '0 auto' }}>
+        <div style={{ padding: '24px',width: '100%', margin: '0 auto' }}>
             <Card>
-                <div style={{ marginBottom: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '16px' }}>
+                {/* Header: Tiêu đề + Đánh giá AI + Cài đặt */}
+                <div style={{
+                    marginBottom: '16px',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    gap: '16px',
+                    flexWrap: 'wrap'
+                }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                         <Button
                             type="default"
@@ -722,32 +807,9 @@ const AIQuestionEvaluation = () => {
                         >
                             Về trang chủ
                         </Button>
-                        <h2 style={{ marginBottom: 0, margin: 0 }}>AI Đánh giá Câu hỏi</h2>
+                        <h2 style={{ margin: 0 }}>AI Đánh giá Câu hỏi</h2>
                     </div>
-                    <div style={{ display: 'flex', gap: '16px', width: '40%' }}>
-                        <Input
-                            placeholder="Tìm kiếm theo ID, CID, Question Content, hoặc Detail..."
-                            prefix={<SearchOutlined />}
-                            value={searchText}
-                            onChange={(e) => setSearchText(e.target.value)}
-                            style={{ flex: 1, maxWidth: '500px' }}
-                            allowClear
-                        />
-                        <Button
-                            type="default"
-                            icon={<SettingOutlined />}
-                            onClick={() => setSettingsModalVisible(true)}
-                        >
-                            Cài đặt
-                        </Button>
-                    </div>
-
-                </div>
-
-                <div style={{ marginBottom: '16px' }}>
-
-                    {/* Action buttons */}
-                    <div style={{ marginBottom: '16px', display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                         <Button
                             type="primary"
                             icon={<RobotOutlined />}
@@ -758,39 +820,85 @@ const AIQuestionEvaluation = () => {
                             Đánh giá AI ({selectedRowKeys.length})
                         </Button>
                         {selectedRowKeys.length > 0 && (
-                            <Button
-                                type="link"
-                                onClick={() => setSelectedRowKeys([])}
-                            >
+                            <Button type="link" onClick={() => setSelectedRowKeys([])}>
                                 Bỏ chọn tất cả
                             </Button>
                         )}
-                        
-                        {/* Feedback Filter */}
-                        <div style={{ marginLeft: 'auto', display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
-                            <span style={{ fontSize: '14px', fontWeight: 500 }}>Lọc Feedback:</span>
-                            <Radio.Group
-                                value={feedbackFilter}
-                                onChange={(e) => setFeedbackFilter(e.target.value)}
-                                size="small"
-                                buttonStyle="solid"
-                            >
-                                <Radio.Button value="all">Tất cả</Radio.Button>
-                                <Radio.Button value="has">Đã đánh giá</Radio.Button>
-                                <Radio.Button value="none">Chưa đánh giá</Radio.Button>
-                            </Radio.Group>
-                            
-                            {/* Feedback Search */}
-                            <Input
-                                placeholder="Tìm kiếm trong Feedback..."
-                                prefix={<SearchOutlined />}
-                                value={feedbackSearchText}
-                                onChange={(e) => setFeedbackSearchText(e.target.value)}
-                                style={{ width: '250px' }}
-                                allowClear
-                            />
-                        </div>
+                        <Button
+                            type="default"
+                            icon={<SettingOutlined />}
+                            onClick={() => setSettingsModalVisible(true)}
+                        >
+                            Cài đặt
+                        </Button>
                     </div>
+                </div>
+
+                {/* Bộ lọc + Tìm kiếm */}
+                <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '24px',
+                    flexWrap: 'wrap',
+                    padding: '12px 16px',
+                    marginBottom: '16px',
+                    backgroundColor: '#fafafa',
+                    borderRadius: '8px',
+                    border: '1px solid #f0f0f0'
+                }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <span style={{ fontSize: '14px', fontWeight: 500, minWidth: '70px' }}>Tìm kiếm:</span>
+                        <Input
+                            placeholder="ID, CID, Question Content, Detail..."
+                            prefix={<SearchOutlined />}
+                            value={searchText}
+                            onChange={(e) => setSearchText(e.target.value)}
+                            style={{ width: 260 }}
+                            allowClear
+                        />
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <span style={{ fontSize: '14px', fontWeight: 500, minWidth: '90px' }}>Tìm trong Feedback:</span>
+                        <Input
+                            placeholder="Tìm trong Feedback..."
+                            prefix={<SearchOutlined />}
+                            value={feedbackSearchText}
+                            onChange={(e) => setFeedbackSearchText(e.target.value)}
+                            style={{ width: 200 }}
+                            allowClear
+                        />
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <span style={{ fontSize: '14px', fontWeight: 500, minWidth: '90px' }}>Lọc Feedback:</span>
+                        <Radio.Group
+                            value={feedbackFilter}
+                            onChange={(e) => setFeedbackFilter(e.target.value)}
+                            size="small"
+                            buttonStyle="solid"
+                        >
+                            <Radio.Button value="all">Tất cả</Radio.Button>
+                            <Radio.Button value="has">Đã đánh giá</Radio.Button>
+                            <Radio.Button value="none">Chưa đánh giá</Radio.Button>
+                        </Radio.Group>
+                    </div>
+                 
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' , flex: 1  }}>
+                        <span style={{ fontSize: '14px', fontWeight: 500, minWidth: '90px' }}>Bộ dữ liệu:</span>
+                        <Select
+                            mode="multiple"
+                            value={datasetFilter}
+                            onChange={setDatasetFilter}
+                            style={{ width: '100%' }}
+                            placeholder="Chọn bộ dữ liệu (chỉ cần có 1)"
+                            showSearch
+                            filterOption={(input, option) =>
+                                (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+                            }
+                            maxTagCount="responsive"
+                            options={datasetOptions}
+                        />
+                    </div>
+                </div>
 
                     {/* Tabs */}
                     <Tabs activeKey={activeTab} onChange={setActiveTab}>
@@ -807,7 +915,6 @@ const AIQuestionEvaluation = () => {
                             key="longForm"
                         />
                     </Tabs>
-                </div>
 
                 {/* Table */}
                 <Table
