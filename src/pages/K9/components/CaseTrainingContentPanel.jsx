@@ -166,12 +166,12 @@ const CaseTrainingContentPanel = ({
                   key={sourceItem.id}
                   style={{
                     fontSize: '13px',
-                    color: '#1890ff',
+                    color: '#124CB2',
                     fontWeight: '500',
-                    backgroundColor: '#f0f8ff',
+                    backgroundColor: '#F8FAFB',
                     padding: '4px 8px',
                     borderRadius: '4px',
-                    border: '1px solid #d6e4ff',
+                    border: '1px solid #99A6C6',
                     marginLeft: '8px',
                     cursor: 'pointer'
                   }}

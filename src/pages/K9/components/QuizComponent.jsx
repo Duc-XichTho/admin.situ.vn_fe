@@ -556,7 +556,7 @@ LƯU Ý: Chỉ dùng số nguyên từ 1-10, không dùng 7.5, 8.3, v.v.`;
           {/* Quiz Questions */}
           {hasQuizQuestions && (
               <div style={{ marginBottom: '24px' }}>
-                <h4 style={{ marginBottom: '16px', color: '#1890ff' }}>
+                <h4 style={{ marginBottom: '16px', color: '#124CB2' }}>
                   📝 Câu hỏi trắc nghiệm ({quizData.questionQuiz.length} câu)
                 </h4>
 
@@ -571,7 +571,7 @@ LƯU Ý: Chỉ dùng số nguyên từ 1-10, không dùng 7.5, 8.3, v.v.`;
                         alignItems: 'flex-start',
                         gap: '8px'
                       }}>
-                  <span style={{ color: '#1890ff', flexShrink: 0 }}>
+                  <span style={{ color: '#124CB2', flexShrink: 0 }}>
                     Câu {index + 1}:
                   </span>
                         <div
@@ -718,7 +718,7 @@ LƯU Ý: Chỉ dùng số nguyên từ 1-10, không dùng 7.5, 8.3, v.v.`;
           {hasEssayQuestions && (
               <div>
                 <Divider />
-                <h4 style={{ marginBottom: '16px', color: '#722ed1' }}>
+                <h4 style={{ marginBottom: '16px', color: '#124CB2' }}>
                   ✍️ Câu hỏi tự luận ({quizData.questionEssay.length} câu)
                 </h4>
 
@@ -733,7 +733,7 @@ LƯU Ý: Chỉ dùng số nguyên từ 1-10, không dùng 7.5, 8.3, v.v.`;
                         alignItems: 'flex-start',
                         gap: '8px'
                       }}>
-                  <span style={{ color: '#722ed1', flexShrink: 0 }}>
+                  <span style={{ color: '#124CB2', flexShrink: 0 }}>
                     Câu {index + 1}:
                   </span>
                         <div
