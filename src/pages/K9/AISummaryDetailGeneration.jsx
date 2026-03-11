@@ -4163,74 +4163,76 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
                     </Button>,
                 ]}
             >
-                {currentSummaryDetailProcessing && (
-                    <div style={{ marginBottom: '24px' }}>
-                        <h5>🔄 Đang xử lý</h5>
-                        <div style={{
-                            padding: '16px',
-                            border: '2px solid #1890ff',
-                            borderRadius: '8px',
-                            backgroundColor: '#e6f7ff'
-                        }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                <LoadingOutlined spin style={{ fontSize: '24px', color: '#1890ff' }} />
-                                <div>
-                                    <div><strong>{currentSummaryDetailProcessing.title}</strong></div>
-                                    <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
-                                        Record ID: {currentSummaryDetailProcessing.recordId}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                )}
-                {summaryDetailQueue.length > 0 && (
-                    <div style={{ marginBottom: '24px' }}>
-                        <h5>📝 Hàng đợi ({summaryDetailQueue.length})</h5>
-                        {summaryDetailQueue.map((task, index) => (
-                            <div key={task.id} style={{
-                                padding: '12px',
-                                border: '1px solid #d9d9d9',
-                                borderRadius: '6px',
-                                marginBottom: '8px',
-                                backgroundColor: '#fafafa'
-                            }}>
-                                <div>#{index + 1} {task.title}</div>
-                                <div style={{ fontSize: '12px', color: '#666' }}>
-                                    Record ID: {task.recordId}
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                )}
-                {summaryDetailQueueResults.length > 0 && (
-                    <div>
-                        <h5>📊 Kết quả ({summaryDetailQueueResults.length})</h5>
-                        {summaryDetailQueueResults.map((result, index) => (
-                            <div key={index} style={{
-                                padding: '12px',
-                                border: '1px solid #d9d9d9',
-                                borderRadius: '6px',
-                                marginBottom: '8px',
-                                backgroundColor: result.status === 'success' ? '#f6ffed' : '#fff2f0'
+                <div style={{ height: '100', overflow: 'auto' }}>
+                    {currentSummaryDetailProcessing && (
+                        <div style={{ marginBottom: '24px' }}>
+                            <h5>🔄 Đang xử lý</h5>
+                            <div style={{
+                                padding: '16px',
+                                border: '2px solid #1890ff',
+                                borderRadius: '8px',
+                                backgroundColor: '#e6f7ff'
                             }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                    {result.status === 'success' ? (
-                                        <CheckCircleOutlined style={{ color: '#52c41a' }} />
-                                    ) : (
-                                        <CloseCircleOutlined style={{ color: '#ff4d4f' }} />
-                                    )}
+                                    <LoadingOutlined spin style={{ fontSize: '24px', color: '#1890ff' }} />
                                     <div>
-                                        <div><strong>{result.task.title}</strong></div>
-                                        <div style={{ fontSize: '12px', color: '#666' }}>
-                                            {result.message}
+                                        <div><strong>{currentSummaryDetailProcessing.title}</strong></div>
+                                        <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
+                                            Record ID: {currentSummaryDetailProcessing.recordId}
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                        ))}
-                    </div>
-                )}
+                        </div>
+                    )}
+                    {summaryDetailQueue.length > 0 && (
+                        <div style={{ marginBottom: '24px' }}>
+                            <h5>📝 Hàng đợi ({summaryDetailQueue.length})</h5>
+                            {summaryDetailQueue.map((task, index) => (
+                                <div key={task.id} style={{
+                                    padding: '12px',
+                                    border: '1px solid #d9d9d9',
+                                    borderRadius: '6px',
+                                    marginBottom: '8px',
+                                    backgroundColor: '#fafafa'
+                                }}>
+                                    <div>#{index + 1} {task.title}</div>
+                                    <div style={{ fontSize: '12px', color: '#666' }}>
+                                        Record ID: {task.recordId}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                    {summaryDetailQueueResults.length > 0 && (
+                        <div>
+                            <h5>📊 Kết quả ({summaryDetailQueueResults.length})</h5>
+                            {summaryDetailQueueResults.map((result, index) => (
+                                <div key={index} style={{
+                                    padding: '12px',
+                                    border: '1px solid #d9d9d9',
+                                    borderRadius: '6px',
+                                    marginBottom: '8px',
+                                    backgroundColor: result.status === 'success' ? '#f6ffed' : '#fff2f0'
+                                }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                        {result.status === 'success' ? (
+                                            <CheckCircleOutlined style={{ color: '#52c41a' }} />
+                                        ) : (
+                                            <CloseCircleOutlined style={{ color: '#ff4d4f' }} />
+                                        )}
+                                        <div>
+                                            <div><strong>{result.task.title}</strong></div>
+                                            <div style={{ fontSize: '12px', color: '#666' }}>
+                                                {result.message}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
             </Modal>
 
             {/* HTML Queue Modal */}
@@ -4250,74 +4252,77 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
                     </Button>,
                 ]}
             >
-                {currentHtmlProcessing && (
-                    <div style={{ marginBottom: '24px' }}>
-                        <h5>🔄 Đang xử lý</h5>
-                        <div style={{
-                            padding: '16px',
-                            border: '2px solid #1890ff',
-                            borderRadius: '8px',
-                            backgroundColor: '#e6f7ff'
-                        }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                <LoadingOutlined spin style={{ fontSize: '24px', color: '#1890ff' }} />
-                                <div>
-                                    <div><strong>{currentHtmlProcessing.title}</strong></div>
-                                    <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
-                                        Record ID: {currentHtmlProcessing.recordId}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                )}
-                {htmlQueue.length > 0 && (
-                    <div style={{ marginBottom: '24px' }}>
-                        <h5>📝 Hàng đợi ({htmlQueue.length})</h5>
-                        {htmlQueue.map((task, index) => (
-                            <div key={task.id} style={{
-                                padding: '12px',
-                                border: '1px solid #d9d9d9',
-                                borderRadius: '6px',
-                                marginBottom: '8px',
-                                backgroundColor: '#fafafa'
-                            }}>
-                                <div>#{index + 1} {task.title}</div>
-                                <div style={{ fontSize: '12px', color: '#666' }}>
-                                    Record ID: {task.recordId}
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                )}
-                {htmlQueueResults.length > 0 && (
-                    <div>
-                        <h5>📊 Kết quả ({htmlQueueResults.length})</h5>
-                        {htmlQueueResults.map((result, index) => (
-                            <div key={index} style={{
-                                padding: '12px',
-                                border: '1px solid #d9d9d9',
-                                borderRadius: '6px',
-                                marginBottom: '8px',
-                                backgroundColor: result.status === 'success' ? '#f6ffed' : '#fff2f0'
+                <div style={{ height: '100', overflow: 'auto' }}>
+                    {currentHtmlProcessing && (
+                        <div style={{ marginBottom: '24px' }}>
+                            <h5>🔄 Đang xử lý</h5>
+                            <div style={{
+                                padding: '16px',
+                                border: '2px solid #1890ff',
+                                borderRadius: '8px',
+                                backgroundColor: '#e6f7ff'
                             }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                    {result.status === 'success' ? (
-                                        <CheckCircleOutlined style={{ color: '#52c41a' }} />
-                                    ) : (
-                                        <CloseCircleOutlined style={{ color: '#ff4d4f' }} />
-                                    )}
+                                    <LoadingOutlined spin style={{ fontSize: '24px', color: '#1890ff' }} />
                                     <div>
-                                        <div><strong>{result.task.title}</strong></div>
-                                        <div style={{ fontSize: '12px', color: '#666' }}>
-                                            {result.message}
+                                        <div><strong>{currentHtmlProcessing.title}</strong></div>
+                                        <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
+                                            Record ID: {currentHtmlProcessing.recordId}
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                        ))}
-                    </div>
-                )}
+                        </div>
+                    )}
+                    {htmlQueue.length > 0 && (
+                        <div style={{ marginBottom: '24px' }}>
+                            <h5>📝 Hàng đợi ({htmlQueue.length})</h5>
+                            {htmlQueue.map((task, index) => (
+                                <div key={task.id} style={{
+                                    padding: '12px',
+                                    border: '1px solid #d9d9d9',
+                                    borderRadius: '6px',
+                                    marginBottom: '8px',
+                                    backgroundColor: '#fafafa'
+                                }}>
+                                    <div>#{index + 1} {task.title}</div>
+                                    <div style={{ fontSize: '12px', color: '#666' }}>
+                                        Record ID: {task.recordId}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                    {htmlQueueResults.length > 0 && (
+                        <div>
+                            <h5>📊 Kết quả ({htmlQueueResults.length})</h5>
+                            {htmlQueueResults.map((result, index) => (
+                                <div key={index} style={{
+                                    padding: '12px',
+                                    border: '1px solid #d9d9d9',
+                                    borderRadius: '6px',
+                                    marginBottom: '8px',
+                                    backgroundColor: result.status === 'success' ? '#f6ffed' : '#fff2f0'
+                                }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                        {result.status === 'success' ? (
+                                            <CheckCircleOutlined style={{ color: '#52c41a' }} />
+                                        ) : (
+                                            <CloseCircleOutlined style={{ color: '#ff4d4f' }} />
+                                        )}
+                                        <div>
+                                            <div><strong>{result.task.title}</strong></div>
+                                            <div style={{ fontSize: '12px', color: '#666' }}>
+                                                {result.message}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+
             </Modal>
 
             {/* Excalidraw Queue Modal */}
