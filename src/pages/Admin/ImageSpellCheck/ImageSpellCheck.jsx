@@ -98,7 +98,7 @@ const ImageSpellCheck = () => {
 
     // Current tab images (by type)
     const currentTabImages = useMemo(() => {
-        const typeMap = { news: 'news', caseTraining: 'caseTraining', longForm: 'longForm' };
+        const typeMap = { news: 'news', document: 'document', caseTraining: 'caseTraining', longForm: 'longForm' };
         return imageData.filter(img => img.type === typeMap[activeTab]);
     }, [imageData, activeTab]);
 
@@ -1640,7 +1640,7 @@ const ImageSpellCheck = () => {
                                     </Select>
                                 </div>
                                 {
-                                    activeTab === 'news' && (
+                                    (activeTab === 'news' || activeTab === 'document') && (
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '4px' , flex: 1 }}>
                                             <span style={{ fontSize: '13px', fontWeight: 500 , minWidth: '90px'}}>Bộ dữ liệu:</span>
                                             <Select
@@ -1763,6 +1763,10 @@ const ImageSpellCheck = () => {
                         {
                             key: 'news',
                             label: `Lý thuyết (${imageData.filter(img => img.type === 'news').length})`,
+                        },
+                        {
+                            key: 'document',
+                            label: `Tài liệu học tập (${imageData.filter(img => img.type === 'document').length})`,
                         },
                         {
                             key: 'caseTraining',

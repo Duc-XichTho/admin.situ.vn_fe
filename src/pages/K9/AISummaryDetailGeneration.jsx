@@ -131,6 +131,7 @@ const AISummaryDetailGeneration = () => {
     // K9 data for each tab
     const [k9Data, setK9Data] = useState({
         news: [],
+        document: [],
         caseTraining: [],
         longForm: [],
         home: [],
@@ -140,8 +141,9 @@ const AISummaryDetailGeneration = () => {
     const loadK9Data = async () => {
         setLoading(true);
         try {
-            const [newsData, caseTrainingData, longFormData, homeData] = await Promise.all([
+            const [newsData, documentData, caseTrainingData, longFormData, homeData] = await Promise.all([
                 getK9ByType('news', { data_type: 'global', }),
+                getK9ByType('document', { data_type: 'global' }),
                 getK9ByType('caseTraining', { data_type: 'global' }),
                 getK9ByType('longForm', { data_type: 'global' }),
                 getK9ByType('home', { data_type: 'global' }),
@@ -149,6 +151,7 @@ const AISummaryDetailGeneration = () => {
 
             const newK9Data = {
                 news: newsData?.data || newsData || [],
+                document: documentData?.data || documentData || [],
                 caseTraining: caseTrainingData?.data || caseTrainingData || [],
                 longForm: longFormData?.data || longFormData || [],
                 home: homeData?.data || homeData || [],
@@ -238,6 +241,7 @@ const AISummaryDetailGeneration = () => {
 
         setK9Data(prev => ({
             news: updater(prev.news || []),
+            document: updater(prev.document || []),
             caseTraining: updater(prev.caseTraining || []),
             longForm: updater(prev.longForm || []),
             home: updater(prev.home || []),
@@ -285,7 +289,7 @@ const AISummaryDetailGeneration = () => {
             try {
                 // Find record from all tabs
                 let record = null;
-                for (const tab of ['news', 'caseTraining', 'longForm', 'home']) {
+                for (const tab of ['news', 'document', 'caseTraining', 'longForm', 'home']) {
                     const found = k9Data[tab]?.find(item => item.id === task.recordId);
                     if (found) {
                         record = found;
@@ -537,7 +541,7 @@ const AISummaryDetailGeneration = () => {
             try {
                 // Find record from all tabs
                 let record = null;
-                for (const tab of ['news', 'caseTraining', 'longForm', 'home']) {
+                for (const tab of ['news', 'document', 'caseTraining', 'longForm', 'home']) {
                     const found = k9Data[tab]?.find(item => item.id === task.recordId);
                     if (found) {
                         record = found;
@@ -599,7 +603,7 @@ const AISummaryDetailGeneration = () => {
             try {
                 // Find record from all tabs
                 let record = null;
-                for (const tab of ['news', 'caseTraining', 'longForm', 'home']) {
+                for (const tab of ['news', 'document', 'caseTraining', 'longForm', 'home']) {
                     const found = k9Data[tab]?.find(item => item.id === task.recordId);
                     if (found) {
                         record = found;
@@ -700,6 +704,7 @@ const AISummaryDetailGeneration = () => {
 
         setK9Data(prev => ({
             news: updater(prev.news || []),
+            document: updater(prev.document || []),
             caseTraining: updater(prev.caseTraining || []),
             longForm: updater(prev.longForm || []),
             home: updater(prev.home || []),
@@ -820,6 +825,7 @@ const AISummaryDetailGeneration = () => {
 
         setK9Data(prev => ({
             news: updater(prev.news || []),
+            document: updater(prev.document || []),
             caseTraining: updater(prev.caseTraining || []),
             longForm: updater(prev.longForm || []),
             home: updater(prev.home || []),
@@ -869,7 +875,7 @@ const AISummaryDetailGeneration = () => {
             try {
                 // Find record from all tabs
                 let record = null;
-                for (const tab of ['news', 'caseTraining', 'longForm', 'home']) {
+                for (const tab of ['news', 'document', 'caseTraining', 'longForm', 'home']) {
                     const found = k9Data[tab]?.find(item => item.id === task.recordId);
                     if (found) {
                         record = found;
@@ -1027,6 +1033,7 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
 
             setK9Data(prev => ({
                 news: updater(prev.news || []),
+                document: updater(prev.document || []),
                 caseTraining: updater(prev.caseTraining || []),
                 longForm: updater(prev.longForm || []),
                 home: updater(prev.home || []),
@@ -1147,7 +1154,7 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
             try {
                 // Find record from all tabs
                 let record = null;
-                for (const tab of ['news', 'caseTraining', 'longForm', 'home']) {
+                for (const tab of ['news', 'document', 'caseTraining', 'longForm', 'home']) {
                     const found = k9Data[tab]?.find(item => item.id === task.recordId);
                     if (found) {
                         record = found;
@@ -1366,6 +1373,7 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
 
         setK9Data(prev => ({
             news: updater(prev.news || []),
+            document: updater(prev.document || []),
             caseTraining: updater(prev.caseTraining || []),
             longForm: updater(prev.longForm || []),
             home: updater(prev.home || []),
@@ -1655,6 +1663,7 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
 
             setK9Data(prev => ({
                 news: updater(prev.news || []),
+                document: updater(prev.document || []),
                 caseTraining: updater(prev.caseTraining || []),
                 longForm: updater(prev.longForm || []),
                 home: updater(prev.home || []),
@@ -1695,6 +1704,7 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
 
             setK9Data(prev => ({
                 news: updater(prev.news || []),
+                document: updater(prev.document || []),
                 caseTraining: updater(prev.caseTraining || []),
                 longForm: updater(prev.longForm || []),
                 home: updater(prev.home || []),
@@ -1738,6 +1748,7 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
 
             setK9Data(prev => ({
                 news: updater(prev.news || []),
+                document: updater(prev.document || []),
                 caseTraining: updater(prev.caseTraining || []),
                 longForm: updater(prev.longForm || []),
                 home: updater(prev.home || []),
@@ -1796,6 +1807,7 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
 
             setK9Data(prev => ({
                 news: updater(prev.news || []),
+                document: updater(prev.document || []),
                 caseTraining: updater(prev.caseTraining || []),
                 longForm: updater(prev.longForm || []),
                 home: updater(prev.home || []),
@@ -1838,6 +1850,7 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
 
             setK9Data(prev => ({
                 news: updater(prev.news || []),
+                document: updater(prev.document || []),
                 caseTraining: updater(prev.caseTraining || []),
                 longForm: updater(prev.longForm || []),
                 home: updater(prev.home || []),
@@ -1882,6 +1895,7 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
 
             setK9Data(prev => ({
                 news: updater(prev.news || []),
+                document: updater(prev.document || []),
                 caseTraining: updater(prev.caseTraining || []),
                 longForm: updater(prev.longForm || []),
                 home: updater(prev.home || []),
@@ -1926,6 +1940,7 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
 
             setK9Data(prev => ({
                 news: updater(prev.news || []),
+                document: updater(prev.document || []),
                 caseTraining: updater(prev.caseTraining || []),
                 longForm: updater(prev.longForm || []),
                 home: updater(prev.home || []),
@@ -1968,6 +1983,7 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
 
             setK9Data(prev => ({
                 news: updater(prev.news || []),
+                document: updater(prev.document || []),
                 caseTraining: updater(prev.caseTraining || []),
                 longForm: updater(prev.longForm || []),
                 home: updater(prev.home || []),
@@ -2010,6 +2026,7 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
 
             setK9Data(prev => ({
                 news: updater(prev.news || []),
+                document: updater(prev.document || []),
                 caseTraining: updater(prev.caseTraining || []),
                 longForm: updater(prev.longForm || []),
                 home: updater(prev.home || []),
@@ -2052,6 +2069,7 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
 
             setK9Data(prev => ({
                 news: updater(prev.news || []),
+                document: updater(prev.document || []),
                 caseTraining: updater(prev.caseTraining || []),
                 longForm: updater(prev.longForm || []),
                 home: updater(prev.home || []),
@@ -2094,6 +2112,7 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
 
             setK9Data(prev => ({
                 news: updater(prev.news || []),
+                document: updater(prev.document || []),
                 caseTraining: updater(prev.caseTraining || []),
                 longForm: updater(prev.longForm || []),
                 home: updater(prev.home || []),
@@ -2131,7 +2150,7 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
 
     // Get related case training count by cid
     const getRelatedCaseTrainingCount = useCallback((record) => {
-        if (!record.cid || activeTab !== 'news') return 0;
+        if (!record.cid || (activeTab !== 'news' && activeTab !== 'document')) return 0;
         const relatedCases = k9Data.caseTraining?.filter(item => item.cid === record.cid) || [];
         return relatedCases.length;
     }, [k9Data.caseTraining, activeTab]);
@@ -2165,7 +2184,7 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
             return k9Data[activeTab];
         }
         return [];
-    }, [activeTab, k9Data.news, k9Data.caseTraining, k9Data.longForm, k9Data.home]);
+    }, [activeTab, k9Data.news, k9Data.document, k9Data.caseTraining, k9Data.longForm, k9Data.home]);
 
     // Get dataset (tag1) options from current tab data
     const datasetOptions = useMemo(() => {
@@ -2479,8 +2498,8 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
             });
         }
 
-        // Filter by related case count (only for news tab)
-        if (activeTab === 'news' && relatedCaseFilter !== 'all') {
+        // Filter by related case count (only for news & document tabs)
+        if ((activeTab === 'news' || activeTab === 'document') && relatedCaseFilter !== 'all') {
             data = data.filter(item => {
                 const caseCount = getRelatedCaseTrainingCount(item);
                 if (relatedCaseFilter === '0') {
@@ -2720,8 +2739,8 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
             width: 100,
             render: (cid) => cid ? <Tag color="blue">{cid}</Tag> : '-',
         },
-        // Related Case Training column - only show in news tab
-        ...(activeTab === 'news' ? [{
+        // Related Case Training column - only show in news & document tabs
+        ...((activeTab === 'news' || activeTab === 'document') ? [{
             title: 'Case liên quan',
             key: 'relatedCaseTraining',
             width: 120,
@@ -3157,6 +3176,7 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
                                 );
                                 setK9Data(prev => ({
                                     news: updater(prev.news || []),
+                                    document: updater(prev.document || []),
                                     caseTraining: updater(prev.caseTraining || []),
                                     longForm: updater(prev.longForm || []),
                                     home: updater(prev.home || []),
@@ -3196,6 +3216,7 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
                                 );
                                 setK9Data(prev => ({
                                     news: updater(prev.news || []),
+                                    document: updater(prev.document || []),
                                     caseTraining: updater(prev.caseTraining || []),
                                     longForm: updater(prev.longForm || []),
                                     home: updater(prev.home || []),
@@ -3235,6 +3256,7 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
                                 );
                                 setK9Data(prev => ({
                                     news: updater(prev.news || []),
+                                    document: updater(prev.document || []),
                                     caseTraining: updater(prev.caseTraining || []),
                                     longForm: updater(prev.longForm || []),
                                     home: updater(prev.home || []),
@@ -3274,6 +3296,7 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
                                 );
                                 setK9Data(prev => ({
                                     news: updater(prev.news || []),
+                                    document: updater(prev.document || []),
                                     caseTraining: updater(prev.caseTraining || []),
                                     longForm: updater(prev.longForm || []),
                                     home: updater(prev.home || []),
@@ -3313,6 +3336,7 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
                                 );
                                 setK9Data(prev => ({
                                     news: updater(prev.news || []),
+                                    document: updater(prev.document || []),
                                     caseTraining: updater(prev.caseTraining || []),
                                     longForm: updater(prev.longForm || []),
                                     home: updater(prev.home || []),
@@ -3397,7 +3421,7 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
                                 padding: '4px 0'
                             }}>
                                 {
-                                    activeTab === 'news' && (
+                                    (activeTab === 'news' || activeTab === 'document') && (
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                             <span style={{ fontSize: '13px', fontWeight: 500, minWidth: '90px' }}>Bộ dữ liệu:</span>
                                             <Select
@@ -3507,7 +3531,7 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
                                         size="small"
                                     />
                                 </div>
-                                {activeTab === 'news' && (
+                                {(activeTab === 'news' || activeTab === 'document') && (
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                         <span style={{ fontSize: '13px', fontWeight: 500, minWidth: '90px' }}>Case liên quan:</span>
                                         <Select
@@ -4008,6 +4032,10 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
                         key="news"
                     />
                     <TabPane
+                        tab={<span>Tài liệu học tập <Badge count={k9Data.document?.length || 0} size="small" overflowCount={999999} /></span>}
+                        key="document"
+                    />
+                    <TabPane
                         tab={<span>Case Training <Badge count={k9Data.caseTraining?.length || 0} size="small" overflowCount={999999} /></span>}
                         key="caseTraining"
                     />
@@ -4075,6 +4103,7 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
 
                     setK9Data(prev => ({
                         news: updater(prev.news || []),
+                        document: updater(prev.document || []),
                         caseTraining: updater(prev.caseTraining || []),
                         longForm: updater(prev.longForm || []),
                         home: updater(prev.home || []),
@@ -4100,6 +4129,7 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
 
                     setK9Data(prev => ({
                         news: updater(prev.news || []),
+                        document: updater(prev.document || []),
                         caseTraining: updater(prev.caseTraining || []),
                         longForm: updater(prev.longForm || []),
                         home: updater(prev.home || []),
@@ -4928,6 +4958,7 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
 
                                                                     setK9Data(prev => ({
                                                                         news: updater(prev.news || []),
+                                                                        document: updater(prev.document || []),
                                                                         caseTraining: updater(prev.caseTraining || []),
                                                                         longForm: updater(prev.longForm || []),
                                                                         home: updater(prev.home || []),
@@ -5179,6 +5210,7 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
 
                                                             setK9Data(prev => ({
                                                                 news: updater(prev.news || []),
+                                                                document: updater(prev.document || []),
                                                                 caseTraining: updater(prev.caseTraining || []),
                                                                 longForm: updater(prev.longForm || []),
                                                                 home: updater(prev.home || []),

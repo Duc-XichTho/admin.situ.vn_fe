@@ -51,6 +51,7 @@ const AIQuestionEvaluation = () => {
     // K9 data for each tab
     const [k9Data, setK9Data] = useState({
         news: [],
+        document: [],
         caseTraining: [],
         longForm: [],
     });
@@ -59,14 +60,16 @@ const AIQuestionEvaluation = () => {
     const loadK9Data = async () => {
         setLoading(true);
         try {
-            const [newsData, caseTrainingData, longFormData] = await Promise.all([
+            const [newsData, documentData, caseTrainingData, longFormData] = await Promise.all([
                 getK9ByType('news', { data_type: 'global', }),
+                getK9ByType('document', { data_type: 'global' }),
                 getK9ByType('caseTraining', { data_type: 'global' }),
                 getK9ByType('longForm', { data_type: 'global' }),
             ]);
 
             const newK9Data = {
                 news: newsData?.data || newsData || [],
+                document: documentData?.data || documentData || [],
                 caseTraining: caseTrainingData?.data || caseTrainingData || [],
                 longForm: longFormData?.data || longFormData || [],
             };
@@ -197,6 +200,7 @@ const AIQuestionEvaluation = () => {
 
         setK9Data(prev => ({
             news: updater(prev.news || []),
+            document: updater(prev.document || []),
             caseTraining: updater(prev.caseTraining || []),
             longForm: updater(prev.longForm || []),
         }));
@@ -268,7 +272,7 @@ const AIQuestionEvaluation = () => {
             return k9Data[activeTab];
         }
         return [];
-    }, [activeTab, k9Data.news, k9Data.caseTraining, k9Data.longForm]);
+    }, [activeTab, k9Data.news, k9Data.document, k9Data.caseTraining, k9Data.longForm]);
 
     // Reset to page 1 when tab, search, or filters change
     useEffect(() => {
@@ -591,6 +595,7 @@ const AIQuestionEvaluation = () => {
 
             setK9Data(prev => ({
                 news: updater(prev.news || []),
+                document: updater(prev.document || []),
                 caseTraining: updater(prev.caseTraining || []),
                 longForm: updater(prev.longForm || []),
             }));
@@ -626,6 +631,7 @@ const AIQuestionEvaluation = () => {
 
             setK9Data(prev => ({
                 news: updater(prev.news || []),
+                document: updater(prev.document || []),
                 caseTraining: updater(prev.caseTraining || []),
                 longForm: updater(prev.longForm || []),
             }));
@@ -882,7 +888,7 @@ const AIQuestionEvaluation = () => {
                         </Radio.Group>
                     </div>
                     {
-                        activeTab === 'news' && (
+                        (activeTab === 'news' || activeTab === 'document') && (
 
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1 }}>
                                 <span style={{ fontSize: '14px', fontWeight: 500, minWidth: '90px' }}>Bộ dữ liệu:</span>
@@ -909,6 +915,10 @@ const AIQuestionEvaluation = () => {
                     <TabPane
                         tab={<span>Lý thuyết <Badge count={k9Data.news?.length || 0} size="small" /></span>}
                         key="news"
+                    />
+                    <TabPane
+                        tab={<span>Learning Materials <Badge count={k9Data.document?.length || 0} size="small" /></span>}
+                        key="document"
                     />
                     <TabPane
                         tab={<span>Case Training <Badge count={k9Data.caseTraining?.length || 0} size="small" /></span>}
@@ -1004,6 +1014,7 @@ const AIQuestionEvaluation = () => {
 
                     setK9Data(prev => ({
                         news: updater(prev.news || []),
+                        document: updater(prev.document || []),
                         caseTraining: updater(prev.caseTraining || []),
                         longForm: updater(prev.longForm || []),
                     }));
