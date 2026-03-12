@@ -13170,7 +13170,9 @@ Chỉ trả về JSON, không thêm text khác.`;
 
           ...recordData,
 
-          fileUrls: uploadedFileUrls?.length > 0 ? uploadedFileUrls : (selectedRecord?.fileUrls || []),
+          // fileUrls: uploadedFileUrls?.length > 0 ? uploadedFileUrls : (selectedRecord?.fileUrls || []),
+          fileUrls: uploadedFileUrls,
+
 
           imgUrls: uploadedImageUrls?.length > 0 ? uploadedImageUrls : (selectedRecord?.imgUrls || []),
 
