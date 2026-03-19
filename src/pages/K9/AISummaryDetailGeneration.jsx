@@ -5005,11 +5005,7 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
                 title={`Xem Matplotlib - ${matplotlibPreviewTitle || ''}`}
                 open={matplotlibPreviewVisible}
                 onCancel={closeMatplotlibPreview}
-                footer={[
-                    <Button key="close" onClick={closeMatplotlibPreview}>
-                        Đóng
-                    </Button>,
-                ]}
+                footer={null}
                 width={1000}
             >
                 <div style={{ height: '100%', overflow: 'auto' }}>
