@@ -140,7 +140,7 @@ export const pullFeeds = async () => {
 	}
 };
 
-export const aiGen = async (prompt, system_message = null, model = null, type = 'text') => {
+export const aiGen = async (prompt, system_message = null, model = null, type = 'text' , temperature) => {
 	// try {
 	// 	const response = await instance.post(`${BASE_URL}${DATA_ANALYSIS_URL}/ai-gen`, {
 	// 		prompt,
@@ -159,7 +159,8 @@ export const aiGen = async (prompt, system_message = null, model = null, type = 
 			prompt,
 			system_message,
 			model,
-			type
+			type,
+			temperature
 		});
 		return response.data;
 	} catch (error) {

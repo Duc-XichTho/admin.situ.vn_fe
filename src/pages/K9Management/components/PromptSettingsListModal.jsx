@@ -26,6 +26,7 @@ const PromptSettingsListModal = ({
     const [selectedCaseFromLearningBlockId, setSelectedCaseFromLearningBlockId] = useState(null);
     const [selectedImageUrlFromSummaryDetailId, setSelectedImageUrlFromSummaryDetailId] = useState(null);
     const [selectedMultiImageFromDetailId, setSelectedMultiImageFromDetailId] = useState(null);
+    const [selectedMatplotlibFromSummaryDetailId, setSelectedMatplotlibFromSummaryDetailId] = useState(null);
 
     // State for each prompt type
     const [improveDetailPrompts, setImproveDetailPrompts] = useState([]);
@@ -39,6 +40,8 @@ const PromptSettingsListModal = ({
     const [imageUrlFromSummaryDetailPrompts, setImageUrlFromSummaryDetailPrompts] = useState([]);
     // New: prompts để tạo nhiều ảnh từ Detail (tách detail -> description -> ảnh)
     const [multiImageFromDetailPrompts, setMultiImageFromDetailPrompts] = useState([]);
+    // New: prompts để tạo Matplotlib code từ SummaryDetail
+    const [matplotlibFromSummaryDetailPrompts, setMatplotlibFromSummaryDetailPrompts] = useState([]);
     // Summary Detail Config (AI tóm tắt Detail)
     const [summaryDetailConfig, setSummaryDetailConfig] = useState({
         aiModel: '',
@@ -116,6 +119,14 @@ const PromptSettingsListModal = ({
         }
     }, [multiImageFromDetailPrompts, selectedMultiImageFromDetailId]);
 
+    useEffect(() => {
+        if (!selectedMatplotlibFromSummaryDetailId && matplotlibFromSummaryDetailPrompts.length > 0) {
+            setSelectedMatplotlibFromSummaryDetailId(matplotlibFromSummaryDetailPrompts[0].id);
+        } else if (selectedMatplotlibFromSummaryDetailId && !matplotlibFromSummaryDetailPrompts.find(p => p.id === selectedMatplotlibFromSummaryDetailId)) {
+            setSelectedMatplotlibFromSummaryDetailId(matplotlibFromSummaryDetailPrompts.length > 0 ? matplotlibFromSummaryDetailPrompts[0].id : null);
+        }
+    }, [matplotlibFromSummaryDetailPrompts, selectedMatplotlibFromSummaryDetailId]);
+
     const loadAllSettings = async () => {
         setLoading(true);
         try {
@@ -183,6 +194,14 @@ const PromptSettingsListModal = ({
                 setMultiImageFromDetailPrompts([]);
             }
 
+            // Load Matplotlib from SummaryDetail Prompts
+            const matplotlibFromSummaryDetailSettings = await getSettingByType('MATPLOTLIB_FROM_SUMMARYDETAIL_PROMPTS');
+            if (matplotlibFromSummaryDetailSettings?.setting && Array.isArray(matplotlibFromSummaryDetailSettings.setting)) {
+                setMatplotlibFromSummaryDetailPrompts(matplotlibFromSummaryDetailSettings.setting);
+            } else {
+                setMatplotlibFromSummaryDetailPrompts([]);
+            }
+
             // Load Summary Detail Config
             const summaryDetailConfigSettings = await getSettingByType('SUMMARY_DETAIL_CONFIG');
             if (summaryDetailConfigSettings?.setting) {
@@ -247,6 +266,12 @@ const PromptSettingsListModal = ({
             await createOrUpdateSetting({
                 type: 'MULTI_IMAGE_FROM_DETAIL_PROMPTS',
                 setting: multiImageFromDetailPrompts
+            });
+
+            // Save Matplotlib from SummaryDetail Prompts
+            await createOrUpdateSetting({
+                type: 'MATPLOTLIB_FROM_SUMMARYDETAIL_PROMPTS',
+                setting: matplotlibFromSummaryDetailPrompts
             });
 
             // Save Summary Detail Config
@@ -1214,6 +1239,160 @@ const PromptSettingsListModal = ({
         ));
     };
 
+    const addMatplotlibFromSummaryDetailPrompt = () => {
+        const newPrompt = {
+            id: `matplotlib_summary_${Date.now()}`,
+            name: `Cài đặt ${matplotlibFromSummaryDetailPrompts.length + 1}`,
+            aiPrompt: '',
+            aiModel: ''
+        };
+        const updatedPrompts = [...matplotlibFromSummaryDetailPrompts, newPrompt];
+        setMatplotlibFromSummaryDetailPrompts(updatedPrompts);
+        setSelectedMatplotlibFromSummaryDetailId(newPrompt.id);
+    };
+
+    const removeMatplotlibFromSummaryDetailPrompt = (id) => {
+        const updatedPrompts = matplotlibFromSummaryDetailPrompts.filter(p => p.id !== id);
+        setMatplotlibFromSummaryDetailPrompts(updatedPrompts);
+        if (selectedMatplotlibFromSummaryDetailId === id) {
+            setSelectedMatplotlibFromSummaryDetailId(updatedPrompts.length > 0 ? updatedPrompts[0].id : null);
+        }
+    };
+
+    const updateMatplotlibFromSummaryDetailPrompt = (id, field, value) => {
+        setMatplotlibFromSummaryDetailPrompts(matplotlibFromSummaryDetailPrompts.map(p =>
+            p.id === id ? { ...p, [field]: value } : p
+        ));
+    };
+
+    const renderMatplotlibFromSummaryDetailTab = () => {
+        const selectedItem = matplotlibFromSummaryDetailPrompts.find(p => p.id === selectedMatplotlibFromSummaryDetailId);
+
+        return (
+            <div style={{ height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+                <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
+                    <h4>Danh sách cài đặt Matplotlib từ SummaryDetail</h4>
+                    <Button type="primary" icon={<PlusOutlined />} onClick={addMatplotlibFromSummaryDetailPrompt}>
+                        Thêm cài đặt
+                    </Button>
+                </div>
+                <Layout style={{ flex: 1, background: '#fff', border: '1px solid #f0f0f0', borderRadius: 4, minHeight: 0, overflow: 'hidden', display: 'flex' }}>
+                    <Sider
+                        width={280}
+                        style={{
+                            background: '#fafafa',
+                            borderRight: '1px solid #f0f0f0',
+                            overflowY: 'auto',
+                            overflowX: 'hidden',
+                            height: '100%',
+                            flexShrink: 0
+                        }}
+                    >
+                        <div style={{ padding: '8px' }}>
+                            {matplotlibFromSummaryDetailPrompts.length === 0 ? (
+                                <div style={{ padding: '16px', textAlign: 'center', color: '#999' }}>
+                                    Chưa có cài đặt nào
+                                </div>
+                            ) : (
+                                matplotlibFromSummaryDetailPrompts.map((item) => (
+                                    <div
+                                        key={item.id}
+                                        onClick={() => setSelectedMatplotlibFromSummaryDetailId(item.id)}
+                                        style={{
+                                            padding: '12px 16px',
+                                            marginBottom: '4px',
+                                            cursor: 'pointer',
+                                            borderRadius: '4px',
+                                            backgroundColor: selectedMatplotlibFromSummaryDetailId === item.id ? '#e6f7ff' : 'transparent',
+                                            border: selectedMatplotlibFromSummaryDetailId === item.id ? '1px solid #91d5ff' : '1px solid transparent',
+                                            transition: 'all 0.2s'
+                                        }}
+                                        onMouseEnter={(e) => {
+                                            if (selectedMatplotlibFromSummaryDetailId !== item.id) {
+                                                e.currentTarget.style.backgroundColor = '#f5f5f5';
+                                            }
+                                        }}
+                                        onMouseLeave={(e) => {
+                                            if (selectedMatplotlibFromSummaryDetailId !== item.id) {
+                                                e.currentTarget.style.backgroundColor = 'transparent';
+                                            }
+                                        }}
+                                    >
+                                        <div style={{ fontWeight: selectedMatplotlibFromSummaryDetailId === item.id ? 600 : 400 }}>
+                                            {item.name || `Cài đặt ${item.id}`}
+                                        </div>
+                                    </div>
+                                ))
+                            )}
+                        </div>
+                    </Sider>
+                    <Content style={{ padding: '24px', overflowY: 'auto', overflowX: 'hidden', height: '100%', flex: 1, minWidth: 0 }}>
+                        {selectedItem ? (
+                            <Card>
+                                <Space direction="vertical" style={{ width: '100%' }} size="middle">
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <h4 style={{ margin: 0 }}>Chi tiết cài đặt</h4>
+                                        <Popconfirm
+                                            title="Xóa cài đặt này?"
+                                            onConfirm={() => removeMatplotlibFromSummaryDetailPrompt(selectedItem.id)}
+                                            okText="Xóa"
+                                            cancelText="Hủy"
+                                        >
+                                            <Button danger icon={<DeleteOutlined />}>
+                                                Xóa
+                                            </Button>
+                                        </Popconfirm>
+                                    </div>
+                                    <Form.Item label="Tên cài đặt">
+                                        <Input
+                                            placeholder="Tên cài đặt"
+                                            value={selectedItem.name}
+                                            onChange={(e) => updateMatplotlibFromSummaryDetailPrompt(selectedItem.id, 'name', e.target.value)}
+                                        />
+                                    </Form.Item>
+                                    <Form.Item label="AI Prompt (System Message)">
+                                        <TextArea
+                                            rows={8}
+                                            value={selectedItem.aiPrompt}
+                                            onChange={(e) => updateMatplotlibFromSummaryDetailPrompt(selectedItem.id, 'aiPrompt', e.target.value)}
+                                            placeholder="Nhập prompt để AI tạo Python code dùng Matplotlib từ SummaryDetail..."
+                                        />
+                                    </Form.Item>
+                                    <Form.Item label="AI Model">
+                                        <Select
+                                            value={selectedItem.aiModel}
+                                            onChange={(value) => updateMatplotlibFromSummaryDetailPrompt(selectedItem.id, 'aiModel', value)}
+                                            style={{ width: '100%' }}
+                                            placeholder="Chọn model"
+                                        >
+                                            {MODEL_AI_LIST.map(model => (
+                                                <Option key={model.value} value={model.value}>
+                                                    {model.name}
+                                                </Option>
+                                            ))}
+                                        </Select>
+                                    </Form.Item>
+                                </Space>
+                            </Card>
+                        ) : (
+                            <div style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                height: '100%',
+                                color: '#999'
+                            }}>
+                                {matplotlibFromSummaryDetailPrompts.length === 0
+                                    ? 'Chưa có cài đặt nào. Hãy thêm cài đặt mới.'
+                                    : 'Chọn một cài đặt từ danh sách bên trái'}
+                            </div>
+                        )}
+                    </Content>
+                </Layout>
+            </div>
+        );
+    };
+
     const renderCaseFromLearningBlockTab = () => {
         const selectedItem = caseFromLearningBlockPrompts.find(p => p.id === selectedCaseFromLearningBlockId);
 
@@ -1774,7 +1953,7 @@ const PromptSettingsListModal = ({
             }
             open={visible}
             onCancel={onCancel}
-            width={1700}
+            width={1900}
             footer={[
                 <Button key="cancel" onClick={onCancel}>
                     Hủy
@@ -1809,19 +1988,22 @@ const PromptSettingsListModal = ({
                     <TabPane tab="4. HTML từ Detail" key="html_from_detail">
                         {renderHtmlFromDetailTab()}
                     </TabPane>
-                    <TabPane tab="5. HTML từ SummaryDetail" key="html_from_summarydetail">
+                    <TabPane tab="5. HTML từ SumDetail" key="html_from_summarydetail">
                         {renderHtmlFromSummaryDetailTab()}
                     </TabPane>
-                    <TabPane tab="6. Case từ Learning Block" key="case_from_learning_block">
+                    <TabPane tab="6. Case từ Learning" key="case_from_learning_block">
                         {renderCaseFromLearningBlockTab()}
                     </TabPane>
-                    <TabPane tab="7. ImageUrl từ SummaryDetail" key="imageurl_from_summarydetail">
+                    <TabPane tab="7. ImageUrl từ SumDetail" key="imageurl_from_summarydetail">
                         {renderImageUrlFromSummaryDetailTab()}
                     </TabPane>
                     <TabPane tab="8. Nhiều ảnh từ Detail" key="multi_image_from_detail">
                         {renderMultiImageFromDetailTab()}
                     </TabPane>
-                    <TabPane tab="9. AI Tóm tắt Detail" key="summary_detail_config">
+                    <TabPane tab="9. Matplotlib từ SummaryDetail" key="matplotlib_from_summarydetail">
+                        {renderMatplotlibFromSummaryDetailTab()}
+                    </TabPane>
+                    <TabPane tab="10.Tóm tắt Detail" key="summary_detail_config">
                         {renderSummaryDetailConfigTab()}
                     </TabPane>
                 </Tabs>

@@ -1,5 +1,6 @@
 import { CheckCircleOutlined, CloseCircleOutlined, DeleteOutlined, FileImageOutlined, FileTextOutlined, FilterOutlined, HomeOutlined, LoadingOutlined, PictureOutlined, SearchOutlined, SettingOutlined, ThunderboltOutlined, UploadOutlined } from '@ant-design/icons';
 import { Badge, Button, Card, Collapse, Dropdown, Empty, Image, Input, message, Modal, Popconfirm, Select, Space, Switch, Table, Tabs, Tag, Tooltip } from 'antd';
+import axios from 'axios';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { aiGen, aiGen2 } from '../../apis/aiGen/botService.jsx';
@@ -35,6 +36,7 @@ const AISummaryDetailGeneration = () => {
     const [deletingSummaryDetail, setDeletingSummaryDetail] = useState(false);
     const [deletingHtml, setDeletingHtml] = useState(false);
     const [deletingExcalidraw, setDeletingExcalidraw] = useState(false);
+    const [deletingMatplotlib, setDeletingMatplotlib] = useState(false);
     const [deletingImgUrls, setDeletingImgUrls] = useState(false);
     const [deletingDetailImageUrls, setDeletingDetailImageUrls] = useState(false);
     const shouldStopRef = useRef(false);
@@ -42,26 +44,38 @@ const AISummaryDetailGeneration = () => {
     // Queue states for HTML and Excalidraw
     const [htmlQueue, setHtmlQueue] = useState([]);
     const [excalidrawQueue, setExcalidrawQueue] = useState([]);
+    const [matplotlibQueue, setMatplotlibQueue] = useState([]);
     const [processingHtmlQueue, setProcessingHtmlQueue] = useState(false);
     const [processingExcalidrawQueue, setProcessingExcalidrawQueue] = useState(false);
+    const [processingMatplotlibQueue, setProcessingMatplotlibQueue] = useState(false);
     const [currentHtmlProcessing, setCurrentHtmlProcessing] = useState(null);
     const [currentExcalidrawProcessing, setCurrentExcalidrawProcessing] = useState(null);
+    const [currentMatplotlibProcessing, setCurrentMatplotlibProcessing] = useState(null);
     const [htmlQueueModalVisible, setHtmlQueueModalVisible] = useState(false);
     const [excalidrawQueueModalVisible, setExcalidrawQueueModalVisible] = useState(false);
+    const [matplotlibQueueModalVisible, setMatplotlibQueueModalVisible] = useState(false);
     const [htmlQueueResults, setHtmlQueueResults] = useState([]); // Track HTML results with success/error
     const [excalidrawQueueResults, setExcalidrawQueueResults] = useState([]); // Track Excalidraw results with success/error
+    const [matplotlibQueueResults, setMatplotlibQueueResults] = useState([]); // Track Matplotlib results with success/error
 
     // Prompt selection states for HTML and Excalidraw from SummaryDetail
     const [selectHtmlPromptModalVisible, setSelectHtmlPromptModalVisible] = useState(false);
     const [selectExcalidrawPromptModalVisible, setSelectExcalidrawPromptModalVisible] = useState(false);
+    const [selectMatplotlibPromptModalVisible, setSelectMatplotlibPromptModalVisible] = useState(false);
     const [pendingHtmlRecord, setPendingHtmlRecord] = useState(null);
     const [pendingExcalidrawRecord, setPendingExcalidrawRecord] = useState(null);
+    const [pendingMatplotlibRecord, setPendingMatplotlibRecord] = useState(null);
     const [pendingHtmlRecords, setPendingHtmlRecords] = useState([]);
     const [pendingExcalidrawRecords, setPendingExcalidrawRecords] = useState([]);
+    const [pendingMatplotlibRecords, setPendingMatplotlibRecords] = useState([]);
 
     // Preview modal states
     const [diagramPreviewModalVisible, setDiagramPreviewModalVisible] = useState(false);
     const [selectedDiagramData, setSelectedDiagramData] = useState(null);
+    const [matplotlibPreviewVisible, setMatplotlibPreviewVisible] = useState(false);
+    const [matplotlibPreviewLoading, setMatplotlibPreviewLoading] = useState(false);
+    const [matplotlibImgSrc, setMatplotlibImgSrc] = useState('');
+    const [matplotlibPreviewTitle, setMatplotlibPreviewTitle] = useState('');
     const [selectedRowKeys, setSelectedRowKeys] = useState([]);
     const [isProcessing, setIsProcessing] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
@@ -69,6 +83,7 @@ const AISummaryDetailGeneration = () => {
     const [summaryDetailFilter, setSummaryDetailFilter] = useState('all'); // 'all', 'has', 'none'
     const [diagramHtmlFilter, setDiagramHtmlFilter] = useState('all'); // 'all', 'has', 'none'
     const [diagramExcalidrawFilter, setDiagramExcalidrawFilter] = useState('all'); // 'all', 'has', 'none'
+    const [matplotlibFilter, setMatplotlibFilter] = useState('all'); // 'all', 'has', 'none'
     const [imgUrlsFilter, setImgUrlsFilter] = useState('all'); // 'all', 'has', 'none'
     const [detailImageUrlsFilter, setDetailImageUrlsFilter] = useState('all'); // 'all', 'has', 'none'
     const [showDetailFilter, setShowDetailFilter] = useState('all'); // 'all', 'has', 'none'
@@ -89,6 +104,7 @@ const AISummaryDetailGeneration = () => {
 
     const [togglingShowHtml, setTogglingShowHtml] = useState(false);
     const [togglingShowExcalidraw, setTogglingShowExcalidraw] = useState(false);
+    const [togglingShowMatplotlib, setTogglingShowMatplotlib] = useState(false);
     const [togglingShowImgUrls, setTogglingShowImgUrls] = useState(false);
     const [togglingShowDetailImageUrls, setTogglingShowDetailImageUrls] = useState(false);
     const [togglingShowDetail, setTogglingShowDetail] = useState(false);
@@ -514,6 +530,20 @@ const AISummaryDetailGeneration = () => {
         return task;
     };
 
+    // Add Matplotlib code to queue with prompt config
+    const addMatplotlibToQueue = (recordId, title, promptConfig = null) => {
+        const task = {
+            id: `matplotlib_${recordId}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+            recordId,
+            title: title.length > 50 ? title.substring(0, 50) + '...' : title,
+            promptConfig: promptConfig,
+            createdAt: new Date().toISOString()
+        };
+        setMatplotlibQueue(prev => [...prev, task]);
+        message.success(`📈 Đã thêm "${task.title}" vào hàng đợi tạo Matplotlib code!`);
+        return task;
+    };
+
 
     // Process HTML queue
     const processHtmlQueue = async () => {
@@ -639,6 +669,68 @@ const AISummaryDetailGeneration = () => {
         }
     };
 
+    // Process Matplotlib queue
+    const processMatplotlibQueue = async () => {
+        if (matplotlibQueue.length === 0 || processingMatplotlibQueue) {
+            return;
+        }
+
+        setProcessingMatplotlibQueue(true);
+        setMatplotlibQueueResults([]);
+        const queue = [...matplotlibQueue];
+
+        for (let i = 0; i < queue.length; i++) {
+            if (shouldStopRef.current) {
+                message.info('Đã dừng quá trình tạo Matplotlib');
+                setProcessingMatplotlibQueue(false);
+                setCurrentMatplotlibProcessing(null);
+                setMatplotlibQueue([]);
+                break;
+            }
+
+            const task = queue[i];
+            setCurrentMatplotlibProcessing(task);
+            setMatplotlibQueue(prev => prev.filter(item => item.id !== task.id));
+
+            try {
+                // Find record from all tabs
+                let record = null;
+                for (const tab of ['news', 'document', 'caseTraining', 'longForm', 'home']) {
+                    const found = k9Data[tab]?.find(item => item.id === task.recordId);
+                    if (found) {
+                        record = found;
+                        break;
+                    }
+                }
+                if (!record) {
+                    throw new Error('Không tìm thấy record');
+                }
+
+                await generateMatplotlibFromSummaryDetailForRecord(record, task.promptConfig);
+
+                setMatplotlibQueueResults(prev => [...prev, {
+                    task,
+                    status: 'success',
+                    message: 'Tạo Matplotlib code thành công'
+                }]);
+            } catch (error) {
+                console.error(`Error processing Matplotlib for ${task.recordId}:`, error);
+                setMatplotlibQueueResults(prev => [...prev, {
+                    task,
+                    status: 'error',
+                    message: error.message || 'Lỗi không xác định'
+                }]);
+            }
+
+            setCurrentMatplotlibProcessing(null);
+        }
+
+        setProcessingMatplotlibQueue(false);
+        if (queue.length > 0) {
+            message.success(`Hoàn thành xử lý ${queue.length} task Matplotlib`);
+        }
+    };
+
     // Auto process queues
     useEffect(() => {
         if (htmlQueue.length > 0 && !processingHtmlQueue) {
@@ -653,6 +745,13 @@ const AISummaryDetailGeneration = () => {
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [excalidrawQueue.length, processingExcalidrawQueue]);
+
+    useEffect(() => {
+        if (matplotlibQueue.length > 0 && !processingMatplotlibQueue) {
+            processMatplotlibQueue();
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [matplotlibQueue.length, processingMatplotlibQueue]);
 
 
     // Generate HTML from summaryDetail for single record (extracted from handleCreateHtmlFromSummaryDetail)
@@ -832,6 +931,61 @@ const AISummaryDetailGeneration = () => {
         }));
 
         message.success(`✅ Tạo Excalidraw diagram từ summaryDetail thành công cho "${record.title}"!`);
+    };
+
+    // Generate Matplotlib code from summaryDetail for single record
+    const generateMatplotlibFromSummaryDetailForRecord = async (record, promptConfig = null) => {
+        if (!record.summaryDetail || record.summaryDetail.trim() === '') {
+            throw new Error('Không có summaryDetail để tạo Matplotlib code!');
+        }
+
+        if (record.matplotlibCode && Array.isArray(record.matplotlibCode) && record.matplotlibCode.length > 0) {
+            throw new Error('Record này đã có Matplotlib code từ summaryDetail');
+        }
+
+        const aiPrompt = promptConfig?.aiPrompt;
+        const aiModel = promptConfig?.aiModel;
+        if (!aiModel || !aiPrompt) {
+            throw new Error('Vui lòng chọn cài đặt prompt trước!');
+        }
+
+        const codes = [];
+        message.info(`🔄 Đang tạo Matplotlib code từ summaryDetail cho: ${record.title}${promptConfig ? ` (Cài đặt: ${promptConfig.name})` : ''}`);
+
+        const aiResult = await aiGen(
+            `${record.summaryDetail}`,
+            aiPrompt,
+            aiModel,
+            'text',
+            0.2
+        );
+        const code = (aiResult?.result || aiResult?.answer || aiResult?.content || '').trim();
+        if (!code) {
+            throw new Error('AI không tạo được Matplotlib code hợp lệ');
+        }
+        codes.push(code);
+
+        const updateData = {
+            id: record.id,
+            matplotlibCode: codes,
+            showMatplotlib: true
+        };
+
+        const updateResponse = await updateK9(updateData);
+        const updatedRecord = updateResponse?.data || updateResponse;
+        const updater = (list) => list.map(item =>
+            item.id === record.id ? { ...item, ...updatedRecord } : item
+        );
+
+        setK9Data(prev => ({
+            news: updater(prev.news || []),
+            document: updater(prev.document || []),
+            caseTraining: updater(prev.caseTraining || []),
+            longForm: updater(prev.longForm || []),
+            home: updater(prev.home || []),
+        }));
+
+        message.success(`✅ Tạo Matplotlib code từ summaryDetail thành công cho "${record.title}"!`);
     };
 
 
@@ -1583,6 +1737,83 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
         message.success(`🎨 Đã thêm ${records.length} bản ghi vào hàng đợi tạo Excalidraw!`);
     };
 
+    // Handle create Matplotlib from summaryDetail (single record - queue)
+    const handleCreateMatplotlibFromSummaryDetail = async (record) => {
+        if (!record.summaryDetail || record.summaryDetail.trim() === '') {
+            message.warning('Không có summaryDetail để tạo Matplotlib code!');
+            return;
+        }
+
+        if (record.matplotlibCode && Array.isArray(record.matplotlibCode) && record.matplotlibCode.length > 0) {
+            message.warning('Record này đã có Matplotlib code. Vui lòng xóa code cũ trước khi tạo mới.');
+            return;
+        }
+
+        if (matplotlibQueue.find(task => task.recordId === record.id) || currentMatplotlibProcessing?.recordId === record.id) {
+            message.warning('Record này đã có trong hàng đợi hoặc đang được xử lý!');
+            return;
+        }
+
+        setPendingMatplotlibRecord(record);
+        setSelectMatplotlibPromptModalVisible(true);
+    };
+
+    const handleMatplotlibPromptSelected = (prompt) => {
+        setSelectMatplotlibPromptModalVisible(false);
+        if (pendingMatplotlibRecord) {
+            addMatplotlibToQueue(pendingMatplotlibRecord.id, pendingMatplotlibRecord.title, prompt);
+        }
+        setPendingMatplotlibRecord(null);
+    };
+
+    // Handle bulk create Matplotlib from summaryDetail
+    const handleBulkCreateMatplotlibFromSummaryDetail = async () => {
+        if (selectedRowKeys.length === 0) {
+            message.warning('Vui lòng chọn ít nhất một bản ghi để tạo Matplotlib code!');
+            return;
+        }
+
+        const selectedItems = filteredData.filter(item => selectedRowKeys.includes(item.id));
+        const noSummaryDetail = selectedItems.filter(item => !item.summaryDetail || String(item.summaryDetail).trim() === '');
+        const alreadyHasMatplotlib = selectedItems.filter(item => item.matplotlibCode && Array.isArray(item.matplotlibCode) && item.matplotlibCode.length > 0);
+        const inQueue = selectedItems.filter(item => matplotlibQueue.some(task => task.recordId === item.id));
+        const beingProcessed = selectedItems.filter(item => currentMatplotlibProcessing?.recordId === item.id);
+
+        const selectedRecords = selectedItems.filter(item =>
+            item.summaryDetail &&
+            String(item.summaryDetail).trim() !== '' &&
+            !(item.matplotlibCode && Array.isArray(item.matplotlibCode) && item.matplotlibCode.length > 0) &&
+            !matplotlibQueue.some(task => task.recordId === item.id) &&
+            currentMatplotlibProcessing?.recordId !== item.id
+        );
+
+        if (selectedRecords.length === 0) {
+            const parts = [];
+            if (noSummaryDetail.length) parts.push(`${noSummaryDetail.length} chưa có SummaryDetail`);
+            if (alreadyHasMatplotlib.length) parts.push(`${alreadyHasMatplotlib.length} đã có Matplotlib code`);
+            if (inQueue.length) parts.push(`${inQueue.length} đang trong hàng đợi`);
+            if (beingProcessed.length) parts.push(`${beingProcessed.length} đang được xử lý`);
+            const detail = parts.length ? ` (${parts.join(', ')})` : '';
+            message.warning(`Không có bản ghi nào có thể tạo Matplotlib${detail}`);
+            return;
+        }
+
+        setPendingMatplotlibRecords(selectedRecords);
+        setSelectMatplotlibPromptModalVisible(true);
+    };
+
+    const handleBulkMatplotlibPromptSelected = (prompt) => {
+        setSelectMatplotlibPromptModalVisible(false);
+        const records = pendingMatplotlibRecords;
+        records.forEach(record => {
+            addMatplotlibToQueue(record.id, record.title, prompt);
+        });
+        setMatplotlibQueueModalVisible(true);
+        setSelectedRowKeys([]);
+        setPendingMatplotlibRecords([]);
+        message.success(`📈 Đã thêm ${records.length} bản ghi vào hàng đợi tạo Matplotlib!`);
+    };
+
 
     // Handle diagram preview
     const handleDiagramPreview = (record, diagramType) => {
@@ -1823,6 +2054,53 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
         }
     };
 
+    // Handle bulk delete Matplotlib code from SummaryDetail
+    const handleBulkDeleteMatplotlibFromSummaryDetail = async () => {
+        if (selectedRowKeys.length === 0) {
+            message.warning('Vui lòng chọn ít nhất một bản ghi để xóa Matplotlib code!');
+            return;
+        }
+
+        try {
+            setDeletingMatplotlib(true);
+
+            await Promise.all([
+                updateK9Bulk({
+                    ids: selectedRowKeys,
+                    fieldToUpdate: 'matplotlibCode',
+                    value: null
+                }),
+                updateK9Bulk({
+                    ids: selectedRowKeys,
+                    fieldToUpdate: 'showMatplotlib',
+                    value: true
+                })
+            ]);
+
+            const updater = (list) => list.map(item =>
+                selectedRowKeys.includes(item.id)
+                    ? { ...item, matplotlibCode: null, showMatplotlib: true }
+                    : item
+            );
+
+            setK9Data(prev => ({
+                news: updater(prev.news || []),
+                document: updater(prev.document || []),
+                caseTraining: updater(prev.caseTraining || []),
+                longForm: updater(prev.longForm || []),
+                home: updater(prev.home || []),
+            }));
+
+            message.success(`Đã xóa Matplotlib code cho ${selectedRowKeys.length} bản ghi!`);
+            setSelectedRowKeys([]);
+        } catch (error) {
+            console.error('Error deleting Matplotlib code:', error);
+            message.error('Xóa Matplotlib code thất bại!');
+        } finally {
+            setDeletingMatplotlib(false);
+        }
+    };
+
     const handleBulkDeleteDetailImageUrls = async () => {
         if (selectedRowKeys.length === 0) {
             message.warning('Vui lòng chọn ít nhất một bản ghi để xóa detailImageUrls!');
@@ -1995,6 +2273,47 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
             message.error('Cập nhật thất bại!');
         } finally {
             setTogglingShowExcalidraw(false);
+        }
+    };
+
+    // Handle bulk toggle showMatplotlib
+    const handleBulkToggleShowMatplotlib = async (toggleTo) => {
+        if (selectedRowKeys.length === 0) {
+            message.warning('Vui lòng chọn ít nhất một bản ghi để cập nhật!');
+            return;
+        }
+
+        try {
+            setTogglingShowMatplotlib(true);
+
+            const updateData = {
+                ids: selectedRowKeys,
+                fieldToUpdate: 'showMatplotlib',
+                value: toggleTo
+            };
+
+            await updateK9Bulk(updateData);
+
+            const updater = (list) => list.map(item =>
+                selectedRowKeys.includes(item.id)
+                    ? { ...item, showMatplotlib: toggleTo }
+                    : item
+            );
+
+            setK9Data(prev => ({
+                news: updater(prev.news || []),
+                document: updater(prev.document || []),
+                caseTraining: updater(prev.caseTraining || []),
+                longForm: updater(prev.longForm || []),
+                home: updater(prev.home || []),
+            }));
+
+            message.success(`Đã ${toggleTo ? 'bật' : 'tắt'} hiển thị Matplotlib cho ${selectedRowKeys.length} bản ghi!`);
+        } catch (error) {
+            console.error('Error toggling showMatplotlib:', error);
+            message.error('Cập nhật thất bại!');
+        } finally {
+            setTogglingShowMatplotlib(false);
         }
     };
 
@@ -2233,7 +2552,7 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
     // Reset to page 1 when tab, search, or filters change
     useEffect(() => {
         setCurrentPage(1);
-    }, [activeTab, searchText, summaryDetailFilter, diagramHtmlFilter, diagramExcalidrawFilter, imgUrlsFilter, detailImageUrlsFilter, showDetailFilter, lessonNumberFilter, relatedCaseFilter, programFilter, datasetFilter]);
+    }, [activeTab, searchText, summaryDetailFilter, diagramHtmlFilter, diagramExcalidrawFilter, matplotlibFilter, imgUrlsFilter, detailImageUrlsFilter, showDetailFilter, lessonNumberFilter, relatedCaseFilter, programFilter, datasetFilter]);
 
     // Calculate how many tags can fit in the container
     useEffect(() => {
@@ -2457,6 +2776,13 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
             data = data.filter(item => !item.diagramExcalidrawJson || item.diagramExcalidrawJson.length === 0);
         }
 
+        // Filter by matplotlib code status (has/none)
+        if (matplotlibFilter === 'has') {
+            data = data.filter(item => item.matplotlibCode && Array.isArray(item.matplotlibCode) && item.matplotlibCode.length > 0);
+        } else if (matplotlibFilter === 'none') {
+            data = data.filter(item => !item.matplotlibCode || !Array.isArray(item.matplotlibCode) || item.matplotlibCode.length === 0);
+        }
+
         // Filter by imgUrls status (has/none)
         if (imgUrlsFilter === 'has') {
             data = data.filter(item => item.imgUrls && Array.isArray(item.imgUrls) && item.imgUrls.length > 0);
@@ -2530,7 +2856,7 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
         }
 
         return data;
-    }, [searchText, summaryDetailFilter, diagramHtmlFilter, diagramExcalidrawFilter, imgUrlsFilter, detailImageUrlsFilter, showDetailFilter, lessonNumberFilter, relatedCaseFilter, programFilter, datasetFilter, activeTab, currentTabData, getRelatedCaseTrainingCount]);
+    }, [searchText, summaryDetailFilter, diagramHtmlFilter, diagramExcalidrawFilter, matplotlibFilter, imgUrlsFilter, detailImageUrlsFilter, showDetailFilter, lessonNumberFilter, relatedCaseFilter, programFilter, datasetFilter, activeTab, currentTabData, getRelatedCaseTrainingCount]);
 
     const renderDetail = useCallback((text, record) => {
         if (!text) return '-';
@@ -2591,136 +2917,136 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
         );
     }, []);
 
+    const extractPythonCode = (rawCode) => {
+        const source = String(rawCode || '').trim();
+        if (!source) return '';
+
+        const fencedMatch = source.match(/```(?:python)?\s*([\s\S]*?)```/i);
+        if (fencedMatch && fencedMatch[1]) {
+            return fencedMatch[1].trim();
+        }
+
+        // Some AI outputs start with a plain "python" line (without markdown fences).
+        // The render API expects pure executable code only.
+        const withoutLeadingLanguageLine = source.replace(/^\s*python\s*\r?\n/i, '');
+        return withoutLeadingLanguageLine.trim();
+    };
+
+    const sanitizeCodeForRenderApi = (code) => {
+        const text = String(code || '');
+        if (!text.trim()) return '';
+        return text
+            // render API handles output image itself; local save can break sandbox
+            .replace(/^\s*fig\.savefig\([\s\S]*?\)\s*$/gim, '')
+            .replace(/^\s*plt\.savefig\([\s\S]*?\)\s*$/gim, '')
+            .replace(/^\s*plt\.close\([\s\S]*?\)\s*$/gim, '')
+            .trim();
+    };
+
+    const parseBlobErrorMessage = async (error) => {
+        try {
+            const blob = error?.response?.data;
+            if (!blob) return null;
+            if (typeof blob === 'string') return blob;
+            const text = await blob.text();
+            if (!text) return null;
+            try {
+                const json = JSON.parse(text);
+                return json?.message || json?.error || text;
+            } catch {
+                return text;
+            }
+        } catch {
+            return null;
+        }
+    };
+
+    const handlePreviewMatplotlibImage = async (record) => {
+        try {
+            const codeList = Array.isArray(record?.matplotlibCode) ? record.matplotlibCode : [];
+            const firstCode = codeList.find(item => String(item || '').trim());
+            if (!firstCode) {
+                message.warning('Không có Matplotlib code để xem');
+                return;
+            }
+
+            const fullCode = sanitizeCodeForRenderApi(extractPythonCode(firstCode));
+            if (!fullCode) {
+                message.warning('Matplotlib code không hợp lệ');
+                return;
+            }
+
+            setMatplotlibPreviewTitle(record?.title || `Record #${record?.id}`);
+            setMatplotlibPreviewLoading(true);
+            setMatplotlibPreviewVisible(true);
+
+            if (matplotlibImgSrc) {
+                URL.revokeObjectURL(matplotlibImgSrc);
+                setMatplotlibImgSrc('');
+            }
+
+            const { data } = await axios.post(
+                'https://pip.xichtho.vn/render/code',
+                { code: fullCode },
+                { responseType: 'blob' }
+            );
+            setMatplotlibImgSrc(URL.createObjectURL(data));
+        } catch (error) {
+            console.error('Error rendering matplotlib code:', error);
+            const apiMessage = await parseBlobErrorMessage(error);
+            message.error(apiMessage || 'Không thể render Matplotlib code');
+        } finally {
+            setMatplotlibPreviewLoading(false);
+        }
+    };
+
+    const closeMatplotlibPreview = () => {
+        setMatplotlibPreviewVisible(false);
+        setMatplotlibPreviewLoading(false);
+        setMatplotlibPreviewTitle('');
+        if (matplotlibImgSrc) {
+            URL.revokeObjectURL(matplotlibImgSrc);
+            setMatplotlibImgSrc('');
+        }
+    };
+
     const renderAction = useCallback((_, record) => {
-        const isHtmlInQueue = htmlQueue.find(task => task.recordId === record.id);
-        const isExcalidrawInQueue = excalidrawQueue.find(task => task.recordId === record.id);
-        const isImageInQueue = imageGenerationQueue.find(task => task.recordId === record.id);
-        const isMultiImageFromDetailInQueue = multiImageFromDetailQueue.find(task => task.recordId === record.id);
-        const isHtmlProcessing = currentHtmlProcessing?.recordId === record.id;
-        const isExcalidrawProcessing = currentExcalidrawProcessing?.recordId === record.id;
-        const isImageProcessing = currentImageProcessing?.recordId === record.id;
-        const isMultiImageFromDetailProcessing = currentMultiImageFromDetailProcessing?.recordId === record.id;
-        const hasHtml = record.diagramHtmlCodeFromSummaryDetail;
-        const hasExcalidraw = record.diagramExcalidrawJson && record.diagramExcalidrawJson.length > 0;
-        const hasImageUrl = record.imgUrls && Array.isArray(record.imgUrls) && record.imgUrls.length > 0;
-        const hasDetailImageUrls = record.detailImageUrls && Array.isArray(record.detailImageUrls) && record.detailImageUrls.length > 0;
-
         return (
-            <Space>
-                {record.detail && (
-                    <Button
-                        type="link"
-                        size="small"
-                        onClick={() => {
-                            setSelectedDetailRecord(record);
-                            setDetailModalVisible(true);
-                        }}
-                        style={{ color: '#c41a16' }}
-                    >
-                        Detail
-                    </Button>
-                )}
-                {record.summaryDetail && (
-                    <Button
-                        type="link"
-                        size="small"
-                        onClick={() => {
-                            setSelectedSummaryDetailRecord(record);
-                            setSummaryDetailModalVisible(true);
-                        }}
-                        style={{ color: 'orange' }}
-                    >
-                        SummaryDetail
-                    </Button>
-                )}
-
-                <Tooltip title={
-                    hasHtml ? 'Đã có HTML từ summaryDetail' :
-                        isHtmlProcessing ? 'Đang tạo HTML' :
-                            isHtmlInQueue ? 'Đang trong hàng đợi' :
-                                'Tạo HTML từ SummaryDetail'
-                }>
-                    <Button
-                        type="link"
-                        size="small"
-                        icon={<FileTextOutlined />}
-                        onClick={() => handleCreateHtmlFromSummaryDetail(record)}
-                        loading={isHtmlProcessing}
-                        disabled={!!hasHtml || isHtmlProcessing || !!isHtmlInQueue}
-                        style={{
-                            color: hasHtml ? '#52c41a' :
-                                isHtmlProcessing || isHtmlInQueue ? '#1890ff' : '#1890ff'
-                        }}
-                    >
-                        HTML
-                    </Button>
-                </Tooltip>
-                <Tooltip title={
-                    hasExcalidraw ? 'Đã có Excalidraw' :
-                        isExcalidrawProcessing ? 'Đang tạo Excalidraw' :
-                            isExcalidrawInQueue ? 'Đang trong hàng đợi' :
-                                'Tạo Excalidraw từ SummaryDetail'
-                }>
-                    <Button
-                        type="link"
-                        size="small"
-                        icon={<PictureOutlined />}
-                        onClick={() => handleCreateExcalidrawFromSummaryDetail(record)}
-                        loading={isExcalidrawProcessing}
-                        disabled={!!hasExcalidraw || isExcalidrawProcessing || !!isExcalidrawInQueue}
-                        style={{
-                            color: hasExcalidraw ? '#52c41a' :
-                                isExcalidrawProcessing || isExcalidrawInQueue ? '#1890ff' : '#1890ff'
-                        }}
-                    >
-                        Excalidraw
-                    </Button>
-                </Tooltip>
-                <Tooltip title={
-                    hasImageUrl ? 'Đã có ảnh từ summaryDetail' :
-                        isImageProcessing ? 'Đang tạo ảnh' :
-                            isImageInQueue ? 'Đang trong hàng đợi' :
-                                'Tạo ảnh từ SummaryDetail'
-                }>
-                    <Button
-                        type="link"
-                        size="small"
-                        icon={<FileImageOutlined />}
-                        onClick={() => handleCreateImageFromSummaryDetail(record)}
-                        loading={isImageProcessing}
-                        disabled={!!hasImageUrl || isImageProcessing || !!isImageInQueue}
-                        style={{
-                            color: hasImageUrl ? '#52c41a' :
-                                isImageProcessing || isImageInQueue ? '#1890ff' : '#1890ff'
-                        }}
-                    >
-                        Ảnh
-                    </Button>
-                </Tooltip>
-                <Tooltip title={
-                    hasDetailImageUrls ? 'Đã có nhiều ảnh từ detail' :
-                        isMultiImageFromDetailProcessing ? 'Đang tạo nhiều ảnh từ detail' :
-                            isMultiImageFromDetailInQueue ? 'Đang trong hàng đợi' :
-                                'Tạo nhiều ảnh từ Detail'
-                }>
-                    <Button
-                        type="link"
-                        size="small"
-                        icon={<FileImageOutlined />}
-                        onClick={() => handleCreateMultiImageFromDetail(record)}
-                        loading={isMultiImageFromDetailProcessing}
-                        disabled={!!hasDetailImageUrls || isMultiImageFromDetailProcessing || !!isMultiImageFromDetailInQueue}
-                        style={{
-                            color: hasDetailImageUrls ? '#52c41a' :
-                                isMultiImageFromDetailProcessing || isMultiImageFromDetailInQueue ? '#1890ff' : '#722ed1'
-                        }}
-                    >
-                        Nhiều ảnh
-                    </Button>
-                </Tooltip>
-            </Space>
+            <div
+                style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+                    gap: 6,
+                    alignItems: 'center'
+                }}
+            >
+                <Button
+                    type="link"
+                    size="small"
+                    onClick={() => {
+                        setSelectedDetailRecord(record);
+                        setDetailModalVisible(true);
+                    }}
+                    disabled={!record.detail}
+                    style={{ color: record.detail ? '#c41a16' : '#999' }}
+                >
+                    Detail
+                </Button>
+                <Button
+                    type="link"
+                    size="small"
+                    onClick={() => {
+                        setSelectedSummaryDetailRecord(record);
+                        setSummaryDetailModalVisible(true);
+                    }}
+                    disabled={!record.summaryDetail}
+                    style={{ color: record.summaryDetail ? 'orange' : '#999' }}
+                >
+                    SummaryDetail
+                </Button>
+            </div>
         );
-    }, [htmlQueue, excalidrawQueue, imageGenerationQueue, multiImageFromDetailQueue, currentHtmlProcessing, currentExcalidrawProcessing, currentImageProcessing, currentMultiImageFromDetailProcessing, handleCreateImageFromSummaryDetail, handleCreateMultiImageFromDetail, handleDiagramPreview]);
+    }, []);
 
     // Memoize columns to prevent table re-render on every component update
     const columns = useMemo(() => [
@@ -2947,6 +3273,53 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
                         title="Chưa tạo diagram Excalidraw từ SummaryDetail"
                     >
                         <PictureOutlined style={{ fontSize: '16px', color: '#999' }} />
+                    </div>
+                );
+            }
+        },
+        {
+            title: <span style={{ color: '#fa8c16', fontWeight: 'bold' }}>Matplotlib Code</span>,
+            key: 'diagramMatplotlibCode',
+            width: 120,
+            render: (_, record) => {
+                const hasMatplotlib = record.matplotlibCode &&
+                    Array.isArray(record.matplotlibCode) &&
+                    record.matplotlibCode.length > 0;
+
+                if (hasMatplotlib) {
+                    return (
+                        <div
+                            onClick={() => handlePreviewMatplotlibImage(record)}
+                            style={{
+                                width: 40,
+                                height: 40,
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                backgroundColor: '#fff7e6',
+                                borderRadius: '4px',
+                                border: '1px solid #ffd591',
+                                cursor: 'pointer'
+                            }}
+                            title={`Matplotlib code (${record.matplotlibCode.length}) - Click để xem`}
+                        >
+                            <FileTextOutlined style={{ fontSize: '16px', color: '#fa8c16' }} />
+                        </div>
+                    );
+                }
+                return (
+                    <div style={{
+                        width: 40,
+                        height: 40,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        backgroundColor: '#f0f0f0',
+                        borderRadius: '4px'
+                    }}
+                        title="Chưa tạo Matplotlib code từ SummaryDetail"
+                    >
+                        <FileTextOutlined style={{ fontSize: '16px', color: '#999' }} />
                     </div>
                 );
             }
@@ -3233,6 +3606,46 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
             }
         },
         {
+            title: <span style={{ fontSize: '12px' }}>Hiển thị Matplotlib</span>,
+            key: 'showMatplotlib',
+            width: 135,
+            render: (_, record) => {
+                const hasMatplotlib = record.matplotlibCode && Array.isArray(record.matplotlibCode) && record.matplotlibCode.length > 0;
+
+                return (
+                    <Switch
+                        checked={record.showMatplotlib !== false}
+                        disabled={!hasMatplotlib}
+                        onChange={async (checked) => {
+                            try {
+                                const updateData = {
+                                    id: record.id,
+                                    showMatplotlib: checked
+                                };
+                                const updateResponse = await updateK9(updateData);
+                                const updatedRecord = updateResponse?.data || updateResponse;
+                                const updater = (list) => list.map(item =>
+                                    item.id === record.id ? { ...item, ...updatedRecord } : item
+                                );
+                                setK9Data(prev => ({
+                                    news: updater(prev.news || []),
+                                    document: updater(prev.document || []),
+                                    caseTraining: updater(prev.caseTraining || []),
+                                    longForm: updater(prev.longForm || []),
+                                    home: updater(prev.home || []),
+                                }));
+                                message.success(`Đã ${checked ? 'bật' : 'tắt'} hiển thị Matplotlib`);
+                            } catch (error) {
+                                console.error('Error updating showMatplotlib:', error);
+                                message.error('Cập nhật thất bại!');
+                            }
+                        }}
+                        size="small"
+                    />
+                );
+            }
+        },
+        {
             title: <span style={{ fontSize: '12px' }}>Hiển thị imgUrls</span>,
             key: 'showImgUrls',
             width: 120,
@@ -3355,7 +3768,7 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
         {
             title: 'Thao tác',
             key: 'action',
-            width: 570,
+            width: 250,
             fixed: 'right',
             render: renderAction,
         },
@@ -3473,6 +3886,19 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
                                     <Select
                                         value={diagramExcalidrawFilter}
                                         onChange={setDiagramExcalidrawFilter}
+                                        style={{ width: 120 }}
+                                        size="small"
+                                    >
+                                        <Select.Option value="all">Tất cả</Select.Option>
+                                        <Select.Option value="has">Đã có</Select.Option>
+                                        <Select.Option value="none">Chưa có</Select.Option>
+                                    </Select>
+                                </div>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <span style={{ fontSize: '13px', fontWeight: 500, minWidth: '90px' }}>Matplotlib:</span>
+                                    <Select
+                                        value={matplotlibFilter}
+                                        onChange={setMatplotlibFilter}
                                         style={{ width: 120 }}
                                         size="small"
                                     >
@@ -3734,6 +4160,16 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
                     </Button>
                     <Button
                         type="default"
+                        icon={<FileTextOutlined />}
+                        onClick={handleBulkCreateMatplotlibFromSummaryDetail}
+                        disabled={selectedRowKeys.length === 0 || processingMatplotlibQueue}
+                        loading={processingMatplotlibQueue}
+                        size="small"
+                    >
+                        Tạo Matplotlib ({selectedRowKeys.length})
+                    </Button>
+                    <Button
+                        type="default"
                         icon={<PictureOutlined />}
                         onClick={handleBulkCreateImageFromSummaryDetail}
                         disabled={selectedRowKeys.length === 0 || processingImageQueue}
@@ -3786,6 +4222,16 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
                             Queue Excalidraw ({excalidrawQueue.length + (currentExcalidrawProcessing ? 1 : 0)})
                         </Button>
                     )}
+                    {(matplotlibQueue.length > 0 || currentMatplotlibProcessing) && (
+                        <Button
+                            type="default"
+                            icon={<FileTextOutlined />}
+                            onClick={() => setMatplotlibQueueModalVisible(true)}
+                            size="small"
+                        >
+                            Queue Matplotlib ({matplotlibQueue.length + (currentMatplotlibProcessing ? 1 : 0)})
+                        </Button>
+                    )}
                     {(imageGenerationQueue.length > 0 || currentImageProcessing) && (
                         <Button
                             type="default"
@@ -3831,7 +4277,7 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
                                 danger
                                 icon={<DeleteOutlined />}
                                 loading={deletingSummaryDetail}
-                                disabled={loading || deletingSummaryDetail || deletingHtml || deletingExcalidraw || deletingImgUrls || deletingDetailImageUrls}
+                                disabled={loading || deletingSummaryDetail || deletingHtml || deletingExcalidraw || deletingMatplotlib || deletingImgUrls || deletingDetailImageUrls}
                                 size="small"
                             >
                                 Xóa SummaryDetail
@@ -3850,7 +4296,7 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
                                 danger
                                 icon={<FileTextOutlined />}
                                 loading={deletingHtml}
-                                disabled={loading || deletingSummaryDetail || deletingHtml || deletingExcalidraw || deletingImgUrls || deletingDetailImageUrls}
+                                disabled={loading || deletingSummaryDetail || deletingHtml || deletingExcalidraw || deletingMatplotlib || deletingImgUrls || deletingDetailImageUrls}
                                 size="small"
                             >
                                 Xóa HTML
@@ -3869,10 +4315,29 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
                                 danger
                                 icon={<PictureOutlined />}
                                 loading={deletingExcalidraw}
-                                disabled={loading || deletingSummaryDetail || deletingHtml || deletingExcalidraw || deletingImgUrls || deletingDetailImageUrls}
+                                disabled={loading || deletingSummaryDetail || deletingHtml || deletingExcalidraw || deletingMatplotlib || deletingImgUrls || deletingDetailImageUrls}
                                 size="small"
                             >
                                 Xóa Excalidraw
+                            </Button>
+                        </Popconfirm>
+
+                        <Popconfirm
+                            title="Xác nhận xóa Matplotlib code"
+                            description={`Bạn có chắc chắn muốn xóa Matplotlib code cho ${selectedRowKeys.length} bản ghi đã chọn?`}
+                            onConfirm={handleBulkDeleteMatplotlibFromSummaryDetail}
+                            okText="Xác nhận"
+                            cancelText="Hủy"
+                            okButtonProps={{ danger: true }}
+                        >
+                            <Button
+                                danger
+                                icon={<FileTextOutlined />}
+                                loading={deletingMatplotlib}
+                                disabled={loading || deletingSummaryDetail || deletingHtml || deletingExcalidraw || deletingMatplotlib || deletingImgUrls || deletingDetailImageUrls}
+                                size="small"
+                            >
+                                Xóa Matplotlib
                             </Button>
                         </Popconfirm>
 
@@ -3888,7 +4353,7 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
                                 danger
                                 icon={<FileImageOutlined />}
                                 loading={deletingImgUrls}
-                                disabled={loading || deletingSummaryDetail || deletingHtml || deletingExcalidraw || deletingImgUrls || deletingDetailImageUrls}
+                                disabled={loading || deletingSummaryDetail || deletingHtml || deletingExcalidraw || deletingMatplotlib || deletingImgUrls || deletingDetailImageUrls}
                                 size="small"
                             >
                                 Xóa ImgUrls
@@ -3907,7 +4372,7 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
                                 danger
                                 icon={<FileImageOutlined />}
                                 loading={deletingDetailImageUrls}
-                                disabled={loading || deletingSummaryDetail || deletingHtml || deletingExcalidraw || deletingImgUrls || deletingDetailImageUrls}
+                                disabled={loading || deletingSummaryDetail || deletingHtml || deletingExcalidraw || deletingMatplotlib || deletingImgUrls || deletingDetailImageUrls}
                                 size="small"
                             >
                                 Xóa DetailImageUrls
@@ -3958,6 +4423,27 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
                             size="small"
                         >
                             Tắt Excalidraw
+                        </Button>
+
+                        <Button
+                            type="default"
+                            icon={<FileTextOutlined />}
+                            onClick={() => handleBulkToggleShowMatplotlib(true)}
+                            loading={togglingShowMatplotlib}
+                            disabled={selectedRowKeys.length === 0 || togglingShowMatplotlib}
+                            size="small"
+                        >
+                            Bật Matplotlib
+                        </Button>
+                        <Button
+                            type="default"
+                            icon={<FileTextOutlined />}
+                            onClick={() => handleBulkToggleShowMatplotlib(false)}
+                            loading={togglingShowMatplotlib}
+                            disabled={selectedRowKeys.length === 0 || togglingShowMatplotlib}
+                            size="small"
+                        >
+                            Tắt Matplotlib
                         </Button>
 
                         <Button
@@ -4342,74 +4828,166 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
                     </Button>,
                 ]}
             >
-                {currentExcalidrawProcessing && (
-                    <div style={{ marginBottom: '24px' }}>
-                        <h5>🔄 Đang xử lý</h5>
-                        <div style={{
-                            padding: '16px',
-                            border: '2px solid #1890ff',
-                            borderRadius: '8px',
-                            backgroundColor: '#e6f7ff'
-                        }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                <LoadingOutlined spin style={{ fontSize: '24px', color: '#1890ff' }} />
-                                <div>
-                                    <div><strong>{currentExcalidrawProcessing.title}</strong></div>
-                                    <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
-                                        Record ID: {currentExcalidrawProcessing.recordId}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                )}
-                {excalidrawQueue.length > 0 && (
-                    <div style={{ marginBottom: '24px' }}>
-                        <h5>📝 Hàng đợi ({excalidrawQueue.length})</h5>
-                        {excalidrawQueue.map((task, index) => (
-                            <div key={task.id} style={{
-                                padding: '12px',
-                                border: '1px solid #d9d9d9',
-                                borderRadius: '6px',
-                                marginBottom: '8px',
-                                backgroundColor: '#fafafa'
-                            }}>
-                                <div>#{index + 1} {task.title}</div>
-                                <div style={{ fontSize: '12px', color: '#666' }}>
-                                    Record ID: {task.recordId}
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                )}
-                {excalidrawQueueResults.length > 0 && (
-                    <div>
-                        <h5>📊 Kết quả ({excalidrawQueueResults.length})</h5>
-                        {excalidrawQueueResults.map((result, index) => (
-                            <div key={index} style={{
-                                padding: '12px',
-                                border: '1px solid #d9d9d9',
-                                borderRadius: '6px',
-                                marginBottom: '8px',
-                                backgroundColor: result.status === 'success' ? '#f6ffed' : '#fff2f0'
+                <div style={{ height: '100%', overflow: 'auto' }}>
+                    {currentExcalidrawProcessing && (
+                        <div style={{ marginBottom: '24px' }}>
+                            <h5>🔄 Đang xử lý</h5>
+                            <div style={{
+                                padding: '16px',
+                                border: '2px solid #1890ff',
+                                borderRadius: '8px',
+                                backgroundColor: '#e6f7ff'
                             }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                    {result.status === 'success' ? (
-                                        <CheckCircleOutlined style={{ color: '#52c41a' }} />
-                                    ) : (
-                                        <CloseCircleOutlined style={{ color: '#ff4d4f' }} />
-                                    )}
+                                    <LoadingOutlined spin style={{ fontSize: '24px', color: '#1890ff' }} />
                                     <div>
-                                        <div><strong>{result.task.title}</strong></div>
-                                        <div style={{ fontSize: '12px', color: '#666' }}>
-                                            {result.message}
+                                        <div><strong>{currentExcalidrawProcessing.title}</strong></div>
+                                        <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
+                                            Record ID: {currentExcalidrawProcessing.recordId}
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                        ))}
+                        </div>
+                    )}
+                    {excalidrawQueue.length > 0 && (
+                        <div style={{ marginBottom: '24px' }}>
+                            <h5>📝 Hàng đợi ({excalidrawQueue.length})</h5>
+                            {excalidrawQueue.map((task, index) => (
+                                <div key={task.id} style={{
+                                    padding: '12px',
+                                    border: '1px solid #d9d9d9',
+                                    borderRadius: '6px',
+                                    marginBottom: '8px',
+                                    backgroundColor: '#fafafa'
+                                }}>
+                                    <div>#{index + 1} {task.title}</div>
+                                    <div style={{ fontSize: '12px', color: '#666' }}>
+                                        Record ID: {task.recordId}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                    {excalidrawQueueResults.length > 0 && (
+                        <div>
+                            <h5>📊 Kết quả ({excalidrawQueueResults.length})</h5>
+                            {excalidrawQueueResults.map((result, index) => (
+                                <div key={index} style={{
+                                    padding: '12px',
+                                    border: '1px solid #d9d9d9',
+                                    borderRadius: '6px',
+                                    marginBottom: '8px',
+                                    backgroundColor: result.status === 'success' ? '#f6ffed' : '#fff2f0'
+                                }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                        {result.status === 'success' ? (
+                                            <CheckCircleOutlined style={{ color: '#52c41a' }} />
+                                        ) : (
+                                            <CloseCircleOutlined style={{ color: '#ff4d4f' }} />
+                                        )}
+                                        <div>
+                                            <div><strong>{result.task.title}</strong></div>
+                                            <div style={{ fontSize: '12px', color: '#666' }}>
+                                                {result.message}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            </Modal>
+
+            {/* Matplotlib Queue Modal */}
+            <Modal
+                title={
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <FileTextOutlined />
+                        <span>Matplotlib Generation Queue</span>
                     </div>
-                )}
+                }
+                open={matplotlibQueueModalVisible}
+                onCancel={() => setMatplotlibQueueModalVisible(false)}
+                width={900}
+                footer={[
+                    <Button key="close" onClick={() => setMatplotlibQueueModalVisible(false)}>
+                        Đóng
+                    </Button>,
+                ]}
+            >
+                <div style={{ height: '100%', overflow: 'auto' }}>
+                    {currentMatplotlibProcessing && (
+                        <div style={{ marginBottom: '24px' }}>
+                            <h5>🔄 Đang xử lý</h5>
+                            <div style={{
+                                padding: '16px',
+                                border: '2px solid #1890ff',
+                                borderRadius: '8px',
+                                backgroundColor: '#e6f7ff'
+                            }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <LoadingOutlined spin style={{ fontSize: '24px', color: '#1890ff' }} />
+                                    <div>
+                                        <div><strong>{currentMatplotlibProcessing.title}</strong></div>
+                                        <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
+                                            Record ID: {currentMatplotlibProcessing.recordId}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                    {matplotlibQueue.length > 0 && (
+                        <div style={{ marginBottom: '24px' }}>
+                            <h5>📝 Hàng đợi ({matplotlibQueue.length})</h5>
+                            {matplotlibQueue.map((task, index) => (
+                                <div key={task.id} style={{
+                                    padding: '12px',
+                                    border: '1px solid #d9d9d9',
+                                    borderRadius: '6px',
+                                    marginBottom: '8px',
+                                    backgroundColor: '#fafafa'
+                                }}>
+                                    <div>#{index + 1} {task.title}</div>
+                                    <div style={{ fontSize: '12px', color: '#666' }}>
+                                        Record ID: {task.recordId}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                    {matplotlibQueueResults.length > 0 && (
+                        <div>
+                            <h5>📊 Kết quả ({matplotlibQueueResults.length})</h5>
+                            {matplotlibQueueResults.map((result, index) => (
+                                <div key={index} style={{
+                                    padding: '12px',
+                                    border: '1px solid #d9d9d9',
+                                    borderRadius: '6px',
+                                    marginBottom: '8px',
+                                    backgroundColor: result.status === 'success' ? '#f6ffed' : '#fff2f0'
+                                }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                        {result.status === 'success' ? (
+                                            <CheckCircleOutlined style={{ color: '#52c41a' }} />
+                                        ) : (
+                                            <CloseCircleOutlined style={{ color: '#ff4d4f' }} />
+                                        )}
+                                        <div>
+                                            <div><strong>{result.task.title}</strong></div>
+                                            <div style={{ fontSize: '12px', color: '#666' }}>
+                                                {result.message}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+
             </Modal>
 
             {/* Diagram Preview Modal */}
@@ -4422,6 +5000,36 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
                 diagramData={selectedDiagramData}
                 onSave={handleDiagramSave}
             />
+
+            <Modal
+                title={`Xem Matplotlib - ${matplotlibPreviewTitle || ''}`}
+                open={matplotlibPreviewVisible}
+                onCancel={closeMatplotlibPreview}
+                footer={[
+                    <Button key="close" onClick={closeMatplotlibPreview}>
+                        Đóng
+                    </Button>,
+                ]}
+                width={1000}
+            >
+                <div style={{ height: '100%', overflow: 'auto' }}>
+                    {matplotlibPreviewLoading ? (
+                        <div style={{ display: 'flex', justifyContent: 'center', padding: '30px 0' }}>
+                            <LoadingOutlined spin style={{ fontSize: 32 }} />
+                        </div>
+                    ) : matplotlibImgSrc ? (
+                        <div style={{ textAlign: 'center' }}>
+                            <img
+                                src={matplotlibImgSrc}
+                                alt="Matplotlib render"
+                                style={{ maxWidth: '100%', maxHeight: '70vh', border: '1px solid #f0f0f0' }}
+                            />
+                        </div>
+                    ) : (
+                        <Empty description="Chưa có dữ liệu ảnh để hiển thị" />
+                    )}
+                </div>
+            </Modal>
 
             <SelectPromptModal
                 visible={selectHtmlPromptModalVisible}
@@ -4457,6 +5065,24 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
                 }}
                 promptType="EXCALIDRAW_REACT_PROMPTS"
                 title="Chọn cài đặt Prompt - Excalidraw từ SummaryDetail"
+            />
+
+            <SelectPromptModal
+                visible={selectMatplotlibPromptModalVisible}
+                onCancel={() => {
+                    setSelectMatplotlibPromptModalVisible(false);
+                    setPendingMatplotlibRecord(null);
+                    setPendingMatplotlibRecords([]);
+                }}
+                onSelect={(prompt) => {
+                    if (pendingMatplotlibRecord) {
+                        handleMatplotlibPromptSelected(prompt);
+                    } else if (pendingMatplotlibRecords.length > 0) {
+                        handleBulkMatplotlibPromptSelected(prompt);
+                    }
+                }}
+                promptType="MATPLOTLIB_FROM_SUMMARYDETAIL_PROMPTS"
+                title="Chọn cài đặt Prompt - Matplotlib từ SummaryDetail"
             />
 
 

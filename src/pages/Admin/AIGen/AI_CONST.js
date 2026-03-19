@@ -15,6 +15,11 @@ export const MODEL_AI_LIST = [
     { name: 'Gemini 3 Pro Preview (Google)', value: 'gemini-3-pro-preview' },
     { name: 'Gemini 3 Flash Preview (Google)', value: 'gemini-3-flash-preview' },
     { name: 'Gemini 3 Pro Preview (Open Router)', value: 'google/gemini-3-pro-preview' },
+
+    { name: 'Claude Opus 4.6', value: 'claude-opus-4-6' },
+    { name: 'Claude Sonnet 4.6', value: 'claude-sonnet-4-6' },
+    { name: 'Anthropic Claude Sonnet 4.6 (Open Router)', value: 'anthropic/claude-sonnet-4.6' },
+    { name: 'Anthropic Claude Opus 4.6 (Open Router)', value: 'anthropic/claude-opus-4.6' },
 ];
 
 export const MODEL_IMG_AI_LIST = [
