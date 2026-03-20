@@ -593,7 +593,7 @@ const ContentPanel = ({
                           />
 
                           {/* Image Counter */}
-                          <div
+                          {/* <div
                             style={{
                               position: 'absolute',
                               bottom: '20px',
@@ -611,7 +611,7 @@ const ContentPanel = ({
                             }}
                           >
                             {safeSelectedIndex + 1} / {totalImages}
-                          </div>
+                          </div> */}
                         </>
                       )}
                     </div>
