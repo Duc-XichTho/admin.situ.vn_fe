@@ -48,6 +48,7 @@ const CaseTrainingContentPanel = ({
   hideEdit = false,
 }) => {
   const [ratingPopupVisible, setRatingPopupVisible] = useState(false);
+  const [selectedMatplotlibImageIndex, setSelectedMatplotlibImageIndex] = useState({});
 
   if (!item) return null;
 
@@ -161,27 +162,42 @@ const CaseTrainingContentPanel = ({
 
             {/* Hiển thị thông tin CID source nếu có */}
             {cidSourceInfo && cidSourceInfo.length > 0 && (
-              cidSourceInfo.map((sourceItem) => (
-                <span
-                  key={sourceItem.id}
-                  style={{
-                    fontSize: '13px',
-                    color: '#124CB2',
-                    fontWeight: '500',
-                    backgroundColor: '#F8FAFB',
-                    padding: '4px 8px',
-                    borderRadius: '4px',
-                    border: '1px solid #99A6C6',
-                    marginLeft: '8px',
-                    cursor: 'pointer'
-                  }}
-                  onClick={() => {
-                    handleCidSourceInfoClick(cidSourceInfo);
-                  }}
-                >
-                  {sourceItem.title} - CID {sourceItem.cid} - {sourceItem.id}
-                </span>
-              ))
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                flexWrap: isMobile ? 'wrap' : 'nowrap',
+                width: isMobile ? '100%' : 'auto'
+              }}>
+                {cidSourceInfo.map((sourceItem, idx) => (
+                  <span
+                    key={sourceItem.id ?? idx}
+                    style={{
+                      fontSize: isMobile ? '11px' : '13px',
+                      color: '#124CB2',
+                      fontWeight: '500',
+                      backgroundColor: '#F8FAFB',
+                      padding: isMobile ? '3px 6px' : '4px 8px',
+                      borderRadius: '4px',
+                      border: '1px solid #d6e4ff',
+                      marginLeft: isMobile ? '0' : '8px',
+                      marginRight: isMobile ? '4px' : '0',
+                      marginTop: isMobile ? '4px' : '0',
+                      cursor: 'pointer',
+                      flexShrink: 0,
+                      whiteSpace: isMobile ? 'nowrap' : 'normal',
+                      overflow: isMobile ? 'hidden' : 'visible',
+                      textOverflow: isMobile ? 'ellipsis' : 'clip',
+                      maxWidth: isMobile ? '100%' : 'none'
+                    }}
+                    onClick={() => {
+                      handleCidSourceInfoClick(cidSourceInfo);
+                    }}
+                  >
+                    {sourceItem.title} - CID {sourceItem.cid} - {sourceItem.id}
+                  </span>
+                ))}
+              </div>
             )}
 
           </div>
@@ -251,11 +267,12 @@ const CaseTrainingContentPanel = ({
           {/* File URLs Section */}
           {item.fileUrls && item.fileUrls.length > 0 && (
             <div className={`${styles.fileTagsContainer} ${newsTabStyles.fileTagsContainer}`}>
-              {item.fileUrls.map((fileItem, index) => {
-                const url = typeof fileItem === 'string' ? fileItem : (fileItem?.url || '');
-                const fileName = typeof fileItem === 'string'
-                  ? (url.split('/').pop() || `file-${index + 1}`)
-                  : (fileItem?.name || url.split('/').pop() || `file-${index + 1}`);
+              {item.fileUrls.map((file, index) => {
+                const url = typeof file === 'string' ? file : file?.url;
+                const fileName =
+                  (file && typeof file === 'object' && file.name) ||
+                  (url && url.split('/').pop()) ||
+                  `file-${index + 1}`;
                 const fileExtension = fileName.split('.').pop()?.toLowerCase() || '';
 
                 return (
@@ -281,7 +298,7 @@ const CaseTrainingContentPanel = ({
           )}
 
           {/* Diagram Section */}
-          {(item.diagramUrl || ((item.diagramHtmlCode || item.diagramHtmlCodeFromSummaryDetail) && item.showHtml !== false) || (item.diagramExcalidrawJson && item.showExcalidraw !== false) || item.diagramNote || item.diagramExcalidrawNote || (item.imgUrls && item.imgUrls.length > 0 && item.showImgUrls !== false) || (item.detailImageUrls && Array.isArray(item.detailImageUrls) && item.detailImageUrls.length > 0 && item.showDetailImageUrls !== false)) && (
+          {(item.diagramUrl || ((item.diagramHtmlCode || item.diagramHtmlCodeFromSummaryDetail) && item.showHtml !== false) || (item.diagramExcalidrawJson && item.showExcalidraw !== false) || item.diagramNote || item.diagramExcalidrawNote || (item.imgUrls && item.imgUrls.length > 0 && item.showImgUrls !== false) || (item.matplotlibCode && Array.isArray(item.matplotlibCode) && item.matplotlibCode.length > 0 && item.showMatplotlib !== false && item.matplotlibCode.some((entry) => Array.isArray(entry?.images) && entry.images.length > 0)) || (item.detailImageUrls && Array.isArray(item.detailImageUrls) && item.detailImageUrls.length > 0 && item.showDetailImageUrls !== false)) && (
             <div className={`${styles.valueSection} ${newsTabStyles.valueSection}`}>
               <div className={`${styles.diagramSectionContent} ${newsTabStyles.diagramSectionContent}`}>
                 {/* Handle Excalidraw React Diagrams */}
@@ -352,6 +369,268 @@ const CaseTrainingContentPanel = ({
                     );
                   })
                 )}
+
+                {/* Handle matplotlibCode images from Matplotlib Code - Gallery Style */}
+                {item.matplotlibCode &&
+                  Array.isArray(item.matplotlibCode) &&
+                  item.matplotlibCode.length > 0 &&
+                  item.showMatplotlib !== false &&
+                  (() => {
+                    const flattenedImages = item.matplotlibCode.flatMap((entry) => {
+                      if (!entry) return [];
+                      if (Array.isArray(entry?.images)) return entry.images;
+                      return [];
+                    });
+
+                    const imageUrls = flattenedImages
+                      .map((imgItem) => {
+                        if (typeof imgItem === 'string') return imgItem;
+                        return imgItem?.url || imgItem?.image_url || imgItem?.fileUrl || '';
+                      })
+                      .filter(Boolean);
+
+                    const currentSelectedIndex = selectedMatplotlibImageIndex[item.id] ?? 0;
+                    const totalImages = imageUrls.length;
+                    const safeSelectedIndex = Math.min(currentSelectedIndex, Math.max(totalImages - 1, 0));
+                    const mainImageUrl = imageUrls[safeSelectedIndex];
+                    const hasMultipleImages = totalImages > 1;
+
+                    if (!mainImageUrl) return null;
+
+                    const handlePrevious = () => {
+                      const newIndex = safeSelectedIndex === 0 ? totalImages - 1 : safeSelectedIndex - 1;
+                      setSelectedMatplotlibImageIndex((prev) => ({
+                        ...prev,
+                        [item.id]: newIndex,
+                      }));
+                    };
+
+                    const handleNext = () => {
+                      const newIndex = safeSelectedIndex === totalImages - 1 ? 0 : safeSelectedIndex + 1;
+                      setSelectedMatplotlibImageIndex((prev) => ({
+                        ...prev,
+                        [item.id]: newIndex,
+                      }));
+                    };
+
+                    return (
+                      <div key={`matplotlib-gallery-${item.id}`} style={{ marginBottom: '20px' }}>
+                        <div className={`${styles.diagramImage} ${newsTabStyles.diagramImage}`} style={{ position: 'relative' }}>
+                          <Image
+                            src={mainImageUrl}
+                            alt={`Ảnh matplotlib ${safeSelectedIndex + 1}`}
+                            className={`${styles.diagramImageDetail} ${newsTabStyles.diagramImageDetail}`}
+                            preview={{
+                              mask: 'Xem ảnh',
+                              maskClassName: 'custom-mask',
+                            }}
+                          />
+
+                          {/* Navigation Buttons */}
+                          {hasMultipleImages && (
+                            <>
+                              <Button
+                                type="default"
+                                shape="circle"
+                                icon={<LeftOutlined />}
+                                onClick={handlePrevious}
+                                style={{
+                                  position: 'absolute',
+                                  left: '20px',
+                                  top: '50%',
+                                  transform: 'translateY(-50%)',
+                                  width: '48px',
+                                  height: '48px',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                                  border: '1px solid #d9d9d9',
+                                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                                  zIndex: 10,
+                                  fontSize: '18px',
+                                  transition: 'all 0.3s ease',
+                                  color: '#595959',
+                                }}
+                                onMouseEnter={(e) => {
+                                  e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 1)';
+                                  e.currentTarget.style.borderColor = '#bfbfbf';
+                                  e.currentTarget.style.transform = 'translateY(-50%) scale(1.1)';
+                                  e.currentTarget.style.boxShadow = '0 6px 16px rgba(0, 0, 0, 0.2)';
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
+                                  e.currentTarget.style.borderColor = '#d9d9d9';
+                                  e.currentTarget.style.transform = 'translateY(-50%) scale(1)';
+                                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
+                                }}
+                                title="Ảnh trước (←)"
+                              />
+                              <Button
+                                type="default"
+                                shape="circle"
+                                icon={<RightOutlined />}
+                                onClick={handleNext}
+                                style={{
+                                  position: 'absolute',
+                                  right: '20px',
+                                  top: '50%',
+                                  transform: 'translateY(-50%)',
+                                  width: '48px',
+                                  height: '48px',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                                  border: '1px solid #d9d9d9',
+                                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                                  zIndex: 10,
+                                  fontSize: '18px',
+                                  transition: 'all 0.3s ease',
+                                  color: '#595959',
+                                }}
+                                onMouseEnter={(e) => {
+                                  e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 1)';
+                                  e.currentTarget.style.borderColor = '#bfbfbf';
+                                  e.currentTarget.style.transform = 'translateY(-50%) scale(1.1)';
+                                  e.currentTarget.style.boxShadow = '0 6px 16px rgba(0, 0, 0, 0.2)';
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
+                                  e.currentTarget.style.borderColor = '#d9d9d9';
+                                  e.currentTarget.style.transform = 'translateY(-50%) scale(1)';
+                                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
+                                }}
+                                title="Ảnh sau (→)"
+                              />
+                              {/* Image Counter */}
+                              <div
+                                style={{
+                                  position: 'absolute',
+                                  bottom: '20px',
+                                  left: '50%',
+                                  transform: 'translateX(-50%)',
+                                  backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                                  color: 'white',
+                                  padding: '6px 16px',
+                                  borderRadius: '20px',
+                                  fontSize: '13px',
+                                  fontWeight: 500,
+                                  zIndex: 10,
+                                  backdropFilter: 'blur(4px)',
+                                  boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
+                                }}
+                              >
+                                {safeSelectedIndex + 1} / {totalImages}
+                              </div>
+                            </>
+                          )}
+                        </div>
+
+                        {/* Thumbnail Gallery (only show if more than 1 image) */}
+                        {hasMultipleImages && (
+                          <div
+                            style={{
+                              marginTop: '16px',
+                              padding: '16px',
+                              backgroundColor: '#fafafa',
+                              borderRadius: '8px',
+                              border: '1px solid #f0f0f0',
+                            }}
+                          >
+                            <div
+                              style={{
+                                display: 'flex',
+                                gap: '12px',
+                                flexWrap: 'wrap',
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                              }}
+                            >
+                              {imageUrls.map((thumbUrl, index) => {
+                                const isSelected = index === safeSelectedIndex;
+                                return (
+                                  <div
+                                    key={index}
+                                    onClick={() => {
+                                      setSelectedMatplotlibImageIndex((prev) => ({
+                                        ...prev,
+                                        [item.id]: index,
+                                      }));
+                                    }}
+                                    style={{
+                                      width: '80px',
+                                      height: '80px',
+                                      borderRadius: '10px',
+                                      overflow: 'hidden',
+                                      cursor: 'pointer',
+                                      border: isSelected ? '1px solid #bfbfbf' : '1px solid #e8e8e8',
+                                      backgroundColor: '#fff',
+                                      position: 'relative',
+                                      transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                                      transform: isSelected ? 'scale(1.05)' : 'scale(1)',
+                                      boxShadow: isSelected ? '0 4px 12px rgba(0, 0, 0, 0.15)' : '0 2px 8px rgba(0,0,0,0.1)',
+                                      opacity: isSelected ? 1 : 0.85,
+                                    }}
+                                    onMouseEnter={(e) => {
+                                      if (!isSelected) {
+                                        e.currentTarget.style.borderColor = '#bfbfbf';
+                                        e.currentTarget.style.transform = 'scale(1.05)';
+                                        e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
+                                        e.currentTarget.style.opacity = '1';
+                                      }
+                                    }}
+                                    onMouseLeave={(e) => {
+                                      if (!isSelected) {
+                                        e.currentTarget.style.borderColor = '#e8e8e8';
+                                        e.currentTarget.style.transform = 'scale(1)';
+                                        e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
+                                        e.currentTarget.style.opacity = '0.85';
+                                      }
+                                    }}
+                                    title={`Ảnh matplotlib ${index + 1} - Click để xem`}
+                                  >
+                                    <img
+                                      src={thumbUrl}
+                                      alt={`Thumbnail matplotlib ${index + 1}`}
+                                      style={{
+                                        width: '100%',
+                                        height: '100%',
+                                        objectFit: 'cover',
+                                      }}
+                                    />
+
+                                    {/* Selected indicator */}
+                                    {isSelected && (
+                                      <div
+                                        style={{
+                                          position: 'absolute',
+                                          top: '4px',
+                                          right: '4px',
+                                          width: '22px',
+                                          height: '22px',
+                                          borderRadius: '50%',
+                                          backgroundColor: '#8c8c8c',
+                                          display: 'flex',
+                                          alignItems: 'center',
+                                          justifyContent: 'center',
+                                          border: '2px solid white',
+                                          boxShadow: '0 2px 6px rgba(0,0,0,0.3)',
+                                          zIndex: 10,
+                                        }}
+                                      >
+                                        <span style={{ color: 'white', fontSize: '12px', fontWeight: 'bold' }}>✓</span>
+                                      </div>
+                                    )}
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
 
                 {/* Handle detailImageUrls from Detail - Gallery Style */}
                 {item.detailImageUrls && Array.isArray(item.detailImageUrls) && item.detailImageUrls.length > 0 && item.showDetailImageUrls !== false && (() => {

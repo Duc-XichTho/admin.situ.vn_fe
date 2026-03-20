@@ -2473,9 +2473,9 @@ const CaseTrainingTab = ({
       destroyOnClose={true}
       maskClosable={true}
       closable={true}
-      className={newsTabStyles.modalContent}
+      className={newsTabStyles.modalContentDetail}
       style={{
-        top: '0px',
+        top: '10px',
         paddingBottom: '0px'
       }}
     >

@@ -40,11 +40,11 @@ const PreviewFile = ({
 
   // Phân loại file types
   const imgTypes = ["jpg", "png", "svg", "jpeg", "gif", "bmp", "webp"];
-  const docTypes = ["doc", "docx", 'xls', 'xlsx', "txt", "csv"];
+  const docTypes = ["doc", "docx", 'xls', 'xlsx'];
   const isImage = imgTypes.includes(fileExtension);
   const isDoc = docTypes.includes(fileExtension);
   const isPDF = fileExtension === "pdf";
-  const isText = ["txt", "csv"].includes(fileExtension);
+  const isText = ["txt"].includes(fileExtension);
 
   // Xử lý encoding (từ code cũ)
   const isEncoded = (str) => {
@@ -85,8 +85,17 @@ const PreviewFile = ({
     }
   };
 
+  const getViewerUrl = (url, ext) => {
+    const officeExts = ['doc', 'docx', 'ppt', 'pptx', 'xls', 'xlsx', 'csv'];
+    if (officeExts.includes(ext)) {
+      return `https://view.officeapps.live.com/op/view.aspx?src=${encodeURIComponent(url)}`;
+    }
+    return url;
+  };
+
   const handleOpenNewTab = () => {
-    window.open(fileUrl, '_blank');
+    const viewerUrl = getViewerUrl(fileUrl, fileExtension);
+    window.open(viewerUrl, '_blank');
   };
 
   return (
@@ -104,6 +113,7 @@ const PreviewFile = ({
                           size="small"
                           icon={<DownloadOutlined />}
                           onClick={handleDownload}
+                          style={{ backgroundColor: '#124CB2', borderColor: '#124CB2' }}
                       >
                         Tải về
                       </Button>
@@ -213,7 +223,7 @@ const PreviewFile = ({
                         File: {fixEncoding(displayName)} ({fileExtension.toUpperCase()})
                       </p>
                       <Space>
-                        <Button type="primary" onClick={handleDownload}>
+                        <Button type="primary" onClick={handleDownload} style={{ backgroundColor: '#124CB2', borderColor: '#124CB2' }}>
                           Tải về để xem
                         </Button>
                         <Button onClick={handleOpenNewTab}>
@@ -231,19 +241,12 @@ const PreviewFile = ({
           {/* Default Preview (không hỗ trợ) */}
           {!isImage && !isPDF && !isText && !isDoc && (
               <div className={css.previewDefault}>
-                <div className={css.defaultIcon}>📎</div>
+                {/* <div className={css.defaultIcon}>📎</div> */}
                 <p>Preview không khả dụng cho loại file này</p>
                 <p className={css.fileInfo}>
                   File: {fixEncoding(displayName)} ({fileExtension.toUpperCase()})
                 </p>
-                <Space>
-                  <Button type="primary" onClick={handleDownload}>
-                    Tải về
-                  </Button>
-                  <Button onClick={handleOpenNewTab}>
-                    Mở trong tab mới
-                  </Button>
-                </Space>
+              
               </div>
           )}
         </div>

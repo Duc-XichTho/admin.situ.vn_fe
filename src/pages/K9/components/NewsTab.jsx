@@ -1,4 +1,4 @@
-import { ClockCircleOutlined, CloseOutlined, SearchOutlined, ShareAltOutlined, StarOutlined } from '@ant-design/icons';
+import { ClockCircleOutlined, CloseOutlined, SearchOutlined, ShareAltOutlined, StarOutlined, FullscreenOutlined, FullscreenExitOutlined } from '@ant-design/icons';
 import { Button, Checkbox, Image, Input, Modal, Space, Tooltip } from 'antd';
 import DOMPurify from 'dompurify';
 import katex from 'katex';
@@ -174,43 +174,41 @@ const NewsTab = ({
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const panelRef = useRef(null);
 
-  // PC modal split states
-  const [modalPcSplitRatio, setModalPcSplitRatio] = useState(0.25);
-  const [modalResizeStartRatio, setModalResizeStartRatio] = useState(0.25);
+  // PC modal split states: ratio = phần bên phải (nội dung), sidebar = 1 - ratio. Default 60% content, 40% sidebar
+  const [modalPcSplitRatio, setModalPcSplitRatio] = useState(0.6);
+  const [modalIsResizingPanels, setModalIsResizingPanels] = useState(false);
+  const [modalResizeStartX, setModalResizeStartX] = useState(0);
+  const [modalResizeStartRatio, setModalResizeStartRatio] = useState(0.6);
+  const modalPcModalContainerRef = useRef(null);
 
   // Infinite scroll states
   const [visibleItems, setVisibleItems] = useState([]);
   const [renderedCount, setRenderedCount] = useState(20);
 
-  const resizableContainerRef = useRef(null);
+  const [isPcArticleFullscreen, setIsPcArticleFullscreen] = useState(false);
 
-  // Handle resizing of PC modal panels
+  // Handle resizing of PC modal panels (left: sidebar, right: content). Clamp content 60%–85%
   useEffect(() => {
+    if (!modalIsResizingPanels) return;
     const handleMouseMove = (e) => {
-      if (modalResizeStartRatio !== null && resizableContainerRef.current) {
-        const rect = resizableContainerRef.current.getBoundingClientRect();
-        const newRatio = (e.clientX - rect.left) / rect.width;
-        // Limit range between 15% and 50%
-        if (newRatio > 0.15 && newRatio < 0.5) {
-          setModalPcSplitRatio(newRatio);
-        }
-      }
+      if (!modalPcModalContainerRef.current) return;
+      const rect = modalPcModalContainerRef.current.getBoundingClientRect();
+      const totalWidth = rect.width || 1;
+      const deltaX = e.clientX - modalResizeStartX;
+      let nextRatio = modalResizeStartRatio - deltaX / totalWidth;
+      nextRatio = Math.max(0.6, Math.min(0.85, nextRatio));
+      setModalPcSplitRatio(nextRatio);
     };
-
-    const handleMouseUp = () => {
-      setModalResizeStartRatio(null);
+    const handleMouseUpResize = () => {
+      setModalIsResizingPanels(false);
     };
-
-    if (modalResizeStartRatio !== null) {
-      window.addEventListener('mousemove', handleMouseMove);
-      window.addEventListener('mouseup', handleMouseUp);
-    }
-
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUpResize);
     return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mouseup', handleMouseUp);
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUpResize);
     };
-  }, [modalResizeStartRatio]);
+  }, [modalIsResizingPanels, modalResizeStartX, modalResizeStartRatio]);
 
 
   // Persist filters to localStorage
@@ -1983,7 +1981,16 @@ const NewsTab = ({
                     Bookmark
                   </Button>
                 </Tooltip>
-
+                <Tooltip title={isPcArticleFullscreen ? 'Thu nhỏ' : 'Mở rộng gần full màn hình'}>
+                  <Button
+                    type="text"
+                    icon={isPcArticleFullscreen ? <FullscreenExitOutlined /> : <FullscreenOutlined />}
+                    onClick={() => setIsPcArticleFullscreen(prev => !prev)}
+                    style={{ padding: '0 8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                  >
+                    {isPcArticleFullscreen ? 'Compact view' : 'Full screen'}
+                  </Button>
+                </Tooltip>
                 {/* Edit button in title bar */}
                 {currentUser?.isAdmin && (
                   <Button
@@ -2002,40 +2009,73 @@ const NewsTab = ({
         open={selectedItem !== null && viewMode === 'grid'}
         onCancel={() => { setSelectedItem(null); updateURL({ item: null }), setExpandedItem(null) }}
         footer={null}
-        width={selectedItem ? 1400 : 1000}
+        width={
+          selectedItem !== null && viewMode === 'grid'
+            ? (isPcArticleFullscreen ? '98vw' : 1400)
+            : 1000
+        }
         style={{
-          top: '0px', paddingBottom: '0px'
+          top: '10px', paddingBottom: '0px'
         }}
         destroyOnClose={true}
         maskClosable={true}
         closable={true}
-        className={newsTabStyles.modalContent}
+        className={newsTabStyles.modalContentDetail}
       >
-        <div className={newsTabStyles.resizablePanel} ref={resizableContainerRef}>
-          {/* Left panel: Sidebar Information */}
-          <div
-            className={newsTabStyles.modalSidebarPanel}
-            style={{ width: `${modalPcSplitRatio * 100}%` }}
-          >
-            {renderArticleSidebarContent(selectedItem)}
-            {/* TOC Section */}
-            {selectedItem?.hasTitle && <div style={{ height: 'auto' }}>{renderTOCSidebar(selectedItem)}</div>}
-          </div>
+        <div
+          ref={modalPcModalContainerRef}
+          className={newsTabStyles.resizablePanel}
+          style={{ overflow: 'hidden', position: 'relative' }}
+        >
+          {/* Left panel: Sidebar (default max 35% width) */}
+          {selectedItem && (
+            <div
+              className={newsTabStyles.modalSidebarPanel}
+              style={{
+                flexBasis: `${(1 - modalPcSplitRatio) * 100}%`,
+                minWidth: '15%',
+                maxWidth: '35%',
+                boxSizing: 'border-box',
+                overflowX: 'hidden'
+              }}
+            >
+              {renderArticleSidebarContent(selectedItem)}
+              {selectedItem?.hasTitle && <div style={{ height: 'auto' }}>{renderTOCSidebar(selectedItem)}</div>}
+            </div>
+          )}
 
           {/* Resizer */}
-          <div
-            className={`${newsTabStyles.resizer} ${modalResizeStartRatio !== null ? newsTabStyles.resizerActive : ''}`}
-            onMouseDown={(e) => {
-              setModalResizeStartRatio(modalPcSplitRatio);
-              e.preventDefault();
-            }}
-          />
+          {selectedItem && (
+            <div
+              className={`${newsTabStyles.resizer} ${modalIsResizingPanels ? newsTabStyles.resizerActive : ''}`}
+              style={{ flexShrink: 0 }}
+              onMouseDown={(e) => {
+                setModalIsResizingPanels(true);
+                setModalResizeStartX(e.clientX);
+                setModalResizeStartRatio(modalPcSplitRatio);
+                e.preventDefault();
+              }}
+            />
+          )}
 
-          {/* Right panel: Article Content */}
-          <div className={newsTabStyles.modalContentPanel}>
+          {/* Right panel: Article Content (default 60%, max 85% width) */}
+          <div
+            className={newsTabStyles.modalContentPanel}
+            style={
+              selectedItem
+                ? {
+                  flexBasis: `${modalPcSplitRatio * 100}%`,
+                  minWidth: '65%',
+                  maxWidth: '85%',
+                  padding: '20px 5px',
+                  boxSizing: 'border-box',
+                  overflowX: 'hidden'
+                }
+                : { padding: '20px', width: '100%' }
+            }
+          >
             {renderContentPanel(selectedItem, true)}
           </div>
-
         </div>
 
         {/* Floating Search Results Panel moved outside resizable container to avoid flex issues */}

@@ -1,4 +1,4 @@
-import { Button, Image, Popover, Switch } from 'antd';
+import { Button, Image, Popover, Switch, Tabs } from 'antd';
 import { LeftOutlined, RightOutlined, StarOutlined } from '@ant-design/icons';
 import DOMPurify from 'dompurify';
 import { marked } from 'marked';
@@ -13,6 +13,7 @@ import { Clock_Icon, FeedBack_Icon, Expand_Icon, Close_Icon } from '../../../ico
 import AccessDenied from './AccessDenied.jsx';
 import ExcalidrawViewer from '../../K9Management/components/ExcalidrawViewer';
 import RatingPopup from './RatingPopup.jsx';
+import PreviewFile from '../../../components/PreviewFile/PreviewFile.jsx';
 const ContentPanel = ({
   fetchItem,
   item,
@@ -50,7 +51,34 @@ const ContentPanel = ({
 }) => {
   const [quizPopoverVisible, setQuizPopoverVisible] = useState(false);
   const [ratingPopupVisible, setRatingPopupVisible] = useState(false);
+  const [showDiagramSection, setShowDiagramSection] = useState(false);
+  const [activeContentTabKey, setActiveContentTabKey] = useState('content');
+  const [selectedMatplotlibImageIndex, setSelectedMatplotlibImageIndex] = useState({});
+  const finalGetFileIcon = getFileIcon;
+
   if (!item) return null;
+
+  const useTabsForFiles =
+    (viewMode === 'list' || viewMode === 'grid' || viewMode === 'map') &&
+    !isMobile &&
+    item?.fileUrls?.length > 0;
+
+  const showFileTagsInContent = !useTabsForFiles;
+
+  const hasDiagramData = React.useMemo(() => {
+    if (!item) return false;
+    const hasUrl = item.diagramUrl != null && item.diagramUrl !== '';
+    const hasHtml = (item.diagramHtmlCode || item.diagramHtmlCodeFromSummaryDetail) && item.showHtml !== false;
+    const hasExcalidraw = item.diagramExcalidrawJson && item.showExcalidraw !== false;
+    const hasNote = !!(item.diagramNote || item.diagramExcalidrawNote);
+    const hasImgUrls = Array.isArray(item.imgUrls) && item.imgUrls.length > 0 && item.showImgUrls !== false;
+    const hasDetailImgs = Array.isArray(item.detailImageUrls) && item.detailImageUrls.length > 0 && item.showDetailImageUrls !== false;
+    const hasMatplotlibImgs = Array.isArray(item.matplotlibCode) &&
+      item.matplotlibCode.length > 0 &&
+      item.showMatplotlib !== false &&
+      item.matplotlibCode.some((entry) => Array.isArray(entry?.images) && entry.images.length > 0);
+    return hasUrl || hasHtml || hasExcalidraw || hasNote || hasImgUrls || hasDetailImgs || hasMatplotlibImgs;
+  }, [item]);
 
   const handleQuizItemClick = (quizItem) => {
     const url = new URL(`${window.location.origin}/home`);
@@ -206,6 +234,7 @@ const ContentPanel = ({
     );
   };
 
+
   // Check access permission
   if (!hasAccess(item)) {
     const isTrialAccount = currentUser?.account_type === 'Dùng thử';
@@ -222,10 +251,981 @@ const ContentPanel = ({
     );
   }
 
+  const renderMainContent = () => (
+    <div className={newsTabStyles.contentMain} style={{ padding: isMobile ? '0px' : '0px' }}>
+      <div className={styles.contentTitleContainer}>
+
+        {/* Audio Player Section */}
+        <div className={styles.audioPlayerContainer}>
+          <AudioPlayer audioUrl={item.audioUrl} />
+        </div>
+        {item.summary && !hideHeaderMeta && (
+          <div className={`${styles.contentDetail} ${newsTabStyles.contentDetail}`} style={{ marginTop: '12px', marginBottom: '12px' }}>
+            <div
+              className={styles.markdownContent}
+              style={{ fontSize: '16px' }}
+              dangerouslySetInnerHTML={{
+                __html: (() => {
+                  const { processedText, latexBlocks } = preprocessLatex(item.summary || '');
+                  let html = marked.parse(processedText, {
+                    headerIds: true,
+                    mangle: false,
+                    headerPrefix: '',
+                    breaks: false,
+                    gfm: true
+                  });
+                  const finalHtml = postprocessLatex(html, latexBlocks);
+                  return DOMPurify.sanitize(finalHtml);
+                })(),
+              }}
+            />
+          </div>
+        )}
+        {item.summaryDetail && showSummaryDetail && (
+          <div className={`${styles.contentDetail} ${newsTabStyles.contentDetail}`} style={{ marginTop: '12px', marginBottom: '12px' }}>
+            <div
+              className={styles.markdownContent}
+              style={{ fontSize: '16px' }}
+              dangerouslySetInnerHTML={{
+                __html: (() => {
+                  const { processedText, latexBlocks } = preprocessLatex(item.summaryDetail || '');
+                  let html = marked.parse(processedText, {
+                    headerIds: true,
+                    mangle: false,
+                    headerPrefix: '',
+                    breaks: false,
+                    gfm: true
+                  });
+                  const finalHtml = postprocessLatex(html, latexBlocks);
+                  return DOMPurify.sanitize(finalHtml);
+                })(),
+              }}
+            />
+          </div>
+        )}
+        <div style={{
+          display: 'flex',
+          gap: isMobile ? '12px' : '16px',
+          fontSize: '15px',
+          color: '#9F9F9F',
+          marginTop: '10px',
+          flexDirection: isMobile ? 'column' : 'row',
+          alignItems: isMobile ? 'flex-start' : 'center'
+        }}>
+          {!hideSummaryDetailToggle && item.summaryDetail && (
+            <Button
+              type="text"
+              size="small"
+              onClick={() => setShowSummaryDetail(!showSummaryDetail)}
+              title={showSummaryDetail ? 'Ẩn Shortform' : 'Hiện Shortform'}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+                padding: '2px 8px',
+                color: '#595959',
+                backgroundColor: '#f5f5f5',
+                borderRadius: '8px',
+                border: 'none',
+                boxShadow: 'none'
+              }}
+              icon={showSummaryDetail ? <Close_Icon width={12} height={12} /> : <Expand_Icon width={12} height={12} />}
+            >
+              Shortform
+            </Button>
+          )}
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+
+            {item.info?.filedLabel_1 && (
+              <span style={{ display: 'flex', alignItems: 'center' }}>
+                {item.info?.filedLabel_1}
+              </span>
+            )}
+            {/*{item.info?.filedLabel_1 && item.info?.filedLabel_2 && (*/}
+            {/*  <span style={{ color: '#C4C4C4' }}>|</span>*/}
+            {/*)}*/}
+            {/*{item.info?.filedLabel_2 && (*/}
+            {/*  <span style={{ display: 'flex', alignItems: 'center' }}>*/}
+            {/*    {item.info?.filedLabel_2}*/}
+            {/*  </span>*/}
+            {/*)}*/}
+          </div>
+          {
+            !hideHeaderMeta && activeTab === 'stream' && relatedCaseTrainingItems.length > 0 && (
+              <Popover
+                content={renderQuizPopoverContent}
+                title={null}
+                trigger="click"
+                open={quizPopoverVisible}
+                onOpenChange={setQuizPopoverVisible}
+                placement="bottomLeft"
+                overlayStyle={{ zIndex: 1001 }}
+              >
+                <span
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    cursor: 'pointer',
+                    color: '#9F9F9F'
+                  }}
+                  title="Bài kiểm tra liên quan"
+                >
+                  <span style={{ fontSize: '17px' }}>📝</span> Bài kiểm tra liên quan
+                </span>
+              </Popover>
+            )
+          }
+
+        </div>
+
+      </div>
+
+
+
+      {/* Diagram Section (collapsible) */}
+      {hasDiagramData && showDiagramSection && (
+        <div style={{ marginTop: '20px' }}
+         className={`${styles.valueSection} ${newsTabStyles.valueSection}`}>
+          <div className={`${styles.diagramSectionContent} ${newsTabStyles.diagramSectionContent}`}>
+            {/* Handle Excalidraw React Diagrams */}
+            {item.diagramExcalidrawJson && Array.isArray(item.diagramExcalidrawJson) && item.showExcalidraw !== false && (
+              item.diagramExcalidrawJson.map((jsonString, index) => {
+                // Lấy imageUrl nếu có
+                const imageUrl = item.diagramExcalidrawImageUrls && Array.isArray(item.diagramExcalidrawImageUrls)
+                  ? item.diagramExcalidrawImageUrls[index]
+                  : null;
+
+                return (
+                  <div key={`excalidraw-${index}`} style={{ marginBottom: '20px' }}>
+                    <div style={{
+                      border: '1px solid #e1e4e8',
+                      borderRadius: '8px',
+                      padding: '16px',
+                      backgroundColor: '#fff'
+                    }}>
+                      <ExcalidrawViewer
+                        jsonString={jsonString}
+                        readOnly={true}
+                        height="500px"
+                        imageUrl={imageUrl}
+                      />
+                    </div>
+                    {/* Show corresponding note if available */}
+                    {(Array.isArray(item.diagramExcalidrawNote) && item.diagramExcalidrawNote[index]) && (
+                      <div className={`${styles.diagramNote} ${newsTabStyles.diagramNote}`}>
+                        <div
+                          className={styles.markdownContent}
+                          dangerouslySetInnerHTML={{
+                            __html: (() => {
+                              const { processedText, latexBlocks } = preprocessLatex(item.diagramExcalidrawNote[index] || '');
+                              const html = marked.parse(processedText);
+                              const finalHtml = postprocessLatex(html, latexBlocks);
+                              return DOMPurify.sanitize(finalHtml);
+                            })(),
+                          }}
+                        />
+                      </div>
+                    )}
+                  </div>
+                );
+              })
+            )}
+
+            {/* Handle imgUrls from SummaryDetail */}
+            {item.imgUrls && Array.isArray(item.imgUrls) && item.imgUrls.length > 0 && item.showImgUrls !== false && (
+              item.imgUrls.map((imgItem, index) => {
+                const imageUrl = typeof imgItem === 'string' ? imgItem : (imgItem?.url || imgItem?.image_url || '');
+                const description = typeof imgItem === 'object' ? imgItem?.description : '';
+                if (!imageUrl) return null;
+
+                return (
+                  <div key={`imgurls-${index}`} style={{ marginBottom: '20px' }}>
+                    <div className={`${styles.diagramImage} ${newsTabStyles.diagramImage}`}>
+                      <Image
+                        src={imageUrl}
+                        alt={description || `Ảnh ${index + 1}`}
+                        className={`${styles.diagramImageDetail} ${newsTabStyles.diagramImageDetail}`}
+                        preview={{
+                          mask: 'Xem ảnh',
+                          maskClassName: 'custom-mask'
+                        }}
+                      />
+                    </div>
+                  </div>
+                );
+              })
+            )}
+
+            {/* Handle matplotlibCode images from Matplotlib Code - Gallery Style */}
+            {item.matplotlibCode &&
+              Array.isArray(item.matplotlibCode) &&
+              item.matplotlibCode.length > 0 &&
+              item.showMatplotlib !== false &&
+              (() => {
+                const flattenedImages = item.matplotlibCode.flatMap((entry) => {
+                  if (!entry) return [];
+                  if (Array.isArray(entry?.images)) return entry.images;
+                  return [];
+                });
+
+                const imageUrls = flattenedImages
+                  .map((imgItem) => {
+                    if (typeof imgItem === 'string') return imgItem;
+                    return imgItem?.url || imgItem?.image_url || imgItem?.fileUrl || '';
+                  })
+                  .filter(Boolean);
+
+                const currentSelectedIndex = selectedMatplotlibImageIndex[item.id] ?? 0;
+                const totalImages = imageUrls.length;
+                const safeSelectedIndex = Math.min(currentSelectedIndex, Math.max(totalImages - 1, 0));
+                const mainImageUrl = imageUrls[safeSelectedIndex];
+                const hasMultipleImages = totalImages > 1;
+
+                if (!mainImageUrl) return null;
+
+                const handlePrevious = () => {
+                  const newIndex = safeSelectedIndex === 0 ? totalImages - 1 : safeSelectedIndex - 1;
+                  setSelectedMatplotlibImageIndex((prev) => ({
+                    ...prev,
+                    [item.id]: newIndex,
+                  }));
+                };
+
+                const handleNext = () => {
+                  const newIndex = safeSelectedIndex === totalImages - 1 ? 0 : safeSelectedIndex + 1;
+                  setSelectedMatplotlibImageIndex((prev) => ({
+                    ...prev,
+                    [item.id]: newIndex,
+                  }));
+                };
+
+                return (
+                  <div key={`matplotlib-gallery-${item.id}`} style={{ marginBottom: '20px' }}>
+                    <div className={`${styles.diagramImage} ${newsTabStyles.diagramImage}`} style={{ position: 'relative' }}>
+                      <Image
+                        src={mainImageUrl}
+                        alt={`Ảnh matplotlib ${safeSelectedIndex + 1}`}
+                        className={`${styles.diagramImageDetail} ${newsTabStyles.diagramImageDetail}`}
+                        preview={{
+                          mask: 'Xem ảnh',
+                          maskClassName: 'custom-mask',
+                        }}
+                      />
+
+                      {/* Navigation Buttons */}
+                      {hasMultipleImages && (
+                        <>
+                          <Button
+                            type="default"
+                            shape="circle"
+                            icon={<LeftOutlined />}
+                            onClick={handlePrevious}
+                            style={{
+                              position: 'absolute',
+                              left: '20px',
+                              top: '50%',
+                              transform: 'translateY(-50%)',
+                              width: '48px',
+                              height: '48px',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                              border: '1px solid #d9d9d9',
+                              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                              zIndex: 10,
+                              fontSize: '18px',
+                              transition: 'all 0.3s ease',
+                              color: '#595959',
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 1)';
+                              e.currentTarget.style.borderColor = '#bfbfbf';
+                              e.currentTarget.style.transform = 'translateY(-50%) scale(1.1)';
+                              e.currentTarget.style.boxShadow = '0 6px 16px rgba(0, 0, 0, 0.2)';
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
+                              e.currentTarget.style.borderColor = '#d9d9d9';
+                              e.currentTarget.style.transform = 'translateY(-50%) scale(1)';
+                              e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
+                            }}
+                            title="Ảnh trước (←)"
+                          />
+                          <Button
+                            type="default"
+                            shape="circle"
+                            icon={<RightOutlined />}
+                            onClick={handleNext}
+                            style={{
+                              position: 'absolute',
+                              right: '20px',
+                              top: '50%',
+                              transform: 'translateY(-50%)',
+                              width: '48px',
+                              height: '48px',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                              border: '1px solid #d9d9d9',
+                              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                              zIndex: 10,
+                              fontSize: '18px',
+                              transition: 'all 0.3s ease',
+                              color: '#595959',
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 1)';
+                              e.currentTarget.style.borderColor = '#bfbfbf';
+                              e.currentTarget.style.transform = 'translateY(-50%) scale(1.1)';
+                              e.currentTarget.style.boxShadow = '0 6px 16px rgba(0, 0, 0, 0.2)';
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
+                              e.currentTarget.style.borderColor = '#d9d9d9';
+                              e.currentTarget.style.transform = 'translateY(-50%) scale(1)';
+                              e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
+                            }}
+                            title="Ảnh sau (→)"
+                          />
+
+                          {/* Image Counter */}
+                          <div
+                            style={{
+                              position: 'absolute',
+                              bottom: '20px',
+                              left: '50%',
+                              transform: 'translateX(-50%)',
+                              backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                              color: 'white',
+                              padding: '6px 16px',
+                              borderRadius: '20px',
+                              fontSize: '13px',
+                              fontWeight: 500,
+                              zIndex: 10,
+                              backdropFilter: 'blur(4px)',
+                              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
+                            }}
+                          >
+                            {safeSelectedIndex + 1} / {totalImages}
+                          </div>
+                        </>
+                      )}
+                    </div>
+
+                    {/* Thumbnail Gallery (only show if more than 1 image) */}
+                    {hasMultipleImages && (
+                      <div
+                        style={{
+                          marginTop: '16px',
+                          padding: '16px',
+                          backgroundColor: '#fafafa',
+                          borderRadius: '8px',
+                          border: '1px solid #f0f0f0',
+                        }}
+                      >
+                        <div
+                          style={{
+                            display: 'flex',
+                            gap: '12px',
+                            flexWrap: 'wrap',
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                          }}
+                        >
+                          {imageUrls.map((thumbUrl, index) => {
+                            const isSelected = index === safeSelectedIndex;
+                            return (
+                              <div
+                                key={index}
+                                onClick={() => {
+                                  setSelectedMatplotlibImageIndex((prev) => ({
+                                    ...prev,
+                                    [item.id]: index,
+                                  }));
+                                }}
+                                style={{
+                                  width: '80px',
+                                  height: '80px',
+                                  borderRadius: '10px',
+                                  overflow: 'hidden',
+                                  cursor: 'pointer',
+                                  border: isSelected ? '1px solid #bfbfbf' : '1px solid #e8e8e8',
+                                  backgroundColor: '#fff',
+                                  position: 'relative',
+                                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                                  transform: isSelected ? 'scale(1.05)' : 'scale(1)',
+                                  boxShadow: isSelected ? '0 4px 12px rgba(0, 0, 0, 0.15)' : '0 2px 8px rgba(0, 0, 0, 0.1)',
+                                  opacity: isSelected ? 1 : 0.85,
+                                }}
+                                onMouseEnter={(e) => {
+                                  if (!isSelected) {
+                                    e.currentTarget.style.borderColor = '#bfbfbf';
+                                    e.currentTarget.style.transform = 'scale(1.05)';
+                                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
+                                    e.currentTarget.style.opacity = '1';
+                                  }
+                                }}
+                                onMouseLeave={(e) => {
+                                  if (!isSelected) {
+                                    e.currentTarget.style.borderColor = '#e8e8e8';
+                                    e.currentTarget.style.transform = 'scale(1)';
+                                    e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.1)';
+                                    e.currentTarget.style.opacity = '0.85';
+                                  }
+                                }}
+                                title={`Ảnh matplotlib ${index + 1} - Click để xem`}
+                              >
+                                <img
+                                  src={thumbUrl}
+                                  alt={`Thumbnail matplotlib ${index + 1}`}
+                                  style={{
+                                    width: '100%',
+                                    height: '100%',
+                                    objectFit: 'cover',
+                                  }}
+                                />
+
+                                {/* Selected indicator */}
+                                {isSelected && (
+                                  <div
+                                    style={{
+                                      position: 'absolute',
+                                      top: '4px',
+                                      right: '4px',
+                                      width: '22px',
+                                      height: '22px',
+                                      borderRadius: '50%',
+                                      backgroundColor: '#8c8c8c',
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      justifyContent: 'center',
+                                      border: '2px solid white',
+                                      boxShadow: '0 2px 6px rgba(0,0,0,0.3)',
+                                      zIndex: 10,
+                                    }}
+                                  >
+                                    <span style={{ color: 'white', fontSize: '12px', fontWeight: 'bold' }}>✓</span>
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
+
+            {/* Handle detailImageUrls from Detail - Gallery Style */}
+            {item.detailImageUrls && Array.isArray(item.detailImageUrls) && item.detailImageUrls.length > 0 && item.showDetailImageUrls !== false && (() => {
+              const currentSelectedIndex = selectedDetailImageIndex[item.id] ?? 0;
+              const mainImage = item.detailImageUrls[currentSelectedIndex];
+              const mainImageUrl = typeof mainImage === 'string' ? mainImage : (mainImage?.url || mainImage?.image_url || '');
+              const totalImages = item.detailImageUrls.length;
+              const hasMultipleImages = totalImages > 1;
+
+              if (!mainImageUrl) return null;
+
+              const handlePrevious = () => {
+                const newIndex = currentSelectedIndex === 0 ? totalImages - 1 : currentSelectedIndex - 1;
+                setSelectedDetailImageIndex(prev => ({
+                  ...prev,
+                  [item.id]: newIndex
+                }));
+              };
+
+              const handleNext = () => {
+                const newIndex = currentSelectedIndex === totalImages - 1 ? 0 : currentSelectedIndex + 1;
+                setSelectedDetailImageIndex(prev => ({
+                  ...prev,
+                  [item.id]: newIndex
+                }));
+              };
+
+              return (
+                <div key={`detailimageurls-gallery`} style={{ marginBottom: '20px' }}>
+                  <div className={`${styles.diagramImage} ${newsTabStyles.diagramImage}`} style={{ position: 'relative' }}>
+                    <Image
+                      src={mainImageUrl}
+                      alt={`Ảnh ${currentSelectedIndex + 1}`}
+                      className={`${styles.diagramImageDetail} ${newsTabStyles.diagramImageDetail}`}
+                      preview={{
+                        mask: 'Xem ảnh',
+                        maskClassName: 'custom-mask'
+                      }}
+                    />
+
+                    {/* Navigation Buttons */}
+                    {hasMultipleImages && (
+                      <>
+                        <Button
+                          type="default"
+                          shape="circle"
+                          icon={<LeftOutlined />}
+                          onClick={handlePrevious}
+                          style={{
+                            position: 'absolute',
+                            left: '20px',
+                            top: '50%',
+                            transform: 'translateY(-50%)',
+                            width: '48px',
+                            height: '48px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                            border: '1px solid #d9d9d9',
+                            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                            zIndex: 10,
+                            fontSize: '18px',
+                            transition: 'all 0.3s ease',
+                            color: '#595959'
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 1)';
+                            e.currentTarget.style.borderColor = '#bfbfbf';
+                            e.currentTarget.style.transform = 'translateY(-50%) scale(1.1)';
+                            e.currentTarget.style.boxShadow = '0 6px 16px rgba(0, 0, 0, 0.2)';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
+                            e.currentTarget.style.borderColor = '#d9d9d9';
+                            e.currentTarget.style.transform = 'translateY(-50%) scale(1)';
+                            e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
+                          }}
+                          title="Ảnh trước (←)"
+                        />
+                        <Button
+                          type="default"
+                          shape="circle"
+                          icon={<RightOutlined />}
+                          onClick={handleNext}
+                          style={{
+                            position: 'absolute',
+                            right: '20px',
+                            top: '50%',
+                            transform: 'translateY(-50%)',
+                            width: '48px',
+                            height: '48px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                            border: '1px solid #d9d9d9',
+                            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                            zIndex: 10,
+                            fontSize: '18px',
+                            transition: 'all 0.3s ease',
+                            color: '#595959'
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 1)';
+                            e.currentTarget.style.borderColor = '#bfbfbf';
+                            e.currentTarget.style.transform = 'translateY(-50%) scale(1.1)';
+                            e.currentTarget.style.boxShadow = '0 6px 16px rgba(0, 0, 0, 0.2)';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
+                            e.currentTarget.style.borderColor = '#d9d9d9';
+                            e.currentTarget.style.transform = 'translateY(-50%) scale(1)';
+                            e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
+                          }}
+                          title="Ảnh sau (→)"
+                        />
+                        {/* Image Counter */}
+                        <div style={{
+                          position: 'absolute',
+                          bottom: '20px',
+                          left: '50%',
+                          transform: 'translateX(-50%)',
+                          backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                          color: 'white',
+                          padding: '6px 16px',
+                          borderRadius: '20px',
+                          fontSize: '13px',
+                          fontWeight: 500,
+                          zIndex: 10,
+                          backdropFilter: 'blur(4px)',
+                          boxShadow: '0 2px 8px rgba(0,0,0,0.3)'
+                        }}>
+                          {currentSelectedIndex + 1} / {totalImages}
+                        </div>
+                      </>
+                    )}
+                  </div>
+
+                  {/* Thumbnail Gallery (only show if more than 1 image) */}
+                  {hasMultipleImages && (
+                    <div style={{
+                      marginTop: '16px',
+                      padding: '16px',
+                      backgroundColor: '#fafafa',
+                      borderRadius: '8px',
+                      border: '1px solid #f0f0f0'
+                    }}>
+                      <div style={{
+                        display: 'flex',
+                        gap: '12px',
+                        flexWrap: 'wrap',
+                        justifyContent: 'center',
+                        alignItems: 'center'
+                      }}>
+                        {item.detailImageUrls.map((imgItem, index) => {
+                          const thumbUrl = typeof imgItem === 'string' ? imgItem : (imgItem?.url || imgItem?.image_url || '');
+                          const isSelected = index === currentSelectedIndex;
+
+                          if (!thumbUrl) return null;
+
+                          return (
+                            <div
+                              key={index}
+                              onClick={() => {
+                                setSelectedDetailImageIndex(prev => ({
+                                  ...prev,
+                                  [item.id]: index
+                                }));
+                              }}
+                              style={{
+                                width: '80px',
+                                height: '80px',
+                                borderRadius: '10px',
+                                overflow: 'hidden',
+                                cursor: 'pointer',
+                                border: isSelected ? '1px solid #bfbfbf' : '1px solid #e8e8e8',
+                                backgroundColor: '#fff',
+                                position: 'relative',
+                                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                                transform: isSelected ? 'scale(1.05)' : 'scale(1)',
+                                boxShadow: isSelected ? '0 4px 12px rgba(0, 0, 0, 0.15)' : '0 2px 8px rgba(0,0,0,0.1)',
+                                opacity: isSelected ? 1 : 0.85
+                              }}
+                              onMouseEnter={(e) => {
+                                if (!isSelected) {
+                                  e.currentTarget.style.borderColor = '#bfbfbf';
+                                  e.currentTarget.style.transform = 'scale(1.05)';
+                                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
+                                  e.currentTarget.style.opacity = '1';
+                                }
+                              }}
+                              onMouseLeave={(e) => {
+                                if (!isSelected) {
+                                  e.currentTarget.style.borderColor = '#e8e8e8';
+                                  e.currentTarget.style.transform = 'scale(1)';
+                                  e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
+                                  e.currentTarget.style.opacity = '0.85';
+                                }
+                              }}
+                              title={`Ảnh ${index + 1} - Click để xem`}
+                            >
+                              <img
+                                src={thumbUrl}
+                                alt={`Thumbnail ${index + 1}`}
+                                style={{
+                                  width: '100%',
+                                  height: '100%',
+                                  objectFit: 'cover'
+                                }}
+                              />
+                              {/* Selected indicator */}
+                              {isSelected && (
+                                <div style={{
+                                  position: 'absolute',
+                                  top: '4px',
+                                  right: '4px',
+                                  width: '22px',
+                                  height: '22px',
+                                  borderRadius: '50%',
+                                  backgroundColor: '#8c8c8c',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  border: '2px solid white',
+                                  boxShadow: '0 2px 6px rgba(0,0,0,0.3)',
+                                  zIndex: 10
+                                }}>
+                                  <span style={{ color: 'white', fontSize: '12px', fontWeight: 'bold' }}>✓</span>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
+
+            {/* Handle HTML Code Diagrams */}
+            {item.diagramHtmlCode && Array.isArray(item.diagramHtmlCode) && item.showHtml !== false && (
+              item.diagramHtmlCode.map((htmlCode, index) => (
+                <div key={`html-${index}`} >
+                  <div className={`${styles.diagramHtmlCode} ${newsTabStyles.diagramHtmlCode}`}>
+                    <div
+                      dangerouslySetInnerHTML={{
+                        __html: DOMPurify.sanitize(htmlCode || ''),
+                      }}
+                    />
+                  </div>
+                </div>
+              ))
+            )}
+
+            {/* Handle HTML Code Diagrams from SummaryDetail */}
+            {item.diagramHtmlCodeFromSummaryDetail && item.showHtml !== false && (
+              (Array.isArray(item.diagramHtmlCodeFromSummaryDetail) ? item.diagramHtmlCodeFromSummaryDetail : [item.diagramHtmlCodeFromSummaryDetail]).map((htmlCode, index) => (
+                <div key={`html-summary-${index}`} >
+                  <div className={`${styles.diagramHtmlCode} ${newsTabStyles.diagramHtmlCode}`}>
+                    <div
+                      dangerouslySetInnerHTML={{
+                        __html: DOMPurify.sanitize(htmlCode || ''),
+                      }}
+                    />
+                  </div>
+                </div>
+              ))
+            )}
+
+            {/* Handle Kroki Image Diagrams */}
+            {item.diagramUrl && (
+              Array.isArray(item.diagramUrl) ? (
+                item.diagramUrl.map((diagramUrl, index) => (
+                  <div key={`kroki-${index}`} style={{ marginBottom: '20px' }}>
+                    <div className={`${styles.diagramImage} ${newsTabStyles.diagramImage}`}>
+                      <Image
+                        src={diagramUrl}
+                        alt={`Diagram ${index + 1}`}
+                        className={`${styles.diagramImageDetail} ${newsTabStyles.diagramImageDetail}`}
+                        preview={{
+                          mask: 'Xem ảnh',
+                          maskClassName: 'custom-mask'
+                        }}
+                      />
+                    </div>
+                    {/* Show corresponding note if available */}
+                    {Array.isArray(item.diagramNote) && item.diagramNote[index] && (
+                      <div className={`${styles.diagramNote} ${newsTabStyles.diagramNote}`}>
+                        <div
+                          className={styles.markdownContent}
+                          dangerouslySetInnerHTML={{
+                            __html: (() => {
+                              const { processedText, latexBlocks } = preprocessLatex(item.diagramNote[index] || '');
+                              const html = marked.parse(processedText);
+                              const finalHtml = postprocessLatex(html, latexBlocks);
+                              return DOMPurify.sanitize(finalHtml);
+                            })(),
+                          }}
+                        />
+                      </div>
+                    )}
+                  </div>
+                ))
+              ) : (
+                /* Handle single diagram (backward compatibility) */
+                <>
+                  <div className={`${styles.diagramImage} ${newsTabStyles.diagramImage}`}>
+                    <Image
+                      src={item.diagramUrl}
+                      alt="Diagram"
+                      className={`${styles.diagramImageDetail} ${newsTabStyles.diagramImageDetail}`}
+                      preview={{
+                        mask: 'Xem ảnh',
+                        maskClassName: 'custom-mask'
+                      }}
+                    />
+                  </div>
+                  {item.diagramNote && (
+                    <div className={`${styles.diagramNote} ${newsTabStyles.diagramNote}`}>
+                      <div
+                        className={styles.markdownContent}
+                        dangerouslySetInnerHTML={{
+                          __html: (() => {
+                            const { processedText, latexBlocks } = preprocessLatex(
+                              Array.isArray(item.diagramNote)
+                                ? item.diagramNote[0] || ''
+                                : item.diagramNote || ''
+                            );
+                            const html = marked.parse(processedText);
+                            const finalHtml = postprocessLatex(html, latexBlocks);
+                            return DOMPurify.sanitize(finalHtml);
+                          })(),
+                        }}
+                      />
+                    </div>
+                  )}
+                </>
+              )
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Toggle Diagram / Illustration */}
+      {hasDiagramData && (
+        <div style={{ marginTop: '7px' }}>
+          <Button
+            type="text"
+            size="small"
+            onClick={() => setShowDiagramSection(prev => !prev)}
+            title={showDiagramSection ? 'Ẩn Diagram / Illustration' : 'Hiện Diagram / Illustration'}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+              padding: '2px 8px',
+              color: '#595959',
+              backgroundColor: '#f5f5f5',
+              borderRadius: '8px',
+              border: 'none',
+              boxShadow: 'none',
+            }}
+            icon={showDiagramSection ? <Close_Icon width={12} height={12} /> : <Expand_Icon width={12} height={12} />}
+          >
+            Diagram / Illustration
+          </Button>
+        </div>
+      )}
+      {/* File URLs tags (only when not using Tabs for files) */}
+      {showFileTagsInContent && item.fileUrls && item.fileUrls.length > 0 && (
+        <div style={{ margin: '10px 0 0px 0px' }}
+          className={`${styles.fileTagsContainer} ${newsTabStyles.fileTagsContainer}`}>
+          {item.fileUrls.map((file, index) => {
+            const url = typeof file === 'string' ? file : file?.url;
+            const fileName =
+              (file && typeof file === 'object' && file.name) ||
+              (url && url.split('/').pop()) ||
+              `file-${index + 1}`;
+            const fileExtension = fileName.split('.').pop()?.toLowerCase() || '';
+
+            return (
+              <div
+                key={index}
+                className={`${styles.fileTag} ${newsTabStyles.fileTag}`}
+                onClick={() => openFilePreview(url, fileName)}
+                title={fileName}
+              >
+                <span className={`${styles.fileTagIcon} ${newsTabStyles.fileTagIcon}`}>
+                  {getFileIcon(fileExtension)}
+                </span>
+                <span className={`${styles.fileTagName} ${newsTabStyles.fileTagName}`}>
+                  {fileName}
+                </span>
+                <span className={`${styles.fileTagExtension} ${newsTabStyles.fileTagExtension}`}>
+                  {fileExtension.toUpperCase()}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      )}
+      <div className={`${styles.contentBody} ${newsTabStyles.contentBody}`}>
+        {item.detail && item.showDetail !== false && (
+          <div className={`${styles.contentDetail} ${newsTabStyles.contentDetail}`}>
+            <div
+              ref={markdownContentRef}
+              className={styles.markdownContent}
+              dangerouslySetInnerHTML={{
+                __html: (() => {
+                  const { processedText, latexBlocks } = preprocessLatex(item.detail || '');
+                  let html = marked.parse(processedText, {
+                    headerIds: true,
+                    mangle: false,
+                    headerPrefix: '',
+                    breaks: false,
+                    gfm: true
+                  });
+
+                  // Apply search highlight if searchText exists
+                  if (searchText && searchText.trim()) {
+                    html = highlightTextInContent(html, searchText);
+                  }
+                  const finalHtml = postprocessLatex(html, latexBlocks);
+                  return DOMPurify.sanitize(finalHtml);
+                })(),
+              }}
+            />
+          </div>
+        )}
+
+        {/* Quiz Component - Hiển thị cuối cùng khi xem chi tiết */}
+        {item.questionContent && (
+          <QuizComponent
+            allowRetake={item.allow_retake}
+            quizData={item.questionContent}
+            questionId={item.id}
+            onScoreUpdate={(qid, score) => setQuestionScoreMap(prev => ({ ...prev, [qid]: score }))}
+          />
+        )}
+      </div>
+    </div>
+  );
+
+  const renderContentArea = () => {
+    if (!useTabsForFiles) {
+      return renderMainContent();
+    }
+
+    const fileTabs =
+      item.fileUrls?.map((fileItem, index) => {
+        const url = typeof fileItem === 'string' ? fileItem : (fileItem?.url || '');
+        const name =
+          typeof fileItem === 'object' && fileItem != null
+            ? fileItem.name || (url && url.split('/').pop()) || `File ${index + 1}`
+            : (url && url.split('/').pop()) || `File ${index + 1}`;
+        const ext = (name || '').split('.').pop()?.toLowerCase() || '';
+        const shortLabel =
+          String(name || '').length > 22 ? String(name).slice(0, 19) + '...' : name || `File ${index + 1}`;
+
+        const labelNode = (
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+            {finalGetFileIcon && ext ? finalGetFileIcon(ext) : null}
+            <span>{shortLabel}</span>
+          </span>
+        );
+
+        return {
+          key: `file-${index}`,
+          label: <span title={name}>{labelNode}</span>,
+          children: (
+            <div style={{ padding: '8px 16px 16px 16px' }}>
+
+              <PreviewFile
+                fileUrl={url}
+                fileName={name}
+                showHeader={true}
+                height="100vh"
+              />
+            </div>
+          ),
+        };
+      }) || [];
+
+    return (
+      // <div style={{ margin: '0 0 10px 10px' }}>
+      <Tabs
+        className={newsTabStyles.contentTabs}
+        activeKey={activeContentTabKey}
+        onChange={setActiveContentTabKey}
+        items={[
+          { key: 'content', label: 'Content', children: renderMainContent() },
+          ...fileTabs,
+        ]}
+      />
+      // </div>
+    );
+  };
+
   // Show skeleton while animating
   if (isAnimating) {
     return renderSkeleton();
   }
+
+
 
   return (
     <div
@@ -380,629 +1380,15 @@ const ContentPanel = ({
         </div>
       )}
 
-      {/* File URLs Section */}
-      <div className={newsTabStyles.contentMain} style={{ padding: isMobile ? '0px' : viewMode === 'grid' ? '0 50px' : '0 100px' }}>
-        <div className={styles.contentTitleContainer}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span className={`${styles.contentTitle} ${newsTabStyles.contentTitle}`}>{item.title}</span>
-            </div>
-          </div>
-          {item.summary && !hideHeaderMeta && (
-            <div className={`${styles.contentDetail} ${newsTabStyles.contentDetail}`} style={{ marginTop: '12px', marginBottom: '12px' }}>
-              <div
-                className={styles.markdownContent}
-                style={{ fontSize: '16px' }}
-                dangerouslySetInnerHTML={{
-                  __html: (() => {
-                    const { processedText, latexBlocks } = preprocessLatex(item.summary || '');
-                    let html = marked.parse(processedText, {
-                      headerIds: true,
-                      mangle: false,
-                      headerPrefix: '',
-                      breaks: false,
-                      gfm: true
-                    });
-                    const finalHtml = postprocessLatex(html, latexBlocks);
-                    return DOMPurify.sanitize(finalHtml);
-                  })(),
-                }}
-              />
-            </div>
-          )}
-          {item.summaryDetail && showSummaryDetail && (
-            <div className={`${styles.contentDetail} ${newsTabStyles.contentDetail}`} style={{ marginTop: '12px', marginBottom: '12px' }}>
-              <div
-                className={styles.markdownContent}
-                style={{ fontSize: '16px' }}
-                dangerouslySetInnerHTML={{
-                  __html: (() => {
-                    const { processedText, latexBlocks } = preprocessLatex(item.summaryDetail || '');
-                    let html = marked.parse(processedText, {
-                      headerIds: true,
-                      mangle: false,
-                      headerPrefix: '',
-                      breaks: false,
-                      gfm: true
-                    });
-                    const finalHtml = postprocessLatex(html, latexBlocks);
-                    return DOMPurify.sanitize(finalHtml);
-                  })(),
-                }}
-              />
-            </div>
-          )}
-          <div style={{
-            display: 'flex',
-            gap: isMobile ? '12px' : '16px',
-            fontSize: '15px',
-            color: '#9F9F9F',
-            marginTop: '10px',
-            flexDirection: isMobile ? 'column' : 'row',
-            alignItems: isMobile ? 'flex-start' : 'center'
-          }}>
-            {!hideSummaryDetailToggle && item.summaryDetail && (
-              <Button
-                type="text"
-                size="small"
-                onClick={() => setShowSummaryDetail(!showSummaryDetail)}
-                title={showSummaryDetail ? 'Ẩn Shortform' : 'Hiện Shortform'}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '4px',
-                  padding: '2px 8px',
-                  color: '#595959',
-                  backgroundColor: '#f5f5f5',
-                  borderRadius: '8px',
-                  border: 'none',
-                  boxShadow: 'none'
-                }}
-                icon={showSummaryDetail ? <Close_Icon width={12} height={12} /> : <Expand_Icon width={12} height={12} />}
-              >
-                Shortform
-              </Button>
-            )}
-
-            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-
-              {item.info?.filedLabel_1 && (
-                <span style={{ display: 'flex', alignItems: 'center' }}>
-                  {item.info?.filedLabel_1}
-                </span>
-              )}
-              {/*{item.info?.filedLabel_1 && item.info?.filedLabel_2 && (*/}
-              {/*  <span style={{ color: '#C4C4C4' }}>|</span>*/}
-              {/*)}*/}
-              {/*{item.info?.filedLabel_2 && (*/}
-              {/*  <span style={{ display: 'flex', alignItems: 'center' }}>*/}
-              {/*    {item.info?.filedLabel_2}*/}
-              {/*  </span>*/}
-              {/*)}*/}
-            </div>
-            {
-              !hideHeaderMeta && activeTab === 'stream' && relatedCaseTrainingItems.length > 0 && (
-                <Popover
-                  content={renderQuizPopoverContent}
-                  title={null}
-                  trigger="click"
-                  open={quizPopoverVisible}
-                  onOpenChange={setQuizPopoverVisible}
-                  placement="bottomLeft"
-                  overlayStyle={{ zIndex: 1001 }}
-                >
-                  <span
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '4px',
-                      cursor: 'pointer',
-                      color: '#9F9F9F'
-                    }}
-                    title="Bài kiểm tra liên quan"
-                  >
-                    <span style={{ fontSize: '17px' }}>📝</span> Bài kiểm tra liên quan
-                  </span>
-                </Popover>
-              )
-            }
-
-          </div>
-          {/* Audio Player Section */}
-          <div className={styles.audioPlayerContainer}>
-            <AudioPlayer audioUrl={item.audioUrl} />
+      <div style={{ padding: isMobile ? '0px' : (viewMode === 'grid' || viewMode === 'map') ? '0 25px' : '0 90px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span className={`${styles.contentTitle} ${newsTabStyles.contentTitle}`}>{item.title}</span>
           </div>
         </div>
-
-        {item.fileUrls && item.fileUrls.length > 0 && (
-          <div className={`${styles.fileTagsContainer} ${newsTabStyles.fileTagsContainer}`}>
-            {item.fileUrls.map((fileItem, index) => {
-              const url = typeof fileItem === 'string' ? fileItem : (fileItem?.url || '');
-              const fileName = typeof fileItem === 'string'
-                ? (url.split('/').pop() || `file-${index + 1}`)
-                : (fileItem?.name || url.split('/').pop() || `file-${index + 1}`);
-              const fileExtension = fileName.split('.').pop()?.toLowerCase() || '';
-
-              return (
-                <div
-                  key={index}
-                  className={`${styles.fileTag} ${newsTabStyles.fileTag}`}
-                  onClick={() => openFilePreview(url, fileName)}
-                  title={fileName}
-                >
-                  <span className={`${styles.fileTagIcon} ${newsTabStyles.fileTagIcon}`}>
-                    {getFileIcon(fileExtension)}
-                  </span>
-                  <span className={`${styles.fileTagName} ${newsTabStyles.fileTagName}`}>
-                    {fileName}
-                  </span>
-                  <span className={`${styles.fileTagExtension} ${newsTabStyles.fileTagExtension}`}>
-                    {fileExtension.toUpperCase()}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
-        )}
-
-        {/* Diagram Section */}
-        {(item.diagramUrl || ((item.diagramHtmlCode || item.diagramHtmlCodeFromSummaryDetail) && item.showHtml !== false) || (item.diagramExcalidrawJson && item.showExcalidraw !== false) || item.diagramNote || item.diagramExcalidrawNote || (item.imgUrls && item.showImgUrls !== false) || (item.detailImageUrls && Array.isArray(item.detailImageUrls) && item.detailImageUrls.length > 0 && item.showDetailImageUrls !== false)) && (
-          <div className={`${styles.valueSection} ${newsTabStyles.valueSection}`}>
-            <div className={`${styles.diagramSectionContent} ${newsTabStyles.diagramSectionContent}`}>
-              {/* Handle Excalidraw React Diagrams */}
-              {item.diagramExcalidrawJson && Array.isArray(item.diagramExcalidrawJson) && item.showExcalidraw !== false && (
-                item.diagramExcalidrawJson.map((jsonString, index) => {
-                  // Lấy imageUrl nếu có
-                  const imageUrl = item.diagramExcalidrawImageUrls && Array.isArray(item.diagramExcalidrawImageUrls)
-                    ? item.diagramExcalidrawImageUrls[index]
-                    : null;
-
-                  return (
-                    <div key={`excalidraw-${index}`} style={{ marginBottom: '20px' }}>
-                      <div style={{
-                        border: '1px solid #e1e4e8',
-                        borderRadius: '8px',
-                        padding: '16px',
-                        backgroundColor: '#fff'
-                      }}>
-                        <ExcalidrawViewer
-                          jsonString={jsonString}
-                          readOnly={true}
-                          height="500px"
-                          imageUrl={imageUrl}
-                        />
-                      </div>
-                      {/* Show corresponding note if available */}
-                      {(Array.isArray(item.diagramExcalidrawNote) && item.diagramExcalidrawNote[index]) && (
-                        <div className={`${styles.diagramNote} ${newsTabStyles.diagramNote}`}>
-                          <div
-                            className={styles.markdownContent}
-                            dangerouslySetInnerHTML={{
-                              __html: (() => {
-                                const { processedText, latexBlocks } = preprocessLatex(item.diagramExcalidrawNote[index] || '');
-                                const html = marked.parse(processedText);
-                                const finalHtml = postprocessLatex(html, latexBlocks);
-                                return DOMPurify.sanitize(finalHtml);
-                              })(),
-                            }}
-                          />
-                        </div>
-                      )}
-                    </div>
-                  );
-                })
-              )}
-
-              {/* Handle imgUrls from SummaryDetail */}
-              {item.imgUrls && Array.isArray(item.imgUrls) && item.imgUrls.length > 0 && item.showImgUrls !== false && (
-                item.imgUrls.map((imgItem, index) => {
-                  const imageUrl = typeof imgItem === 'string' ? imgItem : (imgItem?.url || imgItem?.image_url || '');
-                  const description = typeof imgItem === 'object' ? imgItem?.description : '';
-                  if (!imageUrl) return null;
-
-                  return (
-                    <div key={`imgurls-${index}`} style={{ marginBottom: '20px' }}>
-                      <div className={`${styles.diagramImage} ${newsTabStyles.diagramImage}`}>
-                        <Image
-                          src={imageUrl}
-                          alt={description || `Ảnh ${index + 1}`}
-                          className={`${styles.diagramImageDetail} ${newsTabStyles.diagramImageDetail}`}
-                          preview={{
-                            mask: 'Xem ảnh',
-                            maskClassName: 'custom-mask'
-                          }}
-                        />
-                      </div>
-                    </div>
-                  );
-                })
-              )}
-
-              {/* Handle detailImageUrls from Detail - Gallery Style */}
-              {item.detailImageUrls && Array.isArray(item.detailImageUrls) && item.detailImageUrls.length > 0 && item.showDetailImageUrls !== false && (() => {
-                const currentSelectedIndex = selectedDetailImageIndex[item.id] ?? 0;
-                const mainImage = item.detailImageUrls[currentSelectedIndex];
-                const mainImageUrl = typeof mainImage === 'string' ? mainImage : (mainImage?.url || mainImage?.image_url || '');
-                const totalImages = item.detailImageUrls.length;
-                const hasMultipleImages = totalImages > 1;
-
-                if (!mainImageUrl) return null;
-
-                const handlePrevious = () => {
-                  const newIndex = currentSelectedIndex === 0 ? totalImages - 1 : currentSelectedIndex - 1;
-                  setSelectedDetailImageIndex(prev => ({
-                    ...prev,
-                    [item.id]: newIndex
-                  }));
-                };
-
-                const handleNext = () => {
-                  const newIndex = currentSelectedIndex === totalImages - 1 ? 0 : currentSelectedIndex + 1;
-                  setSelectedDetailImageIndex(prev => ({
-                    ...prev,
-                    [item.id]: newIndex
-                  }));
-                };
-
-                return (
-                  <div key={`detailimageurls-gallery`} style={{ marginBottom: '20px' }}>
-                    <div className={`${styles.diagramImage} ${newsTabStyles.diagramImage}`} style={{ position: 'relative' }}>
-                      <Image
-                        src={mainImageUrl}
-                        alt={`Ảnh ${currentSelectedIndex + 1}`}
-                        className={`${styles.diagramImageDetail} ${newsTabStyles.diagramImageDetail}`}
-                        preview={{
-                          mask: 'Xem ảnh',
-                          maskClassName: 'custom-mask'
-                        }}
-                      />
-
-                      {/* Navigation Buttons */}
-                      {hasMultipleImages && (
-                        <>
-                          <Button
-                            type="default"
-                            shape="circle"
-                            icon={<LeftOutlined />}
-                            onClick={handlePrevious}
-                            style={{
-                              position: 'absolute',
-                              left: '20px',
-                              top: '50%',
-                              transform: 'translateY(-50%)',
-                              width: '48px',
-                              height: '48px',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              backgroundColor: 'rgba(255, 255, 255, 0.9)',
-                              border: '1px solid #d9d9d9',
-                              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-                              zIndex: 10,
-                              fontSize: '18px',
-                              transition: 'all 0.3s ease',
-                              color: '#595959'
-                            }}
-                            onMouseEnter={(e) => {
-                              e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 1)';
-                              e.currentTarget.style.borderColor = '#bfbfbf';
-                              e.currentTarget.style.transform = 'translateY(-50%) scale(1.1)';
-                              e.currentTarget.style.boxShadow = '0 6px 16px rgba(0, 0, 0, 0.2)';
-                            }}
-                            onMouseLeave={(e) => {
-                              e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
-                              e.currentTarget.style.borderColor = '#d9d9d9';
-                              e.currentTarget.style.transform = 'translateY(-50%) scale(1)';
-                              e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
-                            }}
-                            title="Ảnh trước (←)"
-                          />
-                          <Button
-                            type="default"
-                            shape="circle"
-                            icon={<RightOutlined />}
-                            onClick={handleNext}
-                            style={{
-                              position: 'absolute',
-                              right: '20px',
-                              top: '50%',
-                              transform: 'translateY(-50%)',
-                              width: '48px',
-                              height: '48px',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              backgroundColor: 'rgba(255, 255, 255, 0.9)',
-                              border: '1px solid #d9d9d9',
-                              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-                              zIndex: 10,
-                              fontSize: '18px',
-                              transition: 'all 0.3s ease',
-                              color: '#595959'
-                            }}
-                            onMouseEnter={(e) => {
-                              e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 1)';
-                              e.currentTarget.style.borderColor = '#bfbfbf';
-                              e.currentTarget.style.transform = 'translateY(-50%) scale(1.1)';
-                              e.currentTarget.style.boxShadow = '0 6px 16px rgba(0, 0, 0, 0.2)';
-                            }}
-                            onMouseLeave={(e) => {
-                              e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
-                              e.currentTarget.style.borderColor = '#d9d9d9';
-                              e.currentTarget.style.transform = 'translateY(-50%) scale(1)';
-                              e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
-                            }}
-                            title="Ảnh sau (→)"
-                          />
-                          {/* Image Counter */}
-                          <div style={{
-                            position: 'absolute',
-                            bottom: '20px',
-                            left: '50%',
-                            transform: 'translateX(-50%)',
-                            backgroundColor: 'rgba(0, 0, 0, 0.7)',
-                            color: 'white',
-                            padding: '6px 16px',
-                            borderRadius: '20px',
-                            fontSize: '13px',
-                            fontWeight: 500,
-                            zIndex: 10,
-                            backdropFilter: 'blur(4px)',
-                            boxShadow: '0 2px 8px rgba(0,0,0,0.3)'
-                          }}>
-                            {currentSelectedIndex + 1} / {totalImages}
-                          </div>
-                        </>
-                      )}
-                    </div>
-
-                    {/* Thumbnail Gallery (only show if more than 1 image) */}
-                    {hasMultipleImages && (
-                      <div style={{
-                        marginTop: '16px',
-                        padding: '16px',
-                        backgroundColor: '#fafafa',
-                        borderRadius: '8px',
-                        border: '1px solid #f0f0f0'
-                      }}>
-                        <div style={{
-                          display: 'flex',
-                          gap: '12px',
-                          flexWrap: 'wrap',
-                          justifyContent: 'center',
-                          alignItems: 'center'
-                        }}>
-                          {item.detailImageUrls.map((imgItem, index) => {
-                            const thumbUrl = typeof imgItem === 'string' ? imgItem : (imgItem?.url || imgItem?.image_url || '');
-                            const isSelected = index === currentSelectedIndex;
-
-                            if (!thumbUrl) return null;
-
-                            return (
-                              <div
-                                key={index}
-                                onClick={() => {
-                                  setSelectedDetailImageIndex(prev => ({
-                                    ...prev,
-                                    [item.id]: index
-                                  }));
-                                }}
-                                style={{
-                                  width: '80px',
-                                  height: '80px',
-                                  borderRadius: '10px',
-                                  overflow: 'hidden',
-                                  cursor: 'pointer',
-                                  border: isSelected ? '1px solid #bfbfbf' : '1px solid #e8e8e8',
-                                  backgroundColor: '#fff',
-                                  position: 'relative',
-                                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                                  transform: isSelected ? 'scale(1.05)' : 'scale(1)',
-                                  boxShadow: isSelected ? '0 4px 12px rgba(0, 0, 0, 0.15)' : '0 2px 8px rgba(0,0,0,0.1)',
-                                  opacity: isSelected ? 1 : 0.85
-                                }}
-                                onMouseEnter={(e) => {
-                                  if (!isSelected) {
-                                    e.currentTarget.style.borderColor = '#bfbfbf';
-                                    e.currentTarget.style.transform = 'scale(1.05)';
-                                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
-                                    e.currentTarget.style.opacity = '1';
-                                  }
-                                }}
-                                onMouseLeave={(e) => {
-                                  if (!isSelected) {
-                                    e.currentTarget.style.borderColor = '#e8e8e8';
-                                    e.currentTarget.style.transform = 'scale(1)';
-                                    e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
-                                    e.currentTarget.style.opacity = '0.85';
-                                  }
-                                }}
-                                title={`Ảnh ${index + 1} - Click để xem`}
-                              >
-                                <img
-                                  src={thumbUrl}
-                                  alt={`Thumbnail ${index + 1}`}
-                                  style={{
-                                    width: '100%',
-                                    height: '100%',
-                                    objectFit: 'cover'
-                                  }}
-                                />
-                                {/* Selected indicator */}
-                                {isSelected && (
-                                  <div style={{
-                                    position: 'absolute',
-                                    top: '4px',
-                                    right: '4px',
-                                    width: '22px',
-                                    height: '22px',
-                                    borderRadius: '50%',
-                                    backgroundColor: '#8c8c8c',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    border: '2px solid white',
-                                    boxShadow: '0 2px 6px rgba(0,0,0,0.3)',
-                                    zIndex: 10
-                                  }}>
-                                    <span style={{ color: 'white', fontSize: '12px', fontWeight: 'bold' }}>✓</span>
-                                  </div>
-                                )}
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                );
-              })()}
-
-              {/* Handle HTML Code Diagrams */}
-              {item.diagramHtmlCode && Array.isArray(item.diagramHtmlCode) && item.showHtml !== false && (
-                item.diagramHtmlCode.map((htmlCode, index) => (
-                  <div key={`html-${index}`} >
-                    <div className={`${styles.diagramHtmlCode} ${newsTabStyles.diagramHtmlCode}`}>
-                      <div
-                        dangerouslySetInnerHTML={{
-                          __html: DOMPurify.sanitize(htmlCode || ''),
-                        }}
-                      />
-                    </div>
-                  </div>
-                ))
-              )}
-
-              {/* Handle HTML Code Diagrams from SummaryDetail */}
-              {item.diagramHtmlCodeFromSummaryDetail && item.showHtml !== false && (
-                (Array.isArray(item.diagramHtmlCodeFromSummaryDetail) ? item.diagramHtmlCodeFromSummaryDetail : [item.diagramHtmlCodeFromSummaryDetail]).map((htmlCode, index) => (
-                  <div key={`html-summary-${index}`} >
-                    <div className={`${styles.diagramHtmlCode} ${newsTabStyles.diagramHtmlCode}`}>
-                      <div
-                        dangerouslySetInnerHTML={{
-                          __html: DOMPurify.sanitize(htmlCode || ''),
-                        }}
-                      />
-                    </div>
-                  </div>
-                ))
-              )}
-
-              {/* Handle Kroki Image Diagrams */}
-              {item.diagramUrl && (
-                Array.isArray(item.diagramUrl) ? (
-                  item.diagramUrl.map((diagramUrl, index) => (
-                    <div key={`kroki-${index}`} style={{ marginBottom: '20px' }}>
-                      <div className={`${styles.diagramImage} ${newsTabStyles.diagramImage}`}>
-                        <Image
-                          src={diagramUrl}
-                          alt={`Diagram ${index + 1}`}
-                          className={`${styles.diagramImageDetail} ${newsTabStyles.diagramImageDetail}`}
-                          preview={{
-                            mask: 'Xem ảnh',
-                            maskClassName: 'custom-mask'
-                          }}
-                        />
-                      </div>
-                      {/* Show corresponding note if available */}
-                      {Array.isArray(item.diagramNote) && item.diagramNote[index] && (
-                        <div className={`${styles.diagramNote} ${newsTabStyles.diagramNote}`}>
-                          <div
-                            className={styles.markdownContent}
-                            dangerouslySetInnerHTML={{
-                              __html: (() => {
-                                const { processedText, latexBlocks } = preprocessLatex(item.diagramNote[index] || '');
-                                const html = marked.parse(processedText);
-                                const finalHtml = postprocessLatex(html, latexBlocks);
-                                return DOMPurify.sanitize(finalHtml);
-                              })(),
-                            }}
-                          />
-                        </div>
-                      )}
-                    </div>
-                  ))
-                ) : (
-                  /* Handle single diagram (backward compatibility) */
-                  <>
-                    <div className={`${styles.diagramImage} ${newsTabStyles.diagramImage}`}>
-                      <Image
-                        src={item.diagramUrl}
-                        alt="Diagram"
-                        className={`${styles.diagramImageDetail} ${newsTabStyles.diagramImageDetail}`}
-                        preview={{
-                          mask: 'Xem ảnh',
-                          maskClassName: 'custom-mask'
-                        }}
-                      />
-                    </div>
-                    {item.diagramNote && (
-                      <div className={`${styles.diagramNote} ${newsTabStyles.diagramNote}`}>
-                        <div
-                          className={styles.markdownContent}
-                          dangerouslySetInnerHTML={{
-                            __html: (() => {
-                              const { processedText, latexBlocks } = preprocessLatex(
-                                Array.isArray(item.diagramNote)
-                                  ? item.diagramNote[0] || ''
-                                  : item.diagramNote || ''
-                              );
-                              const html = marked.parse(processedText);
-                              const finalHtml = postprocessLatex(html, latexBlocks);
-                              return DOMPurify.sanitize(finalHtml);
-                            })(),
-                          }}
-                        />
-                      </div>
-                    )}
-                  </>
-                )
-              )}
-            </div>
-          </div>
-        )}
-
-        <div className={`${styles.contentBody} ${newsTabStyles.contentBody}`}>
-          {item.detail && item.showDetail !== false && (
-            <div className={`${styles.contentDetail} ${newsTabStyles.contentDetail}`}>
-              <div
-                ref={markdownContentRef}
-                className={styles.markdownContent}
-                dangerouslySetInnerHTML={{
-                  __html: (() => {
-                    const { processedText, latexBlocks } = preprocessLatex(item.detail || '');
-                    let html = marked.parse(processedText, {
-                      headerIds: true,
-                      mangle: false,
-                      headerPrefix: '',
-                      breaks: false,
-                      gfm: true
-                    });
-
-                    // Apply search highlight if searchText exists
-                    if (searchText && searchText.trim()) {
-                      html = highlightTextInContent(html, searchText);
-                    }
-                    const finalHtml = postprocessLatex(html, latexBlocks);
-                    return DOMPurify.sanitize(finalHtml);
-                  })(),
-                }}
-              />
-            </div>
-          )}
-
-          {/* Quiz Component - Hiển thị cuối cùng khi xem chi tiết */}
-          {item.questionContent && (
-            <QuizComponent
-              allowRetake={item.allow_retake}
-              quizData={item.questionContent}
-              questionId={item.id}
-              onScoreUpdate={(qid, score) => setQuestionScoreMap(prev => ({ ...prev, [qid]: score }))}
-            />
-          )}
-        </div>
+        {/* Main content area */}
+        {renderContentArea()}
       </div>
-
       {/* Rating Popup */}
       {currentUser?.id && (
         <RatingPopup

@@ -119,6 +119,13 @@
     overflow: hidden;
 }
 
+.previewDocContainer :global(.kjoySj) {
+    display: none !important;
+}
+
+.previewDocContainer :global(.hysiap) {
+    overflow: hidden !important;
+}
 /* DocViewer styling */
 .previewDocContainer :global(.react-doc-viewer) {
     height: 100% !important;

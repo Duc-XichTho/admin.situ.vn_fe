@@ -1,4 +1,4 @@
-import { ClearOutlined, FilterOutlined, StarOutlined, CloseOutlined, MoreOutlined, SearchOutlined, ClockCircleOutlined, ShareAltOutlined } from '@ant-design/icons';
+import { ClearOutlined, FilterOutlined, StarOutlined, CloseOutlined, MoreOutlined, SearchOutlined, ClockCircleOutlined, ShareAltOutlined, FullscreenOutlined, FullscreenExitOutlined } from '@ant-design/icons';
 import { Button, Menu, Checkbox, Dropdown, Divider, Image, Input, Modal, Popover, Radio, Select, Space, Switch, Tag, Tooltip, Typography } from 'antd';
 import DOMPurify from 'dompurify';
 import { formatDateFromTimestamp } from '../../../generalFunction/format.js';
@@ -38,7 +38,6 @@ const MapView = ({
 	headerStats,
 	setHeaderStats,
 	newsItems = [],
-	documentItems = [],
 	caseTrainingItems = [],
 	longFormItems = [],
 	homeItems = [],
@@ -52,12 +51,12 @@ const MapView = ({
 	onShare,
 }) => {
 
-	console.log('expandedItem', expandedItem);
 	const [historyData, setHistoryData] = useState([]);
 	const [loading, setLoading] = useState(false);
 	const [selectedLongFormItem, setSelectedLongFormItem] = useState(null);
 	const [isModalVisible, setIsModalVisible] = useState(false);
 	const [modalLoading, setModalLoading] = useState(false);
+	const [isWikiFullscreen, setIsWikiFullscreen] = useState(false);
 	const [quizScores, setQuizScores] = useState({}); // Quiz scores map for longFormItems
 	const [searchText, setSearchText] = useState(''); // Search text for filtering items (panel 2)
 	// Search in content states (for wiki and theory modals)
@@ -93,7 +92,7 @@ const MapView = ({
 	const [theoryModalVisible, setTheoryModalVisible] = useState(false); // Modal visibility for theory item
 	const [theoryModalItem, setTheoryModalItem] = useState(null); // Full item data for theory modal
 	const [theoryModalLoading, setTheoryModalLoading] = useState(false); // Loading state for theory modal
-	const [theorySourceType, setTheorySourceType] = useState('news'); // 'news' | 'document'
+	const [isTheoryFullscreen, setIsTheoryFullscreen] = useState(false);
 	const theoryItemRefs = useRef({}); // Refs for theory items
 	const theoryContainerRef = useRef(null); // Container ref for theory column
 
@@ -114,6 +113,14 @@ const MapView = ({
 	const [isAnimating, setIsAnimating] = useState(false); // Animation state
 	const [readItems, setReadItems] = useState([]); // Read items state
 	const [bookmarkedItems, setBookmarkedItems] = useState([]); // Bookmarked items state
+
+	// Shared modal sizing constraints (used by both Theory + Wiki modals)
+	const MODAL_SIDEBAR_MIN_PX = 260;
+	const MODAL_CONTENT_MIN_PX = 600;
+	const MODAL_SIDEBAR_MIN_PERCENT = '20%';
+	const MODAL_SIDEBAR_MAX_PERCENT = '35%';
+	const MODAL_CONTENT_MIN_PERCENT = '65%';
+	const MODAL_CONTENT_MAX_PERCENT = '85%';
 	// Edit modal states
 	const [editModalVisible, setEditModalVisible] = useState(false);
 	const [editingItem, setEditingItem] = useState(null);
@@ -144,8 +151,9 @@ const MapView = ({
 	const caseContainerRef = useRef(null); // Container ref for case column
 
 	// Resize states for modals (separate for each type)
-	const [theoryModalSplitRatio, setTheoryModalSplitRatio] = useState(0.25); // Small sidebar for theory
-	const [wikiModalSplitRatio, setWikiModalSplitRatio] = useState(0.25); // Small sidebar for wiki
+	// Match NewsTab behavior: ratio = content (right panel) width
+	const [theoryModalSplitRatio, setTheoryModalSplitRatio] = useState(0.6);
+	const [wikiModalSplitRatio, setWikiModalSplitRatio] = useState(0.6);
 	const [caseModalSplitRatio, setCaseModalSplitRatio] = useState(0.6); // Lesson vs Quiz split for case study
 	const [modalIsDraggingResizer, setModalIsDraggingResizer] = useState(false);
 	const [modalResizeStartRatio, setModalResizeStartRatio] = useState(0.5);
@@ -253,6 +261,221 @@ const MapView = ({
 		if (!tagValue) return 0;
 		return itemsList.filter(item => item[tagType] === tagValue).length;
 	};
+
+	// Shared modal renderer for Theory (news) + Wiki (longForm)
+	const renderArticleModal = ({
+		tabName,
+		item,
+		open,
+		onClose,
+		loading,
+		isFullscreen,
+		onToggleFullscreen,
+		splitRatio,
+		onStartResize,
+	}) => (
+		<Modal
+			title={
+				item && (
+					<div className={newsTabStyles.modalTitleContainer}>
+						<div className={newsTabStyles.modalTitleMain} style={tabName === 'Lý thuyết' ? { display: 'flex', alignItems: 'center', gap: '8px' } : undefined}>
+							<span className={newsTabStyles.modalTitleTabName}>{tabName}</span>
+							<span>/</span>
+							<span className={newsTabStyles.modalTitleItemName}>{item.title}</span>
+						</div>
+
+						<div className={newsTabStyles.modalTitleActions}>
+							<Input
+								placeholder="Tìm kiếm trong nội d..."
+								prefix={<SearchOutlined />}
+								value={modalSearchText}
+								onChange={(e) => setModalSearchText(e.target.value)}
+								allowClear
+								style={{ width: '200px' }}
+								onPressEnter={() => {
+									if (searchResults.length > 0) {
+										scrollToSearchResult(highlightedIndex >= 0 ? highlightedIndex : 0);
+									}
+								}}
+							/>
+
+							{searchResults.length > 0 && (
+								<Space size={4}>
+									<Button
+										size="small"
+										icon={<span>↑</span>}
+										onClick={() => navigateSearchResult(-1)}
+										disabled={searchResults.length === 0}
+									/>
+									<span style={{ fontSize: '12px', color: '#666', minWidth: '45px', textAlign: 'center' }}>
+										{highlightedIndex + 1}/{searchResults.length}
+									</span>
+									<Button
+										size="small"
+										icon={<span>↓</span>}
+										onClick={() => navigateSearchResult(1)}
+										disabled={searchResults.length === 0}
+									/>
+								</Space>
+							)}
+
+							<Checkbox
+								checked={readItems.includes(item?.id)}
+								onChange={() => handleToggleRead(item)}
+								style={{ color: '#595959', fontWeight: '500' }}
+							>
+								Đã đọc
+							</Checkbox>
+
+							<Tooltip title={bookmarkedItems.includes(item?.id) ? 'Bỏ bookmark' : 'Lưu vào mục quan tâm'}>
+								<Button
+									type="text"
+									icon={bookmarkedItems.includes(item?.id) ? <BookMark_Icon_On width={18} height={18} /> : <BookMark_Icon_Off width={18} height={18} />}
+									onClick={() => handleToggleBookmark(item)}
+									className={newsTabStyles.modalTitleBookmark}
+								>
+									Bookmark
+								</Button>
+							</Tooltip>
+
+							<Tooltip title={isFullscreen ? 'Thu nhỏ' : 'Mở rộng gần full màn hình'}>
+								<Button
+									type="text"
+									icon={isFullscreen ? <FullscreenExitOutlined /> : <FullscreenOutlined />}
+									onClick={onToggleFullscreen}
+									style={{ padding: '0 8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+								>
+									{isFullscreen ? 'Compact view' : 'Full screen'}
+								</Button>
+							</Tooltip>
+
+							{currentUser?.isAdmin && (
+								<Button
+									type="text"
+									size="small"
+									onClick={() => handleEditClick(item)}
+									className={newsTabStyles.modalTitleEdit}
+								>
+									Edit
+								</Button>
+							)}
+						</div>
+					</div>
+				)
+			}
+			open={open}
+			onCancel={onClose}
+			footer={null}
+			width={item ? (isFullscreen ? '98vw' : 1400) : 1000}
+			style={{ top: '10px', paddingBottom: '0px' }}
+			destroyOnClose={true}
+			maskClosable={true}
+			closable={true}
+			className={newsTabStyles.modalContentDetail}
+		>
+			<div className={newsTabStyles.resizablePanel}>
+				<div
+					className={newsTabStyles.modalSidebarPanel}
+					style={{
+						width: item && hasAccess(item) ? `${(1 - splitRatio) * 100}%` : '0%',
+						minWidth: item && hasAccess(item) ? MODAL_SIDEBAR_MIN_PERCENT : '0',
+						maxWidth: item && hasAccess(item) ? MODAL_SIDEBAR_MAX_PERCENT : '0',
+						// padding: '24px',
+						overflowY: 'auto',
+						backgroundColor: '#fff',
+						display: item && hasAccess(item) ? 'block' : 'none',
+					}}
+				>
+					{renderArticleSidebarContent(item)}
+					{item && hasAccess(item) && (
+						<div style={{ height: 'auto' }}>
+							{renderTOCSidebar(item)}
+						</div>
+					)}
+				</div>
+
+				{item && hasAccess(item) && (
+					<div
+						className={`${newsTabStyles.resizer} ${modalIsDraggingResizer ? newsTabStyles.resizerActive : ''}`}
+						onMouseDown={(e) => {
+							onStartResize();
+							e.preventDefault();
+						}}
+						style={{ marginLeft: '10px' }}
+					/>
+				)}
+
+				<div
+					className={newsTabStyles.modalContentPanel}
+					style={{
+						width: item && hasAccess(item) ? `${splitRatio * 100}%` : '100%',
+						minWidth: item && hasAccess(item) ? MODAL_CONTENT_MIN_PERCENT : 'none',
+						maxWidth: item && hasAccess(item) ? MODAL_CONTENT_MAX_PERCENT : 'none',
+						padding: '20px 0px 20px 10px',
+					}}
+				>
+					{loading ? (
+						<div style={{ padding: '40px', textAlign: 'center' }}>Đang tải...</div>
+					) : (
+						renderContentPanel(item ? { ...item, hideHeaderMeta: true } : null)
+					)}
+				</div>
+			</div>
+
+			{searchResults.length > 0 && showSearchResultsPanel && (
+				<div
+					className={newsTabStyles.searchResultsPanel}
+					ref={panelRef}
+					style={{
+						top: `${panelPosition.y}px`,
+						left: `${panelPosition.x}px`,
+						cursor: isDragging ? 'grabbing' : 'default',
+					}}
+				>
+					<div
+						className={newsTabStyles.searchResultsHeader}
+						onMouseDown={handleMouseDown}
+					>
+						<div className={newsTabStyles.searchResultsTitle}>
+							Kết quả tìm kiếm ({searchResults.length})
+						</div>
+						<Button
+							type="text"
+							size="small"
+							icon={<CloseOutlined />}
+							onClick={() => setShowSearchResultsPanel(false)}
+							style={{ minWidth: 'auto', padding: '0 4px' }}
+							onMouseDown={(e) => e.stopPropagation()}
+						/>
+					</div>
+					<div className={newsTabStyles.searchResultsList}>
+						<div className={newsTabStyles.searchResultsContainer}>
+							{searchResults.map((result, index) => (
+								<div
+									key={index}
+									onClick={() => scrollToSearchResult(index)}
+									className={`${newsTabStyles.searchResultItem} ${highlightedIndex === index ? newsTabStyles.searchResultItemActive : ''}`}
+								>
+									<div style={{ fontSize: '11px', color: '#8c8c8c', marginBottom: '4px' }}>
+										Kết quả {index + 1}
+									</div>
+									<div
+										style={{ fontSize: '13px', lineHeight: '1.4', color: '#595959' }}
+										dangerouslySetInnerHTML={{
+											__html: `...${result.context.replace(
+												new RegExp(`(${result.match.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi'),
+												'<mark style="background-color: #fff3cd; padding: 2px 0; border-radius: 2px;">$1</mark>',
+											)}...`,
+										}}
+									/>
+								</div>
+							))}
+						</div>
+					</div>
+				</div>
+			)}
+		</Modal>
+	);
 
 	const getTitlesForTag = (tagType, tagValue, itemsList) => {
 		if (!tagValue) return [];
@@ -681,31 +904,6 @@ const MapView = ({
 		loadUserAppData();
 	}, [currentUser?.id]);
 
-	// Modal Resize effect
-	useEffect(() => {
-		if (modalResizeStartRatio === null) return;
-
-		const handleMouseMove = (e) => {
-			if (!panel1ContainerRef.current) return;
-			const rect = panel1ContainerRef.current.parentElement.getBoundingClientRect();
-			if (rect.width === 0) return;
-			const newRatio = (e.clientX - rect.left) / rect.width;
-			setModalPcSplitRatio(Math.max(0.2, Math.min(0.8, newRatio)));
-		};
-
-		const handleMouseUp = () => {
-			setModalIsDraggingResizer(false);
-			setModalResizeStartRatio(null);
-		};
-
-		window.addEventListener('mousemove', handleMouseMove);
-		window.addEventListener('mouseup', handleMouseUp);
-		return () => {
-			window.removeEventListener('mousemove', handleMouseMove);
-			window.removeEventListener('mouseup', handleMouseUp);
-		};
-	}, [modalResizeStartRatio]);
-
 	// Fetch item by ID and determine its type, then open appropriate modal
 	const fetchItem = async (id) => {
 		if (!id) return;
@@ -992,15 +1190,7 @@ const MapView = ({
 
 	// Panel 1: Theory column - Filter and sort items
 	const theoryBaseFilteredList = useMemo(() => {
-		let baseItems = [];
-
-		if (theorySourceType === 'news') {
-			baseItems = newsItems || [];
-		} else if (theorySourceType === 'document') {
-			baseItems = documentItems || [];
-		}
-
-		let filtered = baseItems.filter(item => item.status === 'published');
+		let filtered = (newsItems || []).filter(item => item.status === 'published');
 
 		// Filter by selectedProgram
 		if (selectedProgram && selectedProgram !== 'all') {
@@ -1056,7 +1246,7 @@ const MapView = ({
 		}
 
 		return filtered;
-	}, [newsItems, documentItems, selectedProgram, selectedTag5, theorySearchText, theoryFilters.readStatus, theoryFilters.bookmarked, theoryFilters.quizStatus, readItems, bookmarkedItems, quizScores, theorySourceType]);
+	}, [newsItems, selectedProgram, selectedTag5, theorySearchText, theoryFilters.readStatus, theoryFilters.bookmarked, theoryFilters.quizStatus, readItems, bookmarkedItems, quizScores]);
 
 	const filteredTheoryItems = useMemo(() => {
 		if (theoryFilters.category === 'all') return theoryBaseFilteredList;
@@ -2166,6 +2356,8 @@ const MapView = ({
 			setShowSearchResultsPanel(false);
 			setPanelPosition({ x: 10, y: 50 });
 			setShowSummaryDetail(false);
+			setIsWikiFullscreen(false);
+			setIsTheoryFullscreen(false);
 		}
 		if (!caseModalVisible) {
 			setCaseModalSearchText('');
@@ -2181,27 +2373,30 @@ const MapView = ({
 		if (!modalIsDraggingResizer) return;
 
 		const handleMouseMove = (e) => {
-			const containerWidth = window.innerWidth;
-			const newRatio = Math.max(0.1, Math.min(0.9, e.clientX / containerWidth));
+			const containerWidth = window.innerWidth || 1;
+			const x = Math.max(0, Math.min(containerWidth, e.clientX));
 
 			if (theoryModalVisible) {
-				// Sidebar on left, min width 200px, Content on right, min width 500px
-				const sidebarWidth = e.clientX;
-				const contentWidth = containerWidth - e.clientX;
-				if (sidebarWidth >= 200 && contentWidth >= 500) {
-					setTheoryModalSplitRatio(newRatio);
+				// Match NewsTab: ratio = content (right). Sidebar = 1 - ratio. Clamp content 60%–85%.
+				const sidebarWidth = x;
+				const contentWidth = containerWidth - x;
+				if (sidebarWidth >= MODAL_SIDEBAR_MIN_PX && contentWidth >= MODAL_CONTENT_MIN_PX) {
+					const contentRatio = Math.max(0.6, Math.min(0.85, contentWidth / containerWidth));
+					setTheoryModalSplitRatio(contentRatio);
 				}
 			} else if (isModalVisible) {
-				// Same for Wiki
-				const sidebarWidth = e.clientX;
-				const contentWidth = containerWidth - e.clientX;
-				if (sidebarWidth >= 200 && contentWidth >= 500) {
-					setWikiModalSplitRatio(newRatio);
+				// Same for Wiki (longForm): ratio = content (right). Clamp content 60%–85%.
+				const sidebarWidth = x;
+				const contentWidth = containerWidth - x;
+				if (sidebarWidth >= MODAL_SIDEBAR_MIN_PX && contentWidth >= MODAL_CONTENT_MIN_PX) {
+					const contentRatio = Math.max(0.6, Math.min(0.85, contentWidth / containerWidth));
+					setWikiModalSplitRatio(contentRatio);
 				}
 			} else if (caseModalVisible) {
 				// Lesson on left, Quiz on right. Lesson min 400px, Quiz min 350px
-				const lessonWidth = e.clientX;
-				const quizWidth = containerWidth - e.clientX;
+				const lessonWidth = x;
+				const quizWidth = containerWidth - x;
+				const newRatio = Math.max(0.1, Math.min(0.9, lessonWidth / containerWidth));
 				if (lessonWidth >= 400 && quizWidth >= 350) {
 					setCaseModalSplitRatio(newRatio);
 				}
@@ -2472,7 +2667,7 @@ const MapView = ({
 			selectedDetailImageIndex: selectedDetailImageIndex[item?.id] || 0,
 			searchText: modalSearchText,
 			activeTab: selectedLongFormItem ? 'longForm' : 'stream',
-			viewMode: 'list',
+			viewMode: 'map',
 			quizPopoverVisible: false,
 			contentPanelRef,
 			markdownContentRef,
@@ -2757,18 +2952,9 @@ const MapView = ({
 							<div className={styles.panel1Column} ref={theoryContainerRef}>
 								<div className={styles.rightPanelHeader}>
 									<div className={styles.rightPanelTitle}>
-										{theorySourceType === 'document' ? 'Tài liệu học tập' : 'Lý thuyết'} ({filteredTheoryItems.length})
+										Lý thuyết ({filteredTheoryItems.length})
 									</div>
-									<div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-										<Select
-											size="small"
-											value={theorySourceType}
-											onChange={setTheorySourceType}
-											style={{ width: 150 }}
-										>
-											<Select.Option value="news">Lý thuyết</Select.Option>
-											<Select.Option value="document">Tài liệu học tập</Select.Option>
-										</Select>
+									<div style={{ display: 'flex', alignItems: 'center' }}>
 										<Input
 											placeholder='Tìm kiếm...'
 											prefix={<SearchOutlined />}
@@ -3185,425 +3371,43 @@ const MapView = ({
 				</div>
 			</div>
 
-			{/* Modal for Long Form Item Details */}
-			<Modal
-				title={
-					selectedLongFormItem && (
-						<div className={newsTabStyles.modalTitleContainer}>
-							<div className={newsTabStyles.modalTitleMain}>
-								<span className={newsTabStyles.modalTitleTabName}>Wiki</span>
-								<span>/</span>
-								<span className={newsTabStyles.modalTitleItemName}>
-									{selectedLongFormItem.title}
-								</span>
-							</div>
-
-							<div className={newsTabStyles.modalTitleActions}>
-								{/* Search input in title bar */}
-								<Input
-									placeholder="Tìm kiếm trong nội d..."
-									prefix={<SearchOutlined />}
-									value={modalSearchText}
-									onChange={(e) => setModalSearchText(e.target.value)}
-									allowClear
-									style={{ width: '200px' }}
-									onPressEnter={() => {
-										if (searchResults.length > 0) {
-											scrollToSearchResult(highlightedIndex >= 0 ? highlightedIndex : 0);
-										}
-									}}
-								/>
-
-								{/* Search navigation */}
-								{searchResults.length > 0 && (
-									<Space size={4}>
-										<Button
-											size="small"
-											icon={<span>↑</span>}
-											onClick={() => navigateSearchResult(-1)}
-											disabled={searchResults.length === 0}
-										/>
-										<span style={{ fontSize: '12px', color: '#666', minWidth: '45px', textAlign: 'center' }}>
-											{highlightedIndex + 1}/{searchResults.length}
-										</span>
-										<Button
-											size="small"
-											icon={<span>↓</span>}
-											onClick={() => navigateSearchResult(1)}
-											disabled={searchResults.length === 0}
-										/>
-									</Space>
-								)}
-
-								{/* Read Status Checkbox */}
-								<Checkbox
-									checked={readItems.includes(selectedLongFormItem?.id)}
-									onChange={() => handleToggleRead(selectedLongFormItem)}
-									style={{ color: '#595959', fontWeight: '500' }}
-								>
-									Đã đọc
-								</Checkbox>
-
-								{/* Bookmark button */}
-								<Tooltip title={bookmarkedItems.includes(selectedLongFormItem?.id) ? 'Bỏ bookmark' : 'Lưu vào mục quan tâm'}>
-									<Button
-										type="text"
-										icon={bookmarkedItems.includes(selectedLongFormItem?.id) ? <BookMark_Icon_On width={18} height={18} /> : <BookMark_Icon_Off width={18} height={18} />}
-										onClick={() => handleToggleBookmark(selectedLongFormItem)}
-										className={newsTabStyles.modalTitleBookmark}
-									>
-										Bookmark
-									</Button>
-								</Tooltip>
-
-								{/* Edit button in title bar */}
-								{currentUser?.isAdmin && (
-									<Button
-										type="text"
-										size="small"
-										onClick={() => handleEditClick(selectedLongFormItem)}
-										className={newsTabStyles.modalTitleEdit}
-									>
-										Edit
-									</Button>
-								)}
-							</div>
-						</div>
-					)
-				}
-				open={isModalVisible}
-				onCancel={() => {
+			{renderArticleModal({
+				tabName: 'Wiki',
+				item: selectedLongFormItem,
+				open: isModalVisible,
+				onClose: () => {
 					setIsModalVisible(false);
 					setSelectedLongFormItem(null);
-				}}
-				footer={null}
-				width={selectedLongFormItem ? 1400 : 1000}
-				style={{
-					top: '0px',
-					paddingBottom: '0px',
-				}}
-				destroyOnClose={true}
-				maskClosable={true}
-				closable={true}
-				className={newsTabStyles.modalContent}
-			>
-				<div className={newsTabStyles.resizablePanel}>
-					{/* Left panel: Sidebar Information */}
-					<div
-						className={newsTabStyles.modalSidebarPanel}
-						style={{
-							width: selectedLongFormItem && hasAccess(selectedLongFormItem) ? `${wikiModalSplitRatio * 100}%` : '0%',
-							minWidth: selectedLongFormItem && hasAccess(selectedLongFormItem) ? '200px' : '0',
-							padding: '24px',
-							overflowY: 'auto',
-							backgroundColor: '#fff',
-							display: selectedLongFormItem && hasAccess(selectedLongFormItem) ? 'block' : 'none',
-						}}
-					>
-						{renderArticleSidebarContent(selectedLongFormItem)}
-						{/* TOC Section */}
-						{selectedLongFormItem && hasAccess(selectedLongFormItem) && (
-							<div style={{ height: 'auto' }}>
-								{renderTOCSidebar(selectedLongFormItem)}
-							</div>
-						)}
-					</div>
+				},
+				loading: modalLoading,
+				isFullscreen: isWikiFullscreen,
+				onToggleFullscreen: () => setIsWikiFullscreen(prev => !prev),
+				splitRatio: wikiModalSplitRatio,
+				onStartResize: () => {
+					setModalIsDraggingResizer(true);
+					setModalResizeStartRatio(wikiModalSplitRatio);
+				},
+			})}
 
-					{/* Resizer */}
-					{selectedLongFormItem && hasAccess(selectedLongFormItem) && (
-						<div
-							className={`${newsTabStyles.resizer} ${modalIsDraggingResizer ? newsTabStyles.resizerActive : ''}`}
-							onMouseDown={(e) => {
-								setModalIsDraggingResizer(true);
-								setModalResizeStartRatio(wikiModalSplitRatio);
-								e.preventDefault();
-							}}
-							style={{ marginLeft: '10px' }}
-						/>
-					)}
-
-					{/* Right panel: Article Content */}
-					<div
-						className={newsTabStyles.modalContentPanel}
-						style={{
-							width: selectedLongFormItem && hasAccess(selectedLongFormItem) ? `${(1 - wikiModalSplitRatio) * 100}%` : '100%',
-							minWidth: selectedLongFormItem && hasAccess(selectedLongFormItem) ? '500px' : 'none',
-							padding: '24px',
-						}}
-					>
-						{modalLoading ? (
-							<div style={{ padding: '40px', textAlign: 'center' }}>Đang tải...</div>
-						) : (
-							renderContentPanel(selectedLongFormItem ? { ...selectedLongFormItem, hideHeaderMeta: true } : null)
-						)}
-					</div>
-				</div>
-
-				{/* Floating Search Results Panel */}
-				{searchResults.length > 0 && showSearchResultsPanel && (
-					<div
-						className={newsTabStyles.searchResultsPanel}
-						ref={panelRef}
-						style={{
-							top: `${panelPosition.y}px`,
-							left: `${panelPosition.x}px`,
-							cursor: isDragging ? 'grabbing' : 'default'
-						}}
-					>
-						<div
-							className={newsTabStyles.searchResultsHeader}
-							onMouseDown={handleMouseDown}
-						>
-							<div className={newsTabStyles.searchResultsTitle}>
-								Kết quả tìm kiếm ({searchResults.length})
-							</div>
-							<Button
-								type="text"
-								size="small"
-								icon={<CloseOutlined />}
-								onClick={() => setShowSearchResultsPanel(false)}
-								style={{ minWidth: 'auto', padding: '0 4px' }}
-								onMouseDown={(e) => e.stopPropagation()}
-							/>
-						</div>
-						<div className={newsTabStyles.searchResultsList}>
-							<div className={newsTabStyles.searchResultsContainer}>
-								{searchResults.map((result, index) => (
-									<div
-										key={index}
-										onClick={() => scrollToSearchResult(index)}
-										className={`${newsTabStyles.searchResultItem} ${highlightedIndex === index ? newsTabStyles.searchResultItemActive : ''}`}
-									>
-										<div style={{ fontSize: '11px', color: '#8c8c8c', marginBottom: '4px' }}>
-											Kết quả {index + 1}
-										</div>
-										<div
-											style={{ fontSize: '13px', lineHeight: '1.4', color: '#595959' }}
-											dangerouslySetInnerHTML={{
-												__html: `...${result.context.replace(
-													new RegExp(`(${result.match.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi'),
-													'<mark style="background-color: #fff3cd; padding: 2px 0; border-radius: 2px;">$1</mark>'
-												)}...`
-											}}
-										/>
-									</div>
-								))}
-							</div>
-						</div>
-					</div>
-				)}
-			</Modal>
-
-			{/* Theory Item Modal */}
-			<Modal
-				title={
-					theoryModalItem && (
-						<div className={newsTabStyles.modalTitleContainer}>
-							<div className={newsTabStyles.modalTitleMain} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-								<span className={newsTabStyles.modalTitleTabName}>Lý thuyết</span>
-								<span>/</span>
-								<span className={newsTabStyles.modalTitleItemName}>
-									{theoryModalItem.title}
-								</span>
-							</div>
-
-							<div className={newsTabStyles.modalTitleActions}>
-								{/* Search input in title bar */}
-								<Input
-									placeholder="Tìm kiếm trong nội d..."
-									prefix={<SearchOutlined />}
-									value={modalSearchText}
-									onChange={(e) => setModalSearchText(e.target.value)}
-									allowClear
-									style={{ width: '200px' }}
-									onPressEnter={() => {
-										if (searchResults.length > 0) {
-											scrollToSearchResult(highlightedIndex >= 0 ? highlightedIndex : 0);
-										}
-									}}
-								/>
-
-								{/* Search navigation */}
-								{searchResults.length > 0 && (
-									<Space size={4}>
-										<Button
-											size="small"
-											icon={<span>↑</span>}
-											onClick={() => navigateSearchResult(-1)}
-											disabled={searchResults.length === 0}
-										/>
-										<span style={{ fontSize: '12px', color: '#666', minWidth: '45px', textAlign: 'center' }}>
-											{highlightedIndex + 1}/{searchResults.length}
-										</span>
-										<Button
-											size="small"
-											icon={<span>↓</span>}
-											onClick={() => navigateSearchResult(1)}
-											disabled={searchResults.length === 0}
-										/>
-									</Space>
-								)}
-
-								{/* Read Status Checkbox */}
-								<Checkbox
-									checked={readItems.includes(theoryModalItem?.id)}
-									onChange={() => handleToggleRead(theoryModalItem)}
-									style={{ color: '#595959', fontWeight: '500' }}
-								>
-									Đã đọc
-								</Checkbox>
-
-								{/* Bookmark button */}
-								<Tooltip title={bookmarkedItems.includes(theoryModalItem?.id) ? 'Bỏ bookmark' : 'Lưu vào mục quan tâm'}>
-									<Button
-										type="text"
-										icon={bookmarkedItems.includes(theoryModalItem?.id) ? <BookMark_Icon_On width={18} height={18} /> : <BookMark_Icon_Off width={18} height={18} />}
-										onClick={() => handleToggleBookmark(theoryModalItem)}
-										className={newsTabStyles.modalTitleBookmark}
-									>
-										Bookmark
-									</Button>
-								</Tooltip>
-
-
-
-								{/* Edit button in title bar */}
-								{currentUser?.isAdmin && (
-									<Button
-										type="text"
-										size="small"
-										onClick={() => handleEditClick(theoryModalItem)}
-										className={newsTabStyles.modalTitleEdit}
-									>
-										Edit
-									</Button>
-								)}
-							</div>
-						</div>
-					)
-				}
-				open={theoryModalVisible}
-				onCancel={() => {
+			{theoryModalVisible && renderArticleModal({
+				tabName: 'Lý thuyết',
+				item: theoryModalItem,
+				open: theoryModalVisible,
+				onClose: () => {
 					setTheoryModalVisible(false);
 					setTheoryModalItem(null);
-				}}
-				footer={null}
-				width={theoryModalItem ? 1400 : 1000}
-				style={{
-					top: '0px',
-					paddingBottom: '0px',
-				}}
-				destroyOnClose={true}
-				maskClosable={true}
-				closable={true}
-				className={newsTabStyles.modalContent}
-			>
-				<div className={newsTabStyles.resizablePanel}>
-					{/* Left panel: Sidebar Information */}
-					<div
-						className={newsTabStyles.modalSidebarPanel}
-						style={{
-							width: theoryModalItem && hasAccess(theoryModalItem) ? `${theoryModalSplitRatio * 100}%` : '0%',
-							minWidth: theoryModalItem && hasAccess(theoryModalItem) ? '200px' : '0',
-							padding: '24px',
-							overflowY: 'auto',
-							backgroundColor: '#fff',
-							display: theoryModalItem && hasAccess(theoryModalItem) ? 'block' : 'none',
-						}}
-					>
-						{renderArticleSidebarContent(theoryModalItem)}
-						{/* TOC Section */}
-						{theoryModalItem && hasAccess(theoryModalItem) && (
-							<div style={{ height: 'auto' }}>
-								{renderTOCSidebar(theoryModalItem)}
-							</div>
-						)}
-					</div>
+				},
+				loading: theoryModalLoading,
+				isFullscreen: isTheoryFullscreen,
+				onToggleFullscreen: () => setIsTheoryFullscreen(prev => !prev),
+				splitRatio: theoryModalSplitRatio,
+				onStartResize: () => {
+					setModalIsDraggingResizer(true);
+					setModalResizeStartRatio(theoryModalSplitRatio);
+				},
+			})}
 
-					{/* Resizer */}
-					{theoryModalItem && hasAccess(theoryModalItem) && (
-						<div
-							className={`${newsTabStyles.resizer} ${modalIsDraggingResizer ? newsTabStyles.resizerActive : ''}`}
-							onMouseDown={(e) => {
-								setModalIsDraggingResizer(true);
-								setModalResizeStartRatio(theoryModalSplitRatio);
-								e.preventDefault();
-							}}
-							style={{ marginLeft: '10px' }}
-						/>
-					)}
 
-					{/* Right panel: Article Content */}
-					<div
-						className={newsTabStyles.modalContentPanel}
-						style={{
-							width: theoryModalItem && hasAccess(theoryModalItem) ? `${(1 - theoryModalSplitRatio) * 100}%` : '100%',
-							minWidth: theoryModalItem && hasAccess(theoryModalItem) ? '500px' : 'none',
-							padding: '24px',
-						}}
-					>
-						{theoryModalLoading ? (
-							<div style={{ padding: '40px', textAlign: 'center' }}>Đang tải...</div>
-						) : (
-							renderContentPanel(theoryModalItem ? { ...theoryModalItem, hideHeaderMeta: true } : null)
-						)}
-					</div>
-				</div>
-
-				{/* Floating Search Results Panel */}
-				{searchResults.length > 0 && showSearchResultsPanel && (
-					<div
-						className={newsTabStyles.searchResultsPanel}
-						ref={panelRef}
-						style={{
-							top: `${panelPosition.y}px`,
-							left: `${panelPosition.x}px`,
-							cursor: isDragging ? 'grabbing' : 'default'
-						}}
-					>
-						<div
-							className={newsTabStyles.searchResultsHeader}
-							onMouseDown={handleMouseDown}
-						>
-							<div className={newsTabStyles.searchResultsTitle}>
-								Kết quả tìm kiếm ({searchResults.length})
-							</div>
-							<Button
-								type="text"
-								size="small"
-								icon={<CloseOutlined />}
-								onClick={() => setShowSearchResultsPanel(false)}
-								style={{ minWidth: 'auto', padding: '0 4px' }}
-								onMouseDown={(e) => e.stopPropagation()}
-							/>
-						</div>
-						<div className={newsTabStyles.searchResultsList}>
-							<div className={newsTabStyles.searchResultsContainer}>
-								{searchResults.map((result, index) => (
-									<div
-										key={index}
-										onClick={() => scrollToSearchResult(index)}
-										className={`${newsTabStyles.searchResultItem} ${highlightedIndex === index ? newsTabStyles.searchResultItemActive : ''}`}
-									>
-										<div style={{ fontSize: '11px', color: '#8c8c8c', marginBottom: '4px' }}>
-											Kết quả {index + 1}
-										</div>
-										<div
-											style={{ fontSize: '13px', lineHeight: '1.4', color: '#595959' }}
-											dangerouslySetInnerHTML={{
-												__html: `...${result.context.replace(
-													new RegExp(`(${result.match.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi'),
-													'<mark style="background-color: #fff3cd; padding: 2px 0; border-radius: 2px;">$1</mark>'
-												)}...`
-											}}
-										/>
-									</div>
-								))}
-							</div>
-						</div>
-					</div>
-				)}
-			</Modal>
 
 			{/* Case Item Modal */}
 			<Modal
@@ -3655,7 +3459,7 @@ const MapView = ({
 									</Space>
 								)}
 
-							
+
 
 								{/* Rating button in title bar - Matching CaseTrainingTab */}
 								{currentUser?.id && (
@@ -3713,13 +3517,13 @@ const MapView = ({
 				footer={null}
 				width={caseModalItem ? 1400 : 1000}
 				style={{
-					top: '0px',
+					top: '10px',
 					paddingBottom: '0px',
 				}}
 				destroyOnClose={true}
 				maskClosable={true}
 				closable={true}
-				className={newsTabStyles.modalContent}
+				className={newsTabStyles.modalContentDetail}
 			>
 				<div className={newsTabStyles.resizablePanel}>
 					{/* Main area: Lesson and Quiz */}
