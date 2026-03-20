@@ -10,6 +10,7 @@ import { getSettingByType } from '../../apis/settingService.jsx';
 import { getSettingByTypePublic } from '../../apis/public/publicService.jsx';
 import EditDetailModal from '../K9/components/EditDetailModal.jsx';
 import EditSummaryDetailModal from '../K9/components/EditSummaryDetailModal.jsx';
+import DetailImageUrlsPreviewModal from '../K9/components/DetailImageUrlsPreviewModal.jsx';
 import DiagramPreviewModal from '../K9Management/components/DiagramPreviewModal.jsx';
 import PromptSettingsListModal from '../K9Management/components/PromptSettingsListModal.jsx';
 import SelectPromptModal from '../K9Management/components/SelectPromptModal.jsx';
@@ -2871,6 +2872,13 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
             data = data.filter(item => !item.imgUrls || !Array.isArray(item.imgUrls) || item.imgUrls.length === 0);
         }
 
+        // Filter by detailImageUrls status (has/none)
+        if (detailImageUrlsFilter === 'has') {
+            data = data.filter(item => item.detailImageUrls && Array.isArray(item.detailImageUrls) && item.detailImageUrls.length > 0);
+        } else if (detailImageUrlsFilter === 'none') {
+            data = data.filter(item => !item.detailImageUrls || !Array.isArray(item.detailImageUrls) || item.detailImageUrls.length === 0);
+        }
+
         // Filter by showDetail status (has/none)
         if (showDetailFilter === 'has') {
             data = data.filter(item => item.detail && item.detail.trim() !== '');
@@ -2950,7 +2958,7 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
                     style={{
                         whiteSpace: 'pre-wrap',
                         display: '-webkit-box',
-                        WebkitLineClamp: 1,
+                        WebkitLineClamp: 3,
                         WebkitBoxOrient: 'vertical',
                         overflow: 'hidden',
                         textOverflow: 'ellipsis',
@@ -2979,7 +2987,7 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
                     style={{
                         whiteSpace: 'pre-wrap',
                         display: '-webkit-box',
-                        WebkitLineClamp: 2,
+                        WebkitLineClamp: 3,
                         WebkitBoxOrient: 'vertical',
                         overflow: 'hidden',
                         textOverflow: 'ellipsis',
@@ -3711,8 +3719,28 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
             dataIndex: 'title',
             key: 'title',
             width: 300,
-            ellipsis: {
-                showTitle: false,
+            ellipsis: false,
+            render: (value) => {
+                const titleText = value ? String(value) : '';
+                if (!titleText) return '-';
+                const tooltipText = titleText.length > 200 ? titleText.substring(0, 200) + '...' : titleText;
+                return (
+                    <Tooltip placement="topLeft" title={tooltipText} mouseEnterDelay={0.5}>
+                        <div
+                            style={{
+                                whiteSpace: 'pre-wrap',
+                                display: '-webkit-box',
+                                WebkitLineClamp: 3,
+                                WebkitBoxOrient: 'vertical',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                wordBreak: 'break-word',
+                            }}
+                        >
+                            {titleText}
+                        </div>
+                    </Tooltip>
+                );
             },
         },
         {
@@ -3720,10 +3748,29 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
             dataIndex: 'summary',
             key: 'summary',
             width: 300,
-            ellipsis: {
-                showTitle: false,
+            ellipsis: false,
+            render: (text) => {
+                const summaryText = text ? String(text) : '';
+                if (!summaryText) return '-';
+                const tooltipText = summaryText.length > 200 ? summaryText.substring(0, 200) + '...' : summaryText;
+                return (
+                    <Tooltip placement="topLeft" title={tooltipText} mouseEnterDelay={0.5}>
+                        <div
+                            style={{
+                                whiteSpace: 'pre-wrap',
+                                display: '-webkit-box',
+                                WebkitLineClamp: 3,
+                                WebkitBoxOrient: 'vertical',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                wordBreak: 'break-word',
+                            }}
+                        >
+                            {summaryText}
+                        </div>
+                    </Tooltip>
+                );
             },
-            render: (text) => text ? String(text).substring(0, 100) + (String(text).length > 100 ? '...' : '') : '-',
         },
         {
             title: 'Detail',
@@ -3748,7 +3795,7 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
         {
             title: <span style={{ color: 'green', fontWeight: 'bold' }}>Diagram HTML</span>,
             key: 'diagramHtml',
-            width: 90,
+            width: 130,
             render: (_, record) => {
                 // Kiểm tra diagramHtmlCodeFromSummaryDetail (có thể là string hoặc array)
                 const hasHtml = record.diagramHtmlCodeFromSummaryDetail &&
@@ -3756,24 +3803,51 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
                         ? record.diagramHtmlCodeFromSummaryDetail.length > 0
                         : record.diagramHtmlCodeFromSummaryDetail.trim() !== '');
 
+                const htmlCount = Array.isArray(record.diagramHtmlCodeFromSummaryDetail)
+                    ? record.diagramHtmlCodeFromSummaryDetail.length
+                    : (hasHtml ? 1 : 0);
+
                 if (hasHtml) {
                     return (
                         <div
                             onClick={() => handleDiagramPreview(record, 'html')}
                             style={{
-                                width: 40,
-                                height: 40,
+                                width: 72,
+                                height: 72,
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
                                 backgroundColor: '#f6ffed',
-                                borderRadius: '4px',
+                                borderRadius: '14px',
                                 border: '1px solid #b7eb8f',
-                                cursor: 'pointer'
+                                cursor: 'pointer',
+                                position: 'relative',
+                                overflow: 'visible'
                             }}
                             title="Diagram HTML từ SummaryDetail"
                         >
-                            <FileTextOutlined style={{ fontSize: '16px', color: '#52c41a' }} />
+                            <FileTextOutlined style={{ fontSize: '20px', color: '#52c41a' }} />
+                            {htmlCount > 1 && (
+                                <div style={{
+                                    position: 'absolute',
+                                    top: '-10px',
+                                    right: '-10px',
+                                    backgroundColor: '#52c41a',
+                                    color: 'white',
+                                    borderRadius: '50%',
+                                    width: '26px',
+                                    height: '26px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    fontSize: '12px',
+                                    fontWeight: 'bold',
+                                    border: '2px solid white',
+                                    boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                                }}>
+                                    {htmlCount}
+                                </div>
+                            )}
                         </div>
                     );
                 }
@@ -3781,13 +3855,13 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
                 // Hiển thị icon trống nếu không có
                 return (
                     <div style={{
-                        width: 40,
-                        height: 40,
+                        width: 72,
+                        height: 72,
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
                         backgroundColor: '#f0f0f0',
-                        borderRadius: '4px'
+                        borderRadius: '14px'
                     }}
                         title="Chưa tạo diagram HTML từ SummaryDetail"
                     >
@@ -3799,39 +3873,66 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
         {
             title: <span style={{ color: '#722ed1', fontWeight: 'bold' }}>Diagram Excalidraw</span>,
             key: 'diagramExcalidraw',
-            width: 110,
+            width: 150,
             render: (_, record) => {
                 // Hiển thị icon Excalidraw React nếu có diagramExcalidrawJson
-                if (record.diagramExcalidrawJson && record.diagramExcalidrawJson.length > 0) {
+                const excCount = record.diagramExcalidrawJson && Array.isArray(record.diagramExcalidrawJson)
+                    ? record.diagramExcalidrawJson.length
+                    : 0;
+
+                if (excCount > 0) {
                     return (
                         <div
                             onClick={() => handleDiagramPreview(record, 'excalidraw')}
                             style={{
-                                width: 40,
-                                height: 40,
+                                width: 72,
+                                height: 72,
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
                                 backgroundColor: '#f9f0ff',
-                                borderRadius: '4px',
+                                borderRadius: '14px',
                                 border: '1px solid #d3adf7',
-                                cursor: 'pointer'
+                                cursor: 'pointer',
+                                position: 'relative',
+                                overflow: 'visible'
                             }}
                             title="Diagram Excalidraw React từ SummaryDetail"
                         >
                             <PictureOutlined style={{ fontSize: '16px', color: '#722ed1' }} />
+                            {excCount > 1 && (
+                                <div style={{
+                                    position: 'absolute',
+                                    top: '-10px',
+                                    right: '-10px',
+                                    backgroundColor: '#722ed1',
+                                    color: 'white',
+                                    borderRadius: '50%',
+                                    width: '26px',
+                                    height: '26px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    fontSize: '12px',
+                                    fontWeight: 'bold',
+                                    border: '2px solid white',
+                                    boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                                }}>
+                                    {excCount}
+                                </div>
+                            )}
                         </div>
                     );
                 }
                 return (
                     <div style={{
-                        width: 40,
-                        height: 40,
+                        width: 72,
+                        height: 72,
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
                         backgroundColor: '#f0f0f0',
-                        borderRadius: '4px'
+                        borderRadius: '14px'
                     }}
                         title="Chưa tạo diagram Excalidraw từ SummaryDetail"
                     >
@@ -3843,42 +3944,80 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
         {
             title: <span style={{ color: '#fa8c16', fontWeight: 'bold' }}>Matplotlib Code</span>,
             key: 'diagramMatplotlibCode',
-            width: 120,
+            width: 170,
             render: (_, record) => {
                 const hasMatplotlib = record.matplotlibCode &&
                     Array.isArray(record.matplotlibCode) &&
                     record.matplotlibCode.length > 0;
 
                 if (hasMatplotlib) {
+                    const firstEntry = record.matplotlibCode?.[0];
+                    const firstImages = firstEntry && typeof firstEntry === 'object' && Array.isArray(firstEntry.images)
+                        ? firstEntry.images
+                        : (Array.isArray(firstEntry?.imageUrls) ? firstEntry.imageUrls : []);
+                    const firstImgUrl = firstImages?.[0]?.url || firstImages?.[0]?.imageUrl || firstImages?.[0]?.src || '';
+                    const matCount = (firstImages && firstImages.length > 0) ? firstImages.length : record.matplotlibCode.length;
+
                     return (
                         <div
                             onClick={() => handlePreviewMatplotlibImage(record)}
                             style={{
-                                width: 40,
-                                height: 40,
+                                width: 72,
+                                height: 72,
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
                                 backgroundColor: '#fff7e6',
-                                borderRadius: '4px',
+                                borderRadius: '14px',
                                 border: '1px solid #ffd591',
-                                cursor: 'pointer'
+                                cursor: 'pointer',
+                                overflow: 'visible',
+                                position: 'relative'
                             }}
                             title={`Matplotlib code (${record.matplotlibCode.length}) - Click để xem`}
                         >
-                            <FileTextOutlined style={{ fontSize: '16px', color: '#fa8c16' }} />
+                            {firstImgUrl ? (
+                                <img
+                                    src={firstImgUrl}
+                                    alt="Matplotlib thumbnail"
+                                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                />
+                            ) : (
+                                <FileTextOutlined style={{ fontSize: '20px', color: '#fa8c16' }} />
+                            )}
+                            {matCount > 1 && (
+                                <div style={{
+                                    position: 'absolute',
+                                    top: '-10px',
+                                    right: '-10px',
+                                    backgroundColor: '#fa8c16',
+                                    color: 'white',
+                                    borderRadius: '50%',
+                                    width: '26px',
+                                    height: '26px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    fontSize: '12px',
+                                    fontWeight: 'bold',
+                                    border: '2px solid white',
+                                    boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                                }}>
+                                    {matCount}
+                                </div>
+                            )}
                         </div>
                     );
                 }
                 return (
                     <div style={{
-                        width: 40,
-                        height: 40,
+                        width: 72,
+                        height: 72,
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
                         backgroundColor: '#f0f0f0',
-                        borderRadius: '4px'
+                        borderRadius: '14px'
                     }}
                         title="Chưa tạo Matplotlib code từ SummaryDetail"
                     >
@@ -3890,7 +4029,7 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
         {
             title: <span style={{ color: '#1890ff', fontWeight: 'bold' }}>imgUrls</span>,
             key: 'imgUrls',
-            width: 100,
+            width: 150,
             render: (_, record) => {
                 // Kiểm tra imgUrls (là mảng các object JSON)
                 const hasImageUrl = record.imgUrls && Array.isArray(record.imgUrls) && record.imgUrls.length > 0;
@@ -3907,16 +4046,16 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
                                 setImgUrlsPreviewModalVisible(true);
                             }}
                             style={{
-                                width: 50,
-                                height: 50,
+                                width: 72,
+                                height: 72,
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
                                 backgroundColor: '#e6f7ff',
-                                borderRadius: '8px',
+                                borderRadius: '14px',
                                 border: '2px solid #91d5ff',
                                 cursor: 'pointer',
-                                overflow: 'hidden',
+                                overflow: 'visible',
                                 position: 'relative',
                                 transition: 'all 0.3s ease'
                             }}
@@ -3947,17 +4086,17 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
                             {record.imgUrls.length > 1 && (
                                 <div style={{
                                     position: 'absolute',
-                                    top: '-4px',
-                                    right: '-4px',
+                                    top: '-10px',
+                                    right: '-10px',
                                     backgroundColor: '#ff4d4f',
                                     color: 'white',
                                     borderRadius: '50%',
-                                    width: '20px',
-                                    height: '20px',
+                                    width: '26px',
+                                    height: '26px',
                                     display: 'flex',
                                     alignItems: 'center',
                                     justifyContent: 'center',
-                                    fontSize: '10px',
+                                    fontSize: '12px',
                                     fontWeight: 'bold',
                                     border: '2px solid white',
                                     boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
@@ -3970,13 +4109,13 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
                 }
                 return (
                     <div style={{
-                        width: 40,
-                        height: 40,
+                        width: 72,
+                        height: 72,
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
                         backgroundColor: '#f0f0f0',
-                        borderRadius: '4px'
+                        borderRadius: '14px'
                     }}
                         title="Chưa tạo imgUrls từ SummaryDetail"
                     >
@@ -3988,7 +4127,7 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
         {
             title: <span style={{ color: '#722ed1', fontWeight: 'bold' }}>detailImageUrls</span>,
             key: 'detailImageUrls',
-            width: 120,
+            width: 170,
             render: (_, record) => {
                 // Kiểm tra detailImageUrls (là mảng các object JSON)
                 const hasDetailImageUrls = record.detailImageUrls && Array.isArray(record.detailImageUrls) && record.detailImageUrls.length > 0;
@@ -4005,16 +4144,16 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
                                 setDetailImageUrlsPreviewModalVisible(true);
                             }}
                             style={{
-                                width: 50,
-                                height: 50,
+                                width: 72,
+                                height: 72,
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
                                 backgroundColor: '#f9f0ff',
-                                borderRadius: '8px',
+                                borderRadius: '14px',
                                 border: '2px solid #d3adf7',
                                 cursor: 'pointer',
-                                overflow: 'hidden',
+                                overflow: 'visible',
                                 position: 'relative',
                                 transition: 'all 0.3s ease'
                             }}
@@ -4045,17 +4184,17 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
                             {record.detailImageUrls.length > 1 && (
                                 <div style={{
                                     position: 'absolute',
-                                    top: '-4px',
-                                    right: '-4px',
+                                    top: '-10px',
+                                    right: '-10px',
                                     backgroundColor: '#ff4d4f',
                                     color: 'white',
                                     borderRadius: '50%',
-                                    width: '20px',
-                                    height: '20px',
+                                    width: '26px',
+                                    height: '26px',
                                     display: 'flex',
                                     alignItems: 'center',
                                     justifyContent: 'center',
-                                    fontSize: '10px',
+                                    fontSize: '12px',
                                     fontWeight: 'bold',
                                     border: '2px solid white',
                                     boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
@@ -4068,13 +4207,13 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
                 }
                 return (
                     <div style={{
-                        width: 40,
-                        height: 40,
+                        width: 72,
+                        height: 72,
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
                         backgroundColor: '#f0f0f0',
-                        borderRadius: '4px'
+                        borderRadius: '14px'
                     }}
                         title="Chưa tạo detailImageUrls từ Detail"
                     >
@@ -4337,6 +4476,36 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
         },
     ], [renderDetail, renderSummaryDetail, renderAction, activeTab, getRelatedCaseTrainingCount, handleOpenRelatedCaseTrainingModal, loadingRelatedCaseTraining, selectedNewsItemForCaseTraining]);
 
+    const isAnyFilterApplied =
+        searchText.trim() !== '' ||
+        summaryDetailFilter !== 'all' ||
+        diagramHtmlFilter !== 'all' ||
+        diagramExcalidrawFilter !== 'all' ||
+        matplotlibFilter !== 'all' ||
+        imgUrlsFilter !== 'all' ||
+        detailImageUrlsFilter !== 'all' ||
+        showDetailFilter !== 'all' ||
+        lessonNumberFilter.trim() !== '' ||
+        (activeTab === 'news' || activeTab === 'document') && relatedCaseFilter !== 'all' ||
+        (Array.isArray(datasetFilter) && datasetFilter.length > 0) ||
+        (Array.isArray(programFilter) && programFilter.length > 0);
+
+    const handleClearAllFilters = () => {
+        setSearchText('');
+        setSummaryDetailFilter('all');
+        setDiagramHtmlFilter('all');
+        setDiagramExcalidrawFilter('all');
+        setMatplotlibFilter('all');
+        setImgUrlsFilter('all');
+        setDetailImageUrlsFilter('all');
+        setShowDetailFilter('all');
+        setLessonNumberFilter('');
+
+        setRelatedCaseFilter('all');
+        setDatasetFilter([]);
+        setProgramFilter([]);
+    };
+
     return (
         <div style={{ padding: '24px', maxWidth: '100%', margin: '0 auto', }}>
             <Card>
@@ -4384,39 +4553,62 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
                     items={[{
                         key: 'filters',
                         label: (
-                            <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                <FilterOutlined />
-                                <span style={{ fontWeight: 500 }}>Bộ lọc</span>
-                            </span>
+                            <div
+                                style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '12px',
+                                    width: '100%',
+                                }}
+                            >
+                                <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <FilterOutlined />
+                                    <span style={{ fontWeight: 500 }}>Bộ lọc</span>
+                                </span>
+                                {isAnyFilterApplied && (
+                                    <Button
+                                        type="link"
+                                        size="small"
+                                        onMouseDown={(e) => e.stopPropagation()}
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleClearAllFilters();
+                                        }}
+                                    >
+                                        Xóa bộ lọc
+                                    </Button>
+                                )}
+                            </div>
                         ),
                         children: (
-                            <div style={{
-                                display: 'grid',
-                                gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
-                                gap: '12px 24px',
-                                padding: '4px 0'
-                            }}>
-                                {
-                                    (activeTab === 'news' || activeTab === 'document') && (
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                            <span style={{ fontSize: '13px', fontWeight: 500, minWidth: '90px' }}>Bộ dữ liệu:</span>
-                                            <Select
-                                                mode="multiple"
-                                                value={datasetFilter}
-                                                onChange={setDatasetFilter}
-                                                style={{ flex: 1, minWidth: 160 }}
-                                                placeholder="Chọn bộ dữ liệu (chỉ cần có 1)"
-                                                showSearch
-                                                filterOption={(input, option) =>
-                                                    (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
-                                                }
-                                                maxTagCount="responsive"
-                                                options={datasetOptions}
-                                                size="small"
-                                            />
-                                        </div>
-                                    )
-                                }
+                            <>
+                                <div style={{
+                                    display: 'grid',
+                                    gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+                                    gap: '12px 24px',
+                                    padding: '4px 0'
+                                }}>
+                                    {
+                                        (activeTab === 'news' || activeTab === 'document') && (
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                <span style={{ fontSize: '13px', fontWeight: 500, minWidth: '90px' }}>Bộ dữ liệu:</span>
+                                                <Select
+                                                    mode="multiple"
+                                                    value={datasetFilter}
+                                                    onChange={setDatasetFilter}
+                                                    style={{ flex: 1, minWidth: 160 }}
+                                                    placeholder="Chọn bộ dữ liệu (chỉ cần có 1)"
+                                                    showSearch
+                                                    filterOption={(input, option) =>
+                                                        (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+                                                    }
+                                                    maxTagCount="responsive"
+                                                    options={datasetOptions}
+                                                    size="small"
+                                                />
+                                            </div>
+                                        )
+                                    }
 
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                     <span style={{ fontSize: '13px', fontWeight: 500, minWidth: '90px' }}>SummaryDetail:</span>
@@ -4538,6 +4730,9 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
                                     </div>
                                 )}
                             </div>
+
+                               
+                            </>
                         ),
                     }]}
                 />
@@ -6392,298 +6587,17 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
                 )}
             </Modal>
 
-            {/* Preview detailImageUrls Modal */}
-            <Modal
-                title={
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        <FileImageOutlined style={{ color: '#722ed1', fontSize: '20px' }} />
-                        <span style={{ fontSize: '18px', fontWeight: 600 }}>
-                            {previewingDetailImageUrlsRecord?.title || 'Preview detailImageUrls'}
-                        </span>
-                        {previewingDetailImageUrlsRecord?.detailImageUrls && Array.isArray(previewingDetailImageUrlsRecord.detailImageUrls) && (
-                            <Tag color="purple" style={{ fontSize: '13px', padding: '4px 12px' }}>
-                                {previewingDetailImageUrlsRecord.detailImageUrls.length} ảnh
-                            </Tag>
-                        )}
-                    </div>
-                }
-                open={detailImageUrlsPreviewModalVisible}
-                onCancel={() => {
-                    setDetailImageUrlsPreviewModalVisible(false);
-                    setPreviewingDetailImageUrlsRecord(null);
-                    setEditingDescriptions({});
-                }}
-                footer={[
-                    <Button key="close" onClick={() => {
-                        setDetailImageUrlsPreviewModalVisible(false);
-                        setPreviewingDetailImageUrlsRecord(null);
-                    }}>
-                        Đóng
-                    </Button>
-                ]}
-                width={1400}
+            <DetailImageUrlsPreviewModal
+                visible={detailImageUrlsPreviewModalVisible}
+                previewingDetailImageUrlsRecord={previewingDetailImageUrlsRecord}
+                setDetailImageUrlsPreviewModalVisible={setDetailImageUrlsPreviewModalVisible}
+                setPreviewingDetailImageUrlsRecord={setPreviewingDetailImageUrlsRecord}
+                setEditingDescriptions={setEditingDescriptions}
+                uploadingImageIndex={uploadingImageIndex}
+                setUploadingImageIndex={setUploadingImageIndex}
+                setK9Data={setK9Data}
                 className={styles.modalContent}
-            >
-
-                {previewingDetailImageUrlsRecord?.detailImageUrls && Array.isArray(previewingDetailImageUrlsRecord.detailImageUrls) && previewingDetailImageUrlsRecord.detailImageUrls.length > 0 ? (
-                    <div style={{
-                        height: '100%',
-                        width: '100%',
-                        overflow: 'auto',
-                        position: 'relative',
-                        marginTop: '16px'
-                    }}>
-                        {previewingDetailImageUrlsRecord.detailImageUrls.map((imgItem, index) => {
-                            const imageUrl = typeof imgItem === 'string' ? imgItem : (imgItem?.url || imgItem?.image_url || '');
-                            const description = typeof imgItem === 'object' ? imgItem?.description : '';
-                            const partNumber = typeof imgItem === 'object' ? imgItem?.partNumber : (index + 1);
-                            const partContent = typeof imgItem === 'object' ? imgItem?.partContent : '';
-                            if (!imageUrl) return null;
-
-                            return (
-                                <Card
-                                    key={index}
-                                    hoverable={false}
-                                    style={{
-                                        borderRadius: '12px',
-                                        overflow: 'hidden',
-                                        boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
-                                        border: '1px solid #e8e8e8',
-                                        width: '100%',
-                                        marginBottom: '16px'
-                                    }}
-                                    bodyStyle={{ padding: 0 }}
-                                >
-                                    <div style={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
-                                        {/* Image Section */}
-                                        <div style={{
-                                            position: 'relative',
-                                            width: '100%',
-                                            backgroundColor: '#fafafa',
-                                            minHeight: '200px',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                            overflow: 'hidden',
-                                            borderBottom: '1px solid #f0f0f0',
-                                            padding: '16px'
-                                        }}>
-                                            <Image
-                                                src={imageUrl}
-                                                alt={`Ảnh ${index + 1}`}
-                                                style={{
-                                                    width: 'auto',
-                                                    height: 'auto',
-                                                    maxWidth: '100%',
-                                                    maxHeight: '400px',
-                                                    objectFit: 'contain'
-                                                }}
-                                                preview={{
-                                                    mask: (
-                                                        <div style={{
-                                                            display: 'flex',
-                                                            alignItems: 'center',
-                                                            gap: '6px',
-                                                            fontSize: '13px',
-                                                            fontWeight: 500,
-                                                            color: 'white'
-                                                        }}>
-                                                            <span>🔍</span>
-                                                            <span>Xem</span>
-                                                        </div>
-                                                    )
-                                                }}
-                                            />
-                                            <div style={{
-                                                position: 'absolute',
-                                                top: '8px',
-                                                right: '8px',
-                                                backgroundColor: 'rgba(114, 46, 209, 0.85)',
-                                                color: 'white',
-                                                padding: '2px 10px',
-                                                borderRadius: '12px',
-                                                fontSize: '11px',
-                                                fontWeight: 600,
-                                                backdropFilter: 'blur(4px)'
-                                            }}>
-                                                Phần {partNumber}
-                                            </div>
-                                            {/* Upload Button */}
-                                            <div style={{
-                                                position: 'absolute',
-                                                bottom: '8px',
-                                                right: '8px',
-                                                display: 'flex',
-                                                gap: '8px'
-                                            }}>
-                                                <input
-                                                    type="file"
-                                                    accept="image/*"
-                                                    style={{ display: 'none' }}
-                                                    id={`upload-detail-image-${index}`}
-                                                    onChange={async (e) => {
-                                                        const file = e.target.files?.[0];
-                                                        if (!file) return;
-
-                                                        try {
-                                                            setUploadingImageIndex(index);
-                                                            message.loading('Đang upload ảnh...', 0);
-
-                                                            // Upload file
-                                                            const response = await uploadFiles([file]);
-                                                            const newImageUrl = response.files?.[0]?.fileUrl || response.files?.[0]?.url || '';
-
-                                                            if (!newImageUrl) {
-                                                                throw new Error('Upload ảnh thất bại');
-                                                            }
-
-                                                            // Update detailImageUrls với URL mới, giữ nguyên partContent và description
-                                                            const updatedDetailImageUrls = [...previewingDetailImageUrlsRecord.detailImageUrls];
-                                                            updatedDetailImageUrls[index] = {
-                                                                ...updatedDetailImageUrls[index],
-                                                                url: newImageUrl
-                                                            };
-
-                                                            const updateData = {
-                                                                id: previewingDetailImageUrlsRecord.id,
-                                                                detailImageUrls: updatedDetailImageUrls
-                                                            };
-
-                                                            const updateResponse = await updateK9(updateData);
-                                                            const updatedRecord = updateResponse?.data || updateResponse;
-
-                                                            // Update local state
-                                                            const updater = (list) => list.map(item =>
-                                                                item.id === previewingDetailImageUrlsRecord.id
-                                                                    ? { ...item, ...updatedRecord }
-                                                                    : item
-                                                            );
-
-                                                            setK9Data(prev => ({
-                                                                news: updater(prev.news || []),
-                                                                document: updater(prev.document || []),
-                                                                caseTraining: updater(prev.caseTraining || []),
-                                                                longForm: updater(prev.longForm || []),
-                                                                home: updater(prev.home || []),
-                                                            }));
-
-                                                            // Update previewing record
-                                                            setPreviewingDetailImageUrlsRecord(prev => ({
-                                                                ...prev,
-                                                                detailImageUrls: updatedDetailImageUrls
-                                                            }));
-
-                                                            message.destroy();
-                                                            message.success('Upload ảnh thành công!');
-                                                        } catch (error) {
-                                                            console.error('Error uploading image:', error);
-                                                            message.destroy();
-                                                            message.error('Upload ảnh thất bại!');
-                                                        } finally {
-                                                            setUploadingImageIndex(null);
-                                                            // Reset input
-                                                            e.target.value = '';
-                                                        }
-                                                    }}
-                                                />
-                                                <Button
-                                                    type="primary"
-                                                    icon={<UploadOutlined />}
-                                                    size="small"
-                                                    loading={uploadingImageIndex === index}
-                                                    onClick={() => {
-                                                        document.getElementById(`upload-detail-image-${index}`)?.click();
-                                                    }}
-                                                    style={{
-                                                        backgroundColor: '#722ed1',
-                                                        borderColor: '#722ed1',
-                                                        boxShadow: '0 2px 4px rgba(114, 46, 209, 0.3)'
-                                                    }}
-                                                >
-                                                    Upload lại ảnh
-                                                </Button>
-                                            </div>
-                                        </div>
-
-                                        {/* Part Content Section */}
-                                        {partContent && (
-                                            <div style={{
-                                                padding: '12px 16px',
-                                                backgroundColor: '#f9f0ff',
-                                                borderBottom: '1px solid #f0f0f0'
-                                            }}>
-                                                <div style={{
-                                                    fontSize: '12px',
-                                                    color: '#595959',
-                                                    fontWeight: 500,
-                                                    marginBottom: '6px'
-                                                }}>
-                                                    Nội dung phần {partNumber}:
-                                                </div>
-                                                <div style={{
-                                                    fontSize: '13px',
-                                                    color: '#434343',
-                                                    lineHeight: '1.6',
-                                                    wordBreak: 'break-word'
-                                                }}>
-                                                    {partContent}
-                                                </div>
-                                            </div>
-                                        )}
-
-                                        {/* Description Section */}
-                                        <div style={{
-                                            padding: '16px',
-                                            backgroundColor: '#fff'
-                                        }}>
-                                            <div style={{
-                                                marginBottom: '10px'
-                                            }}>
-                                                <span style={{
-                                                    fontSize: '12px',
-                                                    color: '#595959',
-                                                    fontWeight: 500
-                                                }}>
-                                                    Mô tả
-                                                </span>
-                                            </div>
-
-                                            {description ? (
-                                                <div style={{
-                                                    fontSize: '13px',
-                                                    color: '#434343',
-                                                    lineHeight: '1.6',
-                                                    wordBreak: 'break-word',
-                                                    fontWeight: 400
-                                                }}>
-                                                    {description}
-                                                </div>
-                                            ) : (
-                                                <div style={{
-                                                    color: '#bfbfbf',
-                                                    fontSize: '12px',
-                                                    fontStyle: 'italic'
-                                                }}>
-                                                    Chưa có mô tả
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-                                </Card>
-                            );
-                        })}
-                    </div>
-                ) : (
-                    <div style={{
-                        textAlign: 'center',
-                        padding: '80px 20px',
-                        color: '#8c8c8c'
-                    }}>
-                        <FileImageOutlined style={{ fontSize: '64px', marginBottom: '20px', opacity: 0.2 }} />
-                        <div style={{ fontSize: '18px', fontWeight: 500 }}>Không có detailImageUrls</div>
-                    </div>
-                )}
-            </Modal>
+            />
 
             {/* Related Case Training Modal */}
             <RelatedCaseTrainingModal
