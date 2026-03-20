@@ -62,9 +62,11 @@ const AISummaryDetailGeneration = () => {
     const [selectHtmlPromptModalVisible, setSelectHtmlPromptModalVisible] = useState(false);
     const [selectExcalidrawPromptModalVisible, setSelectExcalidrawPromptModalVisible] = useState(false);
     const [selectMatplotlibPromptModalVisible, setSelectMatplotlibPromptModalVisible] = useState(false);
+    const [selectFixMatplotlibPromptModalVisible, setSelectFixMatplotlibPromptModalVisible] = useState(false);
     const [pendingHtmlRecord, setPendingHtmlRecord] = useState(null);
     const [pendingExcalidrawRecord, setPendingExcalidrawRecord] = useState(null);
     const [pendingMatplotlibRecord, setPendingMatplotlibRecord] = useState(null);
+    const [pendingMatplotlibFixContext, setPendingMatplotlibFixContext] = useState(null); // { code, errorMessage }
     const [pendingHtmlRecords, setPendingHtmlRecords] = useState([]);
     const [pendingExcalidrawRecords, setPendingExcalidrawRecords] = useState([]);
     const [pendingMatplotlibRecords, setPendingMatplotlibRecords] = useState([]);
@@ -82,6 +84,8 @@ const AISummaryDetailGeneration = () => {
     const [matplotlibPreviewRecord, setMatplotlibPreviewRecord] = useState(null);
     const [matplotlibPreviewSaving, setMatplotlibPreviewSaving] = useState(false);
     const [matplotlibPreviewError, setMatplotlibPreviewError] = useState(null); // { line?: number, message?: string }
+    const [matplotlibPreviewRenderedImages, setMatplotlibPreviewRenderedImages] = useState([]); // [{name,mime,data(base64)}]
+    const [matplotlibPreviewLastRenderedCode, setMatplotlibPreviewLastRenderedCode] = useState('');
     const matplotlibCodeTextareaRef = useRef(null);
     const [selectedRowKeys, setSelectedRowKeys] = useState([]);
     const [isProcessing, setIsProcessing] = useState(false);
@@ -976,9 +980,95 @@ const AISummaryDetailGeneration = () => {
         }
         codes.push(extracted);
 
+        // Tạo ảnh ngay từ server python để đảm bảo code chạy được.
+        // Nếu render thất bại thì vẫn lưu code (images = []) như bạn yêu cầu.
+        const dataUrlToFile = (dataUrl, filename) => {
+            const parts = String(dataUrl || '').split(',');
+            const meta = parts[0] || '';
+            const b64 = parts[1] || '';
+            const mimeMatch = meta.match(/data:([^;]+);base64/i);
+            const mime = mimeMatch?.[1] || 'image/png';
+            const binary = atob(b64);
+            const len = binary.length;
+            const bytes = new Uint8Array(len);
+            for (let i = 0; i < len; i++) {
+                bytes[i] = binary.charCodeAt(i);
+            }
+            const blob = new Blob([bytes], { type: mime });
+            return new File([blob], filename, { type: mime });
+        };
+
+        const matplotlibEntries = [];
+        let hasAtLeastOneImage = false;
+
+        for (const codeStr of codes) {
+            let imagesWithUrls = [];
+            try {
+                message.loading('Đang render Matplotlib để tạo ảnh...', 0);
+                const renderRes = await axios.post(
+                    'https://pip.xichtho.vn/render/code',
+                    { code: codeStr },
+                    { responseType: 'json' }
+                );
+
+                const images = Array.isArray(renderRes?.data?.images) ? renderRes.data.images : [];
+                message.destroy();
+
+                if (!images || images.length === 0) {
+                    throw new Error('Render không trả về ảnh nào');
+                }
+
+                const filesToUpload = images
+                    .map((img, idx) => {
+                        const mime = img?.mime || 'image/png';
+                        const name = img?.name || `matplotlib_${idx + 1}.png`;
+                        const data = img?.data;
+                        if (!data) return null;
+                        const dataUrl = `data:${mime};base64,${data}`;
+                        return dataUrlToFile(dataUrl, name);
+                    })
+                    .filter(Boolean);
+
+                if (filesToUpload.length === 0) {
+                    throw new Error('Render trả về ảnh nhưng thiếu data base64');
+                }
+
+                message.loading('Đang upload ảnh Matplotlib...', 0);
+                const uploadRes = await uploadFiles(filesToUpload);
+                message.destroy();
+
+                const uploadedFiles = uploadRes?.files || uploadRes?.data?.files || [];
+                if (!Array.isArray(uploadedFiles) || uploadedFiles.length === 0) {
+                    throw new Error('Không nhận được URL ảnh sau khi upload');
+                }
+
+                imagesWithUrls = images
+                    .map((img, idx) => {
+                        const u = uploadedFiles[idx] || {};
+                        const url = u?.fileUrl || u?.url || u?.link || '';
+                        if (!url) return null;
+                        return { name: img?.name || filesToUpload[idx]?.name, url };
+                    })
+                    .filter(Boolean);
+
+                if (!imagesWithUrls || imagesWithUrls.length === 0) {
+                    throw new Error('Upload thành công nhưng không mapping được URL');
+                }
+
+                hasAtLeastOneImage = true;
+            } catch (e) {
+                message.destroy();
+                const apiMessage = await parseBlobErrorMessage(e);
+                message.warning(`Render ảnh Matplotlib thất bại: ${apiMessage || 'Lỗi không xác định'}. Vẫn lưu code.`);
+                imagesWithUrls = [];
+            }
+
+            matplotlibEntries.push({ code: codeStr, images: imagesWithUrls });
+        }
+
         const updateData = {
             id: record.id,
-            matplotlibCode: codes,
+            matplotlibCode: matplotlibEntries,
             showMatplotlib: true
         };
 
@@ -3112,6 +3202,8 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
             }
             setMatplotlibPreviewLoading(true);
             setMatplotlibPreviewError(null);
+            setMatplotlibPreviewRenderedImages([]);
+            setMatplotlibPreviewLastRenderedCode(rawPythonCode);
 
             if (matplotlibImgSrcList.length > 0) {
                 matplotlibImgSrcList.forEach((src) => {
@@ -3145,6 +3237,7 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
                     message.error('Render trả về JSON nhưng không có ảnh');
                     return;
                 }
+                setMatplotlibPreviewRenderedImages(images);
                 setMatplotlibImgSrcList(srcList);
             } else {
                 setMatplotlibImgSrcList([URL.createObjectURL(response.data)]);
@@ -3170,8 +3263,39 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
     };
 
     const handlePreviewMatplotlibImage = async (record) => {
-        const codeList = Array.isArray(record?.matplotlibCode) ? record.matplotlibCode : [];
-        const firstCodeRaw = String(codeList[0] || '');
+        const rawMatplotlibCode = record?.matplotlibCode;
+        const entries = Array.isArray(rawMatplotlibCode)
+            ? rawMatplotlibCode
+            : (rawMatplotlibCode && typeof rawMatplotlibCode === 'object'
+                ? [rawMatplotlibCode]
+                : []);
+
+        const firstEntry = entries[0];
+
+        const firstCodeRaw = typeof firstEntry === 'string'
+            ? firstEntry
+            : String(firstEntry?.code || firstEntry?.matplotlibCode || firstEntry?.value || '');
+
+        const savedImages = (() => {
+            if (!firstEntry || typeof firstEntry !== 'object') return [];
+            if (Array.isArray(firstEntry.images)) return firstEntry.images;
+            if (Array.isArray(firstEntry.imageUrls)) return firstEntry.imageUrls;
+            return [];
+        })();
+
+        const savedImageUrls = savedImages
+            .map((it) => {
+                if (typeof it === 'string') return it;
+                if (!it || typeof it !== 'object') return '';
+                return it?.url
+                    || it?.imageUrl
+                    || it?.fileUrl
+                    || it?.file_url
+                    || it?.src
+                    || it?.image_url
+                    || '';
+            })
+            .filter(Boolean);
 
         if (!firstCodeRaw.trim()) {
             message.warning('Không có Matplotlib code để xem');
@@ -3184,13 +3308,110 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
         setMatplotlibPreviewDraftCode(firstCodeRaw);
         setMatplotlibPreviewEditing(false);
         setMatplotlibPreviewRecord(record);
+        setMatplotlibPreviewRenderedImages([]);
+        setMatplotlibPreviewLastRenderedCode('');
         setMatplotlibPreviewVisible(true);
 
-        await renderMatplotlibPreviewFromCode(firstCodeRaw);
+        if (savedImageUrls.length > 0) {
+            setMatplotlibImgSrcList(savedImageUrls);
+            setMatplotlibPreviewLastRenderedCode(firstCodeRaw);
+            // images đã tồn tại ở DB, set lastRendered để tránh render lại không cần thiết
+            setMatplotlibPreviewRenderedImages(savedImages);
+        } else {
+            setMatplotlibImgSrcList([]);
+            await renderMatplotlibPreviewFromCode(firstCodeRaw);
+        }
     };
 
     const handleRerunMatplotlibPreview = async () => {
-        await renderMatplotlibPreviewFromCode(matplotlibPreviewDraftCode);
+        const code = String(matplotlibPreviewDraftCode || '');
+        if (!code.trim()) {
+            message.warning('Code rỗng, không thể render');
+            return;
+        }
+
+        // Nếu code chưa đổi và đang có ảnh sẵn thì không cần gọi render lại
+        if (
+            matplotlibPreviewLastRenderedCode === code
+            && Array.isArray(matplotlibImgSrcList)
+            && matplotlibImgSrcList.length > 0
+        ) {
+            message.info('Ảnh đã có cho đoạn code này, không cần render lại');
+            return;
+        }
+
+        await renderMatplotlibPreviewFromCode(code);
+    };
+
+    const handleOpenFixMatplotlibCode = () => {
+        if (!matplotlibPreviewError?.message) {
+            message.warning('Chưa có lỗi để fix');
+            return;
+        }
+        if (!String(matplotlibPreviewDraftCode || '').trim()) {
+            message.warning('Code rỗng, không thể fix');
+            return;
+        }
+        setPendingMatplotlibFixContext({
+            code: matplotlibPreviewDraftCode,
+            errorMessage: matplotlibPreviewError.message
+        });
+        setSelectFixMatplotlibPromptModalVisible(true);
+    };
+
+    const handleFixMatplotlibPromptSelected = async (promptConfig) => {
+        if (!pendingMatplotlibFixContext) return;
+
+        try {
+            setSelectFixMatplotlibPromptModalVisible(false);
+            const { code, errorMessage } = pendingMatplotlibFixContext;
+            setPendingMatplotlibFixContext(null);
+
+            message.loading('Đang fix Matplotlib code bằng AI...', 0);
+
+            const aiPromptText = promptConfig?.aiPrompt || '';
+            const aiModel = promptConfig?.aiModel || '';
+            if (!aiModel || !aiPromptText) {
+                throw new Error('Vui lòng cài đặt prompt Fix Code Matplotlib (aiPrompt/aiModel) trước!');
+            }
+
+            const fixRequest =  `Code hiện tại:\n${code}\n\n` + `Lỗi khi chạy:\n${errorMessage}\n\n`
+              ;
+
+            const aiResult = await aiGen(
+                fixRequest,
+                aiPromptText,
+                aiModel,
+                'text',
+                0.2
+            );
+
+            const aiText = (aiResult?.result || aiResult?.answer || aiResult?.content || '').trim();
+            if (!aiText) throw new Error('AI không trả về code sau khi fix');
+
+            const fixedCode = extractPythonCode(aiText) || aiText;
+            if (!fixedCode || !String(fixedCode).trim()) {
+                throw new Error('AI trả về code không hợp lệ');
+            }
+
+            setMatplotlibPreviewError(null);
+            setMatplotlibPreviewCode(fixedCode);
+            setMatplotlibPreviewDraftCode(fixedCode);
+            setMatplotlibPreviewEditing(false);
+
+            message.destroy();
+            await renderMatplotlibPreviewFromCode(fixedCode);
+            message.success('Đã fix và chạy lại Matplotlib code thành công');
+        } catch (e) {
+            message.destroy();
+            const apiMessage = await parseBlobErrorMessage(e);
+            const finalMsg = apiMessage || (e?.message ? String(e.message) : 'Fix code thất bại');
+            // Khi AI fix thất bại, giữ code cũ nhưng cập nhật error để user biết
+            setMatplotlibPreviewError({
+                message: finalMsg,
+            });
+            message.error(finalMsg);
+        }
     };
 
     const closeMatplotlibPreview = () => {
@@ -3203,6 +3424,8 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
         setMatplotlibPreviewRecord(null);
         setMatplotlibPreviewSaving(false);
         setMatplotlibPreviewError(null);
+        setMatplotlibPreviewRenderedImages([]);
+        setMatplotlibPreviewLastRenderedCode('');
         if (matplotlibImgSrcList.length > 0) {
             matplotlibImgSrcList.forEach((src) => {
                 if (typeof src === 'string' && src.startsWith('blob:')) URL.revokeObjectURL(src);
@@ -3221,12 +3444,104 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
             return;
         }
 
+        if (!Array.isArray(matplotlibPreviewRenderedImages) || matplotlibPreviewRenderedImages.length === 0) {
+            message.warning('Chưa có ảnh preview để upload. Hãy bấm "Run lại" trước khi lưu.');
+            return;
+        }
+
+        if (matplotlibPreviewLastRenderedCode !== matplotlibPreviewDraftCode) {
+            message.warning('Code hiện tại chưa được render lại. Hãy bấm "Run lại" trước khi lưu.');
+            return;
+        }
+
         try {
             setMatplotlibPreviewSaving(true);
 
+            const dataUrlToFile = (dataUrl, filename) => {
+                // dataUrl format: data:<mime>;base64,<base64>
+                const parts = String(dataUrl || '').split(',');
+                const meta = parts[0] || '';
+                const b64 = parts[1] || '';
+                const mimeMatch = meta.match(/data:([^;]+);base64/i);
+                const mime = mimeMatch?.[1] || 'image/png';
+                const binary = atob(b64);
+                const len = binary.length;
+                const bytes = new Uint8Array(len);
+                for (let i = 0; i < len; i++) {
+                    bytes[i] = binary.charCodeAt(i);
+                }
+                const blob = new Blob([bytes], { type: mime });
+                return new File([blob], filename, { type: mime });
+            };
+
+            const filesToUpload = matplotlibPreviewRenderedImages
+                .map((img, idx) => {
+                    const mime = img?.mime || 'image/png';
+                    const name = img?.name || `matplotlib_${idx + 1}.png`;
+                    const data = img?.data;
+                    if (!data) return null;
+                    const dataUrl = `data:${mime};base64,${data}`;
+                    return dataUrlToFile(dataUrl, name);
+                })
+                .filter(Boolean);
+
+            if (filesToUpload.length === 0) {
+                message.warning('Không tạo được file để upload (ảnh preview rỗng).');
+                return;
+            }
+
+            message.loading('Đang upload ảnh Matplotlib...', 0);
+            const uploadRes = await uploadFiles(filesToUpload);
+            message.destroy();
+
+            const uploadedFiles = uploadRes?.files || uploadRes?.data?.files || [];
+            if (!Array.isArray(uploadedFiles) || uploadedFiles.length === 0) {
+                throw new Error('Không nhận được URL ảnh sau khi upload');
+            }
+
+            const imagesWithUrls = filesToUpload
+                .map((file, idx) => {
+                    const u = uploadedFiles[idx] || {};
+                    const url = u?.fileUrl || u?.url || u?.link || '';
+                    if (!url) return null;
+                    return { name: file.name, url };
+                })
+                .filter(Boolean);
+
+            if (imagesWithUrls.length === 0) {
+                throw new Error('Upload thành công nhưng không có URL ảnh để lưu');
+            }
+
+            const existingList = Array.isArray(matplotlibPreviewRecord?.matplotlibCode)
+                ? matplotlibPreviewRecord.matplotlibCode
+                : [];
+
+            const normalized = existingList.map((entry) => {
+                if (typeof entry === 'string') {
+                    return { code: entry, images: [] };
+                }
+                if (entry && typeof entry === 'object') {
+                    return {
+                        code: entry?.code ?? String(entry?.value ?? ''),
+                        images: Array.isArray(entry?.images) ? entry.images : []
+                    };
+                }
+                return { code: '', images: [] };
+            });
+
+            if (normalized.length === 0) {
+                normalized.push({ code: matplotlibPreviewDraftCode, images: [] });
+            }
+
+            normalized[0] = {
+                ...(normalized[0] || { code: '', images: [] }),
+                code: matplotlibPreviewDraftCode,
+                images: imagesWithUrls
+            };
+
             const updateData = {
                 id: matplotlibPreviewRecord.id,
-                matplotlibCode: [matplotlibPreviewDraftCode],
+                matplotlibCode: normalized,
                 showMatplotlib: true
             };
 
@@ -5328,7 +5643,16 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
                                 border: '1px solid #ffccc7',
                                 background: '#fff1f0'
                             }}>
-                                <div style={{ fontWeight: 700, color: '#c41a16' }}>Lỗi render Matplotlib</div>
+                                <div style={{ fontWeight: 700, color: '#c41a16', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+                                    <span>Lỗi render Matplotlib</span>
+                                    <Button
+                                        size="small"
+                                        type="primary"
+                                        onClick={handleOpenFixMatplotlibCode}
+                                    >
+                                        Fix Code
+                                    </Button>
+                                </div>
                                 {matplotlibPreviewError?.line ? (
                                     <div style={{ fontSize: 12, color: '#595959' }}>
                                         Ở dòng: <strong>{matplotlibPreviewError.line}</strong>
@@ -5466,6 +5790,19 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
                 }}
                 promptType="MATPLOTLIB_FROM_SUMMARYDETAIL_PROMPTS"
                 title="Chọn cài đặt Prompt - Matplotlib từ SummaryDetail"
+            />
+
+            <SelectPromptModal
+                visible={selectFixMatplotlibPromptModalVisible}
+                onCancel={() => {
+                    setSelectFixMatplotlibPromptModalVisible(false);
+                    setPendingMatplotlibFixContext(null);
+                }}
+                onSelect={(prompt) => {
+                    handleFixMatplotlibPromptSelected(prompt);
+                }}
+                promptType="FIX_CODE_MATPLOTLIB_PROMPTS"
+                title="Chọn cài đặt Prompt - Fix Code Matplotlib"
             />
 
 

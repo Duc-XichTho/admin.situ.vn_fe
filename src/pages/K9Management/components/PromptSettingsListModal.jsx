@@ -27,6 +27,7 @@ const PromptSettingsListModal = ({
     const [selectedImageUrlFromSummaryDetailId, setSelectedImageUrlFromSummaryDetailId] = useState(null);
     const [selectedMultiImageFromDetailId, setSelectedMultiImageFromDetailId] = useState(null);
     const [selectedMatplotlibFromSummaryDetailId, setSelectedMatplotlibFromSummaryDetailId] = useState(null);
+    const [selectedFixCodeMatplotlibId, setSelectedFixCodeMatplotlibId] = useState(null);
 
     // State for each prompt type
     const [improveDetailPrompts, setImproveDetailPrompts] = useState([]);
@@ -42,6 +43,8 @@ const PromptSettingsListModal = ({
     const [multiImageFromDetailPrompts, setMultiImageFromDetailPrompts] = useState([]);
     // New: prompts để tạo Matplotlib code từ SummaryDetail
     const [matplotlibFromSummaryDetailPrompts, setMatplotlibFromSummaryDetailPrompts] = useState([]);
+    // New: prompts để sửa lỗi Matplotlib code (Fix Code Matplotlib)
+    const [fixCodeMatplotlibPrompts, setFixCodeMatplotlibPrompts] = useState([]);
     // Summary Detail Config (AI tóm tắt Detail)
     const [summaryDetailConfig, setSummaryDetailConfig] = useState({
         aiModel: '',
@@ -127,6 +130,14 @@ const PromptSettingsListModal = ({
         }
     }, [matplotlibFromSummaryDetailPrompts, selectedMatplotlibFromSummaryDetailId]);
 
+    useEffect(() => {
+        if (!selectedFixCodeMatplotlibId && fixCodeMatplotlibPrompts.length > 0) {
+            setSelectedFixCodeMatplotlibId(fixCodeMatplotlibPrompts[0].id);
+        } else if (selectedFixCodeMatplotlibId && !fixCodeMatplotlibPrompts.find(p => p.id === selectedFixCodeMatplotlibId)) {
+            setSelectedFixCodeMatplotlibId(fixCodeMatplotlibPrompts.length > 0 ? fixCodeMatplotlibPrompts[0].id : null);
+        }
+    }, [fixCodeMatplotlibPrompts, selectedFixCodeMatplotlibId]);
+
     const loadAllSettings = async () => {
         setLoading(true);
         try {
@@ -202,6 +213,14 @@ const PromptSettingsListModal = ({
                 setMatplotlibFromSummaryDetailPrompts([]);
             }
 
+            // Load Fix Code Matplotlib Prompts
+            const fixCodeMatplotlibSettings = await getSettingByType('FIX_CODE_MATPLOTLIB_PROMPTS');
+            if (fixCodeMatplotlibSettings?.setting && Array.isArray(fixCodeMatplotlibSettings.setting)) {
+                setFixCodeMatplotlibPrompts(fixCodeMatplotlibSettings.setting);
+            } else {
+                setFixCodeMatplotlibPrompts([]);
+            }
+
             // Load Summary Detail Config
             const summaryDetailConfigSettings = await getSettingByType('SUMMARY_DETAIL_CONFIG');
             if (summaryDetailConfigSettings?.setting) {
@@ -272,6 +291,12 @@ const PromptSettingsListModal = ({
             await createOrUpdateSetting({
                 type: 'MATPLOTLIB_FROM_SUMMARYDETAIL_PROMPTS',
                 setting: matplotlibFromSummaryDetailPrompts
+            });
+
+            // Save Fix Code Matplotlib Prompts
+            await createOrUpdateSetting({
+                type: 'FIX_CODE_MATPLOTLIB_PROMPTS',
+                setting: fixCodeMatplotlibPrompts
             });
 
             // Save Summary Detail Config
@@ -1265,6 +1290,32 @@ const PromptSettingsListModal = ({
         ));
     };
 
+    const addFixCodeMatplotlibPrompt = () => {
+        const newPrompt = {
+            id: `fix_matplotlib_${Date.now()}`,
+            name: `Cài đặt ${fixCodeMatplotlibPrompts.length + 1}`,
+            aiPrompt: '',
+            aiModel: ''
+        };
+        const updatedPrompts = [...fixCodeMatplotlibPrompts, newPrompt];
+        setFixCodeMatplotlibPrompts(updatedPrompts);
+        setSelectedFixCodeMatplotlibId(newPrompt.id);
+    };
+
+    const removeFixCodeMatplotlibPrompt = (id) => {
+        const updatedPrompts = fixCodeMatplotlibPrompts.filter(p => p.id !== id);
+        setFixCodeMatplotlibPrompts(updatedPrompts);
+        if (selectedFixCodeMatplotlibId === id) {
+            setSelectedFixCodeMatplotlibId(updatedPrompts.length > 0 ? updatedPrompts[0].id : null);
+        }
+    };
+
+    const updateFixCodeMatplotlibPrompt = (id, field, value) => {
+        setFixCodeMatplotlibPrompts(fixCodeMatplotlibPrompts.map(p =>
+            p.id === id ? { ...p, [field]: value } : p
+        ));
+    };
+
     const renderMatplotlibFromSummaryDetailTab = () => {
         const selectedItem = matplotlibFromSummaryDetailPrompts.find(p => p.id === selectedMatplotlibFromSummaryDetailId);
 
@@ -1383,6 +1434,126 @@ const PromptSettingsListModal = ({
                                 color: '#999'
                             }}>
                                 {matplotlibFromSummaryDetailPrompts.length === 0
+                                    ? 'Chưa có cài đặt nào. Hãy thêm cài đặt mới.'
+                                    : 'Chọn một cài đặt từ danh sách bên trái'}
+                            </div>
+                        )}
+                    </Content>
+                </Layout>
+            </div>
+        );
+    };
+
+    const renderFixCodeMatplotlibTab = () => {
+        const selectedItem = fixCodeMatplotlibPrompts.find(p => p.id === selectedFixCodeMatplotlibId);
+
+        return (
+            <div style={{ height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+                <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
+                    <h4>Danh sách cài đặt Fix Code Matplotlib</h4>
+                    <Button type="primary" icon={<PlusOutlined />} onClick={addFixCodeMatplotlibPrompt}>
+                        Thêm cài đặt
+                    </Button>
+                </div>
+
+                <Layout style={{ flex: 1, background: '#fff', border: '1px solid #f0f0f0', borderRadius: 4, minHeight: 0, overflow: 'hidden', display: 'flex' }}>
+                    <Sider
+                        width={280}
+                        style={{
+                            background: '#fafafa',
+                            borderRight: '1px solid #f0f0f0',
+                            overflowY: 'auto',
+                            overflowX: 'hidden',
+                            height: '100%',
+                            flexShrink: 0
+                        }}
+                    >
+                        <div style={{ padding: '8px' }}>
+                            {fixCodeMatplotlibPrompts.length === 0 ? (
+                                <div style={{ padding: '16px', textAlign: 'center', color: '#999' }}>
+                                    Chưa có cài đặt nào
+                                </div>
+                            ) : (
+                                fixCodeMatplotlibPrompts.map((item) => (
+                                    <div
+                                        key={item.id}
+                                        onClick={() => setSelectedFixCodeMatplotlibId(item.id)}
+                                        style={{
+                                            padding: '12px 16px',
+                                            marginBottom: '4px',
+                                            cursor: 'pointer',
+                                            borderRadius: '4px',
+                                            backgroundColor: selectedFixCodeMatplotlibId === item.id ? '#e6f7ff' : 'transparent',
+                                            border: selectedFixCodeMatplotlibId === item.id ? '1px solid #91d5ff' : '1px solid transparent',
+                                            transition: 'all 0.2s'
+                                        }}
+                                    >
+                                        <div style={{ fontWeight: selectedFixCodeMatplotlibId === item.id ? 600 : 400 }}>
+                                            {item.name || `Cài đặt ${item.id}`}
+                                        </div>
+                                    </div>
+                                ))
+                            )}
+                        </div>
+                    </Sider>
+
+                    <Content style={{ padding: '24px', overflowY: 'auto', overflowX: 'hidden', height: '100%', flex: 1, minWidth: 0 }}>
+                        {selectedItem ? (
+                            <Card>
+                                <Space direction="vertical" style={{ width: '100%' }} size="middle">
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <h4 style={{ margin: 0 }}>Chi tiết cài đặt</h4>
+                                        <Popconfirm
+                                            title="Xóa cài đặt này?"
+                                            onConfirm={() => removeFixCodeMatplotlibPrompt(selectedItem.id)}
+                                            okText="Xóa"
+                                            cancelText="Hủy"
+                                        >
+                                            <Button danger icon={<DeleteOutlined />}>
+                                                Xóa
+                                            </Button>
+                                        </Popconfirm>
+                                    </div>
+                                    <Form.Item label="Tên cài đặt">
+                                        <Input
+                                            placeholder="Tên cài đặt"
+                                            value={selectedItem.name}
+                                            onChange={(e) => updateFixCodeMatplotlibPrompt(selectedItem.id, 'name', e.target.value)}
+                                        />
+                                    </Form.Item>
+                                    <Form.Item label="AI Prompt (System Message)">
+                                        <TextArea
+                                            rows={8}
+                                            value={selectedItem.aiPrompt}
+                                            onChange={(e) => updateFixCodeMatplotlibPrompt(selectedItem.id, 'aiPrompt', e.target.value)}
+                                            placeholder="Nhập prompt để AI sửa lỗi Python Matplotlib từ code + error..."
+                                        />
+                                    </Form.Item>
+                                    <Form.Item label="AI Model">
+                                        <Select
+                                            value={selectedItem.aiModel}
+                                            onChange={(value) => updateFixCodeMatplotlibPrompt(selectedItem.id, 'aiModel', value)}
+                                            style={{ width: '100%' }}
+                                            placeholder="Chọn model"
+                                        >
+                                            {MODEL_AI_LIST.map(model => (
+                                                <Option key={model.value} value={model.value}>
+                                                    {model.name}
+                                                </Option>
+                                            ))}
+                                        </Select>
+                                    </Form.Item>
+                                </Space>
+                            </Card>
+                        ) : (
+                            <div style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                height: '100%',
+                                color: '#999'
+                            }}>
+                                {fixCodeMatplotlibPrompts.length === 0
                                     ? 'Chưa có cài đặt nào. Hãy thêm cài đặt mới.'
                                     : 'Chọn một cài đặt từ danh sách bên trái'}
                             </div>
@@ -2003,7 +2174,10 @@ const PromptSettingsListModal = ({
                     <TabPane tab="9. Matplotlib từ SummaryDetail" key="matplotlib_from_summarydetail">
                         {renderMatplotlibFromSummaryDetailTab()}
                     </TabPane>
-                    <TabPane tab="10.Tóm tắt Detail" key="summary_detail_config">
+                    <TabPane tab="10. Fix Code Matplotlib" key="fix_code_matplotlib">
+                        {renderFixCodeMatplotlibTab()}
+                    </TabPane>
+                    <TabPane tab="11.Tóm tắt Detail" key="summary_detail_config">
                         {renderSummaryDetailConfigTab()}
                     </TabPane>
                 </Tabs>
