@@ -79,6 +79,10 @@ const AISummaryDetailGeneration = () => {
     const [matplotlibPreviewCode, setMatplotlibPreviewCode] = useState('');
     const [matplotlibPreviewDraftCode, setMatplotlibPreviewDraftCode] = useState('');
     const [matplotlibPreviewEditing, setMatplotlibPreviewEditing] = useState(false);
+    const [matplotlibPreviewRecord, setMatplotlibPreviewRecord] = useState(null);
+    const [matplotlibPreviewSaving, setMatplotlibPreviewSaving] = useState(false);
+    const [matplotlibPreviewError, setMatplotlibPreviewError] = useState(null); // { line?: number, message?: string }
+    const matplotlibCodeTextareaRef = useRef(null);
     const [selectedRowKeys, setSelectedRowKeys] = useState([]);
     const [isProcessing, setIsProcessing] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
@@ -3039,11 +3043,14 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
             const blob = error?.response?.data;
             if (!blob) return null;
             if (typeof blob === 'string') return blob;
+            if (typeof blob === 'object' && typeof blob.text !== 'function') {
+                return blob?.message || blob?.error || blob?.detail || JSON.stringify(blob);
+            }
             const text = await blob.text();
             if (!text) return null;
             try {
                 const json = JSON.parse(text);
-                return json?.message || json?.error || text;
+                return json?.message || json?.error || json?.detail || text;
             } catch {
                 return text;
             }
@@ -3052,72 +3059,111 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
         }
     };
 
+    const parseMatplotlibErrorLine = (apiMessage) => {
+        const msg = String(apiMessage || '');
+        const m = msg.match(/Line\s+(\d+)/i);
+        if (m?.[1]) {
+            const n = Number(m[1]);
+            if (Number.isFinite(n) && n > 0) return n;
+        }
+        // Try parse from Python traceback: "... File <string>, line 123 ..."
+        const m2 = msg.match(/file\s+["'].*?["']\s*,\s*line\s+(\d+)/i);
+        if (m2?.[1]) {
+            const n = Number(m2[1]);
+            if (Number.isFinite(n) && n > 0) return n;
+        }
+        const m3 = msg.match(/^\s*line\s+(\d+)/im);
+        if (m3?.[1]) {
+            const n = Number(m3[1]);
+            if (Number.isFinite(n) && n > 0) return n;
+        }
+        return null;
+    };
+
+    const highlightMatplotlibErrorLine = (lineNumber, codeText) => {
+        const textareaWrapper = matplotlibCodeTextareaRef.current;
+        const textarea = textareaWrapper?.setSelectionRange
+            ? textareaWrapper
+            : (textareaWrapper?.textarea || textareaWrapper?.input || textareaWrapper?.querySelector?.('textarea'));
+        if (!textarea || !Number.isFinite(lineNumber) || lineNumber <= 0) return;
+
+        const lines = String(codeText || '').split(/\r?\n/);
+        if (!lines.length) return;
+
+        const ln = Math.min(Math.max(1, lineNumber), lines.length);
+
+        const before = lines.slice(0, ln - 1).join('\n');
+        const start = (ln > 1 ? before.length + 1 : 0);
+        const end = start + (lines[ln - 1] ? lines[ln - 1].length : 0);
+
+        textarea.focus();
+        textarea.setSelectionRange(start, end);
+
+        const approxLineHeight = 16.2; // fontSize 12 * lineHeight ~ 1.35
+        textarea.scrollTop = Math.max(0, (ln - 1) * approxLineHeight - 40);
+    };
+
     const renderMatplotlibPreviewFromCode = async (rawCode) => {
         try {
-            const rawPythonCode = extractPythonCode(rawCode);
-            if (!rawPythonCode) {
-                message.warning('Matplotlib code không hợp lệ (AI trả về mô tả, không phải Python).');
+            const rawPythonCode = String(rawCode || '');
+            if (!rawPythonCode.trim()) {
+                message.warning('Không có Matplotlib code để render');
                 return;
             }
             setMatplotlibPreviewLoading(true);
+            setMatplotlibPreviewError(null);
 
             if (matplotlibImgSrcList.length > 0) {
-                matplotlibImgSrcList.forEach((src) => URL.revokeObjectURL(src));
+                matplotlibImgSrcList.forEach((src) => {
+                    if (typeof src === 'string' && src.startsWith('blob:')) URL.revokeObjectURL(src);
+                });
                 setMatplotlibImgSrcList([]);
             }
 
-            // If AI code contains multiple images (multiple savefig), split it into segments
-            // so each render call returns a single image reliably.
-            const savefigRanges = getCallStatementRanges(
-                rawPythonCode,
-                /\b(?:[A-Za-z_]\w*\.)?savefig\s*\(/
+            const response = await axios.post(
+                'https://pip.xichtho.vn/render/code',
+                // 'http://localhost:8000/render/code',
+
+                { code: rawPythonCode },
+                { responseType: 'blob' }
             );
+            const contentType = response?.headers?.['content-type'] || response?.headers?.['Content-Type'] || response?.data?.type;
+            if (contentType && String(contentType).includes('application/json')) {
+                const text = await response.data.text();
+                const json = JSON.parse(text);
+                const images = Array.isArray(json?.images) ? json.images : [];
+                const srcList = images
+                    .map((img) => {
+                        const b64 = img?.data;
+                        if (!b64) return null;
+                        const mime = img?.mime || 'image/png';
+                        return `data:${mime};base64,${b64}`;
+                    })
+                    .filter(Boolean);
 
-            const firstSubplotsIndex = rawPythonCode.search(/plt\.subplots\s*\(/i);
-            const firstSubplotsLineStart = firstSubplotsIndex >= 0
-                ? rawPythonCode.lastIndexOf('\n', firstSubplotsIndex) + 1
-                : 0;
-            const prefix = rawPythonCode.slice(0, firstSubplotsLineStart);
-
-            const segments = savefigRanges.length > 0
-                ? savefigRanges.map((r) => {
-                    const subplotsIndex = rawPythonCode.lastIndexOf('plt.subplots', r.start);
-                    const imageStart = subplotsIndex >= 0
-                        ? rawPythonCode.lastIndexOf('\n', subplotsIndex) + 1
-                        : firstSubplotsLineStart;
-
-                    const imageBlock = rawPythonCode.slice(imageStart, r.end);
-                    return `${prefix}\n${imageBlock}`.trim();
-                })
-                : [rawPythonCode];
-
-            const safeSegments = segments.slice(0, 10);
-            if (segments.length !== safeSegments.length) {
-                message.warning(`Code có nhiều ảnh hơn (${segments.length}). Chỉ hiển thị tối đa 10 ảnh.`);
-            }
-
-            const nextImageUrls = [];
-            for (const seg of safeSegments) {
-                const segmentCode = sanitizeCodeForRenderApi(seg);
-                if (!segmentCode) continue;
-                if (!/import\s+matplotlib/i.test(segmentCode) && !/plt\./i.test(segmentCode)) {
-                    message.warning('AI trả về không phải Python/Matplotlib. Bỏ qua đoạn không hợp lệ.');
-                    continue;
+                if (srcList.length === 0) {
+                    message.error('Render trả về JSON nhưng không có ảnh');
+                    return;
                 }
-
-                const { data } = await axios.post(
-                    'https://pip.xichtho.vn/render/code',
-                    { code: segmentCode },
-                    { responseType: 'blob' }
-                );
-                nextImageUrls.push(URL.createObjectURL(data));
+                setMatplotlibImgSrcList(srcList);
+            } else {
+                setMatplotlibImgSrcList([URL.createObjectURL(response.data)]);
             }
-
-            setMatplotlibImgSrcList(nextImageUrls);
         } catch (error) {
             console.error('Error rendering matplotlib code:', error);
             const apiMessage = await parseBlobErrorMessage(error);
-            message.error(apiMessage || 'Không thể render Matplotlib code');
+            const statusCode = error?.response?.status;
+            const finalMsg = apiMessage || `Không thể render Matplotlib code${statusCode ? ` (HTTP ${statusCode})` : ''}`;
+            const line = parseMatplotlibErrorLine(finalMsg);
+            setMatplotlibPreviewError({
+                line: line || undefined,
+                message: finalMsg
+            });
+            if (matplotlibPreviewEditing && line) {
+                // Ensure textarea is mounted before trying to select
+                setTimeout(() => highlightMatplotlibErrorLine(line, rawPythonCode), 0);
+            }
+            message.error(finalMsg);
         } finally {
             setMatplotlibPreviewLoading(false);
         }
@@ -3137,6 +3183,7 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
         setMatplotlibPreviewCode(firstCodeRaw);
         setMatplotlibPreviewDraftCode(firstCodeRaw);
         setMatplotlibPreviewEditing(false);
+        setMatplotlibPreviewRecord(record);
         setMatplotlibPreviewVisible(true);
 
         await renderMatplotlibPreviewFromCode(firstCodeRaw);
@@ -3153,9 +3200,61 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
         setMatplotlibPreviewCode('');
         setMatplotlibPreviewDraftCode('');
         setMatplotlibPreviewEditing(false);
+        setMatplotlibPreviewRecord(null);
+        setMatplotlibPreviewSaving(false);
+        setMatplotlibPreviewError(null);
         if (matplotlibImgSrcList.length > 0) {
-            matplotlibImgSrcList.forEach((src) => URL.revokeObjectURL(src));
+            matplotlibImgSrcList.forEach((src) => {
+                if (typeof src === 'string' && src.startsWith('blob:')) URL.revokeObjectURL(src);
+            });
             setMatplotlibImgSrcList([]);
+        }
+    };
+
+    const handleSaveMatplotlibPreview = async () => {
+        if (!matplotlibPreviewRecord?.id) {
+            message.warning('Không xác định record để lưu Matplotlib code');
+            return;
+        }
+        if (!String(matplotlibPreviewDraftCode || '').trim()) {
+            message.warning('Code rỗng, không thể lưu');
+            return;
+        }
+
+        try {
+            setMatplotlibPreviewSaving(true);
+
+            const updateData = {
+                id: matplotlibPreviewRecord.id,
+                matplotlibCode: [matplotlibPreviewDraftCode],
+                showMatplotlib: true
+            };
+
+            const updateResponse = await updateK9(updateData);
+            const updatedRecord = updateResponse?.data || updateResponse;
+
+            const updater = (list) => list.map(item =>
+                item.id === matplotlibPreviewRecord.id
+                    ? { ...item, ...updatedRecord }
+                    : item
+            );
+
+            setK9Data(prev => ({
+                news: updater(prev.news || []),
+                document: updater(prev.document || []),
+                caseTraining: updater(prev.caseTraining || []),
+                longForm: updater(prev.longForm || []),
+                home: updater(prev.home || []),
+            }));
+
+            setMatplotlibPreviewCode(matplotlibPreviewDraftCode);
+            setMatplotlibPreviewEditing(false);
+            message.success('Đã lưu thay đổi Matplotlib code');
+        } catch (error) {
+            console.error('Error saving Matplotlib code:', error);
+            message.error('Lưu Matplotlib code thất bại');
+        } finally {
+            setMatplotlibPreviewSaving(false);
         }
     };
 
@@ -5158,8 +5257,8 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
                 width={1700}
                 className={styles.matplotlibPreviewModal}
                 style={{
-                    top : '10px',
-                    paddingBottom : '0px'
+                    top: '10px',
+                    paddingBottom: '0px'
                 }}
             >
                 <div style={{
@@ -5181,6 +5280,14 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8, gap: 8 }}>
                             <Space size={8}>
                                 <Button
+                                    type="primary"
+                                    size="small"
+                                    onClick={handleRerunMatplotlibPreview}
+                                    loading={matplotlibPreviewLoading}
+                                >
+                                    Run lại
+                                </Button>
+                                <Button
                                     size="small"
                                     onClick={() => {
                                         setMatplotlibPreviewEditing(true);
@@ -5189,23 +5296,13 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
                                 >
                                     Chỉnh sửa
                                 </Button>
-                                <Button
-                                    type="primary"
-                                    size="small"
-                                    onClick={handleRerunMatplotlibPreview}
-                                    loading={matplotlibPreviewLoading}
-                                >
-                                    Run lại
-                                </Button>
+
                                 {matplotlibPreviewEditing && (
                                     <Button
                                         type="primary"
                                         size="small"
-                                        onClick={() => {
-                                            setMatplotlibPreviewCode(matplotlibPreviewDraftCode);
-                                            setMatplotlibPreviewEditing(false);
-                                            message.success('Đã lưu thay đổi code');
-                                        }}
+                                        onClick={handleSaveMatplotlibPreview}
+                                        loading={matplotlibPreviewSaving}
                                     >
                                         Lưu
                                     </Button>
@@ -5223,8 +5320,28 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
                                 )}
                             </Space>
                         </div>
+                        {matplotlibPreviewError?.message && (
+                            <div style={{
+                                marginBottom: 8,
+                                padding: '8px 10px',
+                                borderRadius: 6,
+                                border: '1px solid #ffccc7',
+                                background: '#fff1f0'
+                            }}>
+                                <div style={{ fontWeight: 700, color: '#c41a16' }}>Lỗi render Matplotlib</div>
+                                {matplotlibPreviewError?.line ? (
+                                    <div style={{ fontSize: 12, color: '#595959' }}>
+                                        Ở dòng: <strong>{matplotlibPreviewError.line}</strong>
+                                    </div>
+                                ) : null}
+                                <div style={{ fontSize: 12, color: '#595959', marginTop: 4, whiteSpace: 'pre-wrap' }}>
+                                    {matplotlibPreviewError.message}
+                                </div>
+                            </div>
+                        )}
                         {matplotlibPreviewEditing ? (
                             <TextArea
+                                ref={matplotlibCodeTextareaRef}
                                 value={matplotlibPreviewDraftCode}
                                 onChange={(e) => setMatplotlibPreviewDraftCode(e.target.value)}
                                 autoSize={false}
@@ -5238,16 +5355,30 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
                                 placeholder="// (Không có code để hiển thị)"
                             />
                         ) : (
-                            <pre style={{
-                                margin: 0,
-                                whiteSpace: 'pre-wrap',
-                                wordBreak: 'break-word',
+                            <div style={{
                                 fontSize: 12,
                                 fontFamily: 'monospace',
-                                lineHeight: 1.35
+                                lineHeight: 1.35,
+                                whiteSpace: 'pre-wrap',
+                                wordBreak: 'break-word'
                             }}>
-                                {matplotlibPreviewCode || '// (Không có code để hiển thị)'}
-                            </pre>
+                                {(matplotlibPreviewCode || '').split(/\r?\n/).map((line, idx) => {
+                                    const ln = idx + 1;
+                                    const isErrLine = matplotlibPreviewError?.line === ln;
+                                    return (
+                                        <div
+                                            key={idx}
+                                            style={{
+                                                padding: isErrLine ? '0 6px' : '0 6px',
+                                                background: isErrLine ? '#fff1f0' : 'transparent',
+                                                color: isErrLine ? '#c41a16' : 'inherit'
+                                            }}
+                                        >
+                                            {line || ' '}
+                                        </div>
+                                    );
+                                })}
+                            </div>
                         )}
                     </div>
 
@@ -5281,7 +5412,7 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
                         )}
                     </div>
                 </div>
-            </Modal>  
+            </Modal>
 
             <SelectPromptModal
                 visible={selectHtmlPromptModalVisible}
