@@ -74,8 +74,11 @@ const AISummaryDetailGeneration = () => {
     const [selectedDiagramData, setSelectedDiagramData] = useState(null);
     const [matplotlibPreviewVisible, setMatplotlibPreviewVisible] = useState(false);
     const [matplotlibPreviewLoading, setMatplotlibPreviewLoading] = useState(false);
-    const [matplotlibImgSrc, setMatplotlibImgSrc] = useState('');
+    const [matplotlibImgSrcList, setMatplotlibImgSrcList] = useState([]);
     const [matplotlibPreviewTitle, setMatplotlibPreviewTitle] = useState('');
+    const [matplotlibPreviewCode, setMatplotlibPreviewCode] = useState('');
+    const [matplotlibPreviewDraftCode, setMatplotlibPreviewDraftCode] = useState('');
+    const [matplotlibPreviewEditing, setMatplotlibPreviewEditing] = useState(false);
     const [selectedRowKeys, setSelectedRowKeys] = useState([]);
     const [isProcessing, setIsProcessing] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
@@ -959,11 +962,15 @@ const AISummaryDetailGeneration = () => {
             'text',
             0.2
         );
-        const code = (aiResult?.result || aiResult?.answer || aiResult?.content || '').trim();
-        if (!code) {
+        const aiText = (aiResult?.result || aiResult?.answer || aiResult?.content || '').trim();
+        if (!aiText) {
             throw new Error('AI không tạo được Matplotlib code hợp lệ');
         }
-        codes.push(code);
+        const extracted = extractPythonCode(aiText);
+        if (!extracted) {
+            throw new Error('AI trả về nội dung không phải Python/Matplotlib (ví dụ dạng DIAGRAM/IMG-01...), vui lòng chỉnh prompt để yêu cầu output Python code.');
+        }
+        codes.push(extracted);
 
         const updateData = {
             id: record.id,
@@ -1737,26 +1744,6 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
         message.success(`🎨 Đã thêm ${records.length} bản ghi vào hàng đợi tạo Excalidraw!`);
     };
 
-    // Handle create Matplotlib from summaryDetail (single record - queue)
-    const handleCreateMatplotlibFromSummaryDetail = async (record) => {
-        if (!record.summaryDetail || record.summaryDetail.trim() === '') {
-            message.warning('Không có summaryDetail để tạo Matplotlib code!');
-            return;
-        }
-
-        if (record.matplotlibCode && Array.isArray(record.matplotlibCode) && record.matplotlibCode.length > 0) {
-            message.warning('Record này đã có Matplotlib code. Vui lòng xóa code cũ trước khi tạo mới.');
-            return;
-        }
-
-        if (matplotlibQueue.find(task => task.recordId === record.id) || currentMatplotlibProcessing?.recordId === record.id) {
-            message.warning('Record này đã có trong hàng đợi hoặc đang được xử lý!');
-            return;
-        }
-
-        setPendingMatplotlibRecord(record);
-        setSelectMatplotlibPromptModalVisible(true);
-    };
 
     const handleMatplotlibPromptSelected = (prompt) => {
         setSelectMatplotlibPromptModalVisible(false);
@@ -2921,26 +2908,130 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
         const source = String(rawCode || '').trim();
         if (!source) return '';
 
-        const fencedMatch = source.match(/```(?:python)?\s*([\s\S]*?)```/i);
-        if (fencedMatch && fencedMatch[1]) {
-            return fencedMatch[1].trim();
+        const looksLikeMatplotlib = (txt) => {
+            const s = String(txt || '');
+            return (
+                /import\s+matplotlib/i.test(s) ||
+                /import\s+matplotlib\.pyplot/i.test(s) ||
+                /plt\./i.test(s) ||
+                /savefig\s*\(/i.test(s)
+            );
+        };
+
+        // Prefer explicit ```python ... ``` block
+        const pythonBlockMatch = source.match(/```python\s*([\s\S]*?)```/i);
+        if (pythonBlockMatch && pythonBlockMatch[1]) {
+            const code = pythonBlockMatch[1].trim();
+            return looksLikeMatplotlib(code) ? code : '';
         }
 
-        // Some AI outputs start with a plain "python" line (without markdown fences).
-        // The render API expects pure executable code only.
+        // Fallback: pick the first fenced block that looks like matplotlib/python
+        const allFenced = [];
+        const reFenced = /```(?:[a-z]+\s*)?([\s\S]*?)```/gi;
+        let m;
+        while ((m = reFenced.exec(source)) !== null) {
+            if (m[1]) allFenced.push(String(m[1]).trim());
+        }
+        const good = allFenced.find((blk) => looksLikeMatplotlib(blk));
+        if (good) return good;
+
+        // Last resort: strip everything before the first "import matplotlib" occurrence
+        const idx = source.search(/import\s+matplotlib/i);
+        if (idx >= 0) {
+            const maybeCode = source.slice(idx).trim();
+            return looksLikeMatplotlib(maybeCode) ? maybeCode : '';
+        }
+
+        // Some AI outputs may start with plain "python" line (without fences)
         const withoutLeadingLanguageLine = source.replace(/^\s*python\s*\r?\n/i, '');
-        return withoutLeadingLanguageLine.trim();
+        const maybeCode = withoutLeadingLanguageLine.trim();
+        return looksLikeMatplotlib(maybeCode) ? maybeCode : '';
+    };
+
+    const findMatchingParenIndex = (src, openParenIndex) => {
+        // Finds matching closing ')' for the '(' at openParenIndex.
+        // Ignores parentheses inside strings and Python line comments (# ...).
+        let depth = 0;
+        let quote = null; // "'" | '"' | null
+
+        for (let i = openParenIndex; i < src.length; i++) {
+            const ch = src[i];
+
+            // Python line comments
+            if (!quote && ch === '#') {
+                const newlineIdx = src.indexOf('\n', i);
+                i = newlineIdx === -1 ? src.length - 1 : newlineIdx - 1;
+                continue;
+            }
+
+            // Strings
+            if (quote) {
+                if (ch === '\\') {
+                    i += 1; // skip escaped char
+                    continue;
+                }
+                if (ch === quote) quote = null;
+                continue;
+            }
+
+            if (ch === '"' || ch === "'") {
+                quote = ch;
+                continue;
+            }
+
+            if (ch === '(') depth += 1;
+            if (ch === ')') depth -= 1;
+            if (depth === 0) return i;
+        }
+        return -1;
+    };
+
+    const getCallStatementRanges = (src, callRegex) => {
+        const ranges = [];
+        const flags = callRegex.flags.includes('g') ? callRegex.flags : `${callRegex.flags}g`;
+        const re = new RegExp(callRegex.source, flags);
+        let match;
+
+        while ((match = re.exec(src)) !== null) {
+            const matchedText = match[0];
+            const openParenIndex = match.index + matchedText.lastIndexOf('(');
+            if (openParenIndex < 0) continue;
+
+            const endParenIndex = findMatchingParenIndex(src, openParenIndex);
+            if (endParenIndex < 0) continue;
+
+            // Remove whole "statement line" (from line start to end of call line)
+            const lineStart = src.lastIndexOf('\n', match.index - 1) + 1;
+            let lineEnd = src.indexOf('\n', endParenIndex);
+            if (lineEnd === -1) lineEnd = src.length;
+            else lineEnd = lineEnd + 1; // include newline
+
+            ranges.push({ start: lineStart, end: lineEnd });
+        }
+
+        return ranges;
     };
 
     const sanitizeCodeForRenderApi = (code) => {
         const text = String(code || '');
         if (!text.trim()) return '';
-        return text
-            // render API handles output image itself; local save can break sandbox
-            .replace(/^\s*fig\.savefig\([\s\S]*?\)\s*$/gim, '')
-            .replace(/^\s*plt\.savefig\([\s\S]*?\)\s*$/gim, '')
-            .replace(/^\s*plt\.close\([\s\S]*?\)\s*$/gim, '')
-            .trim();
+
+        // render API handles output image itself; local save/close can break sandbox
+        const savefigRanges = getCallStatementRanges(
+            text,
+            /\b(?:[A-Za-z_]\w*\.)?savefig\s*\(/
+        );
+        const closeRanges = getCallStatementRanges(
+            text,
+            /\bplt\.close\s*\(/
+        );
+
+        const ranges = [...savefigRanges, ...closeRanges].sort((a, b) => b.start - a.start);
+        let out = text;
+        for (const r of ranges) {
+            out = out.slice(0, r.start) + out.slice(r.end);
+        }
+        return out.trim();
     };
 
     const parseBlobErrorMessage = async (error) => {
@@ -2961,36 +3052,68 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
         }
     };
 
-    const handlePreviewMatplotlibImage = async (record) => {
+    const renderMatplotlibPreviewFromCode = async (rawCode) => {
         try {
-            const codeList = Array.isArray(record?.matplotlibCode) ? record.matplotlibCode : [];
-            const firstCode = codeList.find(item => String(item || '').trim());
-            if (!firstCode) {
-                message.warning('Không có Matplotlib code để xem');
+            const rawPythonCode = extractPythonCode(rawCode);
+            if (!rawPythonCode) {
+                message.warning('Matplotlib code không hợp lệ (AI trả về mô tả, không phải Python).');
                 return;
             }
-
-            const fullCode = sanitizeCodeForRenderApi(extractPythonCode(firstCode));
-            if (!fullCode) {
-                message.warning('Matplotlib code không hợp lệ');
-                return;
-            }
-
-            setMatplotlibPreviewTitle(record?.title || `Record #${record?.id}`);
             setMatplotlibPreviewLoading(true);
-            setMatplotlibPreviewVisible(true);
 
-            if (matplotlibImgSrc) {
-                URL.revokeObjectURL(matplotlibImgSrc);
-                setMatplotlibImgSrc('');
+            if (matplotlibImgSrcList.length > 0) {
+                matplotlibImgSrcList.forEach((src) => URL.revokeObjectURL(src));
+                setMatplotlibImgSrcList([]);
             }
 
-            const { data } = await axios.post(
-                'https://pip.xichtho.vn/render/code',
-                { code: fullCode },
-                { responseType: 'blob' }
+            // If AI code contains multiple images (multiple savefig), split it into segments
+            // so each render call returns a single image reliably.
+            const savefigRanges = getCallStatementRanges(
+                rawPythonCode,
+                /\b(?:[A-Za-z_]\w*\.)?savefig\s*\(/
             );
-            setMatplotlibImgSrc(URL.createObjectURL(data));
+
+            const firstSubplotsIndex = rawPythonCode.search(/plt\.subplots\s*\(/i);
+            const firstSubplotsLineStart = firstSubplotsIndex >= 0
+                ? rawPythonCode.lastIndexOf('\n', firstSubplotsIndex) + 1
+                : 0;
+            const prefix = rawPythonCode.slice(0, firstSubplotsLineStart);
+
+            const segments = savefigRanges.length > 0
+                ? savefigRanges.map((r) => {
+                    const subplotsIndex = rawPythonCode.lastIndexOf('plt.subplots', r.start);
+                    const imageStart = subplotsIndex >= 0
+                        ? rawPythonCode.lastIndexOf('\n', subplotsIndex) + 1
+                        : firstSubplotsLineStart;
+
+                    const imageBlock = rawPythonCode.slice(imageStart, r.end);
+                    return `${prefix}\n${imageBlock}`.trim();
+                })
+                : [rawPythonCode];
+
+            const safeSegments = segments.slice(0, 10);
+            if (segments.length !== safeSegments.length) {
+                message.warning(`Code có nhiều ảnh hơn (${segments.length}). Chỉ hiển thị tối đa 10 ảnh.`);
+            }
+
+            const nextImageUrls = [];
+            for (const seg of safeSegments) {
+                const segmentCode = sanitizeCodeForRenderApi(seg);
+                if (!segmentCode) continue;
+                if (!/import\s+matplotlib/i.test(segmentCode) && !/plt\./i.test(segmentCode)) {
+                    message.warning('AI trả về không phải Python/Matplotlib. Bỏ qua đoạn không hợp lệ.');
+                    continue;
+                }
+
+                const { data } = await axios.post(
+                    'https://pip.xichtho.vn/render/code',
+                    { code: segmentCode },
+                    { responseType: 'blob' }
+                );
+                nextImageUrls.push(URL.createObjectURL(data));
+            }
+
+            setMatplotlibImgSrcList(nextImageUrls);
         } catch (error) {
             console.error('Error rendering matplotlib code:', error);
             const apiMessage = await parseBlobErrorMessage(error);
@@ -3000,13 +3123,39 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
         }
     };
 
+    const handlePreviewMatplotlibImage = async (record) => {
+        const codeList = Array.isArray(record?.matplotlibCode) ? record.matplotlibCode : [];
+        const firstCodeRaw = String(codeList[0] || '');
+
+        if (!firstCodeRaw.trim()) {
+            message.warning('Không có Matplotlib code để xem');
+            return;
+        }
+
+        setMatplotlibPreviewTitle(record?.title || `Record #${record?.id}`);
+        // Giữ nguyên value gốc để dễ debug lỗi code AI, không format trước khi hiển thị
+        setMatplotlibPreviewCode(firstCodeRaw);
+        setMatplotlibPreviewDraftCode(firstCodeRaw);
+        setMatplotlibPreviewEditing(false);
+        setMatplotlibPreviewVisible(true);
+
+        await renderMatplotlibPreviewFromCode(firstCodeRaw);
+    };
+
+    const handleRerunMatplotlibPreview = async () => {
+        await renderMatplotlibPreviewFromCode(matplotlibPreviewDraftCode);
+    };
+
     const closeMatplotlibPreview = () => {
         setMatplotlibPreviewVisible(false);
         setMatplotlibPreviewLoading(false);
         setMatplotlibPreviewTitle('');
-        if (matplotlibImgSrc) {
-            URL.revokeObjectURL(matplotlibImgSrc);
-            setMatplotlibImgSrc('');
+        setMatplotlibPreviewCode('');
+        setMatplotlibPreviewDraftCode('');
+        setMatplotlibPreviewEditing(false);
+        if (matplotlibImgSrcList.length > 0) {
+            matplotlibImgSrcList.forEach((src) => URL.revokeObjectURL(src));
+            setMatplotlibImgSrcList([]);
         }
     };
 
@@ -5006,26 +5155,133 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
                 open={matplotlibPreviewVisible}
                 onCancel={closeMatplotlibPreview}
                 footer={null}
-                width={1000}
+                width={1700}
+                className={styles.matplotlibPreviewModal}
+                style={{
+                    top : '10px',
+                    paddingBottom : '0px'
+                }}
             >
-                <div style={{ height: '100%', overflow: 'auto' }}>
-                    {matplotlibPreviewLoading ? (
-                        <div style={{ display: 'flex', justifyContent: 'center', padding: '30px 0' }}>
-                            <LoadingOutlined spin style={{ fontSize: 32 }} />
+                <div style={{
+                    display: 'flex',
+                    gap: 16,
+                    height: '100%',
+                    overflow: 'hidden',
+                    alignItems: 'stretch'
+                }}>
+                    <div style={{
+                        flex: '0 0 48%',
+                        maxWidth: '48%',
+                        border: '1px solid #f0f0f0',
+                        borderRadius: 6,
+                        overflow: 'auto',
+                        background: '#fafafa',
+                        padding: 10
+                    }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8, gap: 8 }}>
+                            <Space size={8}>
+                                <Button
+                                    size="small"
+                                    onClick={() => {
+                                        setMatplotlibPreviewEditing(true);
+                                    }}
+                                    disabled={matplotlibPreviewEditing}
+                                >
+                                    Chỉnh sửa
+                                </Button>
+                                <Button
+                                    type="primary"
+                                    size="small"
+                                    onClick={handleRerunMatplotlibPreview}
+                                    loading={matplotlibPreviewLoading}
+                                >
+                                    Run lại
+                                </Button>
+                                {matplotlibPreviewEditing && (
+                                    <Button
+                                        type="primary"
+                                        size="small"
+                                        onClick={() => {
+                                            setMatplotlibPreviewCode(matplotlibPreviewDraftCode);
+                                            setMatplotlibPreviewEditing(false);
+                                            message.success('Đã lưu thay đổi code');
+                                        }}
+                                    >
+                                        Lưu
+                                    </Button>
+                                )}
+                                {matplotlibPreviewEditing && (
+                                    <Button
+                                        size="small"
+                                        onClick={() => {
+                                            setMatplotlibPreviewDraftCode(matplotlibPreviewCode);
+                                            setMatplotlibPreviewEditing(false);
+                                        }}
+                                    >
+                                        Hủy sửa
+                                    </Button>
+                                )}
+                            </Space>
                         </div>
-                    ) : matplotlibImgSrc ? (
-                        <div style={{ textAlign: 'center' }}>
-                            <img
-                                src={matplotlibImgSrc}
-                                alt="Matplotlib render"
-                                style={{ maxWidth: '100%', maxHeight: '70vh', border: '1px solid #f0f0f0' }}
+                        {matplotlibPreviewEditing ? (
+                            <TextArea
+                                value={matplotlibPreviewDraftCode}
+                                onChange={(e) => setMatplotlibPreviewDraftCode(e.target.value)}
+                                autoSize={false}
+                                spellCheck={false}
+                                style={{
+                                    height: '72vh',
+                                    fontSize: 12,
+                                    fontFamily: 'monospace',
+                                    lineHeight: 1.35
+                                }}
+                                placeholder="// (Không có code để hiển thị)"
                             />
-                        </div>
-                    ) : (
-                        <Empty description="Chưa có dữ liệu ảnh để hiển thị" />
-                    )}
+                        ) : (
+                            <pre style={{
+                                margin: 0,
+                                whiteSpace: 'pre-wrap',
+                                wordBreak: 'break-word',
+                                fontSize: 12,
+                                fontFamily: 'monospace',
+                                lineHeight: 1.35
+                            }}>
+                                {matplotlibPreviewCode || '// (Không có code để hiển thị)'}
+                            </pre>
+                        )}
+                    </div>
+
+                    <div style={{
+                        flex: 1,
+                        minWidth: 0,
+                        overflow: 'auto'
+                    }}>
+                        {matplotlibPreviewLoading ? (
+                            <div style={{ display: 'flex', justifyContent: 'center', padding: '30px 0' }}>
+                                <LoadingOutlined spin style={{ fontSize: 32 }} />
+                            </div>
+                        ) : matplotlibImgSrcList.length > 0 ? (
+                            <div style={{
+                                display: 'grid',
+                                gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+                                gap: 12
+                            }}>
+                                {matplotlibImgSrcList.map((src, idx) => (
+                                    <div key={idx} style={{ textAlign: 'center' }}>
+                                        <img
+                                            src={src}
+                                            alt={`Matplotlib render ${idx + 1}`}
+                                            style={{ width: '100%', maxHeight: '70vh', objectFit: 'contain', border: '1px solid #f0f0f0' }}
+                                        />
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <Empty description="Chưa có dữ liệu ảnh để hiển thị" />
+                        )}
+                    </div>
                 </div>
-            </Modal>
+            </Modal>  
 
             <SelectPromptModal
                 visible={selectHtmlPromptModalVisible}

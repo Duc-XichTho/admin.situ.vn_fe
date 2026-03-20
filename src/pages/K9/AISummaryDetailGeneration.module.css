@@ -1,4 +1,8 @@
 /* Diagram SummaryDetail Config Modal Styles */
+.matplotlibPreviewModal :global(.ant-modal-content) {
+    height: 98vh !important;
+}
+
 .diagramSummaryDetailConfigModal :global(.ant-modal) {
     top: 5vh !important;
     max-height: 90vh !important;
