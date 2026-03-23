@@ -67,7 +67,9 @@ const AISummaryDetailGeneration = () => {
     const [pendingHtmlRecord, setPendingHtmlRecord] = useState(null);
     const [pendingExcalidrawRecord, setPendingExcalidrawRecord] = useState(null);
     const [pendingMatplotlibRecord, setPendingMatplotlibRecord] = useState(null);
-    const [pendingMatplotlibFixContext, setPendingMatplotlibFixContext] = useState(null); // { code, errorMessage }
+    const [pendingMatplotlibFixContext, setPendingMatplotlibFixContext] = useState(null); // { code, errorMessage, extraUserNotes? }
+    const [matplotlibFixExtraModalVisible, setMatplotlibFixExtraModalVisible] = useState(false);
+    const [matplotlibFixExtraNotes, setMatplotlibFixExtraNotes] = useState('');
     const [pendingHtmlRecords, setPendingHtmlRecords] = useState([]);
     const [pendingExcalidrawRecords, setPendingExcalidrawRecords] = useState([]);
     const [pendingMatplotlibRecords, setPendingMatplotlibRecords] = useState([]);
@@ -3351,7 +3353,65 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
         await renderMatplotlibPreviewFromCode(code);
     };
 
-    const handleOpenFixMatplotlibCode = () => {
+    const runMatplotlibAiFix = async (fixCtx, promptConfig) => {
+        const { code, errorMessage, extraUserNotes = '' } = fixCtx;
+        const aiPromptText = promptConfig?.aiPrompt || '';
+        const aiModel = promptConfig?.aiModel || '';
+        if (!aiModel || !aiPromptText) {
+            throw new Error('Vui lòng cài đặt prompt Fix Code Matplotlib (aiPrompt/aiModel) trước!');
+        }
+
+        let fixRequest = `Code hiện tại:\n${code}\n\n` + `Lỗi khi chạy:\n${errorMessage}\n\n`;
+        const extra = String(extraUserNotes || '').trim();
+        if (extra) {
+            fixRequest += `Yêu cầu bổ sung từ người dùng:\n${extra}\n\n`;
+        }
+
+        const aiResult = await aiGen(
+            fixRequest,
+            aiPromptText,
+            aiModel,
+            'text',
+            0.2
+        );
+
+        const aiText = (aiResult?.result || aiResult?.answer || aiResult?.content || '').trim();
+        if (!aiText) throw new Error('AI không trả về code sau khi fix');
+
+        const fixedCode = extractPythonCode(aiText) || aiText;
+        if (!fixedCode || !String(fixedCode).trim()) {
+            throw new Error('AI trả về code không hợp lệ');
+        }
+
+        setMatplotlibPreviewError(null);
+        setMatplotlibPreviewCode(fixedCode);
+        setMatplotlibPreviewDraftCode(fixedCode);
+        // Giữ trạng thái chỉnh sửa để user thấy nút "Lưu" ngay sau khi AI fix
+        setMatplotlibPreviewEditing(true);
+
+        await renderMatplotlibPreviewFromCode(fixedCode);
+    };
+
+    const handleDirectFixMatplotlibCode = () => {
+        if (!matplotlibPreviewError?.message) {
+            message.warning('Chưa có lỗi để fix');
+            return;
+        }
+        const code = String(matplotlibPreviewDraftCode || '');
+        if (!code.trim()) {
+            message.warning('Code rỗng, không thể fix');
+            return;
+        }
+        setMatplotlibPreviewEditing(true);
+        setPendingMatplotlibFixContext({
+            code,
+            errorMessage: matplotlibPreviewError.message,
+            extraUserNotes: ''
+        });
+        setSelectFixMatplotlibPromptModalVisible(true);
+    };
+
+    const handleOpenFixMatplotlibExtraModal = () => {
         if (!matplotlibPreviewError?.message) {
             message.warning('Chưa có lỗi để fix');
             return;
@@ -3360,9 +3420,25 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
             message.warning('Code rỗng, không thể fix');
             return;
         }
+        setMatplotlibFixExtraNotes('');
+        setMatplotlibFixExtraModalVisible(true);
+    };
+
+    const handleConfirmMatplotlibExtraThenSelectPrompt = () => {
+        if (!matplotlibPreviewError?.message) {
+            message.warning('Chưa có lỗi để fix');
+            return;
+        }
+        if (!String(matplotlibPreviewDraftCode || '').trim()) {
+            message.warning('Code rỗng, không thể fix');
+            return;
+        }
+        setMatplotlibPreviewEditing(true);
+        setMatplotlibFixExtraModalVisible(false);
         setPendingMatplotlibFixContext({
             code: matplotlibPreviewDraftCode,
-            errorMessage: matplotlibPreviewError.message
+            errorMessage: matplotlibPreviewError.message,
+            extraUserNotes: String(matplotlibFixExtraNotes || '').trim()
         });
         setSelectFixMatplotlibPromptModalVisible(true);
     };
@@ -3372,49 +3448,17 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
 
         try {
             setSelectFixMatplotlibPromptModalVisible(false);
-            const { code, errorMessage } = pendingMatplotlibFixContext;
+            const ctx = { ...pendingMatplotlibFixContext };
             setPendingMatplotlibFixContext(null);
 
             message.loading('Đang fix Matplotlib code bằng AI...', 0);
-
-            const aiPromptText = promptConfig?.aiPrompt || '';
-            const aiModel = promptConfig?.aiModel || '';
-            if (!aiModel || !aiPromptText) {
-                throw new Error('Vui lòng cài đặt prompt Fix Code Matplotlib (aiPrompt/aiModel) trước!');
-            }
-
-            const fixRequest =  `Code hiện tại:\n${code}\n\n` + `Lỗi khi chạy:\n${errorMessage}\n\n`
-              ;
-
-            const aiResult = await aiGen(
-                fixRequest,
-                aiPromptText,
-                aiModel,
-                'text',
-                0.2
-            );
-
-            const aiText = (aiResult?.result || aiResult?.answer || aiResult?.content || '').trim();
-            if (!aiText) throw new Error('AI không trả về code sau khi fix');
-
-            const fixedCode = extractPythonCode(aiText) || aiText;
-            if (!fixedCode || !String(fixedCode).trim()) {
-                throw new Error('AI trả về code không hợp lệ');
-            }
-
-            setMatplotlibPreviewError(null);
-            setMatplotlibPreviewCode(fixedCode);
-            setMatplotlibPreviewDraftCode(fixedCode);
-            setMatplotlibPreviewEditing(false);
-
+            await runMatplotlibAiFix(ctx, promptConfig);
             message.destroy();
-            await renderMatplotlibPreviewFromCode(fixedCode);
             message.success('Đã fix và chạy lại Matplotlib code thành công');
         } catch (e) {
             message.destroy();
             const apiMessage = await parseBlobErrorMessage(e);
             const finalMsg = apiMessage || (e?.message ? String(e.message) : 'Fix code thất bại');
-            // Khi AI fix thất bại, giữ code cũ nhưng cập nhật error để user biết
             setMatplotlibPreviewError({
                 message: finalMsg,
             });
@@ -3434,6 +3478,10 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
         setMatplotlibPreviewError(null);
         setMatplotlibPreviewRenderedImages([]);
         setMatplotlibPreviewLastRenderedCode('');
+        setMatplotlibFixExtraModalVisible(false);
+        setMatplotlibFixExtraNotes('');
+        setPendingMatplotlibFixContext(null);
+        setSelectFixMatplotlibPromptModalVisible(false);
         if (matplotlibImgSrcList.length > 0) {
             matplotlibImgSrcList.forEach((src) => {
                 if (typeof src === 'string' && src.startsWith('blob:')) URL.revokeObjectURL(src);
@@ -5833,23 +5881,43 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
                         {matplotlibPreviewError?.message && (
                             <div style={{
                                 marginBottom: 8,
-                                padding: '8px 10px',
+                                padding: '10px 12px',
                                 borderRadius: 6,
                                 border: '1px solid #ffccc7',
                                 background: '#fff1f0'
                             }}>
-                                <div style={{ fontWeight: 700, color: '#c41a16', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-                                    <span>Lỗi render Matplotlib</span>
-                                    <Button
-                                        size="small"
-                                        type="primary"
-                                        onClick={handleOpenFixMatplotlibCode}
-                                    >
-                                        Fix Code
-                                    </Button>
+                                <div style={{
+                                    fontWeight: 700,
+                                    color: '#c41a16',
+                                    display: 'flex',
+                                    alignItems: 'flex-start',
+                                    justifyContent: 'space-between',
+                                    gap: 12,
+                                    flexWrap: 'wrap'
+                                }}>
+                                    <span style={{ lineHeight: '24px' }}>Lỗi render Matplotlib</span>
+                                    <Space size={8} wrap style={{ justifyContent: 'flex-end' }}>
+                                        <Button
+                                            size="small"
+                                            type="primary"
+                                            onClick={handleDirectFixMatplotlibCode}
+                                        >
+                                            Fix (chọn prompt)
+                                        </Button>
+                                        <Button
+                                            size="small"
+                                            onClick={handleOpenFixMatplotlibExtraModal}
+                                        >
+                                            Fix + yêu cầu cá nhân
+                                        </Button>
+                                    </Space>
+                                </div>
+                                <div style={{ fontSize: 11, color: '#8c8c8c', marginTop: 6, lineHeight: 1.4 }}>
+                                    Cả 2 cách đều mở bước chọn prompt Fix Matplotlib.
+                                    Luồng thứ hai cho phép thêm ghi chú cá nhân trước khi chọn prompt.
                                 </div>
                                 {matplotlibPreviewError?.line ? (
-                                    <div style={{ fontSize: 12, color: '#595959' }}>
+                                    <div style={{ fontSize: 12, color: '#595959', marginTop: 8 }}>
                                         Ở dòng: <strong>{matplotlibPreviewError.line}</strong>
                                     </div>
                                 ) : null}
@@ -5931,6 +5999,31 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
                         )}
                     </div>
                 </div>
+            </Modal>
+
+            <Modal
+                title="Fix code — yêu cầu bổ sung"
+                open={matplotlibFixExtraModalVisible}
+                onCancel={() => {
+                    setMatplotlibFixExtraModalVisible(false);
+                    setMatplotlibFixExtraNotes('');
+                }}
+                onOk={handleConfirmMatplotlibExtraThenSelectPrompt}
+                okText="Tiếp tục chọn prompt"
+                cancelText="Hủy"
+                destroyOnClose
+                width={520}
+            >
+                <div style={{ fontSize: 13, color: '#595959', marginBottom: 10, lineHeight: 1.5 }}>
+                    Nhập ghi chú cho AI nếu cần (tuỳ chọn). Ở bước sau bạn chọn cài đặt prompt Fix Matplotlib — có thể để trống ghi chú nếu chỉ muốn đổi prompt.
+                </div>
+                <TextArea
+                    value={matplotlibFixExtraNotes}
+                    onChange={(e) => setMatplotlibFixExtraNotes(e.target.value)}
+                    rows={5}
+                    placeholder="Ví dụ: dùng backend Agg, thêm tiêu đề biểu đồ, chỉnh kích thước figure..."
+                    spellCheck={false}
+                />
             </Modal>
 
             <SelectPromptModal
