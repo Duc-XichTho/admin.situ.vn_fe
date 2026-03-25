@@ -5986,7 +5986,7 @@ You MUST return ONLY the numbered description in the exact format. Do NOT includ
                             }}>
                                 {matplotlibImgSrcList.map((src, idx) => (
                                     <div key={idx} style={{ textAlign: 'center' }}>
-                                        <img
+                                        <Image
                                             src={src}
                                             alt={`Matplotlib render ${idx + 1}`}
                                             style={{ width: '100%', maxHeight: '70vh', objectFit: 'contain', border: '1px solid #f0f0f0' }}
