@@ -1,11 +1,17 @@
 import { Route, Routes, Navigate, useLocation } from 'react-router-dom';
 import { ROUTES } from './CONST';
-import Admin from './pages/Admin/Admin.jsx';
-import AIGen from './pages/Admin/AIGen/AIGen.jsx';
-import NotFoundPage from './pages/HTTPStatus/NotFoundPage';
+import Login from './pages/Login/Login.jsx';
+import ExcelData from './pages/ExcelData.jsx';
 import K9 from './pages/K9/K9.jsx';
 import PublicHistory from './pages/K9/PublicHistory.jsx';
 import PublicCertificate from './pages/K9/PublicCertificate.jsx';
+import FeedbackManagement from './pages/K9/components/FeedbackManagement.jsx';
+import PaymentSuccess from './pages/K9/PaymentSuccess.jsx';
+import AIQuestionEvaluation from './pages/K9/AIQuestionEvaluation.jsx';
+import AISummaryDetailGeneration from './pages/K9/AISummaryDetailGeneration.jsx';
+import React from 'react';
+import ImageSpellCheck from './pages/Admin/ImageSpellCheck/ImageSpellCheck.jsx';
+import NotFoundPage from './pages/HTTPStatus/NotFoundPage';
 import K9Management from './pages/K9Management/K9Management.jsx';
 import CompanyReport from './pages/CompanyReport/CompanyReport.jsx';
 import Management from './pages/Management/Management.jsx';
@@ -13,19 +19,8 @@ import UserManagement from './pages/UserManagement/UserManagement.jsx';
 import HomepageContentEditor from './pages/Admin/HomepageContentEditor.jsx';
 import AuthRoute from './routes/AuthRoute';
 import AuthRouteAdmin from './routes/AuthRouteAdmin';
-
-import Login from './pages/Login/Login.jsx';
-import ExcelData from './pages/ExcelData.jsx';
-import Homepage from './pages/Homepage/Homepage.jsx';
-import FeedbackManagement from './pages/K9/components/FeedbackManagement.jsx';
-import PaymentSuccess from './pages/K9/PaymentSuccess.jsx';
-import AIQuestionEvaluation from './pages/K9/AIQuestionEvaluation.jsx';
-import AISummaryDetailGeneration from './pages/K9/AISummaryDetailGeneration.jsx';
-import React from 'react';
-import Homepage2 from './pages/Homepage/Homepage2.jsx';
-import LandingPage from './pages/LandingPage/LandingPage.jsx';
-import LandingPageEditor from './pages/LandingPage/LandingPageEditor.jsx';
-import ImageSpellCheck from './pages/Admin/ImageSpellCheck/ImageSpellCheck.jsx';
+import Admin from './pages/Admin/Admin.jsx';
+import AIGen from './pages/Admin/AIGen/AIGen.jsx';
 
 // Wrapper component to route between PublicHistory and PublicCertificate
 const PublicK9Route = () => {
@@ -43,15 +38,8 @@ const PublicK9Route = () => {
 const App = () => {
     return (
         <Routes>
-            {/* Redirect root to K9 page */}
-            {/* <Route path="/" element={<Navigate to={ROUTES.HOME_PAGE} replace />} /> */}
-            {/* <Route path="/" element={<Homepage2 />} /> */}
-            <Route path="/" element={<LandingPage />} />
+            <Route path="/" element={<Login />} />
 
-
-            {/* Trang mặc định là Homepage */}
-            {/* <Route path={ROUTES.LOGIN} element={<Homepage />} /> */}
-            {/* <Route path={ROUTES.HOME_PAGE} element={<Homepage />} /> */}
             <Route path="/k9" element={<PublicK9Route />} />
             <Route path="/payment-success" element={<PaymentSuccess />} />
 
@@ -66,7 +54,6 @@ const App = () => {
                 <Route path="/ai-image-spell-check" element={<ImageSpellCheck />} />
                 <Route path="/ai-question-evaluation" element={<AIQuestionEvaluation />} />
                 <Route path="/ai-summary-detail-generation" element={<AISummaryDetailGeneration />} />
-                <Route path="/landing-page-editor" element={<LandingPageEditor />} />
                 <Route path={ROUTES.ADMIN} element={<Admin />}>
                     <Route index element={<AIGen />} />
                     <Route path="homepage-content" element={<HomepageContentEditor />} />
