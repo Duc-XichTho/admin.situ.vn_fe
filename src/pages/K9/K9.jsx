@@ -1025,8 +1025,8 @@ const K9 = () => {
 	const tabOptions = [
 		{ key: 'stream', label: 'Lý thuyết' },
 		{ key: 'document', label: 'Tài liệu học tập' },
-		{ key: 'caseTraining', label: 'Case Study' },
-		{ key: 'longForm', label: 'Business Wiki' },
+		{ key: 'caseTraining', label: 'Bài kiểm tra' },
+		{ key: 'longForm', label: 'Thư viện' },
 		{ key: 'home', label: 'Về AiMBA' },
 	];
 
@@ -1103,7 +1103,7 @@ const K9 = () => {
 		if (currentUser?.isAdmin) {
 			items.push({
 				key: 'management',
-				label: 'Content Management',
+				label: 'Quản lý nội dung',
 			});
 			items.push({
 				key: 'feedback',

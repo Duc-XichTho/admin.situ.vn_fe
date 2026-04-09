@@ -14970,13 +14970,13 @@ Chỉ trả về JSON, không thêm text khác.`;
 
     { key: 'home', label: 'Home', count: allData.home?.length || 0 },
 
-    { key: 'news', label: 'Learning Company', count: allData.news?.length || 0 },
-    { key: 'document', label: 'Learning Materials', count: allData.document?.length || 0 },
+    { key: 'news', label: 'Tài liệu công ty', count: allData.news?.length || 0 },
+    { key: 'document', label: 'Tài liệu học tập', count: allData.document?.length || 0 },
 
 
-    { key: 'caseTraining', label: 'Case Training', count: allData.caseTraining?.length || 0 },
+    { key: 'caseTraining', label: 'Bài kiểm tra', count: allData.caseTraining?.length || 0 },
 
-    { key: 'longForm', label: 'Kho tài nguyên', count: allData.longForm?.length || 0 },
+    { key: 'longForm', label: 'Thư viện', count: allData.longForm?.length || 0 },
 
     // { key: 'report', label: 'Báo cáo ngành, Vĩ mô', count: aiSummaryData.length || 0 },
 
