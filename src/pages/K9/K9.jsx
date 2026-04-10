@@ -1023,7 +1023,7 @@ const K9 = () => {
 
 	// Tab options (đã tách tab Phân tích doanh nghiệp ra khỏi đây, chỉ còn trong header menu)
 	const tabOptions = [
-		{ key: 'stream', label: 'Lý thuyết' },
+		{ key: 'stream', label: 'Tài liệu công ty' },
 		{ key: 'document', label: 'Tài liệu học tập' },
 		{ key: 'caseTraining', label: 'Bài kiểm tra' },
 		{ key: 'longForm', label: 'Thư viện' },
